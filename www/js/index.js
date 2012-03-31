@@ -25,4 +25,14 @@ $(document).ready(function(){
     //c.addEventHandlers(c);
     prairie.addFigure(c);
     animate();
+    
+    
+    
+    // http://socket.io/#how-to-use
+    var socket = io.connect('http://gunfight.ca');
+    socket.on('news', function (data) {
+      console.log(data);
+      socket.emit('my other event', { my: 'data' });
+    });
+      
 });

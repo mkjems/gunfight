@@ -19,7 +19,7 @@ Color.prototype = {
      ],
     randomDesignerColor: function(){
         var pick = Math.round(Math.random() * (this.designerColors.length -1) ); 
-        console.log(this.designerColors.length, pick);
+        //console.log(this.designerColors.length, pick);
         this.r = this.designerColors[pick][0];
         this.g = this.designerColors[pick][1];
         this.b = this.designerColors[pick][2];
