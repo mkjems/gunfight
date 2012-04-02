@@ -1,10 +1,10 @@
 
 var canvas,
     context,
-    prairie;
+    prairie,
+    model;
 
-canvas.width = 800;
-canvas.height = 640;
+
     
 function animate(){
     prairie.moveAll(); // move
@@ -20,19 +20,31 @@ function animate(){
 $(document).ready(function(){
     context = $('#canvas')[0].getContext("2d");
     canvas = document.getElementById("canvas");
+    canvas.width = 800;
+    canvas.height = 640;
+    
     prairie = new Scene();
     var c = new Controllable();
     //c.addEventHandlers(c);
     prairie.addFigure(c);
     animate();
     
-    
+    model = {};
     
     // http://socket.io/#how-to-use
-    var socket = io.connect('http://gunfight.ca');
-    socket.on('news', function (data) {
-      console.log(data);
-      socket.emit('my other event', { my: 'data' });
+    location
+    var socket = io.connect(location.host);
+
+    socket.on('modelUpdate', function (newModel) {
+        model = newModel;
+        //console.log( model, 'Model update !');
+        var t = new Date().getTime();
+        var timeDiff =  t - model.time;
+        console.log(timeDiff, 'timeDiff');
+        $('#numPlayers').text(model.numPlayers);
     });
-      
+    
+
+          
+
 });
