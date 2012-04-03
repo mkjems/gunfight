@@ -58,19 +58,37 @@ io.sockets.on('connection', function (socket) {
     model.numPlayers += 1;
     console.log('numPlayers', model.numPlayers);
     
-    //socket.on('message', function (data) {
-    //    console.log(data);
-    //});
-    
     socket.on('disconnect', function (data) {
         model.numPlayers -= 1;
         socket.broadcast.emit('modelUpdate', getModel());
         console.log(data);
-    });  
-
-    socket.broadcast.emit('modelUpdate', getModel()); // Tell the others
-    socket.emit('modelUpdate', getModel()); // tell this socket;
-          
+    }); 
+     
+    //socket.broadcast.emit('modelUpdate', getModel()); // Tell the others
+    //socket.emit('modelUpdate', getModel()); // tell this socket;
+    
+    // time sync
+    socket.on('syncServerTime', function (timeData) {
+        var st = new Date().getTime();
+        timeData.serverTime = st;
+        socket.emit('finishSyncTime', timeData);
+    });
+    socket.emit('startSyncTime');
+              
 });
+
+function callDrawAfterRandomPause(){
+    var pause = Math.floor(Math.random()*1000) + 2000;
+    
+    setTimeout(function(){
+        io.sockets.emit('planEvent', {
+            nextEventTime: new Date().getTime() + 150,
+            x: Math.floor(Math.random()*300),
+            y: Math.floor(Math.random()*300)
+        }); 
+        callDrawAfterRandomPause();   
+    },pause);
+}
+callDrawAfterRandomPause();
 
 console.log('Socket.io server running...');
