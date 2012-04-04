@@ -18,5 +18,5 @@ When the client loads the page, the client does:
    * Check Schedule and change Model accordingly.(What should happen in this frame)
    * NB. The world is also the state of the keys of the keyboard.    
    * Move everything one tick. By 1000/framerate ms. The movements must be a function of time.
-* Send Change events of user input to server. Never change the model directly. So it will happen in aprox 100ms but in sync across all participating browsers. 
+* Send Change events of user input to server. Never change the model directly. So it will happen aprox 100ms later but in sync across all participating browsers. 
 * Paint world
