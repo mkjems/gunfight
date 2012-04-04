@@ -64,31 +64,51 @@ io.sockets.on('connection', function (socket) {
         console.log(data);
     }); 
      
-    //socket.broadcast.emit('modelUpdate', getModel()); // Tell the others
-    //socket.emit('modelUpdate', getModel()); // tell this socket;
-    
+    // keys
+    socket.on('keydown', function (data) {
+        console.log('keydown',data);
+        var keyEvent = {
+            eventTime: new Date().getTime() +100,
+            eventName: 'keydown',
+            key: data.key
+        }
+        socket.broadcast.emit('keyEvent', keyEvent);
+        socket.emit('keyEvent', keyEvent);
+    });
+
+    socket.on('keyup', function (data) {
+        console.log('keyup',data);
+        var keyEvent = {
+            eventTime: new Date().getTime() +100,
+            eventName: 'keyup',
+            key: data.key
+        }
+        socket.broadcast.emit('keyEvent', keyEvent);
+        socket.emit('keyEvent', keyEvent);
+    });
+        
     // time sync
     socket.on('syncServerTime', function (timeData) {
         var st = new Date().getTime();
         timeData.serverTime = st;
         socket.emit('finishSyncTime', timeData);
     });
-    socket.emit('startSyncTime');
+
               
 });
 
 function callDrawAfterRandomPause(){
-    var pause = Math.floor(Math.random()*1000) + 2000;
+    var pause = Math.floor(Math.random()*10000) + 3000;
     
     setTimeout(function(){
         io.sockets.emit('planEvent', {
-            nextEventTime: new Date().getTime() + 150,
+            eventTime: new Date().getTime() + 150,
             x: Math.floor(Math.random()*300),
             y: Math.floor(Math.random()*300)
         }); 
         callDrawAfterRandomPause();   
     },pause);
 }
-callDrawAfterRandomPause();
+//callDrawAfterRandomPause();
 
 console.log('Socket.io server running...');

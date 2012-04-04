@@ -1,11 +1,11 @@
 
-function Color(r,g,b){
+GF.Color = function (r,g,b){
     this.r = r||0;
     this.g = g||0;
     this.b = b||0;
 }
 
-Color.prototype = {
+GF.Color.prototype = {
     designerColors:[
         //[20,37,120],
         //[54,73,153],

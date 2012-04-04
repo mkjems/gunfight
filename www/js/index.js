@@ -1,87 +1,82 @@
 
-var canvas,
-    context,
-    prairie,
-    model,
-    deltaServerTime,
-    planed;
 
-
-function checkForEvents(){
-    var t = new Date().getTime();
-    if(planed && planed.nextEventTime < t){
-        prairie.addFigure(new Controllable(planed.x, planed.y));
-        planed = undefined;
+GF.index = (function(){
+    var canvas,
+        context,
+        prairie,
+        model,
+        deltaServerTime,
+        socket,
+        schedule,
+        keys;
+    
+    function checkForEvents(){
+        var frameEvents = schedule.checkForFrameEvents()
+        if(frameEvents.length !== 0){
+            console.log(frameEvents);
+        }
     }
-}
-
+        
+    function animate(){
+        
+        checkForEvents();
+        
+        prairie.moveAll(); // move (update the world) 
+        
+        context.clearRect(0, 0, canvas.width, canvas.height); // clear
+        
+        prairie.drawAll();// draw
+        
+        setTimeout(function(){     // request new frame
+            GF.requestAnimFrame(function(){
+                animate();
+            });
+        },0);
+    }
     
-function animate(){
+    function init(){
+        context = $('#canvas')[0].getContext("2d");
+        canvas = document.getElementById("canvas");
+        canvas.width = 800;
+        canvas.height = 640;
+        prairie = new GF.Scene();
+        model = {};
+    }
     
-    prairie.moveAll(); // move (update the world) 
+    function setupSocket(){ // http://socket.io/#how-to-use
+        socket = io.connect(location.host);
     
-    context.clearRect(0, 0, canvas.width, canvas.height); // clear
-    
-    prairie.drawAll();// draw
-    
-    checkForEvents();
-    setTimeout(function(){     // request new frame
-        requestAnimFrame(function(){
-            animate();
+        socket.on('modelUpdate', function (newModel) {
+            model = newModel;
+            var t = new Date().getTime();
+            var timeDiff =  t - model.time;
+            $('#numPlayers').text(model.numPlayers);
         });
-    },0);
-}
-
-$(document).ready(function(){
-    context = $('#canvas')[0].getContext("2d");
-    canvas = document.getElementById("canvas");
-    canvas.width = 800;
-    canvas.height = 640;
-    
-    prairie = new Scene();
-    var c = new Controllable();
-    //c.addEventHandlers(c);
-    prairie.addFigure(c);
-    animate();
-    
-    model = {};
-    
-    // http://socket.io/#how-to-use
-    location
-    var socket = io.connect(location.host);
-
-    socket.on('modelUpdate', function (newModel) {
-        model = newModel;
-        var t = new Date().getTime();
-        var timeDiff =  t - model.time;
-        console.log(timeDiff, 'timeDiff');
-        $('#numPlayers').text(model.numPlayers);
-    });
-    
-    socket.on('startSyncTime', function () {
+        
+        socket.on('finishSyncTime', function (timeObj) {
+            var ct2 = new Date().getTime();
+            var latency =  (ct2 - timeObj.clientTime)/2;
+            deltaServerTime = ct2-latency - timeObj.serverTime;
+            console.log(deltaServerTime, 'deltaServerTime');        
+        });
+        
+        // start sync of watches
         var ct = new Date().getTime();
-        console.log('startSyncTime', ct);
         socket.emit('syncServerTime', { clientTime: ct });
+        
+        socket.on('planEvent', function (pObj) {
+            //console.log(pObj)
+            planObj = schedule.getEventObj();
+            planObj.eventTime = pObj.eventTime + deltaServerTime
+            schedule.addEvent(planObj);
+        });
+    }
+    
+    $(document).ready(function(){
+        init();
+        setupSocket();
+        schedule = new GF.Schedule(socket);
+        keys = new GF.KeysModel(socket, schedule);
+        animate();
     });
-
-    socket.on('finishSyncTime', function (timeObj) {
-        var ct2 = new Date().getTime();
-        var latency =  (ct2 - timeObj.clientTime)/2;
-        console.log(latency, 'latency');
-        
-        console.log('client time', ct2);
-        console.log('server time', timeObj.serverTime);
-
-        
-        deltaServerTime = ct2-latency - timeObj.serverTime;
-        console.log(deltaServerTime, 'deltaServerTime');        
-        
-    });
-
-    socket.on('planEvent', function (planObj) {
-        console.log(planObj, 'planObj');
-        planObj.nextEventTime += deltaServerTime
-        planed = planObj;
-    });       
-
-});
+}())

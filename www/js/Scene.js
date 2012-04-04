@@ -1,9 +1,9 @@
-function Scene(){
+GF.Scene = function(){
     this.figures = [];
     this.movecount;
 }
 
-Scene.prototype = {
+GF.Scene.prototype = {
     addFigure : function(point){
         this.figures.push(point);
     },

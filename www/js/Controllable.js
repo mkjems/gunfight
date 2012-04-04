@@ -1,12 +1,12 @@
 
-function Controllable(xpos, ypos){
+GF.Controllable = function(xpos, ypos){
     this.x = xpos || 100;
     this.y = ypos || 100;
-    this.pen = new Pen(this.x, this.y, new Color(255,255,0) );
+    this.pen = new GF.Pen(this.x, this.y, new GF.Color(255,255,0) );
     this.dist = 5;   
 }
 
-Controllable.prototype = {
+GF.Controllable.prototype = {
 
     move: function(){
         if(keys.isDown('j')){

@@ -8,7 +8,7 @@ A web remake of the classic arcade game, that used to be the hottest thing in my
 When the client loads the page, the client does:
 
 * Syncs watch
-* listen for planning events
+* Listen for planning events
   * Add them to schedule
 * Starts animation loop, Request animation frame. (Different framerate for each player, challenge)
 

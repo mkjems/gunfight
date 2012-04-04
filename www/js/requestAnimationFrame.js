@@ -1,4 +1,4 @@
-window.requestAnimFrame = (function(callback){
+GF.requestAnimFrame = (function(callback){
     return window.requestAnimationFrame ||
     window.webkitRequestAnimationFrame ||
     window.mozRequestAnimationFrame ||
