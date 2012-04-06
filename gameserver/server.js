@@ -2,7 +2,8 @@
 
 var express = require('express'),
     mustache =require('mustache'),
-    portNumber = '843';
+    portNumber = '843',
+    model = require('./gfmodel');
 
 var app = express.createServer();
 
@@ -26,7 +27,6 @@ app.configure(function(){
     });
 });
 
-
 app.get('/', function(req, res){
     console.log();
     res.render('index.html');
@@ -42,46 +42,29 @@ app.listen(portNumber);
 console.log('Gunfight gameserver running on port: '+ portNumber +', http://localhost:' + portNumber);
 
 
+
+
+
 /*Socket.io */
 
-var model = {
-    numPlayers:0,
-    players: []
-};
-
-function getModel(){
-    model.time = new Date().getTime();
-    return model;
-}
-
-io.sockets.on('connection', function (socket) {
-    model.numPlayers += 1;
-    console.log('numPlayers', model.numPlayers);
+io.sockets.on('connection', function (socket) {    
+    var client = model.getNewClient();
     
     socket.on('disconnect', function (data) {
-        model.numPlayers -= 1;
-        socket.broadcast.emit('modelUpdate', getModel());
+        model.disconnect(client);
+        socket.broadcast.emit('modelUpdate', model.getModel());
         console.log(data);
     }); 
      
     // keys
-    socket.on('keydown', function (data) {
-        console.log('keydown',data);
+    socket.on('clientKeyEvent', function (data) {
+        console.log('clientKeyEvent',data);
         var keyEvent = {
-            eventTime: new Date().getTime() +100,
-            eventName: 'keydown',
-            key: data.key
-        }
-        socket.broadcast.emit('keyEvent', keyEvent);
-        socket.emit('keyEvent', keyEvent);
-    });
-
-    socket.on('keyup', function (data) {
-        console.log('keyup',data);
-        var keyEvent = {
-            eventTime: new Date().getTime() +100,
-            eventName: 'keyup',
-            key: data.key
+            eventTime: new Date().getTime(),
+            action: data.action,
+            eventName: 'clientKeyEvent', 
+            key: data.key,
+            player: data.player
         }
         socket.broadcast.emit('keyEvent', keyEvent);
         socket.emit('keyEvent', keyEvent);
@@ -91,7 +74,9 @@ io.sockets.on('connection', function (socket) {
     socket.on('syncServerTime', function (timeData) {
         var st = new Date().getTime();
         timeData.serverTime = st;
+        timeData.playerId = client.id;
         socket.emit('finishSyncTime', timeData);
+        socket.emit('modelUpdate', model.getModel());
     });
 
               

@@ -1,5 +1,4 @@
 
-
 GF.index = (function(){
     var canvas,
         context,
@@ -8,7 +7,8 @@ GF.index = (function(){
         deltaServerTime,
         socket,
         schedule,
-        keys;
+        keys,
+        playerId;
     
     function checkForEvents(){
         var frameEvents = schedule.checkForFrameEvents()
@@ -28,7 +28,7 @@ GF.index = (function(){
         prairie.drawAll();// draw
         
         setTimeout(function(){     // request new frame
-            GF.requestAnimFrame(function(){
+            requestAnimFrame(function(){
                 animate();
             });
         },0);
@@ -43,40 +43,57 @@ GF.index = (function(){
         model = {};
     }
     
-    function setupSocket(){ // http://socket.io/#how-to-use
+    function setupSocket(callback){ // http://socket.io/#how-to-use
         socket = io.connect(location.host);
     
         socket.on('modelUpdate', function (newModel) {
             model = newModel;
-            var t = new Date().getTime();
-            var timeDiff =  t - model.time;
-            $('#numPlayers').text(model.numPlayers);
+            console.log('model', model);
+            $('#numPlayers').text(model.clients.length);
         });
         
         socket.on('finishSyncTime', function (timeObj) {
             var ct2 = new Date().getTime();
             var latency =  (ct2 - timeObj.clientTime)/2;
             deltaServerTime = ct2-latency - timeObj.serverTime;
-            console.log(deltaServerTime, 'deltaServerTime');        
+            playerId = timeObj.playerId;
+            $('#playerId').text(playerId);
+            console.log(deltaServerTime, 'deltaServerTime');
+            callback();    
         });
         
         // start sync of watches
         var ct = new Date().getTime();
         socket.emit('syncServerTime', { clientTime: ct });
         
+        // planning
         socket.on('planEvent', function (pObj) {
             //console.log(pObj)
             planObj = schedule.getEventObj();
             planObj.eventTime = pObj.eventTime + deltaServerTime
             schedule.addEvent(planObj);
         });
+        
+        // model updates
+        
+
+        
     }
     
     $(document).ready(function(){
         init();
-        setupSocket();
-        schedule = new GF.Schedule(socket);
-        keys = new GF.KeysModel(socket, schedule);
-        animate();
+        setupSocket(function(){
+            schedule = new GF.Schedule(socket);
+            keys = new GF.KeysModel(socket, schedule, playerId );
+            socket.on('keyEvent', function (keyEvent) {
+                //keyStatus[keyEvent.key] = true;
+                schedule.addEvent(keyEvent);
+                //console.log(keyEvent.key);
+            });
+            animate();
+        });
+        
+        
+        
     });
 }())
