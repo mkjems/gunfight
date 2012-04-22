@@ -75,25 +75,13 @@ io.sockets.on('connection', function (socket) {
         var st = new Date().getTime();
         timeData.serverTime = st;
         timeData.playerId = client.id;
+        timeData.model = model.getModel();
         socket.emit('finishSyncTime', timeData);
-        socket.emit('modelUpdate', model.getModel());
+        socket.broadcast.emit('newClient', client.id);
     });
 
               
 });
 
-function callDrawAfterRandomPause(){
-    var pause = Math.floor(Math.random()*10000) + 3000;
-    
-    setTimeout(function(){
-        io.sockets.emit('planEvent', {
-            eventTime: new Date().getTime() + 150,
-            x: Math.floor(Math.random()*300),
-            y: Math.floor(Math.random()*300)
-        }); 
-        callDrawAfterRandomPause();   
-    },pause);
-}
-//callDrawAfterRandomPause();
 
 console.log('Socket.io server running...');

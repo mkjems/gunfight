@@ -5,16 +5,17 @@ GF.index = (function(){
         prairie,
         model,
         deltaServerTime,
-        socket,
+        GFsocket,
         schedule,
         keys,
         playerId;
     
     function checkForEvents(){
         var frameEvents = schedule.checkForFrameEvents()
-        if(frameEvents.length !== 0){
-            console.log(frameEvents);
-        }
+        frameEvents.forEach(function(val,index){
+            console.log('val', val);
+            
+        });   
     }
         
     function animate(){
@@ -44,15 +45,9 @@ GF.index = (function(){
     }
     
     function setupSocket(callback){ // http://socket.io/#how-to-use
-        socket = io.connect(location.host);
-    
-        socket.on('modelUpdate', function (newModel) {
-            model = newModel;
-            console.log('model', model);
-            $('#numPlayers').text(model.clients.length);
-        });
-        
-        socket.on('finishSyncTime', function (timeObj) {
+        GFsocket = io.connect(location.host);
+            
+        GFsocket.on('finishSyncTime', function (timeObj) {
             var ct2 = new Date().getTime();
             var latency =  (ct2 - timeObj.clientTime)/2;
             deltaServerTime = ct2-latency - timeObj.serverTime;
@@ -62,34 +57,33 @@ GF.index = (function(){
             callback();    
         });
         
-        // start sync of watches
         var ct = new Date().getTime();
-        socket.emit('syncServerTime', { clientTime: ct });
-        
-        // planning
-        socket.on('planEvent', function (pObj) {
-            //console.log(pObj)
-            planObj = schedule.getEventObj();
-            planObj.eventTime = pObj.eventTime + deltaServerTime
-            schedule.addEvent(planObj);
-        });
-        
-        // model updates
-        
-
+        GFsocket.emit('syncServerTime', { clientTime: ct }); // start sync of watches
         
     }
     
     $(document).ready(function(){
         init();
         setupSocket(function(){
-            schedule = new GF.Schedule(socket);
-            keys = new GF.KeysModel(socket, schedule, playerId );
-            socket.on('keyEvent', function (keyEvent) {
-                //keyStatus[keyEvent.key] = true;
+            schedule = new GF.Schedule(GFsocket);
+            keys = new GF.KeysModel(GFsocket, schedule, playerId );
+            
+            GFsocket.on('keyEvent', function (keyEvent) { // plan key event
                 schedule.addEvent(keyEvent);
-                //console.log(keyEvent.key);
             });
+            
+            GFsocket.on('planEvent', function (pObj) { // plan event
+                planObj = schedule.getEventObj();
+                planObj.eventTime = pObj.eventTime + deltaServerTime
+                schedule.addEvent(planObj);
+            });
+
+            GFsocket.on('newClient', function (newClientId) {
+                //model = newModel;
+                //console.log('model', model);
+                $('#numPlayers').text(model.clients.length);
+            });
+                        
             animate();
         });
         

@@ -2,7 +2,6 @@
 GF.Schedule = function() {
     
     var events = [];
-    var lastCheckTime;
     
     function compareTime(a,b) {
       if (a.eventTime < b.eventTime)
@@ -31,17 +30,13 @@ GF.Schedule = function() {
         events.sort(compareTime);            
     }
         
-    function checkForFrameEvents(){ // interval 
+    function checkForFrameEvents(){ 
         var t = new Date().getTime();
         var res = [];
-        if(lastCheckTime ){
-            while(events.length >0 && events[0].eventTime < t){
-                res.push(events.shift());
-            }
-            return res;
+        while(events.length >0 && events[0].eventTime < t){
+            res.push(events.shift());
         }
-        lastCheckTime = t;
-        return [];
+        return res;
     }
     
     var shared = {
