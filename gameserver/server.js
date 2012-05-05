@@ -1,12 +1,10 @@
 
-
 var express = require('express'),
     mustache =require('mustache'),
     portNumber = '843',
-    model = require('./gfmodel');
+    model = require('gfmodel');
 
 var app = express.createServer();
-
 
 app.configure(function(){
     //app.use(express.methodOverride());
@@ -28,7 +26,7 @@ app.configure(function(){
 });
 
 app.get('/', function(req, res){
-    console.log();
+    console.log('index.html');
     res.render('index.html');
 });
 
@@ -40,9 +38,6 @@ var io = require('socket.io').listen(app);
 app.listen(portNumber);
 
 console.log('Gunfight gameserver running on port: '+ portNumber +', http://localhost:' + portNumber);
-
-
-
 
 
 /*Socket.io */
