@@ -8,14 +8,22 @@ GF.index = (function(){
         GFsocket,
         schedule,
         players,
+        bullets,
         playerId;
     
     function checkForEvents(){
         var frameEvents = schedule.checkForFrameEvents();
         frameEvents.forEach(function(val){
-            if(val.eventName === 'clientKeyEvent' && players[val.player]){
-                players[val.player].respondToKeyEvent(val);
+            if(val.eventName !== 'clientKeyEvent' || !players[val.player]){
+                return;
             }
+
+            if(val.key === ' ' && val.action === 'down'){
+                shoot(players[val.player]);
+                return;
+            }
+
+            players[val.player].respondToKeyEvent(val);
         });   
     }
         
@@ -43,7 +51,19 @@ GF.index = (function(){
         canvas.height = 640;
         prairie = new GF.Scene();
         players = {};
+        bullets = {};
         model = { clients: [] };
+    }
+
+    function shoot(player){
+        var activeBullet = bullets[player.playerId];
+
+        if(activeBullet && !activeBullet.deleteMe){
+            return;
+        }
+
+        bullets[player.playerId] = new GF.Bullet(player);
+        prairie.addFigure(bullets[player.playerId]);
     }
 
     function getPlayerSlot(index){
@@ -92,6 +112,10 @@ GF.index = (function(){
         Object.keys(players).forEach(function(id){
             if(!activePlayers[id]){
                 players[id].deleteMe = true;
+                if(bullets[id]){
+                    bullets[id].deleteMe = true;
+                    delete bullets[id];
+                }
                 delete players[id];
             }
         });

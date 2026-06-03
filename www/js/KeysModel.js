@@ -8,6 +8,7 @@ GF.KeysModel = function(socket, playerId){
             if(evt.key !== strKeyToAdd){
                 return;
             }
+            evt.preventDefault();
             if(!internalKeyStatus[strKeyToAdd]){
                 socket.emit('clientKeyEvent', { 
                     key: strKeyToAdd,
@@ -22,6 +23,7 @@ GF.KeysModel = function(socket, playerId){
             if(evt.key !== strKeyToAdd){
                 return;
             }
+            evt.preventDefault();
             if(internalKeyStatus[strKeyToAdd]){
                 socket.emit('clientKeyEvent', { 
                     key: strKeyToAdd,
@@ -33,7 +35,7 @@ GF.KeysModel = function(socket, playerId){
         });
     }
     
-    ['h', 'j', 'k', 'l'].forEach(function(val){
+    ['h', 'j', 'k', 'l', ' '].forEach(function(val){
         addKey(val);
     });
         
