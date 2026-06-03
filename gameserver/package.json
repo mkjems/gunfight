@@ -1,8 +1,12 @@
-{ "name" : "gunfight-server"
-	, "version" : "0.0.1"
-	, "dependencies" : { 
-		"express" : "2.5.8",
-		"socket.io": "0.9.3",
-		"mustache": ">= 0.4.0" 
-	} 
+{
+  "name": "gunfight-server",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1"
+  }
 }

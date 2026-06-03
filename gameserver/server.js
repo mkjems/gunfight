@@ -1,82 +1,58 @@
+const express = require('express');
+const http = require('http');
+const path = require('path');
+const { Server } = require('socket.io');
+const model = require('./gameModules/gfmodel');
 
-var express = require('express'),
-    mustache =require('mustache'),
-    portNumber = '843',
-    model = require('gfmodel');
+const portNumber = process.env.PORT || 8080;
+const wwwRoot = path.join(__dirname, '..', 'www');
 
-var app = express.createServer();
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
 
-app.configure(function(){
-    //app.use(express.methodOverride());
-    app.use(express.logger('dev')); // { format: ':method :url' }
-    app.use(express.bodyParser());
-    app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
-    app.use(app.router);
-    app.use(express.static(__dirname + '/../www'));
-    // view engine
-    app.set('views', __dirname + '/../www');
-    app.set('view options', {layout: false});    
-    app.register('.html',{
-        compile: function(str, options) {
-            return function(env) {
-                return mustache.to_html(str, env.locals);
-            };
-        }
-    });
+app.use(express.static(wwwRoot));
+
+app.get('/api', function(req, res) {
+  res.send('Hello World, Api here');
 });
 
-app.get('/', function(req, res){
-    console.log('index.html');
-    res.render('index.html');
+app.get('/', function(req, res) {
+  res.sendFile(path.join(wwwRoot, 'index.html'));
 });
 
-app.get('/api', function(req, res){
-    res.send('Hello World, Api here');
+io.on('connection', function(socket) {
+  const client = model.getNewClient();
+
+  socket.on('disconnect', function(reason) {
+    model.disconnect(client);
+    io.emit('modelUpdate', model.getModel());
+    console.log('client disconnected', client.id, reason);
+  });
+
+  socket.on('clientKeyEvent', function(data) {
+    const keyEvent = {
+      eventTime: new Date().getTime(),
+      action: data.action,
+      eventName: 'clientKeyEvent',
+      key: data.key,
+      player: data.player
+    };
+
+    socket.broadcast.emit('keyEvent', keyEvent);
+    socket.emit('keyEvent', keyEvent);
+  });
+
+  socket.on('syncServerTime', function(timeData) {
+    timeData.serverTime = new Date().getTime();
+    timeData.playerId = client.id;
+    timeData.model = model.getModel();
+    socket.emit('finishSyncTime', timeData);
+    socket.broadcast.emit('newClient', model.getModel());
+  });
 });
 
-var io = require('socket.io').listen(app);
-app.listen(portNumber);
-
-console.log('Gunfight gameserver running on port: '+ portNumber +', http://localhost:' + portNumber);
-
-
-/*Socket.io */
-
-io.sockets.on('connection', function (socket) {    
-    var client = model.getNewClient();
-    
-    socket.on('disconnect', function (data) {
-        model.disconnect(client);
-        socket.broadcast.emit('modelUpdate', model.getModel());
-        console.log(data);
-    }); 
-     
-    // keys
-    socket.on('clientKeyEvent', function (data) {
-        console.log('clientKeyEvent',data);
-        var keyEvent = {
-            eventTime: new Date().getTime(),
-            action: data.action,
-            eventName: 'clientKeyEvent', 
-            key: data.key,
-            player: data.player
-        }
-        socket.broadcast.emit('keyEvent', keyEvent);
-        socket.emit('keyEvent', keyEvent);
-    });
-        
-    // time sync
-    socket.on('syncServerTime', function (timeData) {
-        var st = new Date().getTime();
-        timeData.serverTime = st;
-        timeData.playerId = client.id;
-        timeData.model = model.getModel();
-        socket.emit('finishSyncTime', timeData);
-        socket.broadcast.emit('newClient', client.id);
-    });
-
-              
+server.listen(portNumber, function() {
+  console.log('Gunfight gameserver running on port: ' + portNumber + ', http://localhost:' + portNumber);
+  console.log('Socket.io server running...');
 });
-
-
-console.log('Socket.io server running...');

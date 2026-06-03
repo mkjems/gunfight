@@ -1,12 +1,13 @@
 
-GF.KeysModel = function(socket, schedule, playerId){
-    
-    var keyStatus = {};
+GF.KeysModel = function(socket, playerId){
     var internalKeyStatus = {};
 
     function addKey(strKeyToAdd){
-        
-        $(document).bind('keydown', strKeyToAdd ,function (evt){ // Using hotkeys
+
+        document.addEventListener('keydown', function(evt){
+            if(evt.key !== strKeyToAdd){
+                return;
+            }
             if(!internalKeyStatus[strKeyToAdd]){
                 socket.emit('clientKeyEvent', { 
                     key: strKeyToAdd,
@@ -17,7 +18,10 @@ GF.KeysModel = function(socket, schedule, playerId){
             internalKeyStatus[strKeyToAdd] = true;
         });
         
-        $(document).bind('keyup', strKeyToAdd,function (evt){ // Using hotkeys
+        document.addEventListener('keyup', function(evt){
+            if(evt.key !== strKeyToAdd){
+                return;
+            }
             if(internalKeyStatus[strKeyToAdd]){
                 socket.emit('clientKeyEvent', { 
                     key: strKeyToAdd,
@@ -34,7 +38,7 @@ GF.KeysModel = function(socket, schedule, playerId){
     });
         
     function isKeyDown(key){
-        return (keyStatus[key]) ? true: false;
+        return internalKeyStatus[key] ? true: false;
     }
     
     var shared = {

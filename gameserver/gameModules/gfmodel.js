@@ -1,32 +1,29 @@
-
-
-var counter = 0;
-
-var clients = [];
+let counter = 0;
+const clients = [];
 
 exports.getNewClient = function(){
     counter++;
-    var newC = {
+
+    const newClient = {
         id: counter
     };
-    clients.push(newC);
-    console.log('numPlayers', clients.length);
-    return newC;
-}
+
+    clients.push(newClient);
+    return newClient;
+};
 
 exports.disconnect = function(client){
-    var i;
+    let i;
+
     for( i = clients.length -1; i >= 0; i--){  
         if(clients[i].id == client.id){        
             clients.splice(i,1);
         }
     }
-    console.log('numPlayers', clients.length);
-}
+};
 
 exports.getModel = function(){
     return {
-        'clients': clients
+        clients: clients.slice()
     };
-}
-  
+};

@@ -1,8 +1,8 @@
 GF.Scene = function(){
     this.figures = [];
-    this.movecount;
+    this.moveCount = 0;
     this.lastupdated = null;
-}
+};
 
 GF.Scene.prototype = {
     addFigure : function(point){
@@ -10,7 +10,7 @@ GF.Scene.prototype = {
     },
     moveAll: function(){
         var t = new Date().getTime();
-        if (!this.lastupdated){
+        if(!this.lastupdated){
             this.lastupdated = t;
             return;    
         }
@@ -18,16 +18,17 @@ GF.Scene.prototype = {
         for(i=this.figures.length-1; i>=0; i--){
             if(this.figures[i].deleteMe){
                 this.figures.splice(i, 1);
+                continue;
             }
             this.figures[i].move(this.lastupdated, t);
         }
-        this.movecount += 1;
-        this.lastupdated = t
+        this.moveCount += 1;
+        this.lastupdated = t;
     },
-    drawAll: function(){
+    drawAll: function(context){
         var i;
         for(i=0; i<this.figures.length; i++){
-            this.figures[i].draw();
+            this.figures[i].draw(context);
         }
     }
 };
