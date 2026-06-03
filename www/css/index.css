@@ -5,10 +5,10 @@
 }
 
 
-h3 {  }
-
 ul{
     list-style-type: none;
+    margin: 0;
+    padding: 0;
 }
 
 body{
@@ -16,9 +16,45 @@ body{
     color: rgb(255,244,0);
     font-family: Press Start, sans-serif;
     line-height:25px;
+    margin: 0;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
 }
 
 #canvas{
-    width:800px;
-    height:640px;
+    border: 2px solid rgb(255,244,0);
+    box-sizing: border-box;
+    display: block;
+    height: min(100vh, 80vw);
+    image-rendering: pixelated;
+    inset: 0;
+    margin: auto;
+    position: absolute;
+    width: min(100vw, 125vh);
+    z-index: 0;
+}
+
+#hud{
+    left: 16px;
+    position: absolute;
+    text-shadow: 2px 2px 0 rgb(0,0,0);
+    top: 16px;
+    z-index: 1;
+}
+
+#hud h3{
+    margin: 0 0 20px;
+}
+
+#roundMessage{
+    font-size: 40px;
+    left: 0;
+    line-height: 1.4;
+    position: absolute;
+    right: 0;
+    text-align: center;
+    text-shadow: 4px 4px 0 rgb(0,0,0);
+    top: 40%;
+    z-index: 2;
 }

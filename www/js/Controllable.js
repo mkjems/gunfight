@@ -56,6 +56,29 @@ GF.Controllable.prototype = {
     respondToKeyEvent: function(keyEvent){
         this.keys[keyEvent.key] = keyEvent.action === 'down';
     },
+
+    clearKeys: function(){
+        this.keys = {};
+    },
+
+    resetTo: function(slot){
+        this.x = slot.x;
+        this.y = slot.y;
+        this.facing = slot.facing;
+        this.idleFrame = slot.frame;
+        this.frame = this.idleFrame;
+        this.animationTime = 0;
+        this.clearKeys();
+    },
+
+    getHitBox: function(){
+        return {
+            x: this.x - 30,
+            y: this.y - 112,
+            width: 60,
+            height: 104
+        };
+    },
     
     draw: function(context){
         var sprite = GF.Controllable.sprite;

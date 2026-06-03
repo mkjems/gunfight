@@ -6,16 +6,19 @@
 		<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
 	</head>
 	<body>
-		<h3>GUN FIGHT COUNT <span id="numPlayers">0</span> ID <span id="playerId">0</span></h3>
 		<canvas id="canvas"></canvas>
-		<ul>
-			<li>h left</li>
-			<li>j down</li>
-			<li>k up</li>
-			<li>l right</li>
-			<li>space shoot</li>
-		</ul>
-		INSERT COIN
+		<div id="hud">
+			<h3>GUN FIGHT COUNT <span id="numPlayers">0</span></h3>
+			<ul>
+				<li>h left</li>
+				<li>j down</li>
+				<li>k up</li>
+				<li>l right</li>
+				<li>space shoot</li>
+			</ul>
+			<div>INSERT COIN</div>
+		</div>
+		<div id="roundMessage"></div>
 		<script src="/socket.io/socket.io.js"></script>
 		<script >
 			var GF = {};

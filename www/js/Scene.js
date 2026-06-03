@@ -28,6 +28,9 @@ GF.Scene.prototype = {
     drawAll: function(context){
         var i;
         for(i=0; i<this.figures.length; i++){
+            if(this.figures[i].deleteMe){
+                continue;
+            }
             this.figures[i].draw(context);
         }
     }

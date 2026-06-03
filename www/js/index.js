@@ -9,12 +9,21 @@ GF.index = (function(){
         schedule,
         players,
         bullets,
+        roundState,
+        resetTimer,
         playerId;
     
     function checkForEvents(){
         var frameEvents = schedule.checkForFrameEvents();
         frameEvents.forEach(function(val){
             if(val.eventName !== 'clientKeyEvent' || !players[val.player]){
+                return;
+            }
+
+            if(roundState !== 'playing'){
+                if(val.action === 'up'){
+                    players[val.player].respondToKeyEvent(val);
+                }
                 return;
             }
 
@@ -32,6 +41,8 @@ GF.index = (function(){
         checkForEvents();
         
         prairie.moveAll();
+
+        checkForHits();
         
         context.clearRect(0, 0, canvas.width, canvas.height);
         
@@ -47,12 +58,15 @@ GF.index = (function(){
     function init(){
         canvas = document.getElementById("canvas");
         context = canvas.getContext("2d");
+        context.imageSmoothingEnabled = false;
         canvas.width = 800;
         canvas.height = 640;
         prairie = new GF.Scene();
         players = {};
         bullets = {};
         model = { clients: [] };
+        roundState = 'playing';
+        resetTimer = null;
     }
 
     function shoot(player){
@@ -64,6 +78,90 @@ GF.index = (function(){
 
         bullets[player.playerId] = new GF.Bullet(player);
         prairie.addFigure(bullets[player.playerId]);
+    }
+
+    function boxesOverlap(a, b){
+        return a.x < b.x + b.width &&
+            a.x + a.width > b.x &&
+            a.y < b.y + b.height &&
+            a.y + a.height > b.y;
+    }
+
+    function checkForHits(){
+        if(roundState !== 'playing'){
+            return;
+        }
+
+        Object.keys(bullets).forEach(function(bulletId){
+            var bullet = bullets[bulletId];
+
+            if(!bullet || bullet.deleteMe){
+                return;
+            }
+
+            Object.keys(players).forEach(function(targetId){
+                var target = players[targetId];
+
+                if(roundState !== 'playing' || targetId === String(bullet.ownerId)){
+                    return;
+                }
+
+                if(boxesOverlap(bullet.getHitBox(), target.getHitBox())){
+                    bullet.deleteMe = true;
+                    endRound(bullet.ownerId);
+                }
+            });
+        });
+    }
+
+    function getPlayerLabel(id){
+        var player = players[id];
+
+        if(!player){
+            return id;
+        }
+
+        return player.slot + 1;
+    }
+
+    function setRoundMessage(message){
+        document.getElementById('roundMessage').textContent = message;
+    }
+
+    function endRound(winnerId){
+        roundState = 'roundOver';
+        setRoundMessage('PLAYER ' + getPlayerLabel(winnerId) + ' WINS');
+
+        Object.keys(players).forEach(function(id){
+            players[id].clearKeys();
+        });
+
+        Object.keys(bullets).forEach(function(id){
+            bullets[id].deleteMe = true;
+            delete bullets[id];
+        });
+
+        if(resetTimer){
+            clearTimeout(resetTimer);
+        }
+
+        resetTimer = setTimeout(function(){
+            resetRound();
+        }, 1800);
+    }
+
+    function resetRound(){
+        Object.keys(players).forEach(function(id){
+            var player = players[id];
+            var slot = getPlayerSlot(player.slot);
+
+            player.resetTo(slot);
+        });
+
+        bullets = {};
+        setRoundMessage('');
+        roundState = 'playing';
+        resetTimer = null;
     }
 
     function getPlayerSlot(index){
@@ -129,7 +227,6 @@ GF.index = (function(){
             var latency =  (ct2 - timeObj.clientTime)/2;
             deltaServerTime = ct2-latency - timeObj.serverTime;
             playerId = timeObj.playerId;
-            document.getElementById('playerId').textContent = playerId;
             syncPlayers(timeObj.model);
             callback();    
         });

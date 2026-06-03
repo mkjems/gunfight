@@ -22,6 +22,15 @@ GF.Bullet.prototype = {
         }
     },
 
+    getHitBox: function(){
+        return {
+            x: this.x - (this.width / 2),
+            y: this.y - (this.height / 2),
+            width: this.width,
+            height: this.height
+        };
+    },
+
     draw: function(context){
         context.fillStyle = 'rgb(255,244,0)';
         context.fillRect(
