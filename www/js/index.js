@@ -1,264 +1,169 @@
-
-GF.index = (function(){
+GF.Game = (function(){
     var canvas,
         context,
-        prairie,
-        model,
-        deltaServerTime,
-        GFsocket,
+        scene,
+        socket,
         schedule,
         players,
         bullets,
+        deltaServerTime,
         roundState,
         resetTimer,
         playerId;
-    
-    function checkForEvents(){
-        var frameEvents = schedule.checkForFrameEvents();
-        frameEvents.forEach(function(val){
-            if(val.eventName !== 'clientKeyEvent' || !players[val.player]){
-                return;
-            }
 
-            if(roundState !== 'playing'){
-                if(val.action === 'up'){
-                    players[val.player].respondToKeyEvent(val);
-                }
-                return;
-            }
-
-            if(val.key === ' ' && val.action === 'down'){
-                shoot(players[val.player]);
-                return;
-            }
-
-            players[val.player].respondToKeyEvent(val);
-        });   
-    }
-        
-    function animate(){
-        
-        checkForEvents();
-        
-        prairie.moveAll();
-
-        checkForHits();
-        
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        
-        prairie.drawAll(context);
-        
-        setTimeout(function(){
-            requestAnimFrame(function(){
-                animate();
-            });
-        },0);
-    }
-    
-    function init(){
-        canvas = document.getElementById("canvas");
-        context = canvas.getContext("2d");
+    function initCanvas(){
+        canvas = document.getElementById('canvas');
+        context = canvas.getContext('2d');
         context.imageSmoothingEnabled = false;
         canvas.width = GF.Config.canvas.width;
         canvas.height = GF.Config.canvas.height;
-        prairie = new GF.Scene();
-        players = {};
-        bullets = {};
-        model = { clients: [] };
+    }
+
+    function initGameState(){
+        scene = new GF.Scene();
+        bullets = new GF.Bullets(scene);
+        players = new GF.Players(scene, bullets);
         roundState = 'playing';
         resetTimer = null;
-    }
-
-    function shoot(player){
-        var activeBullet = bullets[player.playerId];
-
-        if(activeBullet && !activeBullet.deleteMe){
-            return;
-        }
-
-        bullets[player.playerId] = new GF.Bullet(player);
-        prairie.addFigure(bullets[player.playerId]);
-    }
-
-    function boxesOverlap(a, b){
-        return a.x < b.x + b.width &&
-            a.x + a.width > b.x &&
-            a.y < b.y + b.height &&
-            a.y + a.height > b.y;
-    }
-
-    function checkForHits(){
-        if(roundState !== 'playing'){
-            return;
-        }
-
-        Object.keys(bullets).forEach(function(bulletId){
-            var bullet = bullets[bulletId];
-
-            if(!bullet || bullet.deleteMe){
-                return;
-            }
-
-            Object.keys(players).forEach(function(targetId){
-                var target = players[targetId];
-
-                if(roundState !== 'playing' || targetId === String(bullet.ownerId)){
-                    return;
-                }
-
-                if(boxesOverlap(bullet.getHitBox(), target.getHitBox())){
-                    bullet.deleteMe = true;
-                    endRound(bullet.ownerId);
-                }
-            });
-        });
-    }
-
-    function getPlayerLabel(id){
-        var player = players[id];
-
-        if(!player){
-            return id;
-        }
-
-        return player.slot + 1;
     }
 
     function setRoundMessage(message){
         document.getElementById('roundMessage').textContent = message;
     }
 
+    function syncPlayers(model){
+        document.getElementById('numPlayers').textContent = model.clients.length;
+        players.sync(model);
+    }
+
+    function handleKeyEvent(keyEvent){
+        var player = players.all[keyEvent.player];
+
+        if(!player){
+            return;
+        }
+
+        if(roundState !== 'playing'){
+            if(keyEvent.action === 'up'){
+                player.respondToKeyEvent(keyEvent);
+            }
+            return;
+        }
+
+        if(keyEvent.key === ' ' && keyEvent.action === 'down'){
+            bullets.fire(player);
+            return;
+        }
+
+        player.respondToKeyEvent(keyEvent);
+    }
+
+    function processScheduledEvents(){
+        schedule.checkForFrameEvents().forEach(function(event){
+            if(event.eventName === 'clientKeyEvent'){
+                handleKeyEvent(event);
+            }
+        });
+    }
+
+    function checkForHits(){
+        var hit;
+
+        if(roundState !== 'playing'){
+            return;
+        }
+
+        hit = GF.Collision.findBulletHit(bullets.all(), players.all);
+
+        if(hit){
+            hit.bullet.deleteMe = true;
+            endRound(hit.winnerId);
+        }
+    }
+
     function endRound(winnerId){
         roundState = 'roundOver';
-        setRoundMessage('PLAYER ' + getPlayerLabel(winnerId) + ' WINS');
-
-        Object.keys(players).forEach(function(id){
-            players[id].clearKeys();
-        });
-
-        Object.keys(bullets).forEach(function(id){
-            bullets[id].deleteMe = true;
-            delete bullets[id];
-        });
+        setRoundMessage('PLAYER ' + players.label(winnerId) + ' WINS');
+        players.clearKeys();
+        bullets.clear();
 
         if(resetTimer){
             clearTimeout(resetTimer);
         }
 
-        resetTimer = setTimeout(function(){
-            resetRound();
-        }, GF.Config.round.resetDelay);
+        resetTimer = setTimeout(resetRound, GF.Config.round.resetDelay);
     }
 
     function resetRound(){
-        Object.keys(players).forEach(function(id){
-            var player = players[id];
-            var slot = getPlayerSlot(player.slot);
-
-            player.resetTo(slot);
-        });
-
-        bullets = {};
+        players.resetAll();
+        bullets.reset();
         setRoundMessage('');
         roundState = 'playing';
         resetTimer = null;
     }
 
-    function getPlayerSlot(index){
-        var slots = GF.Config.player.slots;
+    function animate(){
+        processScheduledEvents();
+        scene.moveAll();
+        checkForHits();
 
-        return slots[index % slots.length];
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        scene.drawAll(context);
+
+        setTimeout(function(){
+            requestAnimFrame(animate);
+        }, 0);
     }
 
-    function ensurePlayer(client, index){
-        var slot = getPlayerSlot(index);
-        var id = client.id;
+    function setupSocket(callback){
+        socket = io();
 
-        if(players[id]){
-            players[id].playerId = id;
-            players[id].slot = index;
-            players[id].facing = slot.facing;
-            players[id].idleFrame = slot.frame;
-            return;
-        }
+        socket.on('finishSyncTime', function(timeObj){
+            var clientTimeAfterSync = new Date().getTime();
+            var latency = (clientTimeAfterSync - timeObj.clientTime) / 2;
 
-        players[id] = new GF.Controllable(slot.x, slot.y, {
-            playerId: id,
-            facing: slot.facing,
-            frame: slot.frame
-        });
-        players[id].slot = index;
-        prairie.addFigure(players[id]);
-    }
-
-    function syncPlayers(newModel){
-        var activePlayers = {};
-
-        model = newModel;
-        document.getElementById('numPlayers').textContent = model.clients.length;
-
-        model.clients.forEach(function(client, index){
-            activePlayers[client.id] = true;
-            ensurePlayer(client, index);
-        });
-
-        Object.keys(players).forEach(function(id){
-            if(!activePlayers[id]){
-                players[id].deleteMe = true;
-                if(bullets[id]){
-                    bullets[id].deleteMe = true;
-                    delete bullets[id];
-                }
-                delete players[id];
-            }
-        });
-    }
-    
-    function setupSocket(callback){ // http://socket.io/#how-to-use
-        GFsocket = io();
-            
-        GFsocket.on('finishSyncTime', function (timeObj) {
-            var ct2 = new Date().getTime();
-            var latency =  (ct2 - timeObj.clientTime)/2;
-            deltaServerTime = ct2-latency - timeObj.serverTime;
+            deltaServerTime = clientTimeAfterSync - latency - timeObj.serverTime;
             playerId = timeObj.playerId;
             syncPlayers(timeObj.model);
-            callback();    
+            callback();
         });
-        
-        var ct = new Date().getTime();
-        GFsocket.emit('syncServerTime', { clientTime: ct }); // start sync of watches
-        
+
+        socket.emit('syncServerTime', {
+            clientTime: new Date().getTime()
+        });
     }
-    
-    document.addEventListener('DOMContentLoaded', function(){
-        init();
+
+    function bindSocketEvents(){
+        socket.on('keyEvent', function(keyEvent){
+            schedule.addEvent(keyEvent);
+        });
+
+        socket.on('planEvent', function(event){
+            var planObj = schedule.getEventObj();
+
+            planObj.eventTime = event.eventTime + deltaServerTime;
+            schedule.addEvent(planObj);
+        });
+
+        socket.on('newClient', syncPlayers);
+        socket.on('modelUpdate', syncPlayers);
+    }
+
+    function start(){
+        initCanvas();
+        initGameState();
+
         setupSocket(function(){
-            schedule = new GF.Schedule(GFsocket);
-            new GF.KeysModel(GFsocket, playerId);
-            
-            GFsocket.on('keyEvent', function (keyEvent) { // plan key event
-                schedule.addEvent(keyEvent);
-            });
-            
-            GFsocket.on('planEvent', function (pObj) { // plan event
-                var planObj = schedule.getEventObj();
-                planObj.eventTime = pObj.eventTime + deltaServerTime;
-                schedule.addEvent(planObj);
-            });
-
-            GFsocket.on('newClient', function (newModel) {
-                syncPlayers(newModel);
-            });
-
-            GFsocket.on('modelUpdate', function (newModel) {
-                syncPlayers(newModel);
-            });
-                        
+            schedule = new GF.Schedule(socket);
+            new GF.KeysModel(socket, playerId);
+            bindSocketEvents();
             animate();
         });
-        
-        
-        
-    });
-}())
+    }
+
+    document.addEventListener('DOMContentLoaded', start);
+
+    return {
+        start: start
+    };
+}());
