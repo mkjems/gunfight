@@ -23,15 +23,16 @@ body{
 }
 
 #canvas{
+    aspect-ratio: 95 / 64;
     border: 2px solid rgb(255,244,0);
     box-sizing: border-box;
     display: block;
-    height: min(100vh, 80vw);
+    height: auto;
     image-rendering: pixelated;
     inset: 0;
     margin: auto;
     position: absolute;
-    width: min(100vw, 125vh);
+    width: min(100vw, 148.4375vh);
     z-index: 0;
 }
 

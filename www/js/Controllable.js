@@ -39,8 +39,8 @@ GF.Controllable.prototype = {
            isMoving = true;
         }
 
-        this.x = Math.max(20, Math.min(740, this.x));
-        this.y = Math.max(90, Math.min(560, this.y));
+        this.x = Math.max(55, Math.min(895, this.x));
+        this.y = Math.max(130, Math.min(630, this.y));
 
         if(isMoving){
             this.animationTime += seconds;

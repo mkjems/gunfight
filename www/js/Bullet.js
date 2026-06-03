@@ -17,7 +17,7 @@ GF.Bullet.prototype = {
 
         this.x += this.facing * this.speed * seconds;
 
-        if(this.x < -this.width || this.x > 800 + this.width){
+        if(this.x < -this.width || this.x > 950 + this.width){
             this.deleteMe = true;
         }
     },
