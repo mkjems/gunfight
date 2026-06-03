@@ -59,8 +59,8 @@ GF.index = (function(){
         canvas = document.getElementById("canvas");
         context = canvas.getContext("2d");
         context.imageSmoothingEnabled = false;
-        canvas.width = 950;
-        canvas.height = 640;
+        canvas.width = GF.Config.canvas.width;
+        canvas.height = GF.Config.canvas.height;
         prairie = new GF.Scene();
         players = {};
         bullets = {};
@@ -147,7 +147,7 @@ GF.index = (function(){
 
         resetTimer = setTimeout(function(){
             resetRound();
-        }, 1800);
+        }, GF.Config.round.resetDelay);
     }
 
     function resetRound(){
@@ -165,12 +165,7 @@ GF.index = (function(){
     }
 
     function getPlayerSlot(index){
-        var slots = [
-            { x: 150, y: 430, facing: 1, frame: 0 },
-            { x: 650, y: 430, facing: -1, frame: 2 },
-            { x: 260, y: 260, facing: 1, frame: 1 },
-            { x: 540, y: 260, facing: -1, frame: 3 }
-        ];
+        var slots = GF.Config.player.slots;
 
         return slots[index % slots.length];
     }

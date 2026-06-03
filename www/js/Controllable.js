@@ -1,6 +1,7 @@
 
 GF.Controllable = function(xpos, ypos, options){
     options = options || {};
+    var config = GF.Config.player;
 
     this.x = xpos || 100;
     this.y = ypos || 100;
@@ -9,15 +10,20 @@ GF.Controllable = function(xpos, ypos, options){
     this.idleFrame = options.frame || 0;
     this.frame = this.idleFrame;
     this.animationTime = 0;
-    this.animationFrameTime = 0.14;
-    this.animationFrames = [0, 1, 2, 3];
-    this.speed = options.speed || 120; // pixels per second.
+    this.animationFrameTime = config.animationFrameTime;
+    this.animationFrames = config.animationFrames;
+    this.speed = options.speed || config.speed;
     this.keys = {};
-    this.pen = new GF.Pen(this.x, this.y, new GF.Color(255,255,0));
+    this.pen = new GF.Pen(this.x, this.y, new GF.Color(
+        GF.Config.colors.yellowRgb[0],
+        GF.Config.colors.yellowRgb[1],
+        GF.Config.colors.yellowRgb[2]
+    ));
 };
 
 GF.Controllable.prototype = {
     move: function(lastupdated, t){
+        var bounds = GF.Config.player.bounds;
         var seconds = (t - lastupdated) / 1000;
         var dist = this.speed * seconds;
         var isMoving = false;
@@ -39,8 +45,8 @@ GF.Controllable.prototype = {
            isMoving = true;
         }
 
-        this.x = Math.max(55, Math.min(895, this.x));
-        this.y = Math.max(130, Math.min(630, this.y));
+        this.x = Math.max(bounds.minX, Math.min(bounds.maxX, this.x));
+        this.y = Math.max(bounds.minY, Math.min(bounds.maxY, this.y));
 
         if(isMoving){
             this.animationTime += seconds;
@@ -72,11 +78,13 @@ GF.Controllable.prototype = {
     },
 
     getHitBox: function(){
+        var hitBox = GF.Config.player.hitBox;
+
         return {
-            x: this.x - 30,
-            y: this.y - 112,
-            width: 60,
-            height: 104
+            x: this.x + hitBox.offsetX,
+            y: this.y + hitBox.offsetY,
+            width: hitBox.width,
+            height: hitBox.height
         };
     },
     
@@ -84,11 +92,12 @@ GF.Controllable.prototype = {
         var sprite = GF.Controllable.sprite;
 
         if(sprite && sprite.complete){
-            var sourceWidth = 55;
-            var sourceHeight = 65;
-            var targetWidth = sourceWidth * 2;
-            var targetHeight = sourceHeight * 2;
-            var sourceX = this.frame * 56;
+            var spriteConfig = GF.Config.player.sprite;
+            var sourceWidth = spriteConfig.sourceWidth;
+            var sourceHeight = spriteConfig.sourceHeight;
+            var targetWidth = sourceWidth * spriteConfig.scale;
+            var targetHeight = sourceHeight * spriteConfig.scale;
+            var sourceX = this.frame * spriteConfig.frameStride;
 
             context.save();
             context.translate(this.x, this.y);

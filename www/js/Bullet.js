@@ -1,13 +1,14 @@
 GF.Bullet = function(owner, options){
     options = options || {};
+    var config = GF.Config.bullet;
 
     this.ownerId = owner.playerId;
     this.facing = owner.facing;
-    this.x = owner.x + (this.facing * 54);
-    this.y = owner.y - 82;
-    this.width = options.width || 18;
-    this.height = options.height || 4;
-    this.speed = options.speed || 420;
+    this.x = owner.x + (this.facing * config.muzzleOffsetX);
+    this.y = owner.y + config.muzzleOffsetY;
+    this.width = options.width || config.width;
+    this.height = options.height || config.height;
+    this.speed = options.speed || config.speed;
     this.deleteMe = false;
 };
 
@@ -17,7 +18,7 @@ GF.Bullet.prototype = {
 
         this.x += this.facing * this.speed * seconds;
 
-        if(this.x < -this.width || this.x > 950 + this.width){
+        if(this.x < -this.width || this.x > GF.Config.canvas.width + this.width){
             this.deleteMe = true;
         }
     },
@@ -32,7 +33,7 @@ GF.Bullet.prototype = {
     },
 
     draw: function(context){
-        context.fillStyle = 'rgb(255,244,0)';
+        context.fillStyle = GF.Config.colors.yellow;
         context.fillRect(
             this.x - (this.width / 2),
             this.y - (this.height / 2),
