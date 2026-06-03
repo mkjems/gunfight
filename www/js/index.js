@@ -14,9 +14,28 @@ GF.Game = (function(){
     function initCanvas(){
         canvas = document.getElementById('canvas');
         context = canvas.getContext('2d');
-        context.imageSmoothingEnabled = false;
         canvas.width = GF.Config.canvas.width;
         canvas.height = GF.Config.canvas.height;
+        disableImageSmoothing();
+        scaleCanvas();
+        window.addEventListener('resize', scaleCanvas);
+    }
+
+    function disableImageSmoothing(){
+        context.imageSmoothingEnabled = false;
+        context.webkitImageSmoothingEnabled = false;
+        context.mozImageSmoothingEnabled = false;
+        context.msImageSmoothingEnabled = false;
+    }
+
+    function scaleCanvas(){
+        var scale = Math.max(1, Math.floor(Math.min(
+            window.innerWidth / GF.Config.canvas.width,
+            window.innerHeight / GF.Config.canvas.height
+        )));
+
+        canvas.style.width = (GF.Config.canvas.width * scale) + 'px';
+        canvas.style.height = (GF.Config.canvas.height * scale) + 'px';
     }
 
     function initGameState(){
