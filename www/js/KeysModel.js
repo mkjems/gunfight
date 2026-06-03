@@ -35,7 +35,7 @@ GF.KeysModel = function(socket, playerId){
         });
     }
     
-    ['h', 'j', 'k', 'l', ' '].forEach(function(val){
+    ['h', 'j', 'k', 'l', 'a', 'z', ' '].forEach(function(val){
         addKey(val);
     });
         

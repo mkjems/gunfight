@@ -1,14 +1,23 @@
 GF.Bullet = function(owner, options){
     options = options || {};
     var config = GF.Config.bullet;
+    var sprite = GF.Config.player.sprite;
+    var muzzle = config.muzzle[owner.aim];
+    var targetWidth = sprite.sourceWidth * sprite.scale;
+    var targetHeight = sprite.sourceHeight * sprite.scale;
+    var muzzleOffsetX = (-targetWidth / 2) + (muzzle.x * sprite.scale);
+    var muzzleOffsetY = -targetHeight + (muzzle.y * sprite.scale);
+    var diagonalSpeed = config.speed / Math.sqrt(2);
 
     this.ownerId = owner.playerId;
     this.facing = owner.facing;
-    this.x = owner.x + (this.facing * config.muzzleOffsetX);
-    this.y = owner.y + config.muzzleOffsetY;
+    this.aim = owner.aim;
+    this.x = owner.x + (this.facing * muzzleOffsetX);
+    this.y = owner.y + muzzleOffsetY;
     this.width = options.width || config.width;
     this.height = options.height || config.height;
-    this.speed = options.speed || config.speed;
+    this.speedX = options.speedX || (this.aim === 'raised' ? diagonalSpeed : config.speed);
+    this.speedY = options.speedY || (this.aim === 'raised' ? -diagonalSpeed : 0);
     this.deleteMe = false;
 };
 
@@ -16,9 +25,13 @@ GF.Bullet.prototype = {
     move: function(lastupdated, t){
         var seconds = (t - lastupdated) / 1000;
 
-        this.x += this.facing * this.speed * seconds;
+        this.x += this.facing * this.speedX * seconds;
+        this.y += this.speedY * seconds;
 
-        if(this.x < -this.width || this.x > GF.Config.canvas.width + this.width){
+        if(this.x < -this.width ||
+            this.x > GF.Config.canvas.width + this.width ||
+            this.y < -this.height ||
+            this.y > GF.Config.canvas.height + this.height){
             this.deleteMe = true;
         }
     },

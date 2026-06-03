@@ -9,9 +9,9 @@ GF.Config = {
     player: {
         speed: 120,
         bounds: {
-            minX: 55,
-            maxX: 895,
-            minY: 130,
+            minX: 64,
+            maxX: 886,
+            minY: 128,
             maxY: 630
         },
         hitBox: {
@@ -22,10 +22,15 @@ GF.Config = {
         },
         animationFrameTime: 0.14,
         animationFrames: [0, 1, 2, 3],
+        aimRows: {
+            level: 0,
+            raised: 1
+        },
         sprite: {
-            sourceWidth: 55,
-            sourceHeight: 65,
-            frameStride: 56,
+            src: 'images/new2_gunfight_spritesheet.png',
+            sourceWidth: 64,
+            sourceHeight: 64,
+            frameStride: 64,
             scale: 2
         },
         slots: [
@@ -36,8 +41,10 @@ GF.Config = {
         ]
     },
     bullet: {
-        muzzleOffsetX: 54,
-        muzzleOffsetY: -82,
+        muzzle: {
+            level: { x: 50, y: 28 },
+            raised: { x: 48, y: 18 }
+        },
         width: 18,
         height: 4,
         speed: 420

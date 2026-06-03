@@ -9,6 +9,7 @@ GF.Controllable = function(xpos, ypos, options){
     this.facing = options.facing || 1;
     this.idleFrame = options.frame || 0;
     this.frame = this.idleFrame;
+    this.aim = 'level';
     this.animationTime = 0;
     this.animationFrameTime = config.animationFrameTime;
     this.animationFrames = config.animationFrames;
@@ -53,13 +54,20 @@ GF.Controllable.prototype = {
             this.frame = this.animationFrames[
                 Math.floor(this.animationTime / this.animationFrameTime) % this.animationFrames.length
             ];
-        } else {
-            this.animationTime = 0;
-            this.frame = this.idleFrame;
         }
     },
 
     respondToKeyEvent: function(keyEvent){
+        if(keyEvent.action === 'down' && keyEvent.key === 'a'){
+            this.aim = 'raised';
+            return;
+        }
+
+        if(keyEvent.action === 'down' && keyEvent.key === 'z'){
+            this.aim = 'level';
+            return;
+        }
+
         this.keys[keyEvent.key] = keyEvent.action === 'down';
     },
 
@@ -73,6 +81,7 @@ GF.Controllable.prototype = {
         this.facing = slot.facing;
         this.idleFrame = slot.frame;
         this.frame = this.idleFrame;
+        this.aim = 'level';
         this.animationTime = 0;
         this.clearKeys();
     },
@@ -98,6 +107,7 @@ GF.Controllable.prototype = {
             var targetWidth = sourceWidth * spriteConfig.scale;
             var targetHeight = sourceHeight * spriteConfig.scale;
             var sourceX = this.frame * spriteConfig.frameStride;
+            var sourceY = GF.Config.player.aimRows[this.aim] * sourceHeight;
 
             context.save();
             context.translate(this.x, this.y);
@@ -109,7 +119,7 @@ GF.Controllable.prototype = {
             context.drawImage(
                 sprite,
                 sourceX,
-                0,
+                sourceY,
                 sourceWidth,
                 sourceHeight,
                 -targetWidth / 2,
@@ -128,4 +138,4 @@ GF.Controllable.prototype = {
 };
 
 GF.Controllable.sprite = new Image();
-GF.Controllable.sprite.src = 'images/gunfight_sprite.png';
+GF.Controllable.sprite.src = GF.Config.player.sprite.src;
