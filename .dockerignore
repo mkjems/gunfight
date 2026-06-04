@@ -1,0 +1,9 @@
+.git
+.agents
+.codex
+node_modules
+gameserver/node_modules
+npm-debug.log
+Dockerfile
+compose.yaml
+.DS_Store

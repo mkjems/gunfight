@@ -3,20 +3,73 @@
 
 A web remake of the classic arcade game, that used to be the hottest thing in my local grill.
 
-### How it will work
- 
-When the client loads the page, the client does:
+## Running with Docker or OrbStack
 
-* Syncs watch
-* Listen for planning events
-  * Add them to schedule
-* Starts animation loop, Request animation frame. (Different framerate for each player, challenge)
+This app is packaged as one Node.js container. The server in `gameserver/server.js`
+serves the static files from `www` and runs the Socket.IO game server.
 
-### The Loop
-    
-* Update world
-   * Check Schedule and change Model accordingly.(What should happen in this frame)
-   * NB. The world is also the state of the keys of the keyboard.    
-   * Move everything one tick. By 1000/framerate ms. The movements must be a function of time.
-* Send Change events of user input to server. Never change the model directly. So it will happen aprox 100ms later but in sync across all participating browsers. 
-* Paint world
+Build and run locally:
+
+```sh
+docker compose up --build
+```
+
+Then open:
+
+```text
+http://localhost:8080
+```
+
+Run in the background:
+
+```sh
+docker compose up -d --build
+```
+
+Stop it:
+
+```sh
+docker compose down
+```
+
+Build a named image manually:
+
+```sh
+docker build -t gunfight:local .
+```
+
+Run that image manually:
+
+```sh
+docker run --rm -p 8080:8080 -e PORT=8080 gunfight:local
+```
+
+For a real host, build and push the image to a registry, then run the same image
+on the server:
+
+```sh
+docker build -t ghcr.io/YOUR_USER/gunfight:latest .
+docker push ghcr.io/YOUR_USER/gunfight:latest
+```
+
+On the host:
+
+```sh
+docker run -d \
+  --name gunfight \
+  --restart unless-stopped \
+  -p 80:8080 \
+  -e PORT=8080 \
+  ghcr.io/YOUR_USER/gunfight:latest
+```
+
+If the host already has a reverse proxy such as Caddy, nginx, or Traefik, keep
+the container on port `8080` internally and let the proxy handle HTTPS and the
+public domain.
+
+## How It Works
+
+The server serves the web client and relays Socket.IO input events.
+
+Each browser syncs time, schedules incoming key events, runs the local game loop,
+moves everything by elapsed time, checks hits, and draws the frame.
