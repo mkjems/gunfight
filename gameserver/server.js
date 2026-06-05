@@ -48,6 +48,11 @@ io.on('connection', function(socket) {
     io.emit('modelUpdate', model.getModel());
   });
 
+  socket.on('resetReady', function() {
+    model.resetReady();
+    io.emit('modelUpdate', model.getModel());
+  });
+
   socket.on('syncServerTime', function(timeData) {
     timeData.serverTime = new Date().getTime();
     timeData.playerId = client.id;

@@ -38,3 +38,9 @@ exports.readyClient = function(client){
         existingClient.ready = true;
     }
 };
+
+exports.resetReady = function(){
+    clients.forEach(function(client){
+        client.ready = false;
+    });
+};

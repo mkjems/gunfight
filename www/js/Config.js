@@ -5,7 +5,8 @@ GF.Config = {
     },
     round: {
         resetDelay: 1800,
-        seconds: 60,
+        gameOverDelay: 3000,
+        seconds: 70,
         ammo: 6
     },
     player: {

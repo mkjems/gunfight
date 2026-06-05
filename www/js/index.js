@@ -101,9 +101,14 @@ GF.Game = (function(){
             secondsLeft = Math.max(0, Math.ceil((roundEndsAt - new Date().getTime()) / 1000));
         }
 
+        if(roundState === 'gameOver'){
+            secondsLeft = 'GAME OVER';
+        }
+
         document.getElementById('scoreLeft').textContent = scores[0] || 0;
         document.getElementById('scoreRight').textContent = scores[1] || 0;
         document.getElementById('roundTimer').textContent = secondsLeft;
+        document.getElementById('roundTimer').className = roundState === 'gameOver' ? 'gameOver' : '';
 
         firstClient = latestModel && latestModel.clients[0];
         secondClient = latestModel && latestModel.clients[1];
@@ -154,11 +159,15 @@ GF.Game = (function(){
     function setOverlayVisible(isVisible){
         document.getElementById('gameOverlay').className = isVisible ? '' : 'hidden';
         document.getElementById('bottomControls').className = isVisible ? '' : 'visible';
-        document.getElementById('gameHud').className = isVisible ? '' : 'visible';
+        document.getElementById('gameHud').className = latestModel && latestModel.clients.length >= 2 ? 'visible' : '';
     }
 
     function startCountdown(){
         var count = 3;
+
+        if(roundState === 'waiting'){
+            scores = [0, 0];
+        }
 
         roundState = 'countdown';
         roundEndsAt = null;
@@ -227,7 +236,7 @@ GF.Game = (function(){
 
         if(roundState !== 'playing'){
             if(roundState === 'hitPause' && roundEndsAt && new Date().getTime() >= roundEndsAt){
-                endRound();
+                endGame();
             }
             return;
         }
@@ -240,7 +249,7 @@ GF.Game = (function(){
         }
 
         if(roundEndsAt && new Date().getTime() >= roundEndsAt){
-            endRound();
+            endGame();
         }
     }
 
@@ -273,7 +282,7 @@ GF.Game = (function(){
         hitTimer = null;
 
         if(roundEndsAt && new Date().getTime() >= roundEndsAt){
-            endRound();
+            endGame();
             return;
         }
 
@@ -319,6 +328,32 @@ GF.Game = (function(){
         resetTimer = setTimeout(resetRound, GF.Config.round.resetDelay);
     }
 
+    function endGame(){
+        roundState = 'gameOver';
+        roundEndsAt = null;
+        hitMessage = null;
+        setRoundMessage('');
+        renderHud();
+        players.clearKeys();
+        bullets.clear();
+
+        if(resetTimer){
+            clearTimeout(resetTimer);
+        }
+
+        if(countdownTimer){
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+        }
+
+        if(hitTimer){
+            clearTimeout(hitTimer);
+            hitTimer = null;
+        }
+
+        resetTimer = setTimeout(resetToStartScreen, GF.Config.round.gameOverDelay);
+    }
+
     function resetRound(){
         players.resetAll();
         bullets.reset();
@@ -334,6 +369,20 @@ GF.Game = (function(){
 
         roundState = 'waiting';
         setOverlayVisible(true);
+    }
+
+    function resetToStartScreen(){
+        players.resetAll();
+        bullets.reset();
+        resetAmmo();
+        setRoundMessage('');
+        roundEndsAt = null;
+        hitMessage = null;
+        resetTimer = null;
+        roundState = 'waiting';
+        setOverlayVisible(true);
+        renderHud();
+        socket.emit('resetReady');
     }
 
     function animate(){

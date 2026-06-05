@@ -126,6 +126,10 @@ body{
     text-align: center;
 }
 
+#roundTimer.gameOver{
+    font-size: 40px;
+}
+
 #ammoLeft,
 #ammoRight{
     bottom: 54px;
