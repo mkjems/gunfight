@@ -9,7 +9,12 @@ GF.Game = (function(){
         deltaServerTime,
         roundState,
         latestModel,
+        scores,
+        ammo,
+        roundEndsAt,
+        hitMessage,
         countdownTimer,
+        hitTimer,
         resetTimer,
         playerId;
 
@@ -19,8 +24,6 @@ GF.Game = (function(){
         canvas.width = GF.Config.canvas.width;
         canvas.height = GF.Config.canvas.height;
         disableImageSmoothing();
-        scaleCanvas();
-        window.addEventListener('resize', scaleCanvas);
     }
 
     function disableImageSmoothing(){
@@ -30,22 +33,17 @@ GF.Game = (function(){
         context.msImageSmoothingEnabled = false;
     }
 
-    function scaleCanvas(){
-        var scale = Math.max(1, Math.floor(Math.min(
-            window.innerWidth / GF.Config.canvas.width,
-            window.innerHeight / GF.Config.canvas.height
-        )));
-
-        canvas.style.width = (GF.Config.canvas.width * scale) + 'px';
-        canvas.style.height = (GF.Config.canvas.height * scale) + 'px';
-    }
-
     function initGameState(){
         scene = new GF.Scene();
         bullets = new GF.Bullets(scene);
         players = new GF.Players(scene, bullets);
         roundState = 'waiting';
+        scores = [0, 0];
+        ammo = {};
+        roundEndsAt = null;
+        hitMessage = null;
         countdownTimer = null;
+        hitTimer = null;
         resetTimer = null;
     }
 
@@ -53,9 +51,80 @@ GF.Game = (function(){
         document.getElementById('roundMessage').textContent = message;
     }
 
+    function getPlayerSlot(id){
+        if(!latestModel){
+            return -1;
+        }
+
+        return latestModel.clients.findIndex(function(client){
+            return client.id === id;
+        });
+    }
+
+    function resetAmmo(){
+        ammo = {};
+
+        if(!latestModel){
+            return;
+        }
+
+        latestModel.clients.forEach(function(client){
+            ammo[client.id] = GF.Config.round.ammo;
+        });
+    }
+
+    function renderAmmo(elementId, count){
+        var element = document.getElementById(elementId);
+        var i;
+
+        if(element.getAttribute('data-count') === String(count)){
+            return;
+        }
+
+        element.setAttribute('data-count', count);
+        element.innerHTML = '';
+
+        for(i = 0; i < count; i++){
+            var round = document.createElement('span');
+
+            round.className = 'ammoRound';
+            element.appendChild(round);
+        }
+    }
+
+    function renderHud(){
+        var secondsLeft = GF.Config.round.seconds;
+        var firstClient;
+        var secondClient;
+
+        if(roundEndsAt){
+            secondsLeft = Math.max(0, Math.ceil((roundEndsAt - new Date().getTime()) / 1000));
+        }
+
+        document.getElementById('scoreLeft').textContent = scores[0] || 0;
+        document.getElementById('scoreRight').textContent = scores[1] || 0;
+        document.getElementById('roundTimer').textContent = secondsLeft;
+
+        firstClient = latestModel && latestModel.clients[0];
+        secondClient = latestModel && latestModel.clients[1];
+
+        renderAmmo('ammoLeft', firstClient ? ammo[firstClient.id] || 0 : 0);
+        renderAmmo('ammoRight', secondClient ? ammo[secondClient.id] || 0 : 0);
+    }
+
+    function setPlayerLabel(model){
+        var playerIndex = model.clients.findIndex(function(client){
+            return client.id === playerId;
+        });
+
+        document.getElementById('playerLabel').textContent = playerIndex >= 0 ? 'Player ' + (playerIndex + 1) : '';
+    }
+
     function syncPlayers(model){
         latestModel = model;
         players.sync(model);
+        renderHud();
+        setPlayerLabel(model);
         renderReadyList(model);
 
         if(roundState === 'waiting' && isReadyToStart(model)){
@@ -85,14 +154,18 @@ GF.Game = (function(){
     function setOverlayVisible(isVisible){
         document.getElementById('gameOverlay').className = isVisible ? '' : 'hidden';
         document.getElementById('bottomControls').className = isVisible ? '' : 'visible';
+        document.getElementById('gameHud').className = isVisible ? '' : 'visible';
     }
 
     function startCountdown(){
         var count = 3;
 
         roundState = 'countdown';
+        roundEndsAt = null;
+        resetAmmo();
         setOverlayVisible(false);
         setRoundMessage(count);
+        renderHud();
 
         if(countdownTimer){
             clearInterval(countdownTimer);
@@ -109,6 +182,9 @@ GF.Game = (function(){
             clearInterval(countdownTimer);
             countdownTimer = null;
             setRoundMessage('');
+            roundEndsAt = new Date().getTime() + (GF.Config.round.seconds * 1000);
+            resetAmmo();
+            renderHud();
             roundState = 'playing';
         }, 1000);
     }
@@ -120,7 +196,7 @@ GF.Game = (function(){
             return;
         }
 
-        if(roundState === 'roundOver'){
+        if(roundState === 'roundOver' || roundState === 'hitPause'){
             if(keyEvent.action === 'up'){
                 player.respondToKeyEvent(keyEvent);
             }
@@ -128,8 +204,9 @@ GF.Game = (function(){
         }
 
         if(keyEvent.key === ' ' && keyEvent.action === 'down'){
-            if(roundState === 'playing'){
-                bullets.fire(player);
+            if(roundState === 'playing' && ammo[player.playerId] > 0 && bullets.fire(player)){
+                ammo[player.playerId]--;
+                renderHud();
             }
             return;
         }
@@ -149,6 +226,9 @@ GF.Game = (function(){
         var hit;
 
         if(roundState !== 'playing'){
+            if(roundState === 'hitPause' && roundEndsAt && new Date().getTime() >= roundEndsAt){
+                endRound();
+            }
             return;
         }
 
@@ -156,13 +236,69 @@ GF.Game = (function(){
 
         if(hit){
             hit.bullet.deleteMe = true;
-            endRound(hit.winnerId);
+            handlePlayerHit(hit);
+        }
+
+        if(roundEndsAt && new Date().getTime() >= roundEndsAt){
+            endRound();
         }
     }
 
+    function handlePlayerHit(hit){
+        var winnerSlot = getPlayerSlot(hit.winnerId);
+
+        roundState = 'hitPause';
+        hitMessage = {
+            targetId: hit.targetId,
+            text: 'Got me!'
+        };
+
+        if(winnerSlot >= 0 && winnerSlot < scores.length){
+            scores[winnerSlot]++;
+        }
+
+        renderHud();
+        players.clearKeys();
+        bullets.clear();
+
+        if(hitTimer){
+            clearTimeout(hitTimer);
+        }
+
+        hitTimer = setTimeout(resetAfterHit, GF.Config.round.resetDelay);
+    }
+
+    function resetAfterHit(){
+        hitMessage = null;
+        hitTimer = null;
+
+        if(roundEndsAt && new Date().getTime() >= roundEndsAt){
+            endRound();
+            return;
+        }
+
+        players.resetAll();
+        bullets.reset();
+        resetAmmo();
+        renderHud();
+        roundState = 'playing';
+    }
+
     function endRound(winnerId){
+        var winnerSlot = getPlayerSlot(winnerId);
+
         roundState = 'roundOver';
-        setRoundMessage('PLAYER ' + players.label(winnerId) + ' WINS');
+        roundEndsAt = null;
+        hitMessage = null;
+
+        if(winnerSlot >= 0 && winnerSlot < scores.length){
+            scores[winnerSlot]++;
+            setRoundMessage('PLAYER ' + players.label(winnerId) + ' WINS');
+        } else {
+            setRoundMessage('TIME');
+        }
+
+        renderHud();
         players.clearKeys();
         bullets.clear();
 
@@ -175,6 +311,11 @@ GF.Game = (function(){
             countdownTimer = null;
         }
 
+        if(hitTimer){
+            clearTimeout(hitTimer);
+            hitTimer = null;
+        }
+
         resetTimer = setTimeout(resetRound, GF.Config.round.resetDelay);
     }
 
@@ -182,6 +323,8 @@ GF.Game = (function(){
         players.resetAll();
         bullets.reset();
         setRoundMessage('');
+        roundEndsAt = null;
+        hitMessage = null;
         resetTimer = null;
 
         if(latestModel && isReadyToStart(latestModel)){
@@ -200,10 +343,37 @@ GF.Game = (function(){
 
         context.clearRect(0, 0, canvas.width, canvas.height);
         scene.drawAll(context);
+        drawHitMessage();
+        renderHud();
 
         setTimeout(function(){
             requestAnimFrame(animate);
         }, 0);
+    }
+
+    function drawHitMessage(){
+        var target;
+
+        if(!hitMessage){
+            return;
+        }
+
+        target = players.all[hitMessage.targetId];
+
+        if(!target){
+            return;
+        }
+
+        context.save();
+        context.fillStyle = GF.Config.colors.yellow;
+        context.font = '32px "Press Start", sans-serif';
+        context.textAlign = 'center';
+        context.textBaseline = 'bottom';
+        context.shadowColor = 'rgb(0,0,0)';
+        context.shadowOffsetX = 4;
+        context.shadowOffsetY = 4;
+        context.fillText(hitMessage.text, target.x, Math.max(80, target.y - 150));
+        context.restore();
     }
 
     function setupSocket(callback){

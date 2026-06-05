@@ -5,11 +5,12 @@ GF.Bullets = function(scene){
         var activeBullet = bullets[player.playerId];
 
         if(activeBullet && !activeBullet.deleteMe){
-            return;
+            return false;
         }
 
         bullets[player.playerId] = new GF.Bullet(player);
         scene.addFigure(bullets[player.playerId]);
+        return true;
     }
 
     function remove(id){

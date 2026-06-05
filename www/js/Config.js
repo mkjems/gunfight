@@ -4,7 +4,9 @@ GF.Config = {
         height: 640
     },
     round: {
-        resetDelay: 1800
+        resetDelay: 1800,
+        seconds: 60,
+        ammo: 6
     },
     player: {
         speed: 120,
