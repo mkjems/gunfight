@@ -7,9 +7,9 @@
 	</head>
 	<body>
 		<canvas id="canvas"></canvas>
-		<div id="hud">
-			<h3>GUN FIGHT COUNT <span id="numPlayers">0</span></h3>
-			<ul>
+		<div id="gameOverlay">
+			<h1>GUNFIGHT</h1>
+			<ul id="introControls">
 				<li>h left</li>
 				<li>j down</li>
 				<li>k up</li>
@@ -18,8 +18,11 @@
 				<li>z aim level</li>
 				<li>space shoot</li>
 			</ul>
+			<ul id="readyList"></ul>
 			<div>INSERT COIN</div>
+			<div>PRESS P TO PLAY</div>
 		</div>
+		<div id="bottomControls">h left | j down | k up | l right | a aim up | z aim level | space shoot</div>
 		<div id="roundMessage"></div>
 		<script src="/socket.io/socket.io.js"></script>
 		<script >

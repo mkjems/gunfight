@@ -43,6 +43,11 @@ io.on('connection', function(socket) {
     socket.emit('keyEvent', keyEvent);
   });
 
+  socket.on('clientReady', function() {
+    model.readyClient(client);
+    io.emit('modelUpdate', model.getModel());
+  });
+
   socket.on('syncServerTime', function(timeData) {
     timeData.serverTime = new Date().getTime();
     timeData.playerId = client.id;

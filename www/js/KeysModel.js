@@ -34,10 +34,37 @@ GF.KeysModel = function(socket, playerId){
             internalKeyStatus[strKeyToAdd] = false;
         });
     }
+
+    function bindReadyKey(){
+        document.addEventListener('keydown', function(evt){
+            if(evt.key !== 'p' && evt.key !== 'P'){
+                return;
+            }
+
+            evt.preventDefault();
+
+            if(!internalKeyStatus.p){
+                socket.emit('clientReady');
+            }
+
+            internalKeyStatus.p = true;
+        });
+
+        document.addEventListener('keyup', function(evt){
+            if(evt.key !== 'p' && evt.key !== 'P'){
+                return;
+            }
+
+            evt.preventDefault();
+            internalKeyStatus.p = false;
+        });
+    }
     
     ['h', 'j', 'k', 'l', 'a', 'z', ' '].forEach(function(val){
         addKey(val);
     });
+
+    bindReadyKey();
         
     function isKeyDown(key){
         return internalKeyStatus[key] ? true: false;

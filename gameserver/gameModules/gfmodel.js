@@ -5,7 +5,8 @@ exports.getNewClient = function(){
     counter++;
 
     const newClient = {
-        id: counter
+        id: counter,
+        ready: false
     };
 
     clients.push(newClient);
@@ -26,4 +27,14 @@ exports.getModel = function(){
     return {
         clients: clients.slice()
     };
+};
+
+exports.readyClient = function(client){
+    const existingClient = clients.find(function(item){
+        return item.id === client.id;
+    });
+
+    if(existingClient){
+        existingClient.ready = true;
+    }
 };

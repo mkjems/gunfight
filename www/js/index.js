@@ -8,6 +8,8 @@ GF.Game = (function(){
         bullets,
         deltaServerTime,
         roundState,
+        latestModel,
+        countdownTimer,
         resetTimer,
         playerId;
 
@@ -42,7 +44,8 @@ GF.Game = (function(){
         scene = new GF.Scene();
         bullets = new GF.Bullets(scene);
         players = new GF.Players(scene, bullets);
-        roundState = 'playing';
+        roundState = 'waiting';
+        countdownTimer = null;
         resetTimer = null;
     }
 
@@ -51,8 +54,63 @@ GF.Game = (function(){
     }
 
     function syncPlayers(model){
-        document.getElementById('numPlayers').textContent = model.clients.length;
+        latestModel = model;
         players.sync(model);
+        renderReadyList(model);
+
+        if(roundState === 'waiting' && isReadyToStart(model)){
+            startCountdown();
+        }
+    }
+
+    function renderReadyList(model){
+        var readyList = document.getElementById('readyList');
+
+        readyList.innerHTML = '';
+
+        model.clients.forEach(function(client, index){
+            var item = document.createElement('li');
+
+            item.textContent = 'Player ' + (index + 1) + ' : ' + (client.ready ? 'ready' : 'waiting');
+            readyList.appendChild(item);
+        });
+    }
+
+    function isReadyToStart(model){
+        return model.clients.length >= 2 && model.clients.every(function(client){
+            return client.ready;
+        });
+    }
+
+    function setOverlayVisible(isVisible){
+        document.getElementById('gameOverlay').className = isVisible ? '' : 'hidden';
+        document.getElementById('bottomControls').className = isVisible ? '' : 'visible';
+    }
+
+    function startCountdown(){
+        var count = 3;
+
+        roundState = 'countdown';
+        setOverlayVisible(false);
+        setRoundMessage(count);
+
+        if(countdownTimer){
+            clearInterval(countdownTimer);
+        }
+
+        countdownTimer = setInterval(function(){
+            count--;
+
+            if(count > 0){
+                setRoundMessage(count);
+                return;
+            }
+
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+            setRoundMessage('');
+            roundState = 'playing';
+        }, 1000);
     }
 
     function handleKeyEvent(keyEvent){
@@ -62,7 +120,7 @@ GF.Game = (function(){
             return;
         }
 
-        if(roundState !== 'playing'){
+        if(roundState === 'roundOver'){
             if(keyEvent.action === 'up'){
                 player.respondToKeyEvent(keyEvent);
             }
@@ -70,7 +128,9 @@ GF.Game = (function(){
         }
 
         if(keyEvent.key === ' ' && keyEvent.action === 'down'){
-            bullets.fire(player);
+            if(roundState === 'playing'){
+                bullets.fire(player);
+            }
             return;
         }
 
@@ -110,6 +170,11 @@ GF.Game = (function(){
             clearTimeout(resetTimer);
         }
 
+        if(countdownTimer){
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+        }
+
         resetTimer = setTimeout(resetRound, GF.Config.round.resetDelay);
     }
 
@@ -117,8 +182,15 @@ GF.Game = (function(){
         players.resetAll();
         bullets.reset();
         setRoundMessage('');
-        roundState = 'playing';
         resetTimer = null;
+
+        if(latestModel && isReadyToStart(latestModel)){
+            startCountdown();
+            return;
+        }
+
+        roundState = 'waiting';
+        setOverlayVisible(true);
     }
 
     function animate(){
@@ -171,6 +243,7 @@ GF.Game = (function(){
     function start(){
         initCanvas();
         initGameState();
+        setOverlayVisible(true);
 
         setupSocket(function(){
             schedule = new GF.Schedule(socket);

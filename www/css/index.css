@@ -34,20 +34,56 @@ body{
     z-index: 0;
 }
 
-#hud{
-    left: 16px;
+#gameOverlay{
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    justify-content: center;
+    left: 0;
+    min-height: 100vh;
     position: absolute;
-    text-shadow: 2px 2px 0 rgb(0,0,0);
-    top: 16px;
+    right: 0;
+    text-align: center;
+    text-shadow: 3px 3px 0 rgb(0,0,0);
+    top: 0;
     z-index: 1;
 }
 
-#hud h3{
-    margin: 0 0 20px;
+#gameOverlay.hidden{
+    display: none;
+}
+
+#gameOverlay h1{
+    font-size: 42px;
+    line-height: 1.2;
+    margin: 0;
+}
+
+#introControls,
+#readyList{
+    font-size: 16px;
+}
+
+#bottomControls{
+    bottom: 18px;
+    display: none;
+    font-size: 14px;
+    left: 0;
+    line-height: 1.5;
+    position: absolute;
+    right: 0;
+    text-align: center;
+    text-shadow: 2px 2px 0 rgb(0,0,0);
+    z-index: 1;
+}
+
+#bottomControls.visible{
+    display: block;
 }
 
 #roundMessage{
-    font-size: 40px;
+    font-size: 64px;
     left: 0;
     line-height: 1.4;
     position: absolute;
