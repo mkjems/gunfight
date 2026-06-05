@@ -1,4 +1,8 @@
-
-
 I generated a ssh key pair for the github action to use
-Created secrets in the project for priv_key ip_address and user to use in the deploy part of the action 
+Created secrets in the project for
+
+VPS_SSH_KEY
+VPS_HOST
+VPS_USER
+ 
+to use in the deploy part of the action 
