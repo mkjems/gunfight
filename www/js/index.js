@@ -115,6 +115,7 @@ GF.Game = (function(){
 
         if(roundState === 'waiting'){
             drawStartScreen();
+            return;
         }
 
         firstClient = latestModel && latestModel.clients[0];
@@ -347,7 +348,7 @@ GF.Game = (function(){
             return;
         }
 
-        if(roundState !== 'playing'){
+        if(roundState === 'ritual' || roundState === 'roundOver' || roundState === 'hitPause' || roundState === 'gameOver'){
             if(keyEvent.action === 'up'){
                 player.respondToKeyEvent(keyEvent);
             }
@@ -526,7 +527,9 @@ GF.Game = (function(){
         checkForHits();
 
         context.clearRect(0, 0, canvas.width, canvas.height);
-        drawScenario();
+        if(roundState !== 'waiting'){
+            drawScenario();
+        }
         scene.drawAll(context);
         drawHitMessage();
         renderHud();

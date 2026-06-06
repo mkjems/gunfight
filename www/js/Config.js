@@ -42,7 +42,7 @@ GF.Config = {
         },
         slots: [
             { x: 150, y: 430, facing: 1, frame: 0 },
-            { x: 650, y: 430, facing: -1, frame: 2 },
+            { x: 800, y: 430, facing: -1, frame: 2 },
             { x: 260, y: 260, facing: 1, frame: 1 },
             { x: 540, y: 260, facing: -1, frame: 3 }
         ]
@@ -52,7 +52,7 @@ GF.Config = {
             level: { x: 50, y: 28 },
             raised: { x: 48, y: 18 }
         },
-        width: 18,
+        width: 4,
         height: 4,
         speed: 420
     },
