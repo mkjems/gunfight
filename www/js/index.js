@@ -21,6 +21,7 @@ GF.Game = (function(){
         hitTimer,
         resetTimer,
         scenarioStartedAt,
+        roundIntro,
         playerId;
 
     function initCanvas(){
@@ -63,6 +64,7 @@ GF.Game = (function(){
         hitTimer = null;
         resetTimer = null;
         scenarioStartedAt = null;
+        roundIntro = null;
     }
 
     function setRoundMessage(message){
@@ -288,17 +290,12 @@ GF.Game = (function(){
         latestModel = model;
         players.sync(model);
 
-        if(roundState === 'waiting'){
-            players.resetAll();
-            bullets.clear();
-            resetAmmo();
+        if(roundState === 'waiting' && isReadyToStart(model)){
+            startRoundRitual({ resetScores: true });
+            return;
         }
 
         renderHud();
-
-        if(roundState === 'waiting' && isReadyToStart(model)){
-            startRoundRitual({ resetScores: true });
-        }
     }
 
     function isReadyToStart(model){
@@ -317,9 +314,9 @@ GF.Game = (function(){
         roundState = 'ritual';
         roundEndsAt = null;
         scenarioStartedAt = new Date().getTime();
-        players.resetAll();
         bullets.reset();
         resetAmmo();
+        startRoundIntro();
         setRoundMessage('GET READY');
         renderHud();
 
@@ -328,6 +325,7 @@ GF.Game = (function(){
         }
 
         ritualTimer = setTimeout(function(){
+            completeRoundIntro();
             setRoundMessage('DRAW !');
 
             ritualTimer = setTimeout(function(){
@@ -339,6 +337,82 @@ GF.Game = (function(){
                 renderHud();
             }, GF.Config.round.drawDelay);
         }, GF.Config.round.getReadyDelay);
+    }
+
+    function startRoundIntro(){
+        var startedAt = new Date().getTime();
+        var duration = GF.Config.round.getReadyDelay;
+        var targets = [];
+
+        players.clearKeys();
+
+        Object.keys(players.all).forEach(function(id){
+            var player = players.all[id];
+            var slot = GF.Config.player.slots[player.slot % GF.Config.player.slots.length];
+            var bounds;
+
+            player.resetTo(slot);
+            bounds = player.getBounds();
+
+            targets.push({
+                player: player,
+                fromX: slot.facing > 0 ? bounds.minX : bounds.maxX,
+                fromY: slot.y,
+                toX: slot.x,
+                toY: slot.y,
+                idleFrame: slot.frame
+            });
+        });
+
+        roundIntro = {
+            startedAt: startedAt,
+            duration: duration,
+            targets: targets
+        };
+
+        updateRoundIntro();
+    }
+
+    function updateRoundIntro(){
+        var elapsed;
+        var progress;
+        var eased;
+
+        if(!roundIntro){
+            return;
+        }
+
+        elapsed = new Date().getTime() - roundIntro.startedAt;
+        progress = Math.min(1, Math.max(0, elapsed / roundIntro.duration));
+        eased = 1 - Math.pow(1 - progress, 3);
+
+        roundIntro.targets.forEach(function(target){
+            var player = target.player;
+
+            player.x = target.fromX + ((target.toX - target.fromX) * eased);
+            player.y = target.fromY + ((target.toY - target.fromY) * eased);
+            player.frame = player.animationFrames[
+                Math.floor(elapsed / (player.animationFrameTime * 1000)) % player.animationFrames.length
+            ];
+        });
+
+        if(progress >= 1){
+            completeRoundIntro();
+        }
+    }
+
+    function completeRoundIntro(){
+        if(!roundIntro){
+            return;
+        }
+
+        roundIntro.targets.forEach(function(target){
+            target.player.x = target.toX;
+            target.player.y = target.toY;
+            target.player.frame = target.idleFrame;
+        });
+
+        roundIntro = null;
     }
 
     function handleKeyEvent(keyEvent){
@@ -425,7 +499,6 @@ GF.Game = (function(){
             return;
         }
 
-        players.resetAll();
         bullets.reset();
         resetAmmo();
         startRoundRitual({ resetScores: false });
@@ -458,6 +531,8 @@ GF.Game = (function(){
             ritualTimer = null;
         }
 
+        roundIntro = null;
+
         if(hitTimer){
             clearTimeout(hitTimer);
             hitTimer = null;
@@ -483,6 +558,8 @@ GF.Game = (function(){
             clearTimeout(ritualTimer);
             ritualTimer = null;
         }
+
+        roundIntro = null;
 
         if(hitTimer){
             clearTimeout(hitTimer);
@@ -524,6 +601,7 @@ GF.Game = (function(){
 
     function animate(){
         scene.moveAll();
+        updateRoundIntro();
         checkForHits();
 
         context.clearRect(0, 0, canvas.width, canvas.height);
