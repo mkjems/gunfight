@@ -24,6 +24,12 @@ app.get('/', function(req, res) {
 io.on('connection', function(socket) {
   const client = model.getNewClient();
 
+  socket.emit('joinedGame', {
+    playerId: client.id,
+    model: model.getModel()
+  });
+  socket.broadcast.emit('newClient', model.getModel());
+
   socket.on('disconnect', function(reason) {
     model.disconnect(client);
     io.emit('modelUpdate', model.getModel());
@@ -32,15 +38,12 @@ io.on('connection', function(socket) {
 
   socket.on('clientKeyEvent', function(data) {
     const keyEvent = {
-      eventTime: new Date().getTime(),
       action: data.action,
-      eventName: 'clientKeyEvent',
       key: data.key,
-      player: data.player
+      player: client.id
     };
 
     socket.broadcast.emit('keyEvent', keyEvent);
-    socket.emit('keyEvent', keyEvent);
   });
 
   socket.on('clientReady', function() {
@@ -53,13 +56,6 @@ io.on('connection', function(socket) {
     io.emit('modelUpdate', model.getModel());
   });
 
-  socket.on('syncServerTime', function(timeData) {
-    timeData.serverTime = new Date().getTime();
-    timeData.playerId = client.id;
-    timeData.model = model.getModel();
-    socket.emit('finishSyncTime', timeData);
-    socket.broadcast.emit('newClient', model.getModel());
-  });
 });
 
 server.listen(portNumber, function() {

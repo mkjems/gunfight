@@ -69,7 +69,9 @@ public domain.
 
 ## How It Works
 
-The server serves the web client and relays Socket.IO input events.
+The server serves the web client, assigns player IDs, tracks ready state, and
+relays Socket.IO input events between browsers.
 
-Each browser syncs time, schedules incoming key events, runs the local game loop,
-moves everything by elapsed time, checks hits, and draws the frame.
+Each browser applies local input immediately, applies remote input when it
+arrives, runs the local game loop, moves everything by elapsed time, checks hits,
+and draws the frame.

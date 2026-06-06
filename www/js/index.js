@@ -3,10 +3,8 @@ GF.Game = (function(){
         context,
         scene,
         socket,
-        schedule,
         players,
         bullets,
-        deltaServerTime,
         roundState,
         latestModel,
         scores,
@@ -128,6 +126,13 @@ GF.Game = (function(){
     function syncPlayers(model){
         latestModel = model;
         players.sync(model);
+
+        if(roundState === 'waiting'){
+            players.resetAll();
+            bullets.clear();
+            resetAmmo();
+        }
+
         renderHud();
         setPlayerLabel(model);
         renderReadyList(model);
@@ -221,14 +226,6 @@ GF.Game = (function(){
         }
 
         player.respondToKeyEvent(keyEvent);
-    }
-
-    function processScheduledEvents(){
-        schedule.checkForFrameEvents().forEach(function(event){
-            if(event.eventName === 'clientKeyEvent'){
-                handleKeyEvent(event);
-            }
-        });
     }
 
     function checkForHits(){
@@ -386,7 +383,6 @@ GF.Game = (function(){
     }
 
     function animate(){
-        processScheduledEvents();
         scene.moveAll();
         checkForHits();
 
@@ -428,32 +424,16 @@ GF.Game = (function(){
     function setupSocket(callback){
         socket = io();
 
-        socket.on('finishSyncTime', function(timeObj){
-            var clientTimeAfterSync = new Date().getTime();
-            var latency = (clientTimeAfterSync - timeObj.clientTime) / 2;
-
-            deltaServerTime = clientTimeAfterSync - latency - timeObj.serverTime;
-            playerId = timeObj.playerId;
-            syncPlayers(timeObj.model);
+        socket.on('joinedGame', function(data){
+            playerId = data.playerId;
+            syncPlayers(data.model);
             callback();
-        });
-
-        socket.emit('syncServerTime', {
-            clientTime: new Date().getTime()
         });
     }
 
     function bindSocketEvents(){
         socket.on('keyEvent', function(keyEvent){
-            keyEvent.eventTime += deltaServerTime;
-            schedule.addEvent(keyEvent);
-        });
-
-        socket.on('planEvent', function(event){
-            var planObj = schedule.getEventObj();
-
-            planObj.eventTime = event.eventTime + deltaServerTime;
-            schedule.addEvent(planObj);
+            handleKeyEvent(keyEvent);
         });
 
         socket.on('newClient', syncPlayers);
@@ -466,8 +446,7 @@ GF.Game = (function(){
         setOverlayVisible(true);
 
         setupSocket(function(){
-            schedule = new GF.Schedule(socket);
-            new GF.KeysModel(socket, playerId);
+            new GF.KeysModel(socket, playerId, handleKeyEvent);
             bindSocketEvents();
             animate();
         });
