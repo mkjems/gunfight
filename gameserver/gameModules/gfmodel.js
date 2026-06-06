@@ -10,14 +10,12 @@ let roundNumber = 0;
 function resolveRocks(scenario){
     return (scenario.rocks || []).map(function(rock){
         const definition = rockDefinitions[rock.type];
-        const scale = rock.scale || 1;
 
         if(!definition){
             return {
                 type: rock.type,
                 x: rock.x,
                 y: rock.y,
-                scale: scale,
                 lines: []
             };
         }
@@ -26,11 +24,10 @@ function resolveRocks(scenario){
             type: rock.type,
             x: rock.x,
             y: rock.y,
-            scale: scale,
             lines: definition.lines.map(function(line){
                 return {
-                    from: [line.from[0] * scale, line.from[1] * scale],
-                    to: [line.to[0] * scale, line.to[1] * scale]
+                    from: line.from,
+                    to: line.to
                 };
             })
         };

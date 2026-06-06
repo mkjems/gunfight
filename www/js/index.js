@@ -8,6 +8,8 @@ GF.Game = (function(){
         ammoSprite,
         wagonSprite,
         cactusSprite,
+        rockPatternSprite,
+        rockPattern,
         scene,
         socket,
         players,
@@ -43,6 +45,11 @@ GF.Game = (function(){
         wagonSprite.src = 'images/wagon.png';
         cactusSprite = new Image();
         cactusSprite.src = 'images/cactus.png';
+        rockPatternSprite = new Image();
+        rockPatternSprite.onload = function(){
+            rockPattern = createScaledPattern(rockPatternSprite);
+        };
+        rockPatternSprite.src = 'images/rock-pattern.png';
         disableImageSmoothing();
     }
 
@@ -73,6 +80,22 @@ GF.Game = (function(){
         scenarioStartedAt = null;
         roundIntro = null;
         advanceRoundAfterHit = false;
+    }
+
+    function createScaledPattern(image){
+        var scale = GF.Config.graphics.scale;
+        var tile = document.createElement('canvas');
+        var tileContext = tile.getContext('2d');
+
+        tile.width = image.width * scale;
+        tile.height = image.height * scale;
+        tileContext.imageSmoothingEnabled = false;
+        tileContext.webkitImageSmoothingEnabled = false;
+        tileContext.mozImageSmoothingEnabled = false;
+        tileContext.msImageSmoothingEnabled = false;
+        tileContext.drawImage(image, 0, 0, tile.width, tile.height);
+
+        return context.createPattern(tile, 'repeat');
     }
 
     function setRoundMessage(message){
@@ -225,7 +248,7 @@ GF.Game = (function(){
             }
 
             context.save();
-            context.fillStyle = GF.Config.colors.yellow;
+            context.fillStyle = rockPattern || GF.Config.colors.yellow;
             context.shadowColor = 'rgb(0,0,0)';
             context.shadowOffsetX = 2;
             context.shadowOffsetY = 2;
