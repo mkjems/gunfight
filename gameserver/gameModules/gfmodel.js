@@ -3,15 +3,57 @@ import { readFileSync } from 'node:fs';
 let counter = 0;
 const clients = [];
 const scenarios = JSON.parse(readFileSync(new URL('../scenarios.json', import.meta.url), 'utf8'));
+const rockDefinitions = JSON.parse(readFileSync(new URL('../rocks.json', import.meta.url), 'utf8'));
 let currentScenarioIndex = -1;
 let roundNumber = 0;
+
+function resolveRocks(scenario){
+    return (scenario.rocks || []).map(function(rock){
+        const definition = rockDefinitions[rock.type];
+        const scale = rock.scale || 1;
+
+        if(!definition){
+            return {
+                type: rock.type,
+                x: rock.x,
+                y: rock.y,
+                scale: scale,
+                lines: []
+            };
+        }
+
+        return {
+            type: rock.type,
+            x: rock.x,
+            y: rock.y,
+            scale: scale,
+            lines: definition.lines.map(function(line){
+                return {
+                    from: [line.from[0] * scale, line.from[1] * scale],
+                    to: [line.to[0] * scale, line.to[1] * scale]
+                };
+            })
+        };
+    });
+}
+
+function resolveScenario(scenario){
+    if(!scenario){
+        return null;
+    }
+
+    return {
+        ...scenario,
+        rocks: resolveRocks(scenario)
+    };
+}
 
 function getCurrentScenario(){
     if(currentScenarioIndex < 0 || scenarios.length === 0){
         return null;
     }
 
-    return scenarios[currentScenarioIndex];
+    return resolveScenario(scenarios[currentScenarioIndex]);
 }
 
 function areAllReady(){

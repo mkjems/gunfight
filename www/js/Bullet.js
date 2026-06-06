@@ -17,7 +17,7 @@ GF.Bullet = function(owner, options){
     this.y = owner.y + muzzleOffsetY;
     this.width = options.width || config.width;
     this.height = options.height || config.height;
-    this.speedX = options.speedX || (this.aim === 'raised' ? diagonalSpeed : config.speed);
+    this.speedX = this.facing * (options.speedX || (this.aim === 'raised' ? diagonalSpeed : config.speed));
     this.speedY = options.speedY || (this.aim === 'raised' ? -diagonalSpeed : 0);
     this.deleteMe = false;
 };
@@ -25,16 +25,47 @@ GF.Bullet = function(owner, options){
 GF.Bullet.prototype = {
     move: function(lastupdated, t){
         var seconds = (t - lastupdated) / 1000;
+        var remaining = seconds;
+        var bounces = 0;
+        var maxBounces = 3;
+        var collision;
+        var moveSeconds;
+        var epsilon = 0.01;
 
-        this.x += this.facing * this.speedX * seconds;
-        this.y += this.speedY * seconds;
+        while(remaining > 0 && bounces <= maxBounces){
+            collision = GF.Bullet.findCollision(
+                this.x,
+                this.y,
+                this.x + (this.speedX * remaining),
+                this.y + (this.speedY * remaining)
+            );
 
-        if(this.x < -this.width ||
-            this.x > GF.Config.canvas.width + this.width ||
-            this.y < -this.height ||
-            this.y > GF.Config.canvas.height + this.height){
+            if(!collision){
+                this.x += this.speedX * remaining;
+                this.y += this.speedY * remaining;
+                break;
+            }
+
+            moveSeconds = remaining * collision.progress;
+            this.x += this.speedX * moveSeconds;
+            this.y += this.speedY * moveSeconds;
+            this.reflect(collision.normal);
+            remaining = Math.max(0, remaining - moveSeconds);
+            this.x += collision.normal.x * epsilon;
+            this.y += collision.normal.y * epsilon;
+            bounces++;
+        }
+
+        if(this.x < -this.width || this.x > GF.Config.canvas.width + this.width){
             this.deleteMe = true;
         }
+    },
+
+    reflect: function(normal){
+        var dot = (this.speedX * normal.x) + (this.speedY * normal.y);
+
+        this.speedX -= 2 * dot * normal.x;
+        this.speedY -= 2 * dot * normal.y;
     },
 
     getHitBox: function(){
@@ -55,4 +86,85 @@ GF.Bullet.prototype = {
             this.height
         );
     }
+};
+
+GF.Bullet.collisionLines = [];
+
+GF.Bullet.setCollisionLines = function(lines){
+    GF.Bullet.collisionLines = lines || [];
+};
+
+GF.Bullet.findCollision = function(fromX, fromY, toX, toY){
+    var lines = GF.Bullet.getCollisionLines();
+    var best = null;
+
+    lines.forEach(function(line){
+        var collision = GF.Bullet.getSegmentIntersection(fromX, fromY, toX, toY, line.x1, line.y1, line.x2, line.y2);
+
+        if(!collision || collision.progress <= 0 || collision.progress > 1){
+            return;
+        }
+
+        collision.normal = GF.Bullet.getReflectionNormal(line, toX - fromX, toY - fromY);
+
+        if(!best || collision.progress < best.progress){
+            best = collision;
+        }
+    });
+
+    return best;
+};
+
+GF.Bullet.getCollisionLines = function(){
+    return [
+        { x1: 0, y1: 0, x2: GF.Config.canvas.width, y2: 0 },
+        { x1: 0, y1: GF.Config.canvas.height, x2: GF.Config.canvas.width, y2: GF.Config.canvas.height }
+    ].concat(GF.Bullet.collisionLines);
+};
+
+GF.Bullet.getSegmentIntersection = function(aX, aY, bX, bY, cX, cY, dX, dY){
+    var bulletX = bX - aX;
+    var bulletY = bY - aY;
+    var lineX = dX - cX;
+    var lineY = dY - cY;
+    var denominator = (bulletX * lineY) - (bulletY * lineX);
+    var cToAX;
+    var cToAY;
+    var progress;
+    var lineProgress;
+
+    if(Math.abs(denominator) < 0.000001){
+        return null;
+    }
+
+    cToAX = cX - aX;
+    cToAY = cY - aY;
+    progress = ((cToAX * lineY) - (cToAY * lineX)) / denominator;
+    lineProgress = ((cToAX * bulletY) - (cToAY * bulletX)) / denominator;
+
+    if(progress < 0 || progress > 1 || lineProgress < 0 || lineProgress > 1){
+        return null;
+    }
+
+    return {
+        progress: progress
+    };
+};
+
+GF.Bullet.getReflectionNormal = function(line, velocityX, velocityY){
+    var lineX = line.x2 - line.x1;
+    var lineY = line.y2 - line.y1;
+    var length = Math.sqrt((lineX * lineX) + (lineY * lineY));
+    var normal = {
+        x: -lineY / length,
+        y: lineX / length
+    };
+    var dot = (velocityX * normal.x) + (velocityY * normal.y);
+
+    if(dot > 0){
+        normal.x = -normal.x;
+        normal.y = -normal.y;
+    }
+
+    return normal;
 };

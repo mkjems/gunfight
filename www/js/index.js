@@ -198,9 +198,53 @@ GF.Game = (function(){
             drawCactus(cactus.x, cactus.y, cactus.scale || 1);
         });
 
+        drawRocks(scenario);
+
         if(scenario.wagon){
             drawWagon(scenario.wagon);
         }
+    }
+
+    function drawRocks(scenario){
+        getRockLines(scenario).forEach(function(line){
+            context.save();
+            context.strokeStyle = GF.Config.colors.yellow;
+            context.lineWidth = 4;
+            context.lineCap = 'square';
+            context.shadowColor = 'rgb(0,0,0)';
+            context.shadowOffsetX = 2;
+            context.shadowOffsetY = 2;
+            context.beginPath();
+            context.moveTo(line.x1, line.y1);
+            context.lineTo(line.x2, line.y2);
+            context.stroke();
+            context.restore();
+        });
+    }
+
+    function getRockLines(scenario){
+        var lines = [];
+
+        if(!scenario){
+            return lines;
+        }
+
+        (scenario.rocks || []).forEach(function(rock){
+            (rock.lines || []).forEach(function(line){
+                lines.push({
+                    x1: rock.x + line.from[0],
+                    y1: rock.y + line.from[1],
+                    x2: rock.x + line.to[0],
+                    y2: rock.y + line.to[1]
+                });
+            });
+        });
+
+        return lines;
+    }
+
+    function updateBulletCollisionEnvironment(){
+        GF.Bullet.setCollisionLines(getRockLines(getCurrentScenario()));
     }
 
     function drawCactus(x, y, scale){
@@ -610,6 +654,7 @@ GF.Game = (function(){
     }
 
     function animate(){
+        updateBulletCollisionEnvironment();
         scene.moveAll();
         updateRoundIntro();
         checkForHits();
