@@ -22,6 +22,7 @@ GF.Game = (function(){
         resetTimer,
         scenarioStartedAt,
         roundIntro,
+        advanceRoundAfterHit,
         playerId;
 
     function initCanvas(){
@@ -65,6 +66,7 @@ GF.Game = (function(){
         resetTimer = null;
         scenarioStartedAt = null;
         roundIntro = null;
+        advanceRoundAfterHit = false;
     }
 
     function setRoundMessage(message){
@@ -476,9 +478,7 @@ GF.Game = (function(){
             scores[winnerSlot]++;
         }
 
-        if(hit.winnerId === playerId){
-            socket.emit('advanceRound');
-        }
+        advanceRoundAfterHit = hit.winnerId === playerId;
 
         renderHud();
         players.clearKeys();
@@ -500,6 +500,11 @@ GF.Game = (function(){
             return;
         }
 
+        if(advanceRoundAfterHit){
+            socket.emit('advanceRound');
+            advanceRoundAfterHit = false;
+        }
+
         bullets.reset();
         resetAmmo();
         startRoundRitual({ resetScores: false });
@@ -511,6 +516,7 @@ GF.Game = (function(){
         roundState = 'roundOver';
         roundEndsAt = null;
         hitMessage = null;
+        advanceRoundAfterHit = false;
 
         if(winnerSlot >= 0 && winnerSlot < scores.length){
             scores[winnerSlot]++;
@@ -546,6 +552,7 @@ GF.Game = (function(){
         roundState = 'gameOver';
         roundEndsAt = null;
         hitMessage = null;
+        advanceRoundAfterHit = false;
         setRoundMessage('');
         renderHud();
         players.clearKeys();
@@ -576,6 +583,7 @@ GF.Game = (function(){
         setRoundMessage('');
         roundEndsAt = null;
         hitMessage = null;
+        advanceRoundAfterHit = false;
         resetTimer = null;
 
         if(latestModel && isReadyToStart(latestModel)){
@@ -594,6 +602,7 @@ GF.Game = (function(){
         setRoundMessage('');
         roundEndsAt = null;
         hitMessage = null;
+        advanceRoundAfterHit = false;
         resetTimer = null;
         roundState = 'waiting';
         renderHud();
