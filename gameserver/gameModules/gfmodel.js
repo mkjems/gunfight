@@ -29,6 +29,13 @@ function resolveRocks(scenario){
                     from: line.from,
                     to: line.to
                 };
+            }),
+            colliders: (definition.colliders || []).map(function(collider){
+                return {
+                    x: collider.x,
+                    y: collider.y,
+                    radius: collider.radius
+                };
             })
         };
     });

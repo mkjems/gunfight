@@ -24,30 +24,32 @@ GF.Controllable = function(xpos, ypos, options){
 
 GF.Controllable.prototype = {
     move: function(lastupdated, t){
-        var bounds = this.getBounds();
         var seconds = (t - lastupdated) / 1000;
         var dist = this.speed * seconds;
+        var dx = 0;
+        var dy = 0;
         var isMoving = false;
 
         if(this.keys.j){
-           this.y += dist;
+           dy += dist;
            isMoving = true;
         }
         if(this.keys.k){
-           this.y -= dist;
+           dy -= dist;
            isMoving = true;
         }
         if(this.keys.h){
-           this.x -= dist;
+           dx -= dist;
            isMoving = true;
         }
         if(this.keys.l){
-           this.x += dist;
+           dx += dist;
            isMoving = true;
         }
 
-        this.x = Math.max(bounds.minX, Math.min(bounds.maxX, this.x));
-        this.y = Math.max(bounds.minY, Math.min(bounds.maxY, this.y));
+        if(isMoving){
+            this.moveWithCollision(dx, dy);
+        }
 
         if(isMoving){
             this.animationTime += seconds;
@@ -55,6 +57,43 @@ GF.Controllable.prototype = {
                 Math.floor(this.animationTime / this.animationFrameTime) % this.animationFrames.length
             ];
         }
+    },
+
+    moveWithCollision: function(dx, dy){
+        if(this.canMoveTo(this.x + dx, this.y + dy)){
+            this.applyPosition(this.x + dx, this.y + dy);
+            return;
+        }
+
+        if(dx && this.canMoveTo(this.x + dx, this.y)){
+            this.applyPosition(this.x + dx, this.y);
+        }
+
+        if(dy && this.canMoveTo(this.x, this.y + dy)){
+            this.applyPosition(this.x, this.y + dy);
+        }
+    },
+
+    canMoveTo: function(x, y){
+        var position = this.clampPosition(x, y);
+
+        return !GF.Obstacles.collidesWithAny(this.getCollisionCircles(position.x, position.y));
+    },
+
+    applyPosition: function(x, y){
+        var position = this.clampPosition(x, y);
+
+        this.x = position.x;
+        this.y = position.y;
+    },
+
+    clampPosition: function(x, y){
+        var bounds = this.getBounds();
+
+        return {
+            x: Math.max(bounds.minX, Math.min(bounds.maxX, x)),
+            y: Math.max(bounds.minY, Math.min(bounds.maxY, y))
+        };
     },
 
     getBounds: function(){
@@ -122,6 +161,23 @@ GF.Controllable.prototype = {
             width: visualRight - visualLeft,
             height: bottom - top
         };
+    },
+
+    getCollisionCircles: function(x, y){
+        var scale = GF.Config.graphics.scale;
+        var circles = GF.Config.player.collider.circles;
+        var facing = this.facing;
+
+        x = typeof x === 'number' ? x : this.x;
+        y = typeof y === 'number' ? y : this.y;
+
+        return circles.map(function(circle){
+            return {
+                x: x + (circle.x * scale * facing),
+                y: y + (circle.y * scale),
+                radius: circle.radius * scale
+            };
+        });
     },
     
     draw: function(context){

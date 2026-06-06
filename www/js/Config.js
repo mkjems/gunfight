@@ -6,6 +6,9 @@ GF.Config = {
     graphics: {
         scale: 2
     },
+    debug: {
+        showCollisionBodies: true
+    },
     round: {
         resetDelay: 1800,
         gameOverDelay: 3000,
@@ -19,6 +22,15 @@ GF.Config = {
         speed: 120,
         animationFrameTime: 0.14,
         animationFrames: [0, 1, 2, 3],
+        collider: {
+            circles: [
+                { x: 15, y: -33, radius: 2.5 },
+                { x: -7, y: -28, radius: 4 },
+                { x: 0, y: -40, radius: 6.5 },
+                { x: 0, y: -29, radius: 7 },
+                { x: 0, y: -18, radius: 5.5 }
+            ]
+        },
         aimRows: {
             level: 0,
             raised: 1

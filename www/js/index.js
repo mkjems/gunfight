@@ -27,6 +27,7 @@ GF.Game = (function(){
         scenarioStartedAt,
         roundIntro,
         advanceRoundAfterHit,
+        lastPositionSyncAt,
         playerId;
 
     function initCanvas(){
@@ -80,6 +81,7 @@ GF.Game = (function(){
         scenarioStartedAt = null;
         roundIntro = null;
         advanceRoundAfterHit = false;
+        lastPositionSyncAt = 0;
     }
 
     function createScaledPattern(image){
@@ -290,6 +292,72 @@ GF.Game = (function(){
         GF.Bullet.setCollisionLines(getRockLines(getCurrentScenario()));
     }
 
+    function updateMovementObstacleEnvironment(){
+        var scenario = roundState === 'waiting' ? null : getCurrentScenario();
+
+        GF.Obstacles.setBodies(getObstacleBodies(scenario));
+    }
+
+    function getObstacleBodies(scenario){
+        var bodies = [];
+        var scale = GF.Config.graphics.scale;
+
+        if(!scenario){
+            return bodies;
+        }
+
+        (scenario.cacti || []).forEach(function(cactus){
+            var width = 5 * scale;
+            var height = 29 * scale;
+
+            bodies.push({
+                type: 'rect',
+                x: cactus.x - (width / 2),
+                y: cactus.y - height,
+                width: width,
+                height: height
+            });
+        });
+
+        (scenario.rocks || []).forEach(function(rock){
+            (rock.colliders || []).forEach(function(collider){
+                bodies.push({
+                    type: 'circle',
+                    x: rock.x + collider.x,
+                    y: rock.y + collider.y,
+                    radius: collider.radius
+                });
+            });
+        });
+
+        if(scenario.wagon){
+            getWagonObstacleCircles(scenario.wagon).forEach(function(circle){
+                bodies.push(circle);
+            });
+        }
+
+        return bodies;
+    }
+
+    function getWagonObstacleCircles(wagon){
+        var position = getWagonPosition(wagon);
+        var scale = GF.Config.graphics.scale;
+        var colliders = [
+            { x: -7, y: 7, radius: 9 },
+            { x: 7, y: 7, radius: 9 },
+            { x: 0, y: -10, radius: 10 }
+        ];
+
+        return colliders.map(function(collider){
+            return {
+                type: 'circle',
+                x: position.x + (collider.x * scale),
+                y: position.y + (collider.y * scale),
+                radius: collider.radius * scale
+            };
+        });
+    }
+
     function drawCactus(x, y){
         var scale = GF.Config.graphics.scale;
         var width = 17 * scale;
@@ -308,11 +376,7 @@ GF.Game = (function(){
     }
 
     function drawWagon(wagon){
-        var elapsed = scenarioStartedAt ? new Date().getTime() - scenarioStartedAt : 0;
-        var duration = wagon.duration || 10000;
-        var progress = Math.min(1, Math.max(0, elapsed / duration));
-        var y = wagon.fromY + ((wagon.toY - wagon.fromY) * progress);
-        var x = wagon.x;
+        var position = getWagonPosition(wagon);
         var scale = GF.Config.graphics.scale;
         var width = 37 * scale;
         var height = 38 * scale;
@@ -320,13 +384,24 @@ GF.Game = (function(){
         context.save();
 
         if(wagonSprite && wagonSprite.complete){
-            context.drawImage(wagonSprite, x - (width / 2), y - (height / 2), width, height);
+            context.drawImage(wagonSprite, position.x - (width / 2), position.y - (height / 2), width, height);
         } else {
             context.fillStyle = GF.Config.colors.yellow;
-            context.fillRect(x - (width / 2), y - (height / 2), width, height);
+            context.fillRect(position.x - (width / 2), position.y - (height / 2), width, height);
         }
 
         context.restore();
+    }
+
+    function getWagonPosition(wagon){
+        var elapsed = scenarioStartedAt ? new Date().getTime() - scenarioStartedAt : 0;
+        var duration = wagon.duration || 10000;
+        var progress = Math.min(1, Math.max(0, elapsed / duration));
+
+        return {
+            x: wagon.x,
+            y: wagon.fromY + ((wagon.toY - wagon.fromY) * progress)
+        };
     }
 
     function drawStartScreen(){
@@ -714,8 +789,10 @@ GF.Game = (function(){
 
     function animate(){
         updateBulletCollisionEnvironment();
+        updateMovementObstacleEnvironment();
         scene.moveAll();
         updateRoundIntro();
+        syncLocalPlayerPosition();
         checkForHits();
 
         context.clearRect(0, 0, canvas.width, canvas.height);
@@ -723,12 +800,98 @@ GF.Game = (function(){
             drawScenario();
         }
         scene.drawAll(context);
+        drawCollisionBodies();
         drawHitMessage();
         renderHud();
 
         setTimeout(function(){
             requestAnimFrame(animate);
         }, 0);
+    }
+
+    function syncLocalPlayerPosition(){
+        var now = new Date().getTime();
+        var player = players.all[playerId];
+
+        if(roundState !== 'playing' || !player || now - lastPositionSyncAt < 80){
+            return;
+        }
+
+        lastPositionSyncAt = now;
+        socket.emit('playerPosition', {
+            x: player.x,
+            y: player.y,
+            frame: player.frame,
+            aim: player.aim,
+            facing: player.facing
+        });
+    }
+
+    function applyRemotePlayerPosition(data){
+        var player;
+
+        if(data.player === playerId || roundState !== 'playing'){
+            return;
+        }
+
+        player = players.all[data.player];
+
+        if(!player){
+            return;
+        }
+
+        player.x = data.x;
+        player.y = data.y;
+        player.frame = data.frame;
+        player.aim = data.aim;
+        player.facing = data.facing;
+    }
+
+    function drawCollisionBodies(){
+        if(!GF.Config.debug.showCollisionBodies){
+            return;
+        }
+
+        drawCollisionBodyShapes(GF.Obstacles.all(), 'rgba(255, 80, 80, 0.75)');
+
+        Object.keys(players.all).forEach(function(id){
+            drawCircles(players.all[id].getCollisionCircles(), 'rgba(80, 180, 255, 0.8)');
+        });
+    }
+
+    function drawCollisionBodyShapes(bodies, color){
+        context.save();
+        context.strokeStyle = color;
+        context.lineWidth = 2;
+
+        bodies.forEach(function(body){
+            if(body.type === 'rect'){
+                context.strokeRect(body.x, body.y, body.width, body.height);
+                return;
+            }
+
+            drawCirclePath(body);
+        });
+
+        context.restore();
+    }
+
+    function drawCircles(circles, color){
+        context.save();
+        context.strokeStyle = color;
+        context.lineWidth = 2;
+
+        circles.forEach(function(circle){
+            drawCirclePath(circle);
+        });
+
+        context.restore();
+    }
+
+    function drawCirclePath(circle){
+        context.beginPath();
+        context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
+        context.stroke();
     }
 
     function drawHitMessage(){
@@ -771,6 +934,7 @@ GF.Game = (function(){
             handleKeyEvent(keyEvent);
         });
 
+        socket.on('playerPosition', applyRemotePlayerPosition);
         socket.on('newClient', syncPlayers);
         socket.on('modelUpdate', syncPlayers);
     }

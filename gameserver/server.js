@@ -50,6 +50,17 @@ io.on('connection', function(socket) {
     socket.broadcast.emit('keyEvent', keyEvent);
   });
 
+  socket.on('playerPosition', function(data) {
+    socket.broadcast.emit('playerPosition', {
+      player: client.id,
+      x: data.x,
+      y: data.y,
+      frame: data.frame,
+      aim: data.aim,
+      facing: data.facing
+    });
+  });
+
   socket.on('clientReady', function() {
     model.readyClient(client);
     io.emit('modelUpdate', model.getModel());
