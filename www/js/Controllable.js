@@ -24,7 +24,7 @@ GF.Controllable = function(xpos, ypos, options){
 
 GF.Controllable.prototype = {
     move: function(lastupdated, t){
-        var bounds = GF.Config.player.bounds;
+        var bounds = this.getBounds();
         var seconds = (t - lastupdated) / 1000;
         var dist = this.speed * seconds;
         var isMoving = false;
@@ -55,6 +55,25 @@ GF.Controllable.prototype = {
                 Math.floor(this.animationTime / this.animationFrameTime) % this.animationFrames.length
             ];
         }
+    },
+
+    getBounds: function(){
+        var sprite = GF.Config.player.sprite;
+        var visibleBounds = sprite.visibleBounds;
+        var scale = GF.Config.graphics.scale;
+        var left = ((-sprite.sourceWidth / 2) + visibleBounds.left) * scale;
+        var right = ((-sprite.sourceWidth / 2) + visibleBounds.right) * scale;
+        var top = (-sprite.sourceHeight + visibleBounds.top) * scale;
+        var bottom = (-sprite.sourceHeight + visibleBounds.bottom) * scale;
+        var visualLeft = this.facing < 0 ? -right : left;
+        var visualRight = this.facing < 0 ? -left : right;
+
+        return {
+            minX: -visualLeft,
+            maxX: GF.Config.canvas.width - visualRight,
+            minY: -top,
+            maxY: GF.Config.canvas.height - bottom
+        };
     },
 
     respondToKeyEvent: function(keyEvent){

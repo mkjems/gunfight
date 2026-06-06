@@ -16,12 +16,6 @@ GF.Config = {
     },
     player: {
         speed: 120,
-        bounds: {
-            minX: 64,
-            maxX: 886,
-            minY: 128,
-            maxY: 630
-        },
         hitBox: {
             offsetX: -30,
             offsetY: -112,
@@ -38,7 +32,13 @@ GF.Config = {
             src: 'images/new2_gunfight_spritesheet.png',
             sourceWidth: 64,
             sourceHeight: 64,
-            frameStride: 64
+            frameStride: 64,
+            visibleBounds: {
+                left: 21,
+                right: 50,
+                top: 14,
+                bottom: 51
+            }
         },
         slots: [
             { x: 150, y: 430, facing: 1, frame: 0 },
