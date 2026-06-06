@@ -1,6 +1,8 @@
 GF.Game = (function(){
     var canvas,
         context,
+        hudCanvas,
+        hudContext,
         scene,
         socket,
         players,
@@ -10,6 +12,7 @@ GF.Game = (function(){
         scores,
         ammo,
         roundEndsAt,
+        roundMessageText,
         hitMessage,
         countdownTimer,
         hitTimer,
@@ -19,8 +22,12 @@ GF.Game = (function(){
     function initCanvas(){
         canvas = document.getElementById('canvas');
         context = canvas.getContext('2d');
+        hudCanvas = document.getElementById('hudCanvas');
+        hudContext = hudCanvas.getContext('2d');
         canvas.width = GF.Config.canvas.width;
         canvas.height = GF.Config.canvas.height;
+        hudCanvas.width = GF.Config.canvas.width;
+        hudCanvas.height = GF.Config.canvas.height;
         disableImageSmoothing();
     }
 
@@ -29,6 +36,10 @@ GF.Game = (function(){
         context.webkitImageSmoothingEnabled = false;
         context.mozImageSmoothingEnabled = false;
         context.msImageSmoothingEnabled = false;
+        hudContext.imageSmoothingEnabled = false;
+        hudContext.webkitImageSmoothingEnabled = false;
+        hudContext.mozImageSmoothingEnabled = false;
+        hudContext.msImageSmoothingEnabled = false;
     }
 
     function initGameState(){
@@ -39,6 +50,7 @@ GF.Game = (function(){
         scores = [0, 0];
         ammo = {};
         roundEndsAt = null;
+        roundMessageText = '';
         hitMessage = null;
         countdownTimer = null;
         hitTimer = null;
@@ -46,7 +58,8 @@ GF.Game = (function(){
     }
 
     function setRoundMessage(message){
-        document.getElementById('roundMessage').textContent = message;
+        roundMessageText = message;
+        renderHud();
     }
 
     function getPlayerSlot(id){
@@ -71,29 +84,12 @@ GF.Game = (function(){
         });
     }
 
-    function renderAmmo(elementId, count){
-        var element = document.getElementById(elementId);
-        var i;
-
-        if(element.getAttribute('data-count') === String(count)){
-            return;
-        }
-
-        element.setAttribute('data-count', count);
-        element.innerHTML = '';
-
-        for(i = 0; i < count; i++){
-            var round = document.createElement('span');
-
-            round.className = 'ammoRound';
-            element.appendChild(round);
-        }
-    }
-
     function renderHud(){
         var secondsLeft = GF.Config.round.seconds;
         var firstClient;
         var secondClient;
+        var firstAmmo;
+        var secondAmmo;
 
         if(roundEndsAt){
             secondsLeft = Math.max(0, Math.ceil((roundEndsAt - new Date().getTime()) / 1000));
@@ -103,16 +99,66 @@ GF.Game = (function(){
             secondsLeft = 'GAME OVER';
         }
 
-        document.getElementById('scoreLeft').textContent = scores[0] || 0;
-        document.getElementById('scoreRight').textContent = scores[1] || 0;
-        document.getElementById('roundTimer').textContent = secondsLeft;
-        document.getElementById('roundTimer').className = roundState === 'gameOver' ? 'gameOver' : '';
+        hudContext.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
+
+        if(roundMessageText){
+            drawRoundMessage(roundMessageText);
+        }
 
         firstClient = latestModel && latestModel.clients[0];
         secondClient = latestModel && latestModel.clients[1];
 
-        renderAmmo('ammoLeft', firstClient ? ammo[firstClient.id] || 0 : 0);
-        renderAmmo('ammoRight', secondClient ? ammo[secondClient.id] || 0 : 0);
+        if(!firstClient || !secondClient){
+            return;
+        }
+
+        firstAmmo = ammo[firstClient.id] || 0;
+        secondAmmo = ammo[secondClient.id] || 0;
+
+        drawHudText(scores[0] || 0, 122, 26, 24, 'left');
+        drawHudText(scores[1] || 0, 828, 26, 24, 'right');
+        drawHudText(secondsLeft, 475, 26, 24 , 'center');
+        drawAmmo(firstAmmo, 122, 596, 1);
+        drawAmmo(secondAmmo, 828, 596, -1);
+    }
+
+    function drawHudText(text, x, y, size, align){
+        hudContext.save();
+        hudContext.font = size + 'px "Press Start", sans-serif';
+        hudContext.textAlign = align;
+        hudContext.textBaseline = 'top';
+        hudContext.fillStyle = GF.Config.colors.yellow;
+        hudContext.shadowColor = 'rgb(0,0,0)';
+        hudContext.shadowOffsetX = 2;
+        hudContext.shadowOffsetY = 2;
+        hudContext.fillText(text, x, y);
+        hudContext.restore();
+    }
+
+    function drawAmmo(count, x, y, direction){
+        var i;
+        var roundX;
+        var spacing = 16;
+
+        hudContext.save();
+        hudContext.fillStyle = GF.Config.colors.yellow;
+        hudContext.shadowColor = 'rgb(0,0,0)';
+        hudContext.shadowOffsetX = 3;
+        hudContext.shadowOffsetY = 3;
+
+        for(i = 0; i < count; i++){
+            roundX = x + (i * spacing * direction);
+            hudContext.fillRect(roundX, y, 7, 26);
+            hudContext.fillRect(roundX, y - 6, 7, 7);
+        }
+
+        hudContext.restore();
+    }
+
+    function drawRoundMessage(message){
+        var fontSize = String(message).length > 3 ? 40 : 64;
+
+        drawHudText(message, 475, 262, fontSize, 'center');
     }
 
     function setPlayerLabel(model){
@@ -163,7 +209,6 @@ GF.Game = (function(){
 
     function setOverlayVisible(isVisible){
         document.getElementById('gameOverlay').className = isVisible ? '' : 'hidden';
-        document.getElementById('gameHud').className = latestModel && latestModel.clients.length >= 2 ? 'visible' : '';
     }
 
     function startCountdown(){

@@ -22,19 +22,36 @@ body{
     position: relative;
 }
 
-#canvas{
+#gameStage{
     aspect-ratio: 950 / 640;
     border: 2px solid rgb(255,244,0);
     box-sizing: border-box;
-    display: block;
     height: min(100vh, 67.3684vw);
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
     inset: 0;
     margin: auto;
     position: absolute;
     width: min(100vw, 148.4375vh);
     z-index: 0;
+}
+
+#canvas,
+#hudCanvas{
+    display: block;
+    height: 100%;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    inset: 0;
+    position: absolute;
+    width: 100%;
+}
+
+#canvas{
+    z-index: 0;
+}
+
+#hudCanvas{
+    pointer-events: none;
+    z-index: 1;
 }
 
 #gameOverlay{
@@ -72,89 +89,4 @@ body{
 #introControls,
 #readyList{
     font-size: 16px;
-}
-
-#gameHud{
-    display: none;
-    inset: 0;
-    position: absolute;
-    text-shadow: 3px 3px 0 rgb(0,0,0);
-    z-index: 1;
-}
-
-#gameHud.visible{
-    display: block;
-}
-
-#scoreLeft,
-#scoreRight,
-#roundTimer{
-    font-size: 48px;
-    line-height: 1;
-    position: absolute;
-    top: 18px;
-}
-
-#scoreLeft{
-    left: 16%;
-}
-
-#scoreRight{
-    right: 16%;
-}
-
-#roundTimer{
-    left: 0;
-    right: 0;
-    text-align: center;
-}
-
-#roundTimer.gameOver{
-    font-size: 40px;
-}
-
-#ammoLeft,
-#ammoRight{
-    bottom: 54px;
-    display: flex;
-    gap: 14px;
-    position: absolute;
-}
-
-#ammoLeft{
-    left: 14%;
-}
-
-#ammoRight{
-    right: 14%;
-}
-
-.ammoRound{
-    background: rgb(255,244,0);
-    border-radius: 8px 8px 2px 2px;
-    box-shadow: 3px 3px 0 rgb(0,0,0);
-    display: block;
-    height: 38px;
-    width: 10px;
-}
-
-.ammoRound::before{
-    background: rgb(255,244,0);
-    border-radius: 6px 6px 0 0;
-    content: '';
-    display: block;
-    height: 10px;
-    width: 10px;
-}
-
-#roundMessage{
-    font-size: 64px;
-    left: 0;
-    line-height: 1.4;
-    position: absolute;
-    right: 0;
-    text-align: center;
-    text-shadow: 4px 4px 0 rgb(0,0,0);
-    top: 40%;
-    z-index: 2;
 }
