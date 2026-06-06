@@ -69,9 +69,10 @@ public domain.
 
 ## How It Works
 
-The server serves the web client, assigns player IDs, tracks ready state, and
-relays Socket.IO input events between browsers.
+The server serves the web client, assigns player IDs, tracks ready state, chooses
+the current scenario from `gameserver/scenarios.json`, and relays Socket.IO
+input events between browsers.
 
 Each browser applies local input immediately, applies remote input when it
 arrives, runs the local game loop, moves everything by elapsed time, checks hits,
-and draws the frame.
+draws the scenario, and draws the frame.

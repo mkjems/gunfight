@@ -59,6 +59,11 @@ io.on('connection', function(socket) {
     io.emit('modelUpdate', model.getModel());
   });
 
+  socket.on('advanceRound', function() {
+    model.advanceRound();
+    io.emit('modelUpdate', model.getModel());
+  });
+
 });
 
 server.listen(portNumber, function() {

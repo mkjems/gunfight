@@ -7,7 +7,9 @@ GF.Config = {
         resetDelay: 1800,
         gameOverDelay: 3000,
         seconds: 70,
-        ammo: 6
+        ammo: 6,
+        getReadyDelay: 1200,
+        drawDelay: 700
     },
     player: {
         speed: 120,
