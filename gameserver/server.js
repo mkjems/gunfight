@@ -43,7 +43,8 @@ io.on('connection', function(socket) {
     const keyEvent = {
       action: data.action,
       key: data.key,
-      player: client.id
+      player: client.id,
+      shot: data.shot
     };
 
     socket.broadcast.emit('keyEvent', keyEvent);

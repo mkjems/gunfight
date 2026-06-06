@@ -477,8 +477,19 @@ GF.Game = (function(){
         }
 
         if(keyEvent.key === ' ' && keyEvent.action === 'down'){
-            if(roundState === 'playing' && ammo[player.playerId] > 0 && bullets.fire(player)){
+            var bullet;
+
+            if(roundState === 'playing' && ammo[player.playerId] > 0){
+                bullet = bullets.fire(player, keyEvent.shot);
+            }
+
+            if(bullet){
                 ammo[player.playerId]--;
+
+                if(!keyEvent.shot){
+                    keyEvent.shot = bullet.toSnapshot();
+                }
+
                 renderHud();
             }
             return;

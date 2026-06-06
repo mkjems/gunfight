@@ -1,16 +1,18 @@
 GF.Bullets = function(scene){
     var bullets = {};
 
-    function fire(player){
+    function fire(player, options){
         var activeBullet = bullets[player.playerId];
+        var bullet;
 
         if(activeBullet && !activeBullet.deleteMe){
             return false;
         }
 
-        bullets[player.playerId] = new GF.Bullet(player);
-        scene.addFigure(bullets[player.playerId]);
-        return true;
+        bullet = new GF.Bullet(player, options);
+        bullets[player.playerId] = bullet;
+        scene.addFigure(bullet);
+        return bullet;
     }
 
     function remove(id){

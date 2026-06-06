@@ -9,22 +9,40 @@ GF.Bullet = function(owner, options){
     var muzzleOffsetX = (-targetWidth / 2) + (muzzle.x * scale);
     var muzzleOffsetY = -targetHeight + (muzzle.y * scale);
     var diagonalSpeed = config.speed / Math.sqrt(2);
+    var hasSnapshot = typeof options.x === 'number' && typeof options.y === 'number';
 
     this.ownerId = owner.playerId;
-    this.facing = owner.facing;
-    this.aim = owner.aim;
-    this.x = owner.x + (this.facing * muzzleOffsetX);
-    this.y = owner.y + muzzleOffsetY;
+    this.facing = options.facing || owner.facing;
+    this.aim = options.aim || owner.aim;
+    this.x = hasSnapshot ? options.x : owner.x + (this.facing * muzzleOffsetX);
+    this.y = hasSnapshot ? options.y : owner.y + muzzleOffsetY;
     this.width = options.width || config.width;
     this.height = options.height || config.height;
-    this.speedX = this.facing * (options.speedX || (this.aim === 'raised' ? diagonalSpeed : config.speed));
-    this.speedY = options.speedY || (this.aim === 'raised' ? -diagonalSpeed : 0);
+    this.speedX = typeof options.speedX === 'number' ?
+        options.speedX :
+        this.facing * (this.aim === 'raised' ? diagonalSpeed : config.speed);
+    this.speedY = typeof options.speedY === 'number' ?
+        options.speedY :
+        (this.aim === 'raised' ? -diagonalSpeed : 0);
+    this.stepAccumulator = 0;
     this.deleteMe = false;
 };
 
 GF.Bullet.prototype = {
     move: function(lastupdated, t){
         var seconds = (t - lastupdated) / 1000;
+        var fixedStep = GF.Config.bullet.fixedStep;
+        var maxAccumulatedSeconds = fixedStep * 8;
+
+        this.stepAccumulator = Math.min(this.stepAccumulator + seconds, maxAccumulatedSeconds);
+
+        while(this.stepAccumulator >= fixedStep && !this.deleteMe){
+            this.moveStep(fixedStep);
+            this.stepAccumulator -= fixedStep;
+        }
+    },
+
+    moveStep: function(seconds){
         var remaining = seconds;
         var bounces = 0;
         var maxBounces = 3;
@@ -66,6 +84,19 @@ GF.Bullet.prototype = {
 
         this.speedX -= 2 * dot * normal.x;
         this.speedY -= 2 * dot * normal.y;
+    },
+
+    toSnapshot: function(){
+        return {
+            x: this.x,
+            y: this.y,
+            facing: this.facing,
+            aim: this.aim,
+            width: this.width,
+            height: this.height,
+            speedX: this.speedX,
+            speedY: this.speedY
+        };
     },
 
     getHitBox: function(){

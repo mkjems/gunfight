@@ -55,7 +55,8 @@ GF.Config = {
         },
         width: 4,
         height: 4,
-        speed: 420
+        speed: 420,
+        fixedStep: 1 / 120
     },
     colors: {
         yellowRgb: [255, 255, 0],
