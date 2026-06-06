@@ -206,18 +206,32 @@ GF.Game = (function(){
     }
 
     function drawRocks(scenario){
-        getRockLines(scenario).forEach(function(line){
+        if(!scenario){
+            return;
+        }
+
+        (scenario.rocks || []).forEach(function(rock){
+            var lines = rock.lines || [];
+            var firstLine = lines[0];
+
+            if(!firstLine){
+                return;
+            }
+
             context.save();
-            context.strokeStyle = GF.Config.colors.yellow;
-            context.lineWidth = 4;
-            context.lineCap = 'square';
+            context.fillStyle = GF.Config.colors.yellow;
             context.shadowColor = 'rgb(0,0,0)';
             context.shadowOffsetX = 2;
             context.shadowOffsetY = 2;
             context.beginPath();
-            context.moveTo(line.x1, line.y1);
-            context.lineTo(line.x2, line.y2);
-            context.stroke();
+            context.moveTo(rock.x + firstLine.from[0], rock.y + firstLine.from[1]);
+
+            lines.forEach(function(line){
+                context.lineTo(rock.x + line.to[0], rock.y + line.to[1]);
+            });
+
+            context.closePath();
+            context.fill();
             context.restore();
         });
     }
