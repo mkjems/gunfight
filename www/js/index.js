@@ -331,15 +331,11 @@ GF.Game = (function(){
 
     function drawStartScreen(){
         var controls = [
-            'h left',
-            'j down',
-            'k up',
-            'l right',
-            'a aim up',
-            'z aim level',
-            'space shoot'
+            'h j k l - left down up right',
+            'a z - aim high low',
+            'Space - shoot'
         ];
-        var y = 162;
+        var y = 176;
 
         drawHudText('GUNFIGHT', 475, 104, 'center');
         drawHudText(getPlayerLabel(), 475, 132, 'center');
@@ -349,7 +345,7 @@ GF.Game = (function(){
             y += 22;
         });
 
-        y += 12;
+        y += 24;
         (latestModel ? latestModel.clients : []).forEach(function(client, index){
             drawHudText('Player ' + (index + 1) + ' : ' + (client.ready ? 'ready' : 'waiting'), 475, y, 'center');
             y += 22;
