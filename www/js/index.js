@@ -347,13 +347,20 @@ GF.Game = (function(){
 
         y += 24;
         (latestModel ? latestModel.clients : []).forEach(function(client, index){
-            drawHudText('Player ' + (index + 1) + ' : ' + (client.ready ? 'ready' : 'waiting'), 475, y, 'center');
+            drawHudText('Player ' + (index + 1) + ' : ' + (client.ready ? 'READY' : 'waiting'), 475, y, 'center');
             y += 22;
         });
 
         y += 18;
         drawHudText('INSERT COIN', 475, y, 'center');
-        drawHudText('PRESS P TO PLAY', 475, y + 32, 'center');
+
+        if(shouldShowBlinkingPrompt()){
+            drawHudText('PRESS P TO PLAY', 475, y + 32, 'center');
+        }
+    }
+
+    function shouldShowBlinkingPrompt(){
+        return Math.floor(new Date().getTime() / 1000) % 2 === 0;
     }
 
     function getPlayerLabel(){
