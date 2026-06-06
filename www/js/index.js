@@ -306,6 +306,7 @@ GF.Game = (function(){
 
     function startRoundRitual(options){
         options = options || {};
+        var getReadyDelay = Math.max(GF.Config.round.getReadyDelay, GF.Config.round.introWalkDelay);
 
         if(options.resetScores){
             scores = [0, 0];
@@ -336,12 +337,12 @@ GF.Game = (function(){
                 roundState = 'playing';
                 renderHud();
             }, GF.Config.round.drawDelay);
-        }, GF.Config.round.getReadyDelay);
+        }, getReadyDelay);
     }
 
     function startRoundIntro(){
         var startedAt = new Date().getTime();
-        var duration = GF.Config.round.getReadyDelay;
+        var duration = GF.Config.round.introWalkDelay;
         var targets = [];
 
         players.clearKeys();

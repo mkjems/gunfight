@@ -11,6 +11,7 @@ GF.Config = {
         gameOverDelay: 3000,
         seconds: 70,
         ammo: 6,
+        introWalkDelay: 1500,
         getReadyDelay: 1200,
         drawDelay: 700
     },
