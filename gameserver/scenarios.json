@@ -2,7 +2,7 @@
   {
     "name": "single-cactus",
     "cacti": [
-      { "x": 475, "y": 378, "scale": 1 }
+      { "x": 475, "y": 378 }
     ],
     "rocks": [
       { "type": "small", "x": 475, "y": 445, "scale": 1 }
@@ -11,8 +11,8 @@
   {
     "name": "split-cacti",
     "cacti": [
-      { "x": 380, "y": 360, "scale": 0.85 },
-      { "x": 570, "y": 430, "scale": 1.1 }
+      { "x": 380, "y": 360 },
+      { "x": 570, "y": 430 }
     ],
     "rocks": [
       { "type": "small", "x": 475, "y": 335, "scale": 0.85 },
@@ -22,8 +22,8 @@
   {
     "name": "wagon-crossing",
     "cacti": [
-      { "x": 565, "y": 290, "scale": 0.8 },
-      { "x": 565, "y": 510, "scale": 0.8 }
+      { "x": 565, "y": 290 },
+      { "x": 565, "y": 510 }
     ],
     "rocks": [
       { "type": "tall", "x": 410, "y": 405, "scale": 0.8 },
@@ -33,7 +33,7 @@
       "x": 475,
       "fromY": 700,
       "toY": -80,
-      "duration": 12000
+      "duration": 40000
     }
   }
 ]

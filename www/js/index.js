@@ -6,6 +6,8 @@ GF.Game = (function(){
         hudCanvas,
         hudContext,
         ammoSprite,
+        wagonSprite,
+        cactusSprite,
         scene,
         socket,
         players,
@@ -37,6 +39,10 @@ GF.Game = (function(){
         ammoSprite = new Image();
         ammoSprite.onload = renderHud;
         ammoSprite.src = 'images/bullet.png';
+        wagonSprite = new Image();
+        wagonSprite.src = 'images/wagon.png';
+        cactusSprite = new Image();
+        cactusSprite.src = 'images/cactus.png';
         disableImageSmoothing();
     }
 
@@ -195,7 +201,7 @@ GF.Game = (function(){
         }
 
         (scenario.cacti || []).forEach(function(cactus){
-            drawCactus(cactus.x, cactus.y, cactus.scale || 1);
+            drawCactus(cactus.x, cactus.y);
         });
 
         drawRocks(scenario);
@@ -261,21 +267,20 @@ GF.Game = (function(){
         GF.Bullet.setCollisionLines(getRockLines(getCurrentScenario()));
     }
 
-    function drawCactus(x, y, scale){
-        var width = 8 * scale;
-        var height = 62 * scale;
-        var armWidth = 24 * scale;
-        var armHeight = 8 * scale;
+    function drawCactus(x, y){
+        var scale = GF.Config.graphics.scale;
+        var width = 17 * scale;
+        var height = 32 * scale;
 
         context.save();
-        context.fillStyle = GF.Config.colors.yellow;
-        context.shadowColor = 'rgb(0,0,0)';
-        context.shadowOffsetX = 2;
-        context.shadowOffsetY = 2;
-        context.fillRect(x - (width / 2), y - height, width, height);
-        context.fillRect(x - (armWidth / 2), y - (height * 0.72), armWidth, armHeight);
-        context.fillRect(x + (armWidth / 2) - width, y - (height * 0.92), width, height * 0.24);
-        context.fillRect(x - (armWidth / 2), y - (height * 0.58), width, height * 0.22);
+
+        if(cactusSprite && cactusSprite.complete){
+            context.drawImage(cactusSprite, x - (width / 2), y - height, width, height);
+        } else {
+            context.fillStyle = GF.Config.colors.yellow;
+            context.fillRect(x - (width / 2), y - height, width, height);
+        }
+
         context.restore();
     }
 
@@ -285,18 +290,19 @@ GF.Game = (function(){
         var progress = Math.min(1, Math.max(0, elapsed / duration));
         var y = wagon.fromY + ((wagon.toY - wagon.fromY) * progress);
         var x = wagon.x;
+        var scale = GF.Config.graphics.scale;
+        var width = 37 * scale;
+        var height = 38 * scale;
 
         context.save();
-        context.fillStyle = GF.Config.colors.yellow;
-        context.shadowColor = 'rgb(0,0,0)';
-        context.shadowOffsetX = 2;
-        context.shadowOffsetY = 2;
-        context.fillRect(x - 34, y - 12, 68, 24);
-        context.fillRect(x - 24, y - 34, 48, 22);
-        context.clearRect(x - 10, y - 25, 20, 13);
-        context.fillRect(x - 42, y + 10, 8, 24);
-        context.fillRect(x + 34, y + 10, 8, 24);
-        context.fillRect(x - 44, y + 30, 88, 5);
+
+        if(wagonSprite && wagonSprite.complete){
+            context.drawImage(wagonSprite, x - (width / 2), y - (height / 2), width, height);
+        } else {
+            context.fillStyle = GF.Config.colors.yellow;
+            context.fillRect(x - (width / 2), y - (height / 2), width, height);
+        }
+
         context.restore();
     }
 
