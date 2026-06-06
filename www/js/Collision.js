@@ -19,14 +19,14 @@ GF.Collision = {
             Object.keys(players).forEach(function(targetId){
                 var target = players[targetId];
 
-                if(hit || targetId === String(bullet.ownerId)){
+                if(hit || (targetId === String(bullet.ownerId) && !bullet.hasRicocheted)){
                     return;
                 }
 
                 if(GF.Collision.boxesOverlap(bullet.getHitBox(), target.getHitBox())){
                     hit = {
                         bullet: bullet,
-                        winnerId: bullet.ownerId,
+                        winnerId: GF.Collision.getWinnerId(bullet.ownerId, targetId, players),
                         targetId: targetId
                     };
                 }
@@ -34,5 +34,21 @@ GF.Collision = {
         });
 
         return hit;
+    },
+
+    getWinnerId: function(ownerId, targetId, players){
+        var winnerId = ownerId;
+
+        if(targetId !== String(ownerId)){
+            return winnerId;
+        }
+
+        Object.keys(players).forEach(function(playerId){
+            if(playerId !== targetId){
+                winnerId = players[playerId].playerId;
+            }
+        });
+
+        return winnerId;
     }
 };

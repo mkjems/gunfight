@@ -25,6 +25,7 @@ GF.Bullet = function(owner, options){
         options.speedY :
         (this.aim === 'raised' ? -diagonalSpeed : 0);
     this.stepAccumulator = 0;
+    this.hasRicocheted = options.hasRicocheted || false;
     this.deleteMe = false;
 };
 
@@ -84,6 +85,7 @@ GF.Bullet.prototype = {
 
         this.speedX -= 2 * dot * normal.x;
         this.speedY -= 2 * dot * normal.y;
+        this.hasRicocheted = true;
     },
 
     toSnapshot: function(){
@@ -95,7 +97,8 @@ GF.Bullet.prototype = {
             width: this.width,
             height: this.height,
             speedX: this.speedX,
-            speedY: this.speedY
+            speedY: this.speedY,
+            hasRicocheted: this.hasRicocheted
         };
     },
 
