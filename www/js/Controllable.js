@@ -102,10 +102,11 @@ GF.Controllable.prototype = {
 
         if(sprite && sprite.complete){
             var spriteConfig = GF.Config.player.sprite;
+            var scale = GF.Config.graphics.scale;
             var sourceWidth = spriteConfig.sourceWidth;
             var sourceHeight = spriteConfig.sourceHeight;
-            var targetWidth = sourceWidth * spriteConfig.scale;
-            var targetHeight = sourceHeight * spriteConfig.scale;
+            var targetWidth = sourceWidth * scale;
+            var targetHeight = sourceHeight * scale;
             var sourceX = this.frame * spriteConfig.frameStride;
             var sourceY = GF.Config.player.aimRows[this.aim] * sourceHeight;
 

@@ -2,11 +2,12 @@ GF.Bullet = function(owner, options){
     options = options || {};
     var config = GF.Config.bullet;
     var sprite = GF.Config.player.sprite;
+    var scale = GF.Config.graphics.scale;
     var muzzle = config.muzzle[owner.aim];
-    var targetWidth = sprite.sourceWidth * sprite.scale;
-    var targetHeight = sprite.sourceHeight * sprite.scale;
-    var muzzleOffsetX = (-targetWidth / 2) + (muzzle.x * sprite.scale);
-    var muzzleOffsetY = -targetHeight + (muzzle.y * sprite.scale);
+    var targetWidth = sprite.sourceWidth * scale;
+    var targetHeight = sprite.sourceHeight * scale;
+    var muzzleOffsetX = (-targetWidth / 2) + (muzzle.x * scale);
+    var muzzleOffsetY = -targetHeight + (muzzle.y * scale);
     var diagonalSpeed = config.speed / Math.sqrt(2);
 
     this.ownerId = owner.playerId;

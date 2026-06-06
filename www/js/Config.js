@@ -3,6 +3,9 @@ GF.Config = {
         width: 950,
         height: 640
     },
+    graphics: {
+        scale: 2
+    },
     round: {
         resetDelay: 1800,
         gameOverDelay: 3000,
@@ -35,8 +38,7 @@ GF.Config = {
             src: 'images/new2_gunfight_spritesheet.png',
             sourceWidth: 64,
             sourceHeight: 64,
-            frameStride: 64,
-            scale: 2
+            frameStride: 64
         },
         slots: [
             { x: 150, y: 430, facing: 1, frame: 0 },

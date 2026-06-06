@@ -5,6 +5,7 @@ GF.Game = (function(){
         context,
         hudCanvas,
         hudContext,
+        ammoSprite,
         scene,
         socket,
         players,
@@ -31,6 +32,9 @@ GF.Game = (function(){
         canvas.height = GF.Config.canvas.height;
         hudCanvas.width = GF.Config.canvas.width;
         hudCanvas.height = GF.Config.canvas.height;
+        ammoSprite = new Image();
+        ammoSprite.onload = renderHud;
+        ammoSprite.src = 'images/bullet.png';
         disableImageSmoothing();
     }
 
@@ -126,8 +130,8 @@ GF.Game = (function(){
         drawHudText(scores[0] || 0, 122, 22, 'left');
         drawHudText(scores[1] || 0, 828, 22, 'right');
         drawHudText(secondsLeft, 475, 22, 'center');
-        drawAmmo(firstAmmo, 122, 596, 1);
-        drawAmmo(secondAmmo, 828, 596, -1);
+        drawAmmo(firstAmmo, 122, 606, 1);
+        drawAmmo(secondAmmo, 828, 606, -1);
     }
 
     function drawHudText(text, x, y, align){
@@ -146,7 +150,10 @@ GF.Game = (function(){
     function drawAmmo(count, x, y, direction){
         var i;
         var roundX;
-        var spacing = 16;
+        var scale = GF.Config.graphics.scale;
+        var spriteWidth = 7 * scale;
+        var spriteHeight = 16 * scale;
+        var spacing = 10 * scale;
 
         hudContext.save();
         hudContext.fillStyle = GF.Config.colors.yellow;
@@ -156,8 +163,12 @@ GF.Game = (function(){
 
         for(i = 0; i < count; i++){
             roundX = x + (i * spacing * direction);
-            hudContext.fillRect(roundX, y, 7, 26);
-            hudContext.fillRect(roundX, y - 6, 7, 7);
+
+            if(ammoSprite && ammoSprite.complete){
+                hudContext.drawImage(ammoSprite, roundX, y, spriteWidth, spriteHeight);
+            } else {
+                hudContext.fillRect(roundX, y, spriteWidth, spriteHeight);
+            }
         }
 
         hudContext.restore();
