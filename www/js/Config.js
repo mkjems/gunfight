@@ -17,12 +17,6 @@ GF.Config = {
     },
     player: {
         speed: 120,
-        hitBox: {
-            offsetX: -30,
-            offsetY: -112,
-            width: 60,
-            height: 104
-        },
         animationFrameTime: 0.14,
         animationFrames: [0, 1, 2, 3],
         aimRows: {
@@ -38,6 +32,12 @@ GF.Config = {
                 left: 21,
                 right: 50,
                 top: 14,
+                bottom: 51
+            },
+            hitZone: {
+                left: 24,
+                right: 48,
+                top: 16,
                 bottom: 51
             }
         },

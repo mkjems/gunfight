@@ -106,13 +106,21 @@ GF.Controllable.prototype = {
     },
 
     getHitBox: function(){
-        var hitBox = GF.Config.player.hitBox;
+        var sprite = GF.Config.player.sprite;
+        var hitZone = sprite.hitZone || sprite.visibleBounds;
+        var scale = GF.Config.graphics.scale;
+        var left = ((-sprite.sourceWidth / 2) + hitZone.left) * scale;
+        var right = ((-sprite.sourceWidth / 2) + hitZone.right) * scale;
+        var top = (-sprite.sourceHeight + hitZone.top) * scale;
+        var bottom = (-sprite.sourceHeight + hitZone.bottom) * scale;
+        var visualLeft = this.facing < 0 ? -right : left;
+        var visualRight = this.facing < 0 ? -left : right;
 
         return {
-            x: this.x + hitBox.offsetX,
-            y: this.y + hitBox.offsetY,
-            width: hitBox.width,
-            height: hitBox.height
+            x: this.x + visualLeft,
+            y: this.y + top,
+            width: visualRight - visualLeft,
+            height: bottom - top
         };
     },
     
