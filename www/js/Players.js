@@ -7,15 +7,23 @@ GF.Players = function(scene, bullets){
         return slots[index % slots.length];
     }
 
-    function ensure(client, index){
+    function ensure(client, index, options){
+        options = options || {};
         var slot = getSlot(index);
         var id = client.id;
+        var slotChanged;
 
         if(players[id]){
+            slotChanged = players[id].slot !== index;
             players[id].playerId = id;
             players[id].slot = index;
             players[id].facing = slot.facing;
             players[id].idleFrame = slot.frame;
+
+            if(slotChanged && options.resetChangedSlots){
+                players[id].resetTo(slot);
+            }
+
             return;
         }
 
@@ -28,12 +36,12 @@ GF.Players = function(scene, bullets){
         scene.addFigure(players[id]);
     }
 
-    function sync(model){
+    function sync(model, options){
         var activePlayers = {};
 
         model.clients.forEach(function(client, index){
             activePlayers[client.id] = true;
-            ensure(client, index);
+            ensure(client, index, options);
         });
 
         Object.keys(players).forEach(function(id){
