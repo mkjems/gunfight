@@ -337,7 +337,7 @@ GF.Game = (function(){
         ];
         var y = 176;
 
-        drawHudText('GUNFIGHT', 475, 104, 'center');
+        drawHudText('GUNFIGHT 1975', 475, 104, 'center');
         drawHudText(getPlayerLabel(), 475, 132, 'center');
 
         controls.forEach(function(control){
@@ -380,7 +380,9 @@ GF.Game = (function(){
 
     function syncPlayers(model){
         latestModel = model;
-        players.sync(model);
+        players.sync(model, {
+            resetChangedSlots: roundState === 'waiting'
+        });
 
         if(roundState === 'waiting' && isReadyToStart(model)){
             startRoundRitual({ resetScores: true });
