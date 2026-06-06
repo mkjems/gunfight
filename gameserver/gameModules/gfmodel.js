@@ -1,7 +1,7 @@
 let counter = 0;
 const clients = [];
 
-exports.getNewClient = function(){
+export function getNewClient(){
     counter++;
 
     const newClient = {
@@ -11,9 +11,9 @@ exports.getNewClient = function(){
 
     clients.push(newClient);
     return newClient;
-};
+}
 
-exports.disconnect = function(client){
+export function disconnect(client){
     let i;
 
     for( i = clients.length -1; i >= 0; i--){  
@@ -21,15 +21,15 @@ exports.disconnect = function(client){
             clients.splice(i,1);
         }
     }
-};
+}
 
-exports.getModel = function(){
+export function getModel(){
     return {
         clients: clients.slice()
     };
-};
+}
 
-exports.readyClient = function(client){
+export function readyClient(client){
     const existingClient = clients.find(function(item){
         return item.id === client.id;
     });
@@ -37,10 +37,10 @@ exports.readyClient = function(client){
     if(existingClient){
         existingClient.ready = true;
     }
-};
+}
 
-exports.resetReady = function(){
+export function resetReady(){
     clients.forEach(function(client){
         client.ready = false;
     });
-};
+}

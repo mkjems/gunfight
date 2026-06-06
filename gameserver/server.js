@@ -1,10 +1,13 @@
-const express = require('express');
-const http = require('http');
-const path = require('path');
-const { Server } = require('socket.io');
-const model = require('./gameModules/gfmodel');
+import express from 'express';
+import http from 'node:http';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { Server } from 'socket.io';
+import * as model from './gameModules/gfmodel.js';
 
 const portNumber = process.env.PORT || 8080;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const wwwRoot = path.join(__dirname, '..', 'www');
 
 const app = express();
