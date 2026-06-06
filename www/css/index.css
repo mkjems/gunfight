@@ -74,23 +74,6 @@ body{
     font-size: 16px;
 }
 
-#bottomControls{
-    bottom: 18px;
-    display: none;
-    font-size: 14px;
-    left: 0;
-    line-height: 1.5;
-    position: absolute;
-    right: 0;
-    text-align: center;
-    text-shadow: 2px 2px 0 rgb(0,0,0);
-    z-index: 1;
-}
-
-#bottomControls.visible{
-    display: block;
-}
-
 #gameHud{
     display: none;
     inset: 0;

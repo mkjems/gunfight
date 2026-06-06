@@ -163,7 +163,6 @@ GF.Game = (function(){
 
     function setOverlayVisible(isVisible){
         document.getElementById('gameOverlay').className = isVisible ? '' : 'hidden';
-        document.getElementById('bottomControls').className = isVisible ? '' : 'visible';
         document.getElementById('gameHud').className = latestModel && latestModel.clients.length >= 2 ? 'visible' : '';
     }
 
