@@ -445,6 +445,7 @@ GF.Game = (function(){
 
     function bindSocketEvents(){
         socket.on('keyEvent', function(keyEvent){
+            keyEvent.eventTime += deltaServerTime;
             schedule.addEvent(keyEvent);
         });
 
