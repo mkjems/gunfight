@@ -67,6 +67,7 @@ GF.Game = (function(){
             emptyGun: createSoundEffect('sounds/empty-gun-shot.mp3', 0.8, 3),
             pain: createSoundEffect('sounds/pain.m4a', 0.8, 3),
             ricochet: createSoundEffect('sounds/ricochet.mp3', 0.7, 5),
+            ready: createSoundEffect('sounds/ready.mp3', 0.8, 3),
             cactusHit: createSoundEffect('sounds/cactus-hit.m4a', 0.8, 3),
             wagonHit: createSoundEffect('sounds/wagon-hit.mp3', 0.8, 3)
         };
@@ -252,6 +253,10 @@ GF.Game = (function(){
 
     function playPainSound(){
         playSoundEffect('pain');
+    }
+
+    function playReadySound(){
+        playSoundEffect('ready');
     }
 
     function playObstacleHitSound(id){
@@ -782,6 +787,7 @@ GF.Game = (function(){
         });
 
         if(roundState === 'waiting' && isReadyToStart(model)){
+            playReadySound();
             startRoundRitual({ resetScores: true });
             return;
         }
