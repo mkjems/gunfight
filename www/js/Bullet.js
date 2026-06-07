@@ -86,6 +86,10 @@ GF.Bullet.prototype = {
         this.speedX -= 2 * dot * normal.x;
         this.speedY -= 2 * dot * normal.y;
         this.hasRicocheted = true;
+
+        if(GF.Bullet.onRicochet){
+            GF.Bullet.onRicochet(this);
+        }
     },
 
     toSnapshot: function(){
@@ -123,6 +127,7 @@ GF.Bullet.prototype = {
 };
 
 GF.Bullet.collisionLines = [];
+GF.Bullet.onRicochet = null;
 
 GF.Bullet.setCollisionLines = function(lines){
     GF.Bullet.collisionLines = lines || [];

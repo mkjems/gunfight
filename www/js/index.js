@@ -11,6 +11,7 @@ GF.Game = (function(){
         saloonSprite,
         rockPatternSprite,
         rockPattern,
+        soundEffects,
         scene,
         socket,
         players,
@@ -55,7 +56,28 @@ GF.Game = (function(){
             rockPattern = createScaledPattern(rockPatternSprite);
         };
         rockPatternSprite.src = 'images/rock-pattern.png';
+        initSoundEffects();
         disableImageSmoothing();
+    }
+
+    function initSoundEffects(){
+        soundEffects = {
+            gunshot: createSoundEffect('sounds/gunshot.m4a', 0.8),
+            emptyGun: createSoundEffect('sounds/empty-gun-shot.mp3', 0.8),
+            pain: createSoundEffect('sounds/pain.m4a', 0.8),
+            ricochet: createSoundEffect('sounds/ricochet.mp3', 0.7),
+            cactusHit: createSoundEffect('sounds/cactus-hit.m4a', 0.8),
+            wagonHit: createSoundEffect('sounds/wagon-hit.mp3', 0.8)
+        };
+    }
+
+    function createSoundEffect(src, volume){
+        var audio = new Audio(src);
+
+        audio.preload = 'auto';
+        audio.volume = volume;
+
+        return audio;
     }
 
     function disableImageSmoothing(){
@@ -87,6 +109,52 @@ GF.Game = (function(){
         advanceRoundAfterHit = false;
         lastPositionSyncAt = 0;
         obstacleDamage = {};
+        GF.Bullet.onRicochet = playRicochetSound;
+    }
+
+    function playGunSound(){
+        playSoundEffect('gunshot');
+    }
+
+    function playEmptyGunSound(){
+        playSoundEffect('emptyGun');
+    }
+
+    function playRicochetSound(){
+        playSoundEffect('ricochet');
+    }
+
+    function playPainSound(){
+        playSoundEffect('pain');
+    }
+
+    function playObstacleHitSound(id){
+        if(id === 'wagon'){
+            playSoundEffect('wagonHit');
+            return;
+        }
+
+        if(id && id.indexOf('cactus:') === 0){
+            playSoundEffect('cactusHit');
+        }
+    }
+
+    function playSoundEffect(name){
+        var sound = soundEffects && soundEffects[name];
+        var instance;
+        var playRequest;
+
+        if(!sound){
+            return;
+        }
+
+        instance = sound.cloneNode();
+        instance.volume = sound.volume;
+        playRequest = instance.play();
+
+        if(playRequest && playRequest.catch){
+            playRequest.catch(function(){});
+        }
     }
 
     function createScaledPattern(image){
@@ -702,10 +770,13 @@ GF.Game = (function(){
 
             if(roundState === 'playing' && ammo[player.playerId] > 0){
                 bullet = bullets.fire(player, keyEvent.shot);
+            }else if(roundState === 'playing'){
+                playEmptyGunSound();
             }
 
             if(bullet){
                 ammo[player.playerId]--;
+                playGunSound();
 
                 if(!keyEvent.shot){
                     keyEvent.shot = bullet.toSnapshot();
@@ -845,6 +916,7 @@ GF.Game = (function(){
         }
 
         damageObstacle(data.id);
+        playObstacleHitSound(data.id);
         bullets.remove(data.ownerId);
     }
 
@@ -856,6 +928,7 @@ GF.Game = (function(){
             targetId: hit.targetId,
             text: 'Got me!'
         };
+        playPainSound();
 
         if(winnerSlot >= 0 && winnerSlot < scores.length){
             scores[winnerSlot]++;
