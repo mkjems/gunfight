@@ -1,6 +1,9 @@
 [
   {
     "name": "single-cactus",
+    "decorations": [
+      { "type": "saloon", "x": 0, "y": 220 }
+    ],
     "cacti": [
       { "x": 475, "y": 378 }
     ],
@@ -10,6 +13,9 @@
   },
   {
     "name": "split-cacti",
+    "decorations": [
+      { "type": "saloon", "x": 0, "y": 220 }
+    ],
     "cacti": [
       { "x": 380, "y": 360 },
       { "x": 570, "y": 430 }
@@ -21,6 +27,9 @@
   },
   {
     "name": "wagon-crossing",
+    "decorations": [
+      { "type": "saloon", "x": 0, "y": 220 }
+    ],
     "cacti": [
       { "x": 565, "y": 290 },
       { "x": 565, "y": 510 }

@@ -7,7 +7,7 @@ GF.Config = {
         scale: 2
     },
     debug: {
-        showCollisionBodies: true
+        showCollisionBodies: false
     },
     round: {
         resetDelay: 1800,

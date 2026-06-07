@@ -8,6 +8,7 @@ GF.Game = (function(){
         ammoSprite,
         wagonSprite,
         cactusSprite,
+        saloonSprite,
         rockPatternSprite,
         rockPattern,
         scene,
@@ -47,6 +48,8 @@ GF.Game = (function(){
         wagonSprite.src = 'images/wagon-1-4-37x38.png';
         cactusSprite = new Image();
         cactusSprite.src = 'images/cactus-1-4-17X32.png';
+        saloonSprite = new Image();
+        saloonSprite.src = 'images/saloon-64x128.png';
         rockPatternSprite = new Image();
         rockPatternSprite.onload = function(){
             rockPattern = createScaledPattern(rockPatternSprite);
@@ -227,6 +230,8 @@ GF.Game = (function(){
             return;
         }
 
+        drawDecorations(scenario);
+
         (scenario.cacti || []).forEach(function(cactus, index){
             drawCactus(cactus.x, cactus.y, getObstacleDamage(getCactusId(index)));
         });
@@ -236,6 +241,26 @@ GF.Game = (function(){
         if(scenario.wagon){
             drawWagon(scenario.wagon);
         }
+    }
+
+    function drawDecorations(scenario){
+        (scenario.decorations || []).forEach(function(decoration){
+            if(decoration.type === 'saloon'){
+                drawSaloon(decoration.x, decoration.y);
+            }
+        });
+    }
+
+    function drawSaloon(x, y){
+        var scale = GF.Config.graphics.scale;
+        var width = 64 * scale;
+        var height = 128 * scale;
+
+        if(!saloonSprite || !saloonSprite.complete){
+            return;
+        }
+
+        context.drawImage(saloonSprite, x, y, width, height);
     }
 
     function drawRocks(scenario){
