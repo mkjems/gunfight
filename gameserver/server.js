@@ -61,6 +61,10 @@ io.on('connection', function(socket) {
     });
   });
 
+  socket.on('obstacleDamage', function(data) {
+    socket.broadcast.emit('obstacleDamage', data);
+  });
+
   socket.on('clientReady', function() {
     model.readyClient(client);
     io.emit('modelUpdate', model.getModel());

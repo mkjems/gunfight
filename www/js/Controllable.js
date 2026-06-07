@@ -165,7 +165,8 @@ GF.Controllable.prototype = {
 
     getCollisionCircles: function(x, y){
         var scale = GF.Config.graphics.scale;
-        var circles = GF.Config.player.collider.circles;
+        var collider = GF.Config.player.collider;
+        var circles = collider.circles.concat(collider.aimCircles[this.aim] || []);
         var facing = this.facing;
 
         x = typeof x === 'number' ? x : this.x;
