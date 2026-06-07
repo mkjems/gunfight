@@ -22,6 +22,11 @@ GF.Config = {
         speed: 120,
         animationFrameTime: 0.14,
         animationFrames: [0, 1, 2, 3],
+        deathAnimation: {
+            row: 9,
+            frames: [0, 1, 2, 3],
+            frameTime: 0.18
+        },
         collider: {
             circles: [
                 { x: -7, y: -28, radius: 4 },
@@ -29,21 +34,32 @@ GF.Config = {
                 { x: 0, y: -29, radius: 7 },
                 { x: 0, y: -18, radius: 5.5 }
             ],
-            aimCircles: {
-                level: [
-                    { x: 15, y: -33, radius: 2.5 }
-                ],
-                raised: [
-                    { x: 14, y: -45, radius: 2.5 }
-                ]
-            }
+            aimCircles: [
+                { x: 10, y: -18, radius: 2.2 },
+                { x: 12, y: -21, radius: 2.2 },
+                { x: 14, y: -25, radius: 2.2 },
+                { x: 15, y: -29, radius: 2.2 },
+                { x: 15, y: -33, radius: 2.2 },
+                { x: 15, y: -37, radius: 2.2 },
+                { x: 14, y: -42, radius: 2.2 },
+                { x: 12, y: -46, radius: 2.2 },
+                { x: 10, y: -50, radius: 2.2 }
+            ]
         },
-        aimRows: {
-            level: 0,
-            raised: 1
-        },
+        defaultAim: 4,
+        aimLevels: [
+            { row: 0, angleDegrees: 60, muzzle: { x: 49, y: 50 } },
+            { row: 1, angleDegrees: 45, muzzle: { x: 52, y: 46 } },
+            { row: 2, angleDegrees: 30, muzzle: { x: 54, y: 41 } },
+            { row: 3, angleDegrees: 15, muzzle: { x: 55, y: 36 } },
+            { row: 4, angleDegrees: 0, muzzle: { x: 55, y: 31 } },
+            { row: 5, angleDegrees: -15, muzzle: { x: 55, y: 26 } },
+            { row: 6, angleDegrees: -30, muzzle: { x: 54, y: 21 } },
+            { row: 7, angleDegrees: -45, muzzle: { x: 52, y: 16 } },
+            { row: 8, angleDegrees: -60, muzzle: { x: 49, y: 12 } }
+        ],
         sprite: {
-            src: 'images/new2_gunfight_spritesheet.png',
+            src: 'images/gunfight_player_spritesheet.png',
             sourceWidth: 64,
             sourceHeight: 64,
             frameStride: 64,
@@ -68,10 +84,6 @@ GF.Config = {
         ]
     },
     bullet: {
-        muzzle: {
-            level: { x: 50, y: 28 },
-            raised: { x: 48, y: 18 }
-        },
         width: 4,
         height: 4,
         speed: 420,

@@ -9,10 +9,11 @@ GF.Controllable = function(xpos, ypos, options){
     this.facing = options.facing || 1;
     this.idleFrame = options.frame || 0;
     this.frame = this.idleFrame;
-    this.aim = 'level';
+    this.aim = config.defaultAim;
     this.animationTime = 0;
     this.animationFrameTime = config.animationFrameTime;
     this.animationFrames = config.animationFrames;
+    this.deathAnimationTime = null;
     this.speed = options.speed || config.speed;
     this.keys = {};
     this.pen = new GF.Pen(this.x, this.y, new GF.Color(
@@ -29,6 +30,11 @@ GF.Controllable.prototype = {
         var dx = 0;
         var dy = 0;
         var isMoving = false;
+
+        if(this.isDeathAnimating()){
+            this.advanceDeathAnimation(seconds);
+            return;
+        }
 
         if(this.keys.j){
            dy += dist;
@@ -116,13 +122,15 @@ GF.Controllable.prototype = {
     },
 
     respondToKeyEvent: function(keyEvent){
+        var aim = this.getAim();
+
         if(keyEvent.action === 'down' && keyEvent.key === 'a'){
-            this.aim = 'raised';
+            this.aim = Math.min(GF.Config.player.aimLevels.length - 1, aim + 1);
             return;
         }
 
         if(keyEvent.action === 'down' && keyEvent.key === 'z'){
-            this.aim = 'level';
+            this.aim = Math.max(0, aim - 1);
             return;
         }
 
@@ -139,9 +147,36 @@ GF.Controllable.prototype = {
         this.facing = slot.facing;
         this.idleFrame = slot.frame;
         this.frame = this.idleFrame;
-        this.aim = 'level';
+        this.aim = GF.Config.player.defaultAim;
         this.animationTime = 0;
+        this.deathAnimationTime = null;
         this.clearKeys();
+    },
+
+    playDeathAnimation: function(){
+        this.deathAnimationTime = 0;
+        this.frame = GF.Config.player.deathAnimation.frames[0];
+        this.clearKeys();
+    },
+
+    clearDeathAnimation: function(){
+        this.deathAnimationTime = null;
+    },
+
+    isDeathAnimating: function(){
+        return typeof this.deathAnimationTime === 'number';
+    },
+
+    advanceDeathAnimation: function(seconds){
+        var animation = GF.Config.player.deathAnimation;
+        var frameIndex;
+
+        this.deathAnimationTime += seconds;
+        frameIndex = Math.min(
+            animation.frames.length - 1,
+            Math.floor(this.deathAnimationTime / animation.frameTime)
+        );
+        this.frame = animation.frames[frameIndex];
     },
 
     getHitBox: function(){
@@ -166,7 +201,7 @@ GF.Controllable.prototype = {
     getCollisionCircles: function(x, y){
         var scale = GF.Config.graphics.scale;
         var collider = GF.Config.player.collider;
-        var circles = collider.circles.concat(collider.aimCircles[this.aim] || []);
+        var circles = collider.circles.concat(collider.aimCircles[this.getAim()] || []);
         var facing = this.facing;
 
         x = typeof x === 'number' ? x : this.x;
@@ -180,6 +215,14 @@ GF.Controllable.prototype = {
             };
         });
     },
+
+    getAim: function(){
+        if(typeof this.aim === 'number' && GF.Config.player.aimLevels[this.aim]){
+            return this.aim;
+        }
+
+        return GF.Config.player.defaultAim;
+    },
     
     draw: function(context){
         var sprite = GF.Controllable.sprite;
@@ -192,7 +235,7 @@ GF.Controllable.prototype = {
             var targetWidth = sourceWidth * scale;
             var targetHeight = sourceHeight * scale;
             var sourceX = this.frame * spriteConfig.frameStride;
-            var sourceY = GF.Config.player.aimRows[this.aim] * sourceHeight;
+            var sourceY = this.getSpriteRow() * sourceHeight;
 
             context.save();
             context.translate(this.x, this.y);
@@ -219,6 +262,14 @@ GF.Controllable.prototype = {
         this.pen.x = this.x;
         this.pen.y = this.y;
         this.pen.draw(context);
+    },
+
+    getSpriteRow: function(){
+        if(this.isDeathAnimating()){
+            return GF.Config.player.deathAnimation.row;
+        }
+
+        return GF.Config.player.aimLevels[this.getAim()].row;
     }
 };
 

@@ -13,10 +13,14 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent){
         socket.emit('clientKeyEvent', keyEvent);
     }
 
+    function normalizeKey(key){
+        return key.length === 1 ? key.toLowerCase() : key;
+    }
+
     function addKey(strKeyToAdd){
 
         document.addEventListener('keydown', function(evt){
-            if(evt.key !== strKeyToAdd){
+            if(normalizeKey(evt.key) !== strKeyToAdd){
                 return;
             }
             evt.preventDefault();
@@ -27,7 +31,7 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent){
         });
         
         document.addEventListener('keyup', function(evt){
-            if(evt.key !== strKeyToAdd){
+            if(normalizeKey(evt.key) !== strKeyToAdd){
                 return;
             }
             evt.preventDefault();

@@ -734,7 +734,7 @@ GF.Game = (function(){
     function drawStartScreen(){
         var controls = [
             'h j k l - left down up right',
-            'a z - aim high low',
+            'a z - aim up down',
             'Space - shoot'
         ];
         var y = 176;
@@ -1085,6 +1085,7 @@ GF.Game = (function(){
 
     function handlePlayerHit(hit){
         var winnerSlot = getPlayerSlot(hit.winnerId);
+        var target = players.all[hit.targetId];
 
         roundState = 'hitPause';
         hitMessage = {
@@ -1092,6 +1093,10 @@ GF.Game = (function(){
             text: 'Got me!'
         };
         playPainSound();
+
+        if(target){
+            target.playDeathAnimation();
+        }
 
         if(winnerSlot >= 0 && winnerSlot < scores.length){
             scores[winnerSlot]++;
@@ -1113,6 +1118,7 @@ GF.Game = (function(){
     function resetAfterHit(){
         hitMessage = null;
         hitTimer = null;
+        clearPlayerDeathAnimations();
 
         if(roundEndsAt && new Date().getTime() >= roundEndsAt){
             endGame();
@@ -1127,6 +1133,12 @@ GF.Game = (function(){
         bullets.reset();
         resetAmmo();
         startRoundRitual({ resetScores: false });
+    }
+
+    function clearPlayerDeathAnimations(){
+        Object.keys(players.all).forEach(function(id){
+            players.all[id].clearDeathAnimation();
+        });
     }
 
     function endRound(winnerId){

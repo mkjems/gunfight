@@ -1,29 +1,38 @@
 GF.Bullet = function(owner, options){
     options = options || {};
     var config = GF.Config.bullet;
+    var aim = typeof options.aim === 'number' ? options.aim : owner.aim;
+    var aimLevel;
     var sprite = GF.Config.player.sprite;
     var scale = GF.Config.graphics.scale;
-    var muzzle = config.muzzle[owner.aim];
+    var muzzle;
+
+    if(typeof aim !== 'number' || !GF.Config.player.aimLevels[aim]){
+        aim = GF.Config.player.defaultAim;
+    }
+
+    aimLevel = GF.Config.player.aimLevels[aim];
+    muzzle = aimLevel.muzzle;
     var targetWidth = sprite.sourceWidth * scale;
     var targetHeight = sprite.sourceHeight * scale;
     var muzzleOffsetX = (-targetWidth / 2) + (muzzle.x * scale);
     var muzzleOffsetY = -targetHeight + (muzzle.y * scale);
-    var diagonalSpeed = config.speed / Math.sqrt(2);
+    var angle = aimLevel.angleDegrees * Math.PI / 180;
     var hasSnapshot = typeof options.x === 'number' && typeof options.y === 'number';
 
     this.ownerId = owner.playerId;
     this.facing = options.facing || owner.facing;
-    this.aim = options.aim || owner.aim;
+    this.aim = aim;
     this.x = hasSnapshot ? options.x : owner.x + (this.facing * muzzleOffsetX);
     this.y = hasSnapshot ? options.y : owner.y + muzzleOffsetY;
     this.width = options.width || config.width;
     this.height = options.height || config.height;
     this.speedX = typeof options.speedX === 'number' ?
         options.speedX :
-        this.facing * (this.aim === 'raised' ? diagonalSpeed : config.speed);
+        this.facing * Math.cos(angle) * config.speed;
     this.speedY = typeof options.speedY === 'number' ?
         options.speedY :
-        (this.aim === 'raised' ? -diagonalSpeed : 0);
+        Math.sin(angle) * config.speed;
     this.stepAccumulator = 0;
     this.hasRicocheted = options.hasRicocheted || false;
     this.deleteMe = false;
