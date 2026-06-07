@@ -46,7 +46,7 @@ GF.Game = (function(){
         wagonSprite = new Image();
         wagonSprite.src = 'images/wagon-1-4-37x38.png';
         cactusSprite = new Image();
-        cactusSprite.src = 'images/cactus.png';
+        cactusSprite.src = 'images/cactus-1-4-17X32.png';
         rockPatternSprite = new Image();
         rockPatternSprite.onload = function(){
             rockPattern = createScaledPattern(rockPatternSprite);
@@ -309,7 +309,11 @@ GF.Game = (function(){
         }
 
         (scenario.cacti || []).forEach(function(cactus, index){
-            bodies.push(getCactusBody(cactus, index));
+            var body = getCactusBody(cactus, index);
+
+            if(body){
+                bodies.push(body);
+            }
         });
 
         (scenario.rocks || []).forEach(function(rock){
@@ -364,9 +368,14 @@ GF.Game = (function(){
 
     function getCactusBody(cactus, index){
         var scale = GF.Config.graphics.scale;
-        var damage = getObstacleDamage(getCactusId(index));
+        var damage = getCactusDamageStage(index);
         var width = 5 * scale;
-        var height = (damage ? 15 : 29) * scale;
+        var heights = [29, 22, 15, 0];
+        var height = heights[damage] * scale;
+
+        if(!height){
+            return null;
+        }
 
         return {
             type: 'rect',
@@ -383,6 +392,10 @@ GF.Game = (function(){
         return 'cactus:' + index;
     }
 
+    function getCactusDamageStage(index){
+        return Math.min(3, getObstacleDamage(getCactusId(index)));
+    }
+
     function getObstacleDamage(id){
         return obstacleDamage[id] || 0;
     }
@@ -393,13 +406,26 @@ GF.Game = (function(){
 
     function drawCactus(x, y, damage){
         var scale = GF.Config.graphics.scale;
-        var width = 17 * scale;
-        var height = 32 * scale;
+        var sourceWidth = 17;
+        var sourceHeight = 32;
+        var frame = Math.min(3, damage);
+        var width = sourceWidth * scale;
+        var height = sourceHeight * scale;
 
         context.save();
 
         if(cactusSprite && cactusSprite.complete){
-            context.drawImage(cactusSprite, x - (width / 2), y - height, width, height);
+            context.drawImage(
+                cactusSprite,
+                frame * sourceWidth,
+                0,
+                sourceWidth,
+                sourceHeight,
+                x - (width / 2),
+                y - height,
+                width,
+                height
+            );
         } else {
             context.fillStyle = GF.Config.colors.yellow;
             context.fillRect(x - (width / 2), y - height, width, height);
@@ -738,7 +764,11 @@ GF.Game = (function(){
         }
 
         (scenario.cacti || []).forEach(function(cactus, index){
-            bodies.push(getCactusBody(cactus, index));
+            var body = getCactusBody(cactus, index);
+
+            if(body){
+                bodies.push(body);
+            }
         });
 
         if(scenario.wagon){
