@@ -239,6 +239,11 @@ export function createLobby(options){
         game.updatedAt = now();
     }
 
+    function refreshStatus(game){
+        updateGameStatus(game);
+        game.updatedAt = now();
+    }
+
     function getModel(game){
         const model = game.model.getModel();
 
@@ -263,6 +268,7 @@ export function createLobby(options){
         join: join,
         leave: leave,
         markPlaying: markPlaying,
+        refreshStatus: refreshStatus,
         requeue: requeue,
         updateName: updateName
     };

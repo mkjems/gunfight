@@ -3,13 +3,13 @@ import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Server } from 'socket.io';
-import { createGameModel } from './gameModules/gfmodel.js';
+import { createLobby } from './gameModules/lobby.js';
 
 const portNumber = process.env.PORT || 8080;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const wwwRoot = path.join(__dirname, '..', 'www');
-const model = createGameModel();
+const lobby = createLobby();
 
 const app = express();
 const server = http.createServer(app);
@@ -25,35 +25,79 @@ app.get('/', function(req, res) {
   res.sendFile(path.join(wwwRoot, 'index.html'));
 });
 
+function getSocketGameContext(socket){
+  const game = lobby.getGameForSocket(socket.id);
+  const client = lobby.getClientForSocket(socket.id);
+
+  if(!game || !client){
+    return null;
+  }
+
+  return {
+    client: client,
+    game: game
+  };
+}
+
+function emitGameModel(game, eventName){
+  io.to(game.room).emit(eventName || 'modelUpdate', lobby.getModel(game));
+}
+
+function isReadyToStart(model){
+  return model.clients.length >= 2 && model.clients.every(function(client){
+    return client.ready;
+  });
+}
+
 io.on('connection', function(socket) {
-  const client = model.getNewClient();
+  const joined = lobby.join(socket.id);
+  const client = joined.client;
+  const game = joined.game;
+
+  socket.join(game.room);
 
   socket.emit('joinedGame', {
     playerId: client.id,
-    model: model.getModel()
+    model: joined.model
   });
-  socket.broadcast.emit('newClient', model.getModel());
+  socket.to(game.room).emit('newClient', lobby.getModel(game));
 
   socket.on('disconnect', function(reason) {
-    model.disconnect(client);
-    io.emit('modelUpdate', model.getModel());
+    const left = lobby.leave(socket.id);
+
+    if(left && left.model){
+      emitGameModel(left.game);
+    }
+
     console.log('client disconnected', client.id, reason);
   });
 
   socket.on('clientKeyEvent', function(data) {
+    const context = getSocketGameContext(socket);
+
+    if(!context){
+      return;
+    }
+
     const keyEvent = {
       action: data.action,
       key: data.key,
-      player: client.id,
+      player: context.client.id,
       shot: data.shot
     };
 
-    socket.broadcast.emit('keyEvent', keyEvent);
+    socket.to(context.game.room).emit('keyEvent', keyEvent);
   });
 
   socket.on('playerPosition', function(data) {
-    socket.broadcast.emit('playerPosition', {
-      player: client.id,
+    const context = getSocketGameContext(socket);
+
+    if(!context){
+      return;
+    }
+
+    socket.to(context.game.room).emit('playerPosition', {
+      player: context.client.id,
       x: data.x,
       y: data.y,
       frame: data.frame,
@@ -63,22 +107,54 @@ io.on('connection', function(socket) {
   });
 
   socket.on('obstacleDamage', function(data) {
-    socket.broadcast.emit('obstacleDamage', data);
+    const context = getSocketGameContext(socket);
+
+    if(!context){
+      return;
+    }
+
+    socket.to(context.game.room).emit('obstacleDamage', data);
   });
 
   socket.on('clientReady', function() {
-    model.readyClient(client);
-    io.emit('modelUpdate', model.getModel());
+    const context = getSocketGameContext(socket);
+    let model;
+
+    if(!context){
+      return;
+    }
+
+    context.game.model.readyClient(context.client);
+    model = lobby.getModel(context.game);
+
+    if(isReadyToStart(model)){
+      lobby.markPlaying(context.game);
+    }
+
+    emitGameModel(context.game);
   });
 
   socket.on('resetReady', function() {
-    model.resetReady();
-    io.emit('modelUpdate', model.getModel());
+    const context = getSocketGameContext(socket);
+
+    if(!context){
+      return;
+    }
+
+    context.game.model.resetReady();
+    lobby.refreshStatus(context.game);
+    emitGameModel(context.game);
   });
 
   socket.on('advanceRound', function() {
-    model.advanceRound();
-    io.emit('modelUpdate', model.getModel());
+    const context = getSocketGameContext(socket);
+
+    if(!context){
+      return;
+    }
+
+    context.game.model.advanceRound();
+    emitGameModel(context.game);
   });
 
 });
