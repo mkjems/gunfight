@@ -17,6 +17,7 @@ GF.Game = (function(){
         audioContext,
         scene,
         socket,
+        inputController,
         players,
         bullets,
         roundState,
@@ -1691,7 +1692,7 @@ GF.Game = (function(){
         initGameState();
 
         setupSocket(function(){
-            new GF.KeysModel(socket, playerId, handleKeyEvent, {
+            inputController = new GF.KeysModel(socket, playerId, handleKeyEvent, {
                 canReady: function(){
                     return !nameEditor || !nameEditor.isActive();
                 }

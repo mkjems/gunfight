@@ -3,6 +3,7 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent, options){
     options = options || {};
 
     var internalKeyStatus = {};
+    var inputKeys = ['h', 'j', 'k', 'l', 'a', 'z', ' ', 'e'];
 
     function emitKeyEvent(key, action){
         var keyEvent = {
@@ -19,6 +20,45 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent, options){
         }
 
         socket.emit('clientKeyEvent', keyEvent);
+    }
+
+    function press(key){
+        key = normalizeKey(key);
+
+        if(internalKeyStatus[key]){
+            return;
+        }
+
+        emitKeyEvent(key, 'down');
+        internalKeyStatus[key] = true;
+    }
+
+    function release(key){
+        key = normalizeKey(key);
+
+        if(!internalKeyStatus[key]){
+            return;
+        }
+
+        emitKeyEvent(key, 'up');
+        internalKeyStatus[key] = false;
+    }
+
+    function ready(){
+        if(options.canReady && !options.canReady()){
+            return;
+        }
+
+        if(internalKeyStatus.p){
+            return;
+        }
+
+        socket.emit('clientReady');
+        internalKeyStatus.p = true;
+    }
+
+    function releaseReady(){
+        internalKeyStatus.p = false;
     }
 
     function normalizeKey(key){
@@ -43,10 +83,7 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent, options){
                 return;
             }
             evt.preventDefault();
-            if(!internalKeyStatus[strKeyToAdd]){
-                emitKeyEvent(strKeyToAdd, 'down');
-            }
-            internalKeyStatus[strKeyToAdd] = true;
+            press(strKeyToAdd);
         });
         
         document.addEventListener('keyup', function(evt){
@@ -58,10 +95,7 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent, options){
                 return;
             }
             evt.preventDefault();
-            if(internalKeyStatus[strKeyToAdd]){
-                emitKeyEvent(strKeyToAdd, 'up');
-            }
-            internalKeyStatus[strKeyToAdd] = false;
+            release(strKeyToAdd);
         });
     }
 
@@ -76,16 +110,7 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent, options){
             }
 
             evt.preventDefault();
-
-            if(options.canReady && !options.canReady()){
-                return;
-            }
-
-            if(!internalKeyStatus.p){
-                socket.emit('clientReady');
-            }
-
-            internalKeyStatus.p = true;
+            ready();
         });
 
         document.addEventListener('keyup', function(evt){
@@ -98,11 +123,11 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent, options){
             }
 
             evt.preventDefault();
-            internalKeyStatus.p = false;
+            releaseReady();
         });
     }
     
-    ['h', 'j', 'k', 'l', 'a', 'z', ' ', 'e'].forEach(function(val){
+    inputKeys.forEach(function(val){
         addKey(val);
     });
 
@@ -113,7 +138,11 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent, options){
     }
     
     var shared = {
-       isDown: isKeyDown
+       isDown: isKeyDown,
+       press: press,
+       ready: ready,
+       release: release,
+       releaseReady: releaseReady
     };
     
     return shared;    
