@@ -880,10 +880,16 @@ GF.Game = (function(){
     }
 
     function syncPlayers(model){
+        var previousModel = latestModel;
+
         latestModel = model;
 
         if(model.status === 'abandoned'){
             enterLobbyState();
+        }
+
+        if(didAnyClientBecomeReady(previousModel, model)){
+            playReadySound();
         }
 
         players.sync(model, {
@@ -891,12 +897,27 @@ GF.Game = (function(){
         });
 
         if(roundState === 'waiting' && isReadyToStart(model)){
-            playReadySound();
             startRoundRitual({ resetScores: true });
             return;
         }
 
         renderHud();
+    }
+
+    function didAnyClientBecomeReady(previousModel, model){
+        var previousReady = {};
+
+        if(!previousModel || !model){
+            return false;
+        }
+
+        (previousModel.clients || []).forEach(function(client){
+            previousReady[client.id] = client.ready;
+        });
+
+        return (model.clients || []).some(function(client){
+            return client.ready && !previousReady[client.id];
+        });
     }
 
     function isReadyToStart(model){
