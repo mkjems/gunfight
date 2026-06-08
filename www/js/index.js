@@ -12,6 +12,7 @@ GF.Game = (function(){
         rockPatternSprite,
         rockPattern,
         nameEditor,
+        camera,
         soundEffects,
         audioContext,
         scene,
@@ -60,12 +61,23 @@ GF.Game = (function(){
         rockPatternSprite.src = 'images/rock-pattern.png';
         initSoundEffects();
         initNameEditor();
+        initCamera();
         disableImageSmoothing();
     }
 
     function initNameEditor(){
         nameEditor = new GF.NameEditor({
             onSubmit: submitNameChange
+        });
+    }
+
+    function initCamera(){
+        camera = new GF.Camera({
+            worldWidth: GF.Config.canvas.width,
+            worldHeight: GF.Config.canvas.height,
+            screenWidth: GF.Config.canvas.width,
+            screenHeight: GF.Config.canvas.height,
+            scale: getCameraScale()
         });
     }
 
@@ -799,6 +811,49 @@ GF.Game = (function(){
         });
     }
 
+    function shouldUseCamera(){
+        if(!camera || roundState === 'waiting'){
+            return false;
+        }
+
+        if(window.location.search.indexOf('camera=1') >= 0){
+            return true;
+        }
+
+        return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    }
+
+    function getCameraScale(){
+        if(window.location.search.indexOf('camera=1') >= 0){
+            return 1.85;
+        }
+
+        if(window.matchMedia && window.matchMedia('(pointer: coarse)').matches){
+            return 1.85;
+        }
+
+        return 1;
+    }
+
+    function updateCamera(){
+        var player;
+
+        if(!camera){
+            return;
+        }
+
+        camera.setScreenSize(canvas.width, canvas.height);
+        camera.setScale(getCameraScale());
+
+        if(!shouldUseCamera()){
+            camera.reset();
+            return;
+        }
+
+        player = players.all[playerId];
+        camera.follow(player);
+    }
+
     function shouldShowBlinkingPrompt(){
         return Math.floor(new Date().getTime() / 1000) % 2 === 0;
     }
@@ -1460,14 +1515,20 @@ GF.Game = (function(){
         updateRoundIntro();
         syncLocalPlayerPosition();
         checkForHits();
+        updateCamera();
 
         context.clearRect(0, 0, canvas.width, canvas.height);
-        if(roundState !== 'waiting'){
-            drawScenario();
+        context.save();
+        if(shouldUseCamera()){
+            camera.apply(context);
         }
-        scene.drawAll(context);
-        drawCollisionBodies();
-        drawHitMessage();
+            if(roundState !== 'waiting'){
+                drawScenario();
+            }
+            scene.drawAll(context);
+            drawCollisionBodies();
+            drawHitMessage();
+        context.restore();
         renderHud();
 
         setTimeout(function(){

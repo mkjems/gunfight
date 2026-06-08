@@ -8,6 +8,7 @@ const STATIC_ASSETS = [
     '/js/InstallPrompt.js',
     '/js/KeysModel.js',
     '/js/NameEditor.js',
+    '/js/Camera.js',
     '/js/Color.js',
     '/js/Pen.js',
     '/js/Scene.js',
