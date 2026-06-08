@@ -52,17 +52,23 @@ function isReadyToStart(model){
 function joinSocketGame(socket, options){
   const existingGame = lobby.getGameForSocket(socket.id);
   const joined = lobby.join(socket.id, options);
+  const joinedModel = lobby.getModel(joined.game);
 
   socket.join(joined.game.room);
   socket.emit('joinedGame', {
+    gameId: joined.game.id,
+    name: joined.client.name,
     playerId: joined.client.id,
-    model: joined.model
+    slot: joinedModel.clients.findIndex(function(client){
+      return client.id === joined.client.id;
+    }),
+    model: joinedModel
   });
 
   if(existingGame){
     emitGameModel(joined.game);
   } else {
-    socket.to(joined.game.room).emit('newClient', joined.model);
+    socket.to(joined.game.room).emit('newClient', joinedModel);
   }
 
   return joined;

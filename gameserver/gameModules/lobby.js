@@ -20,6 +20,8 @@ const DEFAULT_NAMES = [
  * @typedef {'waiting' | 'readying' | 'playing' | 'abandoned' | 'closed'} GameStatus
  * @typedef {{ id: number, ready: boolean, gameId: string, socketId: string, name: string }} LobbyClient
  * @typedef {{ id: string, room: string, status: GameStatus, model: ReturnType<typeof createGameModel>, clients: LobbyClient[], createdAt: number, updatedAt: number }} GameSession
+ * @typedef {{ id: number, name: string, ready: boolean, slot: number }} PublicClient
+ * @typedef {{ gameId: string, status: GameStatus, message: string, playerLimit: number, clients: PublicClient[], currentScenario: object | null, roundNumber: number }} PublicGameModel
  */
 
 function defaultNow(){
@@ -61,12 +63,35 @@ function resolveUniqueName(name, game){
     return resolvedName;
 }
 
-function toPublicClient(client){
+function toPublicClient(client, index){
     return {
         id: client.id,
         name: client.name,
-        ready: client.ready
+        ready: client.ready,
+        slot: index
     };
+}
+
+function getGameMessage(game){
+    if(game.status === 'abandoned'){
+        return 'OPPONENT LEFT';
+    }
+
+    if(game.status === 'playing'){
+        return '';
+    }
+
+    if(game.clients.length < MAX_PLAYERS_PER_GAME){
+        return 'LOOKING FOR CHALLENGER';
+    }
+
+    if(game.clients.every(function(client){
+        return client.ready;
+    })){
+        return 'GET READY';
+    }
+
+    return 'PRESS P TO PLAY';
 }
 
 function updateGameStatus(game){
@@ -244,6 +269,7 @@ export function createLobby(options){
         game.updatedAt = now();
     }
 
+    /** @returns {PublicGameModel} */
     function getModel(game){
         const model = game.model.getModel();
 
@@ -251,6 +277,8 @@ export function createLobby(options){
             ...model,
             gameId: game.id,
             status: game.status,
+            message: getGameMessage(game),
+            playerLimit: MAX_PLAYERS_PER_GAME,
             clients: game.clients.map(toPublicClient)
         };
     }
