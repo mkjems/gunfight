@@ -737,10 +737,11 @@ GF.Game = (function(){
             'a z - aim up down',
             'Space - shoot'
         ];
-        var y = 176;
+        var y = 190;
 
         drawHudText('GUNFIGHT 1975', 475, 104, 'center');
-        drawHudText(getPlayerLabel(), 475, 132, 'center');
+        drawHudText(getLobbyPlayerLabel(), 475, 132, 'center');
+        drawHudText(getGameLabel(), 475, 154, 'center');
 
         controls.forEach(function(control){
             drawHudText(control, 475, y, 'center');
@@ -748,15 +749,18 @@ GF.Game = (function(){
         });
 
         y += 24;
-        (latestModel ? latestModel.clients : []).forEach(function(client, index){
-            drawHudText('Player ' + (index + 1) + ' : ' + (client.ready ? 'READY' : 'waiting'), 475, y, 'center');
+        getLobbySlots().forEach(function(client, index){
+            drawHudText(getLobbySlotLabel(client, index), 475, y, 'center');
             y += 22;
         });
 
         y += 18;
-        drawHudText('INSERT COIN', 475, y, 'center');
 
-        if(shouldShowBlinkingPrompt()){
+        if(shouldShowLobbyMessage()){
+            drawHudText(getLobbyMessage(), 475, y, 'center');
+        }
+
+        if(shouldShowLobbyPrompt()){
             drawHudText('PRESS P TO PLAY', 475, y + 32, 'center');
         }
     }
@@ -765,23 +769,123 @@ GF.Game = (function(){
         return Math.floor(new Date().getTime() / 1000) % 2 === 0;
     }
 
-    function getPlayerLabel(){
+    function shouldShowLobbyPrompt(){
+        if(!shouldShowBlinkingPrompt()){
+            return false;
+        }
+
+        if(getLobbyMessage() === 'PRESS P TO PLAY'){
+            return false;
+        }
+
+        return !latestModel || latestModel.status !== 'abandoned';
+    }
+
+    function shouldShowLobbyMessage(){
+        if(getLobbyMessage() !== 'PRESS P TO PLAY'){
+            return true;
+        }
+
+        return shouldShowBlinkingPrompt();
+    }
+
+    function getLobbyPlayerLabel(){
         var model = latestModel;
+        var client;
         var playerIndex;
 
         if(!model){
             return '';
         }
 
-        playerIndex = model.clients.findIndex(function(client){
+        playerIndex = (model.clients || []).findIndex(function(client){
             return client.id === playerId;
         });
 
-        return playerIndex >= 0 ? 'Player ' + (playerIndex + 1) : '';
+        client = (model.clients || [])[playerIndex];
+
+        if(!client){
+            return '';
+        }
+
+        return getClientName(client) + ' - PLAYER ' + (playerIndex + 1);
+    }
+
+    function getGameLabel(){
+        if(!latestModel || !latestModel.gameId){
+            return '';
+        }
+
+        return 'GAME ' + latestModel.gameId;
+    }
+
+    function getClientName(client){
+        return client.name || ('PLAYER ' + ((client.slot || 0) + 1));
+    }
+
+    function getLobbySlots(){
+        var slots = [];
+        var model = latestModel || {};
+        var clients = model.clients || [];
+        var playerLimit = model.playerLimit || Math.max(2, clients.length);
+        var i;
+
+        for(i = 0; i < playerLimit; i++){
+            slots.push(clients[i] || null);
+        }
+
+        return slots;
+    }
+
+    function getLobbySlotLabel(client, index){
+        if(!client){
+            return 'PLAYER ' + (index + 1) + ' : WAITING';
+        }
+
+        return getClientName(client) + ' - PLAYER ' + (index + 1) + ' : ' + (client.ready ? 'READY' : 'WAITING');
+    }
+
+    function getLobbyMessage(){
+        if(latestModel && latestModel.message){
+            return latestModel.message;
+        }
+
+        return 'INSERT COIN';
+    }
+
+    function enterLobbyState(){
+        if(ritualTimer){
+            clearTimeout(ritualTimer);
+            ritualTimer = null;
+        }
+
+        if(hitTimer){
+            clearTimeout(hitTimer);
+            hitTimer = null;
+        }
+
+        if(resetTimer){
+            clearTimeout(resetTimer);
+            resetTimer = null;
+        }
+
+        roundIntro = null;
+        roundEndsAt = null;
+        hitMessage = null;
+        advanceRoundAfterHit = false;
+        obstacleDamage = {};
+        roundState = 'waiting';
+        players.clearKeys();
+        bullets.clear();
     }
 
     function syncPlayers(model){
         latestModel = model;
+
+        if(model.status === 'abandoned'){
+            enterLobbyState();
+        }
+
         players.sync(model, {
             resetChangedSlots: roundState === 'waiting'
         });
