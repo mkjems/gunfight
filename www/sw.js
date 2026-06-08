@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gunfight-v1';
+const CACHE_NAME = 'gunfight-v3';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -9,6 +9,7 @@ const STATIC_ASSETS = [
     '/js/KeysModel.js',
     '/js/NameEditor.js',
     '/js/Camera.js',
+    '/js/TouchControls.js',
     '/js/Color.js',
     '/js/Pen.js',
     '/js/Scene.js',
@@ -43,6 +44,7 @@ self.addEventListener('install', function(event){
             return cache.addAll(STATIC_ASSETS);
         })
     );
+    self.skipWaiting();
 });
 
 self.addEventListener('activate', function(event){
@@ -53,6 +55,8 @@ self.addEventListener('activate', function(event){
                     return caches.delete(key);
                 }
             }));
+        }).then(function(){
+            return self.clients.claim();
         })
     );
 });

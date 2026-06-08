@@ -23,6 +23,22 @@
 		<div id="gameStage">
 			<canvas id="canvas"></canvas>
 			<canvas id="hudCanvas"></canvas>
+			<div id="touchControls" hidden>
+				<div id="touchLobbyControls">
+					<button type="button" id="touchEditButton">EDIT</button>
+					<button type="button" id="touchPlayButton">PLAY</button>
+				</div>
+				<div id="touchJoystick" aria-label="Move">
+					<div id="touchJoystickKnob"></div>
+				</div>
+				<div id="touchActionControls">
+					<div id="touchAimSlider" aria-label="Aim">
+						<div id="touchAimTrack"></div>
+						<div id="touchAimHandle"></div>
+					</div>
+					<button type="button" id="touchShootButton">FIRE</button>
+				</div>
+			</div>
 		</div>
 		<script src="/socket.io/socket.io.js"></script>
 		<script >
@@ -36,6 +52,7 @@
 		<script src="js/KeysModel.js" ></script>
 		<script src="js/NameEditor.js" ></script>
 		<script src="js/Camera.js" ></script>
+		<script src="js/TouchControls.js" ></script>
 				
 		<script src="js/Color.js" ></script>		
 		<script src="js/Pen.js" ></script>

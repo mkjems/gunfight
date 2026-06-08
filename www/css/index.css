@@ -43,6 +43,24 @@ body{
     }
 }
 
+@media (pointer: coarse){
+    #gameStage{
+        height: max(100vh, 67.3684vw);
+        inset: 0;
+        margin: auto;
+        width: max(100vw, 148.4375vh);
+    }
+}
+
+@supports (height: 100dvh){
+    @media (pointer: coarse){
+        #gameStage{
+            height: max(100dvh, 67.3684vw);
+            width: max(100vw, 148.4375dvh);
+        }
+    }
+}
+
 #canvas,
 #hudCanvas{
     display: block;
@@ -62,6 +80,190 @@ body{
 #hudCanvas{
     pointer-events: none;
     z-index: 1;
+}
+
+#touchControls{
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+    z-index: 3;
+}
+
+@media (pointer: coarse){
+    #touchControls{
+        position: fixed;
+    }
+}
+
+#touchControls[hidden]{
+    display: none;
+}
+
+#touchControls button{
+    background: rgba(30,30,30,0.86);
+    border: 2px solid rgb(255,244,0);
+    color: rgb(255,244,0);
+    font: 10px Press Start, sans-serif;
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+#touchLobbyControls{
+    bottom: max(18px, env(safe-area-inset-bottom, 0));
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    left: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+}
+
+#touchLobbyControls[hidden]{
+    display: none;
+}
+
+#touchEditButton,
+#touchPlayButton{
+    min-height: 44px;
+    min-width: 86px;
+}
+
+#touchJoystick{
+    background: rgba(30,30,30,0.42);
+    border: 2px solid rgba(255,244,0,0.9);
+    border-radius: 50%;
+    bottom: max(22px, env(safe-area-inset-bottom, 0));
+    height: 126px;
+    left: max(22px, env(safe-area-inset-left, 0));
+    pointer-events: auto;
+    position: absolute;
+    touch-action: none;
+    width: 126px;
+}
+
+#touchJoystick[hidden]{
+    display: none;
+}
+
+#touchJoystick::before,
+#touchJoystick::after{
+    background: rgba(255,244,0,0.45);
+    content: "";
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#touchJoystick::before{
+    height: 2px;
+    width: 72px;
+}
+
+#touchJoystick::after{
+    height: 72px;
+    width: 2px;
+}
+
+#touchJoystickKnob{
+    background: rgb(255,244,0);
+    border-radius: 50%;
+    height: 34px;
+    left: calc(50% - 17px);
+    position: absolute;
+    top: calc(50% - 17px);
+    width: 34px;
+}
+
+#touchActionControls{
+    align-items: center;
+    bottom: max(20px, env(safe-area-inset-bottom, 0));
+    display: flex;
+    gap: 14px;
+    pointer-events: none;
+    position: absolute;
+    right: max(20px, env(safe-area-inset-right, 0));
+}
+
+#touchActionControls[hidden]{
+    display: none;
+}
+
+#touchAimSlider{
+    background: rgba(30,30,30,0.42);
+    border: 2px solid rgba(255,244,0,0.9);
+    height: 138px;
+    pointer-events: auto;
+    position: relative;
+    touch-action: none;
+    width: 44px;
+}
+
+#touchAimTrack{
+    background: rgba(255,244,0,0.45);
+    bottom: 12px;
+    left: 50%;
+    position: absolute;
+    top: 12px;
+    transform: translateX(-50%);
+    width: 2px;
+}
+
+#touchAimHandle{
+    background: rgb(255,244,0);
+    height: 14px;
+    left: 8px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+}
+
+#touchShootButton{
+    border-radius: 50%;
+    height: 82px;
+    width: 82px;
+}
+
+#touchControls.is-editing #touchAimSlider{
+    display: none;
+}
+
+#touchControls.is-editing #touchShootButton{
+    height: 74px;
+    width: 74px;
+}
+
+@media (pointer: coarse){
+    #touchLobbyControls{
+        bottom: max(8px, env(safe-area-inset-bottom, 0));
+    }
+
+    #touchJoystick{
+        bottom: max(8px, env(safe-area-inset-bottom, 0));
+        height: 120px;
+        left: max(8px, env(safe-area-inset-left, 0));
+        width: 120px;
+    }
+
+    #touchActionControls{
+        bottom: max(8px, env(safe-area-inset-bottom, 0));
+        gap: 8px;
+        right: max(8px, env(safe-area-inset-right, 0));
+    }
+
+    #touchAimSlider{
+        height: 132px;
+    }
+}
+
+@media (pointer: fine){
+    #touchControls:not(.debug-touch){
+        display: none;
+    }
 }
 
 #installPrompt{

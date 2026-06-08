@@ -268,26 +268,26 @@ This keeps gameplay code from caring whether input came from keyboard or touch.
 
 Add an HTML touch overlay with large stable hit targets.
 
-Needed controls:
+Implemented controls:
 
-- Join/ready: Play button mapped to `clientReady`.
-- Move left: mapped to `h`.
-- Move right: mapped to `l`.
-- Aim up: mapped to `a`.
-- Aim down: mapped to `z`.
-- Shoot: mapped to Space.
-
-The original keyboard also supports `j` and `k` for down/up movement. Current gameplay appears side-view and mainly horizontal, but if vertical movement is meaningful we should add a small four-way pad:
-
-- Left: `h`
-- Down: `j`
-- Up: `k`
-- Right: `l`
+- Lobby: `EDIT` maps to `e`; `PLAY` maps to ready.
+- Name editor: left-side joystick maps to `h`, `j`, `k`, `l`; `FIRE` maps to Space for selecting letters.
+- Gameplay movement: left-side virtual joystick maps to `h`, `j`, `k`, `l`.
+- Gameplay aiming: right-side vertical slider maps to repeated `a`/`z` input.
+- Gameplay shooting: right-side `FIRE` button maps to Space.
 
 For touch ergonomics:
 
 - Put movement on the lower left.
 - Put aim and shoot on the lower right.
+- Keep the overlay HTML/CSS separate from canvas rendering.
+- Keep the input mapping inside `TouchControls.js`, with gameplay using the unified `KeysModel` input API.
+
+Follow-up tuning after real-device testing:
+
+- Tune joystick size/deadzone.
+- Tune aim slider direction and travel.
+- Adjust control positions for iPhone safe areas and PWA full-screen mode.
 - Make shoot the largest action button.
 - Use `pointerdown`, `pointerup`, `pointercancel`, and `lostpointercapture`.
 - Emit key `down` once on press and key `up` once on release.

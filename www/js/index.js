@@ -18,6 +18,7 @@ GF.Game = (function(){
         scene,
         socket,
         inputController,
+        touchControls,
         players,
         bullets,
         roundState,
@@ -1531,6 +1532,7 @@ GF.Game = (function(){
             drawHitMessage();
         context.restore();
         renderHud();
+        updateTouchControls();
 
         setTimeout(function(){
             requestAnimFrame(animate);
@@ -1573,6 +1575,37 @@ GF.Game = (function(){
         player.frame = data.frame;
         player.aim = data.aim;
         player.facing = data.facing;
+    }
+
+    function initTouchControls(){
+        touchControls = new GF.TouchControls({
+            input: inputController,
+            getAimLevel: getLocalAimLevel
+        });
+        updateTouchControls();
+    }
+
+    function getLocalAimLevel(){
+        var player = players.all[playerId];
+
+        if(player && typeof player.getAim === 'function'){
+            return player.getAim();
+        }
+
+        return GF.Config.player.defaultAim;
+    }
+
+    function updateTouchControls(){
+        if(!touchControls){
+            return;
+        }
+
+        touchControls.update({
+            waiting: roundState === 'waiting',
+            playing: roundState === 'playing',
+            editing: nameEditor && nameEditor.isActive(),
+            aimLevel: getLocalAimLevel()
+        });
     }
 
     function drawCollisionBodies(){
@@ -1697,6 +1730,7 @@ GF.Game = (function(){
                     return !nameEditor || !nameEditor.isActive();
                 }
             });
+            initTouchControls();
             bindSocketEvents();
             animate();
         });
