@@ -11,6 +11,7 @@ GF.Game = (function(){
         saloonSprite,
         rockPatternSprite,
         rockPattern,
+        nameEditor,
         soundEffects,
         audioContext,
         scene,
@@ -58,7 +59,14 @@ GF.Game = (function(){
         };
         rockPatternSprite.src = 'images/rock-pattern.png';
         initSoundEffects();
+        initNameEditor();
         disableImageSmoothing();
+    }
+
+    function initNameEditor(){
+        nameEditor = new GF.NameEditor({
+            onSubmit: submitNameChange
+        });
     }
 
     function initSoundEffects(){
@@ -418,6 +426,17 @@ GF.Game = (function(){
         hudContext.restore();
     }
 
+    function drawHudRect(x, y, width, height){
+        hudContext.save();
+        hudContext.strokeStyle = GF.Config.colors.yellow;
+        hudContext.lineWidth = 2;
+        hudContext.shadowColor = 'rgb(0,0,0)';
+        hudContext.shadowOffsetX = 1;
+        hudContext.shadowOffsetY = 1;
+        hudContext.strokeRect(x, y, width, height);
+        hudContext.restore();
+    }
+
     function drawAmmo(count, x, y, direction){
         var i;
         var roundX;
@@ -740,6 +759,12 @@ GF.Game = (function(){
         var y = 190;
 
         drawHudText('GUNFIGHT 1975', 475, 104, 'center');
+
+        if(nameEditor && nameEditor.isActive()){
+            drawNameEditor();
+            return;
+        }
+
         drawHudText(getLobbyPlayerLabel(), 475, 132, 'center');
         drawHudText(getGameLabel(), 475, 154, 'center');
 
@@ -755,6 +780,8 @@ GF.Game = (function(){
         });
 
         y += 18;
+        drawHudText('PRESS E TO EDIT NAME', 475, y, 'center');
+        y += 32;
 
         if(shouldShowLobbyMessage()){
             drawHudText(getLobbyMessage(), 475, y, 'center');
@@ -763,6 +790,13 @@ GF.Game = (function(){
         if(shouldShowLobbyPrompt()){
             drawHudText('PRESS P TO PLAY', 475, y + 32, 'center');
         }
+    }
+
+    function drawNameEditor(){
+        nameEditor.draw({
+            text: drawHudText,
+            rect: drawHudRect
+        });
     }
 
     function shouldShowBlinkingPrompt(){
@@ -790,25 +824,30 @@ GF.Game = (function(){
     }
 
     function getLobbyPlayerLabel(){
-        var model = latestModel;
-        var client;
+        var client = getLocalClient();
         var playerIndex;
 
-        if(!model){
+        if(!latestModel || !client){
             return '';
         }
 
-        playerIndex = (model.clients || []).findIndex(function(client){
-            return client.id === playerId;
+        playerIndex = (latestModel.clients || []).findIndex(function(item){
+            return item.id === playerId;
         });
 
-        client = (model.clients || [])[playerIndex];
+        return getClientName(client) + ' - PLAYER ' + (playerIndex + 1);
+    }
 
-        if(!client){
-            return '';
+    function getLocalClient(){
+        var model = latestModel;
+
+        if(!model){
+            return null;
         }
 
-        return getClientName(client) + ' - PLAYER ' + (playerIndex + 1);
+        return (model.clients || []).find(function(client){
+            return client.id === playerId;
+        }) || null;
     }
 
     function getGameLabel(){
@@ -821,6 +860,36 @@ GF.Game = (function(){
 
     function getClientName(client){
         return client.name || ('PLAYER ' + ((client.slot || 0) + 1));
+    }
+
+    function submitNameChange(name){
+        if(!socket || !name){
+            return;
+        }
+
+        socket.emit('updateName', {
+            name: name
+        });
+    }
+
+    function syncNameEditor(){
+        var client;
+
+        if(!nameEditor || nameEditor.isActive()){
+            return;
+        }
+
+        client = getLocalClient();
+
+        if(client){
+            nameEditor.setName(getClientName(client));
+        }
+    }
+
+    function closeNameEditor(){
+        if(nameEditor && nameEditor.isActive()){
+            nameEditor.close();
+        }
     }
 
     function getLobbySlots(){
@@ -877,6 +946,7 @@ GF.Game = (function(){
         roundState = 'waiting';
         players.clearKeys();
         bullets.clear();
+        syncNameEditor();
     }
 
     function syncPlayers(model){
@@ -895,6 +965,7 @@ GF.Game = (function(){
         players.sync(model, {
             resetChangedSlots: roundState === 'waiting'
         });
+        syncNameEditor();
 
         if(roundState === 'waiting' && isReadyToStart(model)){
             startRoundRitual({ resetScores: true });
@@ -935,6 +1006,7 @@ GF.Game = (function(){
         }
 
         roundState = 'ritual';
+        closeNameEditor();
         roundEndsAt = null;
         scenarioStartedAt = new Date().getTime();
         obstacleDamage = {};
@@ -1040,7 +1112,16 @@ GF.Game = (function(){
     }
 
     function handleKeyEvent(keyEvent){
-        var player = players.all[keyEvent.player];
+        var player;
+
+        if(roundState === 'waiting' && nameEditor && keyEvent.player === playerId){
+            if(nameEditor.handleKeyEvent(keyEvent) === false){
+                renderHud();
+                return false;
+            }
+        }
+
+        player = players.all[keyEvent.player];
 
         if(!player){
             return;
@@ -1270,6 +1351,7 @@ GF.Game = (function(){
         var winnerSlot = getPlayerSlot(winnerId);
 
         roundState = 'roundOver';
+        closeNameEditor();
         roundEndsAt = null;
         hitMessage = null;
         advanceRoundAfterHit = false;
@@ -1306,6 +1388,7 @@ GF.Game = (function(){
 
     function endGame(){
         roundState = 'gameOver';
+        closeNameEditor();
         roundEndsAt = null;
         hitMessage = null;
         advanceRoundAfterHit = false;
@@ -1350,6 +1433,7 @@ GF.Game = (function(){
         }
 
         roundState = 'waiting';
+        syncNameEditor();
         renderHud();
     }
 
@@ -1364,6 +1448,7 @@ GF.Game = (function(){
         obstacleDamage = {};
         resetTimer = null;
         roundState = 'waiting';
+        syncNameEditor();
         renderHud();
         socket.emit('resetReady');
     }
@@ -1545,7 +1630,11 @@ GF.Game = (function(){
         initGameState();
 
         setupSocket(function(){
-            new GF.KeysModel(socket, playerId, handleKeyEvent);
+            new GF.KeysModel(socket, playerId, handleKeyEvent, {
+                canReady: function(){
+                    return !nameEditor || !nameEditor.isActive();
+                }
+            });
             bindSocketEvents();
             animate();
         });

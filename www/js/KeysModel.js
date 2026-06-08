@@ -1,5 +1,7 @@
 
-GF.KeysModel = function(socket, playerId, onLocalKeyEvent){
+GF.KeysModel = function(socket, playerId, onLocalKeyEvent, options){
+    options = options || {};
+
     var internalKeyStatus = {};
 
     function emitKeyEvent(key, action){
@@ -8,8 +10,14 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent){
             player: playerId,
             action: action
         };
+        var result;
 
-        onLocalKeyEvent(keyEvent);
+        result = onLocalKeyEvent(keyEvent);
+
+        if(result === false){
+            return;
+        }
+
         socket.emit('clientKeyEvent', keyEvent);
     }
 
@@ -17,9 +25,20 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent){
         return key.length === 1 ? key.toLowerCase() : key;
     }
 
+    function shouldIgnoreKeyboardEvent(evt){
+        var target = evt.target;
+        var tagName = target && target.tagName;
+
+        return tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT' || (target && target.isContentEditable);
+    }
+
     function addKey(strKeyToAdd){
 
         document.addEventListener('keydown', function(evt){
+            if(shouldIgnoreKeyboardEvent(evt)){
+                return;
+            }
+
             if(normalizeKey(evt.key) !== strKeyToAdd){
                 return;
             }
@@ -31,6 +50,10 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent){
         });
         
         document.addEventListener('keyup', function(evt){
+            if(shouldIgnoreKeyboardEvent(evt)){
+                return;
+            }
+
             if(normalizeKey(evt.key) !== strKeyToAdd){
                 return;
             }
@@ -44,11 +67,19 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent){
 
     function bindReadyKey(){
         document.addEventListener('keydown', function(evt){
+            if(shouldIgnoreKeyboardEvent(evt)){
+                return;
+            }
+
             if(evt.key !== 'p' && evt.key !== 'P'){
                 return;
             }
 
             evt.preventDefault();
+
+            if(options.canReady && !options.canReady()){
+                return;
+            }
 
             if(!internalKeyStatus.p){
                 socket.emit('clientReady');
@@ -58,6 +89,10 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent){
         });
 
         document.addEventListener('keyup', function(evt){
+            if(shouldIgnoreKeyboardEvent(evt)){
+                return;
+            }
+
             if(evt.key !== 'p' && evt.key !== 'P'){
                 return;
             }
@@ -67,7 +102,7 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent){
         });
     }
     
-    ['h', 'j', 'k', 'l', 'a', 'z', ' '].forEach(function(val){
+    ['h', 'j', 'k', 'l', 'a', 'z', ' ', 'e'].forEach(function(val){
         addKey(val);
     });
 
