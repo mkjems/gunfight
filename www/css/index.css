@@ -4,6 +4,12 @@
     src: url('../fonts/press_start/prstart.ttf'); 
 }
 
+html{
+    background-color: rgb(30,30,30);
+    min-height: 100%;
+    overflow: auto;
+    overscroll-behavior: auto;
+}
 
 body{
     background-color: rgb(30,30,30);
@@ -11,9 +17,33 @@ body{
     font-family: Press Start, sans-serif;
     line-height:25px;
     margin: 0;
-    min-height: 100vh;
-    overflow: hidden;
+    min-height: 115vh;
+    overflow: auto;
+    overscroll-behavior: auto;
     position: relative;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+}
+
+@media (pointer: coarse){
+    html{
+        min-height: 100%;
+        overflow: auto;
+        overscroll-behavior: auto;
+    }
+
+    body{
+        min-height: 115vh;
+        overflow: auto;
+        overscroll-behavior: auto;
+    }
+
+    #gameStage{
+        top: 0;
+        bottom: auto;
+        margin-top: 0;
+    }
 }
 
 #gameStage{
@@ -24,6 +54,13 @@ body{
     position: absolute;
     width: min(100vw, 148.4375vh);
     z-index: 0;
+}
+
+@supports (height: 100lvh){
+    #gameStage{
+        height: min(100lvh, 67.3684vw);
+        width: min(100vw, 148.4375lvh);
+    }
 }
 
 #canvas,
