@@ -23,7 +23,7 @@ The current app is close in spirit already: the waiting screen is the arcade lob
 - Visitors can join, leave, disconnect, reconnect in a predictable way.
 - Visitors get short generated names, and can change them before or while waiting.
 - Touch users can ready up, move, aim, and shoot without a keyboard.
-- The full playfield fits on small screens without camera scrolling.
+- Mobile gameplay feels full-screen by using a virtual camera that follows the local player instead of shrinking the whole playfield.
 
 ## Non-Goals For The First Public Version
 
@@ -58,7 +58,7 @@ The waiting screen should remain the lobby UI. Instead of showing only `Player 1
 - The visitor's generated name.
 - The opponent slot, either occupied or waiting.
 - A blinking retro prompt such as `PRESS P TO PLAY` on keyboard and `TAP PLAY` on touch devices.
-- A small name-change control outside or overlaid near the canvas, styled like an arcade service panel.
+- An arcade-native name editor entered with `E`, using the existing movement/select controls.
 
 ## Pairing Flow
 
@@ -185,13 +185,18 @@ Then either auto-requeue after a delay or show a Play/Requeue button. Auto-reque
 
 ### 7. Add Name Editing
 
-Add a compact HTML overlay near the game stage:
+Add an arcade-native name editor instead of a normal web form.
 
-- Short text input, max 3 to 8 characters.
-- Randomize button.
-- Save/update behavior that emits `updateName`.
+Expected behavior:
 
-Keep this visually quiet and arcade-like. It should not become a modern lobby panel that fights the game screen.
+- Lobby shows `PRESS E TO EDIT NAME`.
+- Pressing `E` switches the lobby into name-entry mode.
+- `h j k l` move a highlight through a matrix of letters/actions.
+- Space selects a character or action.
+- Include letters, numbers, backspace, random, and OK.
+- Finishing emits `updateName`.
+
+Keep this inside a separate client module so the main game loop only delegates input and drawing.
 
 ### 8. Add Server Tests For Pairing And Room Isolation
 
@@ -211,21 +216,43 @@ This should happen before touch work, because matchmaking bugs will be much hard
 Add mobile basics:
 
 - `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">`
-- `touch-action: none` on the game/touch control surface.
-- Use modern viewport units such as `100dvh` where supported, with existing `100vh` fallback.
-- Respect safe-area insets for controls.
-- Prevent body scrolling while the game is active.
+- Keep the desktop browser view as a centered arcade cabinet without scrollbars.
+- Prefer home-screen/PWA mode for mobile play, because browser chrome makes the canvas feel too small.
+- Add install metadata and a retro install hint for mobile visitors.
+- Keep page-level touch/scroll rules conservative until touch controls exist, so mobile browsers do not feel trapped.
 
-The current canvas wrapper already scales the 950 by 640 field to fit. We should preserve that.
+The current canvas wrapper already scales the 950 by 640 field to fit. That remains useful for desktop and lobby views, but it is not enough for convincing mobile gameplay.
 
 About hiding the URL/tab bars: browsers do not let web apps directly force browser chrome away. The best practical options are:
 
-- Make the page non-scrollable and fit within the dynamic viewport.
-- Use `100dvh` so layout adapts when browser chrome collapses or expands.
-- Support installed/PWA mode later if fullscreen-like behavior becomes important.
+- Support installed/PWA mode and guide users to launch from the home screen.
 - Optionally call `requestFullscreen()` after a user tap, but this is browser-dependent and can be awkward on mobile.
+- Set up HTTPS on the production Hetzner VPS before launch so PWA install and service worker behavior are reliable on the public domain.
 
-### 10. Refactor Keyboard Input Into A Unified Input API
+### 10. Add A Virtual Camera For Mobile Gameplay
+
+Add a camera/viewport layer so mobile can show a zoomed-in part of the arena instead of shrinking the entire 950 by 640 playfield.
+
+Expected behavior:
+
+- Desktop can keep the full-board view by default.
+- Mobile/touch gameplay uses a scale factor that makes the player, bullets, obstacles, and touch controls readable.
+- Camera follows the local player during active gameplay.
+- Camera is clamped to world bounds so it does not show outside the arena.
+- Camera movement should be smoothed enough to feel stable, but responsive enough that the player never outruns the view.
+- Remote player, bullets, obstacles, collision debug drawing, and hit messages must all draw through the same world-to-screen transform.
+- HUD/lobby text can remain screen-space rather than world-space.
+- Waiting/lobby can continue to show the full board unless the mobile design feels better with the same camera treatment.
+
+Implementation notes:
+
+- Introduce a small client module such as `Camera.js`.
+- Keep world coordinates unchanged for physics, collision, networking, and server events.
+- Apply camera transforms only in rendering and pointer/touch interpretation.
+- Start with a simple local-player follow camera before adding predictive lookahead or opponent-aware framing.
+- Add a debug toggle or helper to compare full-board and camera views while tuning.
+
+### 11. Refactor Keyboard Input Into A Unified Input API
 
 Refactor `KeysModel.js` into a more general input model that can emit the same events from keyboard and touch.
 
@@ -237,7 +264,7 @@ Suggested shape:
 
 This keeps gameplay code from caring whether input came from keyboard or touch.
 
-### 11. Add Touch Controls
+### 12. Add Touch Controls
 
 Add an HTML touch overlay with large stable hit targets.
 
@@ -266,8 +293,9 @@ For touch ergonomics:
 - Emit key `down` once on press and key `up` once on release.
 - Avoid duplicate events when a finger moves across controls.
 - Keep controls hidden or reduced on desktop unless touch is detected.
+- Account for the virtual camera when interpreting any touch input that maps to world-space intent.
 
-### 12. Run Small-Screen And Multiplayer QA
+### 13. Run Small-Screen And Multiplayer QA
 
 Verify at least:
 
@@ -278,10 +306,15 @@ Verify at least:
 - 844 by 390 landscape.
 - Desktop keyboard play.
 - Two or three concurrent two-player games.
+- Installed PWA/home-screen launch on iPhone.
+- Installed PWA/home-screen launch or browser install flow on Android.
 
 Checks:
 
-- Canvas is fully visible.
+- Desktop canvas is fully visible.
+- Mobile gameplay is readable with the virtual camera enabled.
+- Camera follows the local player and clamps at arena edges.
+- Bullets, obstacles, hit messages, and both players draw correctly through the camera.
 - Touch controls do not cover essential HUD information.
 - No text overlaps inside controls.
 - Ready/join works by touch.
@@ -289,7 +322,7 @@ Checks:
 - Audio still warms up after first user interaction.
 - Events from one game do not leak into another game.
 
-### 13. Deploy To Staging And Run Public-Style Smoke Tests
+### 14. Deploy To Staging And Run Public-Style Smoke Tests
 
 Deploy to a staging or temporary public URL and test with real browsers on separate networks if possible.
 
@@ -301,18 +334,22 @@ Smoke-test:
 - A player can leave during play.
 - A new visitor can be paired after another game is abandoned.
 - A touch device can join, ready, move, aim, and shoot.
+- HTTPS is enabled on the public/staging domain.
+- PWA install prompt/instructions are visible before install and hidden in standalone mode.
 
 ## Concerns And Decisions To Make
 
 - The game is currently mostly client-authoritative. For a public version, cheating and divergent game states are possible. This may be acceptable for a friendly arcade toy, but public competitive play would eventually need more server authority.
 - Hit detection is performed locally, and the winner advances the round. In split rooms this remains workable, but latency or disagreements between clients can still happen.
 - Reconnection needs a product decision. The simple version treats disconnect as leaving. A nicer version gives players 10 to 20 seconds to reconnect to the same game.
-- Mobile portrait may fit the field, but touch controls will compete for space. Landscape will likely feel much better. We can support portrait, but we may want a subtle rotate hint if the controls feel cramped.
-- Browser fullscreen and URL bar behavior cannot be guaranteed. We can make the app respond well to browser chrome changes, but we should not depend on hiding chrome.
+- Mobile portrait can technically fit the board, but shrinking the whole board is not convincing. A virtual camera is likely needed for satisfying mobile play.
+- Camera-follow changes how much battlefield information a player sees. We need to decide whether this is mobile-only, touch-only, or also an optional desktop mode.
+- Browser fullscreen and URL bar behavior cannot be guaranteed. The production path should be HTTPS plus PWA/home-screen launch, with browser play treated as a fallback.
 - Name editing should be constrained and sanitized. Short uppercase ASCII names are easiest to render cleanly in the existing arcade font.
 - Public matchmaking needs cleanup timers so abandoned sessions do not accumulate forever.
 - We should decide whether visitors waiting alone should see themselves as `Player 1` or just as their chosen name. My preference is to show both: `ACE - PLAYER 1`.
 - The current server has no rate limiting. For public exposure, we may want basic connection limits, payload validation, and logging before launch.
+- The Hetzner VPS needs HTTPS configured before public PWA testing and launch.
 
 ## First Implementation Slice
 
