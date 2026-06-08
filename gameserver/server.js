@@ -49,27 +49,96 @@ function isReadyToStart(model){
   });
 }
 
-io.on('connection', function(socket) {
-  const joined = lobby.join(socket.id);
-  const client = joined.client;
-  const game = joined.game;
+function joinSocketGame(socket, options){
+  const existingGame = lobby.getGameForSocket(socket.id);
+  const joined = lobby.join(socket.id, options);
 
-  socket.join(game.room);
-
+  socket.join(joined.game.room);
   socket.emit('joinedGame', {
-    playerId: client.id,
+    playerId: joined.client.id,
     model: joined.model
   });
-  socket.to(game.room).emit('newClient', lobby.getModel(game));
+
+  if(existingGame){
+    emitGameModel(joined.game);
+  } else {
+    socket.to(joined.game.room).emit('newClient', joined.model);
+  }
+
+  return joined;
+}
+
+function leaveSocketGame(socket){
+  const context = getSocketGameContext(socket);
+  const left = lobby.leave(socket.id);
+
+  if(context){
+    socket.leave(context.game.room);
+  }
+
+  if(left && left.model){
+    emitGameModel(left.game);
+  }
+
+  return left;
+}
+
+function getNameFromPayload(data){
+  if(typeof data === 'string'){
+    return data;
+  }
+
+  return data && data.name;
+}
+
+io.on('connection', function(socket) {
+  const joined = joinSocketGame(socket);
+  const client = joined.client;
 
   socket.on('disconnect', function(reason) {
-    const left = lobby.leave(socket.id);
-
-    if(left && left.model){
-      emitGameModel(left.game);
-    }
+    leaveSocketGame(socket);
 
     console.log('client disconnected', client.id, reason);
+  });
+
+  socket.on('joinLobby', function(data) {
+    joinSocketGame(socket, {
+      name: getNameFromPayload(data)
+    });
+  });
+
+  socket.on('updateName', function(data) {
+    const updated = lobby.updateName(socket.id, getNameFromPayload(data));
+
+    if(!updated){
+      return;
+    }
+
+    emitGameModel(updated.game);
+  });
+
+  socket.on('leaveGame', function(data) {
+    const left = leaveSocketGame(socket);
+
+    socket.emit('leftGame', {
+      gameId: left && left.game.id
+    });
+
+    if(data && data.rejoin){
+      joinSocketGame(socket, {
+        name: left && left.client.name
+      });
+    }
+  });
+
+  socket.on('requeue', function() {
+    const context = getSocketGameContext(socket);
+    const name = context && context.client.name;
+
+    leaveSocketGame(socket);
+    joinSocketGame(socket, {
+      name: name
+    });
   });
 
   socket.on('clientKeyEvent', function(data) {
