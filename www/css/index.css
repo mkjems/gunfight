@@ -239,20 +239,20 @@ body{
 
 @media (pointer: coarse){
     #touchLobbyControls{
-        bottom: max(8px, env(safe-area-inset-bottom, 0));
+        bottom: 8px;
     }
 
     #touchJoystick{
-        bottom: max(8px, env(safe-area-inset-bottom, 0));
+        bottom: 8px;
         height: 120px;
-        left: max(8px, env(safe-area-inset-left, 0));
+        left: 5px;
         width: 120px;
     }
 
     #touchActionControls{
-        bottom: max(8px, env(safe-area-inset-bottom, 0));
+        bottom: 8px;
         gap: 8px;
-        right: max(8px, env(safe-area-inset-right, 0));
+        right: 5px;
     }
 
     #touchAimSlider{

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gunfight-v3';
+const CACHE_NAME = 'gunfight-v9';
 const STATIC_ASSETS = [
     '/',
     '/index.html',

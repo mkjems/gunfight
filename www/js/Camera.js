@@ -5,6 +5,10 @@ GF.Camera = function(options){
     this.worldHeight = options.worldHeight;
     this.screenWidth = options.screenWidth;
     this.screenHeight = options.screenHeight;
+    this.visibleX = 0;
+    this.visibleY = 0;
+    this.visibleWidth = options.screenWidth;
+    this.visibleHeight = options.screenHeight;
     this.scale = options.scale || 1;
     this.smoothing = typeof options.smoothing === 'number' ? options.smoothing : 0.18;
     this.x = 0;
@@ -16,6 +20,14 @@ GF.Camera.prototype = {
     setScreenSize: function(width, height){
         this.screenWidth = width;
         this.screenHeight = height;
+        this.setVisibleScreen(0, 0, width, height);
+    },
+
+    setVisibleScreen: function(x, y, width, height){
+        this.visibleX = x || 0;
+        this.visibleY = y || 0;
+        this.visibleWidth = width || this.screenWidth;
+        this.visibleHeight = height || this.screenHeight;
     },
 
     setScale: function(scale){
@@ -48,8 +60,14 @@ GF.Camera.prototype = {
     },
 
     getDesiredPosition: function(target){
-        var viewportWidth = this.screenWidth / this.scale;
-        var viewportHeight = this.screenHeight / this.scale;
+        var viewportWidth = this.visibleWidth / this.scale;
+        var viewportHeight = this.visibleHeight / this.scale;
+        var visibleWorldX = this.visibleX / this.scale;
+        var visibleWorldY = this.visibleY / this.scale;
+        var minX = -visibleWorldX;
+        var minY = -visibleWorldY;
+        var maxX = this.worldWidth - visibleWorldX - viewportWidth;
+        var maxY = this.worldHeight - visibleWorldY - viewportHeight;
         var x;
         var y;
 
@@ -60,12 +78,12 @@ GF.Camera.prototype = {
             };
         }
 
-        x = target.x - (viewportWidth / 2);
-        y = target.y - (viewportHeight / 2);
+        x = target.x - visibleWorldX - (viewportWidth / 2);
+        y = target.y - visibleWorldY - (viewportHeight / 2);
 
         return {
-            x: this.clamp(x, 0, Math.max(0, this.worldWidth - viewportWidth)),
-            y: this.clamp(y, 0, Math.max(0, this.worldHeight - viewportHeight))
+            x: this.clamp(x, Math.min(0, minX), Math.max(0, maxX)),
+            y: this.clamp(y, Math.min(0, minY), Math.max(0, maxY))
         };
     },
 

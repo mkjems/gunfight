@@ -826,18 +826,32 @@ GF.Game = (function(){
     }
 
     function getCameraScale(){
+        var queryScale = getQueryNumber('cameraScale');
+
+        if(queryScale){
+            return queryScale;
+        }
+
         if(window.location.search.indexOf('camera=1') >= 0){
             return 1.85;
         }
 
         if(window.matchMedia && window.matchMedia('(pointer: coarse)').matches){
-            return 1.85;
+            return 1.15;
         }
 
         return 1;
     }
 
+    function getQueryNumber(name){
+        var match = new RegExp('[?&]' + name + '=([^&]+)').exec(window.location.search);
+        var value = match ? parseFloat(decodeURIComponent(match[1])) : 0;
+
+        return isNaN(value) ? 0 : value;
+    }
+
     function updateCamera(){
+        var visibleScreen;
         var player;
 
         if(!camera){
@@ -845,6 +859,13 @@ GF.Game = (function(){
         }
 
         camera.setScreenSize(canvas.width, canvas.height);
+        visibleScreen = getVisibleCanvasScreen();
+        camera.setVisibleScreen(
+            visibleScreen.x,
+            visibleScreen.y,
+            visibleScreen.width,
+            visibleScreen.height
+        );
         camera.setScale(getCameraScale());
 
         if(!shouldUseCamera()){
@@ -854,6 +875,23 @@ GF.Game = (function(){
 
         player = players.all[playerId];
         camera.follow(player);
+    }
+
+    function getVisibleCanvasScreen(){
+        var rect = canvas.getBoundingClientRect();
+        var visibleLeft = Math.max(0, rect.left);
+        var visibleTop = Math.max(0, rect.top);
+        var visibleRight = Math.min(window.innerWidth || rect.right, rect.right);
+        var visibleBottom = Math.min(window.innerHeight || rect.bottom, rect.bottom);
+        var scaleX = rect.width ? canvas.width / rect.width : 1;
+        var scaleY = rect.height ? canvas.height / rect.height : 1;
+
+        return {
+            x: Math.max(0, (visibleLeft - rect.left) * scaleX),
+            y: Math.max(0, (visibleTop - rect.top) * scaleY),
+            width: Math.max(1, (visibleRight - visibleLeft) * scaleX),
+            height: Math.max(1, (visibleBottom - visibleTop) * scaleY)
+        };
     }
 
     function shouldShowBlinkingPrompt(){
