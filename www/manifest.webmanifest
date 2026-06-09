@@ -10,7 +10,7 @@
   "theme_color": "#1e1e1e",
   "icons": [
     {
-      "src": "/favicon.ico",
+      "src": "/favicon.ico?v=gunfight-v1",
       "sizes": "32x32",
       "type": "image/x-icon"
     }
