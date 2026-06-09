@@ -28,6 +28,15 @@ GF.InstallPrompt = (function(){
             return;
         }
 
+        if(isLocalDevelopment()){
+            navigator.serviceWorker.getRegistrations().then(function(registrations){
+                registrations.forEach(function(registration){
+                    registration.unregister();
+                });
+            }).catch(function(){});
+            return;
+        }
+
         if(!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'){
             return;
         }
@@ -35,6 +44,12 @@ GF.InstallPrompt = (function(){
         window.addEventListener('load', function(){
             navigator.serviceWorker.register('/sw.js').catch(function(){});
         });
+    }
+
+    function isLocalDevelopment(){
+        return window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.hostname === '';
     }
 
     function bindEvents(){

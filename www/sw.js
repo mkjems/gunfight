@@ -1,4 +1,6 @@
-const CACHE_NAME = 'gunfight-v9';
+const CACHE_NAME = 'gunfight-v10';
+const LOCAL_DEVELOPMENT_HOSTS = ['localhost', '127.0.0.1'];
+const IS_LOCAL_DEVELOPMENT = LOCAL_DEVELOPMENT_HOSTS.indexOf(self.location.hostname) >= 0;
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -39,6 +41,11 @@ const STATIC_ASSETS = [
 ];
 
 self.addEventListener('install', function(event){
+    if(IS_LOCAL_DEVELOPMENT){
+        self.skipWaiting();
+        return;
+    }
+
     event.waitUntil(
         caches.open(CACHE_NAME).then(function(cache){
             return cache.addAll(STATIC_ASSETS);
@@ -51,7 +58,7 @@ self.addEventListener('activate', function(event){
     event.waitUntil(
         caches.keys().then(function(keys){
             return Promise.all(keys.map(function(key){
-                if(key !== CACHE_NAME){
+                if(IS_LOCAL_DEVELOPMENT || key !== CACHE_NAME){
                     return caches.delete(key);
                 }
             }));
@@ -62,6 +69,10 @@ self.addEventListener('activate', function(event){
 });
 
 self.addEventListener('fetch', function(event){
+    if(IS_LOCAL_DEVELOPMENT){
+        return;
+    }
+
     const url = new URL(event.request.url);
 
     if(url.pathname.indexOf('/socket.io/') === 0 || event.request.method !== 'GET'){
