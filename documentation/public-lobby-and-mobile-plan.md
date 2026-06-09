@@ -84,8 +84,8 @@ Important behavior:
 
 Progress note:
 
-- Steps 1 through 12 are implemented in the current working app.
-- The next implementation slice should focus on moving text out of canvas rendering and tightening touch/mobile lobby behavior before broad QA.
+- Steps 1 through 13 are implemented in the current working app.
+- The next implementation slice should focus on small-screen and multiplayer QA.
 
 ### 1. Refactor The Game Model Into Instances
 
@@ -171,7 +171,7 @@ This gives the waiting screen enough information to show names, opponent state, 
 
 ### 6. Update The Waiting Screen Into The Public Lobby
 
-Keep `drawStartScreen()` as the primary lobby visual, but update it to use room-scoped names and statuses.
+Keep the existing arcade waiting screen as the primary lobby visual, but render its text with the HTML overlay and update it to use room-scoped names and statuses.
 
 The screen should show:
 

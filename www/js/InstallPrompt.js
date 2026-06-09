@@ -108,6 +108,7 @@ GF.InstallPrompt = (function(){
 
         promptElement.hidden = false;
         promptElement.classList.add('is-visible');
+        document.body.classList.add('install-prompt-visible');
     }
 
     function hide(){
@@ -117,6 +118,7 @@ GF.InstallPrompt = (function(){
 
         promptElement.classList.remove('is-visible');
         promptElement.hidden = true;
+        document.body.classList.remove('install-prompt-visible');
     }
 
     function isTouchDevice(){

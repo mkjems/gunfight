@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gunfight-v10';
+const CACHE_NAME = 'gunfight-v11';
 const LOCAL_DEVELOPMENT_HOSTS = ['localhost', '127.0.0.1'];
 const IS_LOCAL_DEVELOPMENT = LOCAL_DEVELOPMENT_HOSTS.indexOf(self.location.hostname) >= 0;
 const STATIC_ASSETS = [
@@ -27,6 +27,7 @@ const STATIC_ASSETS = [
     '/images/cactus-1-4-17X32.png',
     '/images/gunfight_player_spritesheet.png',
     '/images/rock-pattern.png',
+    '/images/RotatePlease.png',
     '/images/saloon-64x128.png',
     '/images/wagon-1-4-37x38.png',
     '/sounds/ready.mp3',

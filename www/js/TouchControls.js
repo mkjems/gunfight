@@ -29,6 +29,9 @@ GF.TouchControls = function(options){
 
         if(!visible){
             root.hidden = true;
+            if(lobbyControls){
+                lobbyControls.hidden = true;
+            }
             return;
         }
 
@@ -244,7 +247,7 @@ GF.TouchControls = function(options){
         }
 
         editing = state.editing;
-        showGameplayControls = state.playing || editing;
+        showGameplayControls = state.gameplay || state.playing || editing;
         root.classList.toggle('is-waiting', state.waiting);
         root.classList.toggle('is-playing', state.playing);
         root.classList.toggle('is-editing', editing);

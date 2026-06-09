@@ -3,6 +3,7 @@ GF.NameEditor = function(options){
 
     var maxLength = options.maxLength || 8;
     var onSubmit = options.onSubmit || function(){};
+    var onChange = options.onChange || function(){};
     var active = false;
     var name = '';
     var cursorRow = 0;
@@ -38,6 +39,7 @@ GF.NameEditor = function(options){
 
     function setName(nextName){
         name = sanitize(nextName);
+        onChange();
     }
 
     function open(nextName){
@@ -45,33 +47,38 @@ GF.NameEditor = function(options){
         active = true;
         cursorRow = 0;
         cursorCol = 0;
+        onChange();
     }
 
     function close(options){
         options = options || {};
         active = false;
 
-        if(options.submit && name){
+        if(options.submit){
             onSubmit(name);
         }
+
+        onChange();
     }
 
     function move(dx, dy){
         cursorRow = Math.max(0, Math.min(grid.length - 1, cursorRow + dy));
         cursorCol = Math.max(0, Math.min(grid[cursorRow].length - 1, cursorCol + dx));
+        onChange();
     }
 
-    function selectCurrent(){
-        var value = grid[cursorRow][cursorCol];
+    function selectValue(value){
 
         if(value === '<'){
             name = name.slice(0, -1);
+            onChange();
             return;
         }
 
         if(value === 'RND'){
             name = randomNames[Math.floor(Math.random() * randomNames.length)];
             onSubmit(name);
+            onChange();
             return;
         }
 
@@ -82,7 +89,22 @@ GF.NameEditor = function(options){
 
         if(name.length < maxLength){
             name += value;
+            onChange();
         }
+    }
+
+    function selectCurrent(){
+        selectValue(grid[cursorRow][cursorCol]);
+    }
+
+    function select(rowIndex, colIndex){
+        if(!grid[rowIndex] || typeof grid[rowIndex][colIndex] === 'undefined'){
+            return;
+        }
+
+        cursorRow = rowIndex;
+        cursorCol = colIndex;
+        selectCurrent();
     }
 
     function handleKeyEvent(keyEvent){
@@ -91,7 +113,7 @@ GF.NameEditor = function(options){
         }
 
         if(!active && keyEvent.key === 'e'){
-            open(name);
+            open('');
             return false;
         }
 
@@ -132,43 +154,25 @@ GF.NameEditor = function(options){
         return false;
     }
 
-    function draw(drawer){
-        var startX = 219;
-        var startY = 238;
-        var cellWidth = 64;
-        var cellHeight = 34;
-
-        drawer.text('EDIT NAME', 475, 154, 'center');
-        drawer.text('NAME: ' + (name || ' '), 475, 190, 'center');
-
-        grid.forEach(function(row, rowIndex){
-            var rowX = startX + ((9 - row.length) * cellWidth / 2);
-
-            row.forEach(function(value, colIndex){
-                var x = rowX + (colIndex * cellWidth);
-                var y = startY + (rowIndex * cellHeight);
-
-                if(rowIndex === cursorRow && colIndex === cursorCol){
-                    drawer.rect(x - 5, y - 5, cellWidth - 8, cellHeight - 7);
-                }
-
-                drawer.text(value, x + ((cellWidth - 14) / 2), y, 'center');
-            });
-        });
-
-        drawer.text('H J K L MOVE', 475, 446, 'center');
-        drawer.text('SPACE SELECT', 475, 470, 'center');
-        drawer.text('E DONE', 475, 494, 'center');
+    function getState(){
+        return {
+            active: active,
+            cursorCol: cursorCol,
+            cursorRow: cursorRow,
+            grid: grid,
+            name: name
+        };
     }
 
     return {
         close: close,
-        draw: draw,
+        getState: getState,
         handleKeyEvent: handleKeyEvent,
         isActive: function(){
             return active;
         },
         open: open,
+        select: select,
         setName: setName
     };
 };

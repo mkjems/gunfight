@@ -1,10 +1,26 @@
 GF.Game = (function(){
-    var HUD_TEXT_SIZE = 14;
-
     var canvas,
         context,
         hudCanvas,
         hudContext,
+        hudOverlay,
+        gameHud,
+        lobbyHud,
+        scoreLeftElement,
+        scoreRightElement,
+        roundTimerElement,
+        roundMessageElement,
+        hitMessageElement,
+        lobbyIdentityElement,
+        lobbyControlsElement,
+        lobbySlotsElement,
+        lobbyEditPromptElement,
+        lobbyMessageElement,
+        lobbyPlayPromptElement,
+        nameEditorElement,
+        nameEditorValueElement,
+        nameEditorGridElement,
+        nameEditorHelpElement,
         ammoSprite,
         wagonSprite,
         cactusSprite,
@@ -61,6 +77,7 @@ GF.Game = (function(){
             rockPattern = createScaledPattern(rockPatternSprite);
         };
         rockPatternSprite.src = 'images/rock-pattern.png';
+        initHudOverlay();
         initSoundEffects();
         initNameEditor();
         initCamera();
@@ -69,8 +86,30 @@ GF.Game = (function(){
 
     function initNameEditor(){
         nameEditor = new GF.NameEditor({
+            onChange: renderHud,
             onSubmit: submitNameChange
         });
+    }
+
+    function initHudOverlay(){
+        hudOverlay = document.getElementById('hudOverlay');
+        gameHud = document.getElementById('gameHud');
+        lobbyHud = document.getElementById('lobbyHud');
+        scoreLeftElement = document.getElementById('scoreLeft');
+        scoreRightElement = document.getElementById('scoreRight');
+        roundTimerElement = document.getElementById('roundTimer');
+        roundMessageElement = document.getElementById('roundMessage');
+        hitMessageElement = document.getElementById('hitMessage');
+        lobbyIdentityElement = document.getElementById('lobbyIdentity');
+        lobbyControlsElement = document.getElementById('lobbyControlsText');
+        lobbySlotsElement = document.getElementById('lobbySlots');
+        lobbyEditPromptElement = document.getElementById('lobbyEditPrompt');
+        lobbyMessageElement = document.getElementById('lobbyMessage');
+        lobbyPlayPromptElement = document.getElementById('lobbyPlayPrompt');
+        nameEditorElement = document.getElementById('nameEditor');
+        nameEditorValueElement = document.getElementById('nameEditorValue');
+        nameEditorGridElement = document.getElementById('nameEditorGrid');
+        nameEditorHelpElement = document.getElementById('nameEditorHelp');
     }
 
     function initCamera(){
@@ -401,54 +440,73 @@ GF.Game = (function(){
 
         hudContext.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
 
-        if(roundMessageText){
-            drawRoundMessage(roundMessageText);
-        }
-
         if(roundState === 'waiting'){
-            drawStartScreen();
+            renderLobbyHud();
             return;
         }
+
+        showElement(gameHud, true);
+        showElement(lobbyHud, false);
 
         firstClient = latestModel && latestModel.clients[0];
         secondClient = latestModel && latestModel.clients[1];
 
         if(!firstClient || !secondClient){
+            renderGameHud(secondsLeft);
             return;
         }
 
         firstAmmo = ammo[firstClient.id] || 0;
         secondAmmo = ammo[secondClient.id] || 0;
 
-        drawHudText(scores[0] || 0, 122, 22, 'left');
-        drawHudText(scores[1] || 0, 828, 22, 'right');
-        drawHudText(secondsLeft, 475, 22, 'center');
+        renderGameHud(secondsLeft);
         drawAmmo(firstAmmo, 122, 606, 1);
         drawAmmo(secondAmmo, 828, 606, -1);
     }
 
-    function drawHudText(text, x, y, align){
-        hudContext.save();
-        hudContext.font = HUD_TEXT_SIZE + 'px "Press Start", sans-serif';
-        hudContext.textAlign = align;
-        hudContext.textBaseline = 'top';
-        hudContext.fillStyle = GF.Config.colors.yellow;
-        hudContext.shadowColor = 'rgb(0,0,0)';
-        hudContext.shadowOffsetX = 1;
-        hudContext.shadowOffsetY = 1;
-        hudContext.fillText(text, x, y);
-        hudContext.restore();
+    function renderGameHud(secondsLeft){
+        setText(scoreLeftElement, scores[0] || 0);
+        setText(scoreRightElement, scores[1] || 0);
+        setText(roundTimerElement, secondsLeft);
+        setText(roundMessageElement, roundMessageText || '');
+        renderHitMessage();
     }
 
-    function drawHudRect(x, y, width, height){
-        hudContext.save();
-        hudContext.strokeStyle = GF.Config.colors.yellow;
-        hudContext.lineWidth = 2;
-        hudContext.shadowColor = 'rgb(0,0,0)';
-        hudContext.shadowOffsetX = 1;
-        hudContext.shadowOffsetY = 1;
-        hudContext.strokeRect(x, y, width, height);
-        hudContext.restore();
+    function renderHitMessage(){
+        var target;
+        var point;
+
+        if(!hitMessage || !hitMessageElement){
+            showElement(hitMessageElement, false);
+            return;
+        }
+
+        target = players.all[hitMessage.targetId];
+
+        if(!target){
+            showElement(hitMessageElement, false);
+            return;
+        }
+
+        point = worldToHudPoint(target.x, Math.max(80, target.y - 150));
+        setText(hitMessageElement, hitMessage.text);
+        hitMessageElement.style.left = (point.x / GF.Config.canvas.width * 100) + '%';
+        hitMessageElement.style.top = (point.y / GF.Config.canvas.height * 100) + '%';
+        showElement(hitMessageElement, true);
+    }
+
+    function worldToHudPoint(x, y){
+        if(shouldUseCamera()){
+            return {
+                x: (x - camera.x) * camera.scale,
+                y: (y - camera.y) * camera.scale
+            };
+        }
+
+        return {
+            x: x,
+            y: y
+        };
     }
 
     function drawAmmo(count, x, y, direction){
@@ -476,10 +534,6 @@ GF.Game = (function(){
         }
 
         hudContext.restore();
-    }
-
-    function drawRoundMessage(message){
-        drawHudText(message, 475, 262, 'center');
     }
 
     function getCurrentScenario(){
@@ -764,53 +818,148 @@ GF.Game = (function(){
         };
     }
 
-    function drawStartScreen(){
+    function renderLobbyHud(){
         var controls = [
             'h j k l - left down up right',
             'a z - aim up down',
             'Space - shoot'
         ];
-        var y = 190;
-
-        drawHudText('GUNFIGHT 1975', 475, 104, 'center');
+        showElement(gameHud, false);
+        showElement(lobbyHud, true);
 
         if(nameEditor && nameEditor.isActive()){
-            drawNameEditor();
+            renderNameEditor();
             return;
         }
 
-        drawHudText(getLobbyPlayerLabel(), 475, 132, 'center');
-        drawHudText(getGameLabel(), 475, 154, 'center');
-
-        controls.forEach(function(control){
-            drawHudText(control, 475, y, 'center');
-            y += 22;
-        });
-
-        y += 24;
-        getLobbySlots().forEach(function(client, index){
-            drawHudText(getLobbySlotLabel(client, index), 475, y, 'center');
-            y += 22;
-        });
-
-        y += 18;
-        drawHudText('PRESS E TO EDIT NAME', 475, y, 'center');
-        y += 32;
+        showElement(nameEditorElement, false);
+        setLines(lobbyIdentityElement, [
+            getLobbyPlayerLabel(),
+            getGameLabel()
+        ]);
+        setLines(lobbyControlsElement, isTouchInterface() ? [] : controls);
+        setLines(lobbySlotsElement, getLobbySlots().map(function(client, index){
+            return getLobbySlotLabel(client, index);
+        }));
+        setText(lobbyEditPromptElement, isTouchInterface() ? '' : 'PRESS E TO EDIT NAME');
 
         if(shouldShowLobbyMessage()){
-            drawHudText(getLobbyMessage(), 475, y, 'center');
+            setText(lobbyMessageElement, getLobbyMessage());
+        } else {
+            setText(lobbyMessageElement, '');
         }
 
-        if(shouldShowLobbyPrompt()){
-            drawHudText('PRESS P TO PLAY', 475, y + 32, 'center');
+        showElement(lobbyPlayPromptElement, true);
+        setText(lobbyPlayPromptElement, shouldShowLobbyPrompt() && !isTouchInterface() ? 'PRESS P TO PLAY' : '');
+    }
+
+    function renderNameEditor(){
+        var state = nameEditor.getState();
+        var helpLines = isTouchInterface() ? [] : [
+            'H J K L MOVE',
+            'SPACE SELECT',
+            'E DONE'
+        ];
+
+        setLines(lobbyIdentityElement, []);
+        setLines(lobbyControlsElement, []);
+        setLines(lobbySlotsElement, []);
+        setText(lobbyEditPromptElement, '');
+        setText(lobbyMessageElement, '');
+        setText(lobbyPlayPromptElement, '');
+        showElement(lobbyPlayPromptElement, false);
+        showElement(nameEditorElement, true);
+        setText(nameEditorValueElement, 'NAME: ' + (state.name || ' '));
+        setLines(nameEditorHelpElement, helpLines);
+        renderNameEditorGrid(state);
+    }
+
+    function renderNameEditorGrid(state){
+        var gridKey;
+
+        if(!nameEditorGridElement){
+            return;
+        }
+
+        gridKey = state.cursorRow + ':' + state.cursorCol;
+
+        if(nameEditorGridElement.dataset.gridKey === gridKey){
+            return;
+        }
+
+        nameEditorGridElement.dataset.gridKey = gridKey;
+        nameEditorGridElement.innerHTML = '';
+
+        state.grid.forEach(function(row, rowIndex){
+            var rowElement = document.createElement('div');
+
+            rowElement.className = 'name-editor-row' + (row.length < 9 ? ' is-short' : '');
+
+            row.forEach(function(value, colIndex){
+                var button = document.createElement('button');
+
+                button.type = 'button';
+                button.className = 'name-editor-key' + (state.cursorRow === rowIndex && state.cursorCol === colIndex ? ' is-selected' : '');
+                button.textContent = value;
+                button.addEventListener('pointerdown', function(evt){
+                    evt.preventDefault();
+                    nameEditor.select(rowIndex, colIndex);
+                    renderHud();
+                });
+                rowElement.appendChild(button);
+            });
+
+            nameEditorGridElement.appendChild(rowElement);
+        });
+    }
+
+    function setText(element, text){
+        if(!element){
+            return;
+        }
+
+        element.textContent = typeof text === 'undefined' || text === null ? '' : String(text);
+    }
+
+    function setLines(element, lines){
+        var key;
+
+        if(!element){
+            return;
+        }
+
+        key = lines.filter(function(line){
+            return line;
+        }).join('\n');
+
+        if(element.dataset.linesKey === key){
+            return;
+        }
+
+        element.dataset.linesKey = key;
+        element.innerHTML = '';
+        key.split('\n').filter(function(line){
+            return line;
+        }).forEach(function(line){
+            var lineElement = document.createElement('div');
+
+            lineElement.textContent = line;
+            element.appendChild(lineElement);
+        });
+    }
+
+    function showElement(element, visible){
+        if(element){
+            element.hidden = !visible;
         }
     }
 
-    function drawNameEditor(){
-        nameEditor.draw({
-            text: drawHudText,
-            rect: drawHudRect
-        });
+    function isTouchInterface(){
+        if(window.location.search.indexOf('touch=1') >= 0){
+            return true;
+        }
+
+        return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
     }
 
     function shouldUseCamera(){
@@ -894,28 +1043,12 @@ GF.Game = (function(){
         };
     }
 
-    function shouldShowBlinkingPrompt(){
-        return Math.floor(new Date().getTime() / 1000) % 2 === 0;
-    }
-
     function shouldShowLobbyPrompt(){
-        if(!shouldShowBlinkingPrompt()){
-            return false;
-        }
-
-        if(getLobbyMessage() === 'PRESS P TO PLAY'){
-            return false;
-        }
-
         return !latestModel || latestModel.status !== 'abandoned';
     }
 
     function shouldShowLobbyMessage(){
-        if(getLobbyMessage() !== 'PRESS P TO PLAY'){
-            return true;
-        }
-
-        return shouldShowBlinkingPrompt();
+        return getLobbyMessage() !== 'PRESS P TO PLAY';
     }
 
     function getLobbyPlayerLabel(){
@@ -958,12 +1091,12 @@ GF.Game = (function(){
     }
 
     function submitNameChange(name){
-        if(!socket || !name){
+        if(!socket){
             return;
         }
 
         socket.emit('updateName', {
-            name: name
+            name: name || ''
         });
     }
 
@@ -1567,7 +1700,6 @@ GF.Game = (function(){
             }
             scene.drawAll(context);
             drawCollisionBodies();
-            drawHitMessage();
         context.restore();
         renderHud();
         updateTouchControls();
@@ -1639,11 +1771,19 @@ GF.Game = (function(){
         }
 
         touchControls.update({
+            gameplay: shouldShowGameplayTouchControls(),
             waiting: roundState === 'waiting',
             playing: roundState === 'playing',
             editing: nameEditor && nameEditor.isActive(),
             aimLevel: getLocalAimLevel()
         });
+    }
+
+    function shouldShowGameplayTouchControls(){
+        return roundState === 'ritual' ||
+            roundState === 'playing' ||
+            roundState === 'hitPause' ||
+            roundState === 'roundOver';
     }
 
     function drawCollisionBodies(){
@@ -1710,31 +1850,6 @@ GF.Game = (function(){
         });
         context.closePath();
         context.stroke();
-    }
-
-    function drawHitMessage(){
-        var target;
-
-        if(!hitMessage){
-            return;
-        }
-
-        target = players.all[hitMessage.targetId];
-
-        if(!target){
-            return;
-        }
-
-        context.save();
-        context.fillStyle = GF.Config.colors.yellow;
-        context.font = HUD_TEXT_SIZE + 'px "Press Start", sans-serif';
-        context.textAlign = 'center';
-        context.textBaseline = 'bottom';
-        context.shadowColor = 'rgb(0,0,0)';
-        context.shadowOffsetX = 1;
-        context.shadowOffsetY = 1;
-        context.fillText(hitMessage.text, target.x, Math.max(80, target.y - 150));
-        context.restore();
     }
 
     function setupSocket(callback){
