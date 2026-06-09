@@ -82,6 +82,11 @@ Important behavior:
 
 ## Sequential Implementation Plan
 
+Progress note:
+
+- Steps 1 through 12 are implemented in the current working app.
+- The next implementation slice should focus on moving text out of canvas rendering and tightening touch/mobile lobby behavior before broad QA.
+
 ### 1. Refactor The Game Model Into Instances
 
 Refactor `gfmodel.js` so it can create independent model instances instead of using module-level globals.
@@ -295,7 +300,43 @@ Follow-up tuning after real-device testing:
 - Keep controls hidden or reduced on desktop unless touch is detected.
 - Account for the virtual camera when interpreting any touch input that maps to world-space intent.
 
-### 13. Run Small-Screen And Multiplayer QA
+### 13. Move Lobby And HUD Text To HTML
+
+Move all screen text out of canvas drawing and into regular HTML elements. Text is easier to inspect, style, test, and adapt for mobile when it is normal DOM text instead of canvas pixels.
+
+Expected behavior:
+
+- Lobby, ready state, prompts, round timer, scores, ammo/HUD labels, hit messages, install messages, and name editor text should render as HTML.
+- The canvas should remain responsible for game-world visuals: players, bullets, obstacles, scenery, and effects.
+- HTML text should live inside the same `#gameStage` / canvas box so it follows the scaled playfield exactly.
+- Text layout should use normal responsive HTML/CSS layout: flexbox, grid, logical groups, gaps, alignment, and padding.
+- Do not use canvas-style coordinate placement for text, such as `x: 475, y: 132`, unless a specific gameplay effect truly needs absolute positioning.
+- Do not position gameplay/lobby text relative to the browser viewport unless the intended behavior is truly viewport-level UI.
+- Keep the HTML overlay separate from touch controls so prompts, controls, and install messaging can be shown or hidden independently.
+
+Touch/mobile text behavior:
+
+- Do not show desktop keyboard instructions to touch-device users.
+- Show touch-specific prompts such as `TAP PLAY` or visible action buttons instead of `PRESS P`, `PRESS E`, and keyboard movement instructions.
+- When the add-to-home-screen/install message is visible, it should be the only message on screen. Hide lobby prompts and other instructional text until the install message is dismissed or no longer relevant.
+
+Name editor behavior:
+
+- Keep the virtual arcade keyboard for mobile because it fits the game style.
+- Also allow touch users to tap the on-screen letter/action buttons directly.
+- When entering the edit-name screen, start with an empty input field.
+- If the user actively submits an empty name, keep the existing default-name behavior and assign a generated fallback name.
+
+Implementation notes:
+
+- Add a DOM overlay inside `#gameStage`, likely between the canvases and `#touchControls`, for text/HUD elements.
+- Keep overlay dimensions locked to the canvas aspect ratio through the existing `#gameStage` scaling.
+- Convert existing `drawHudText()` call sites into semantic overlay regions, such as lobby header, controls, player status, prompts, score row, timer, ammo row, hit message, and name editor.
+- Use CSS grid/flex layouts for those regions instead of preserving the old canvas text coordinates.
+- Replace canvas-drawn name-editor rectangles/text with HTML buttons that support keyboard focus, keyboard selection, joystick selection, and direct tapping.
+- Ensure pointer events are enabled only where elements are interactive; passive labels should not block gameplay controls.
+
+### 14. Run Small-Screen And Multiplayer QA
 
 Verify at least:
 
@@ -317,12 +358,17 @@ Checks:
 - Bullets, obstacles, hit messages, and both players draw correctly through the camera.
 - Touch controls do not cover essential HUD information.
 - No text overlaps inside controls.
+- HTML text follows the canvas box exactly on desktop, mobile portrait, and mobile landscape.
+- Touch devices do not show desktop keyboard instructions.
+- Name editor works by keyboard, virtual joystick/select, and direct tapping.
+- Entering name edit starts with an empty input, while submitting empty still produces a generated fallback name.
+- Install/add-to-home-screen messaging hides other lobby messages while visible.
 - Ready/join works by touch.
 - Movement, aim, and shoot work by touch.
 - Audio still warms up after first user interaction.
 - Events from one game do not leak into another game.
 
-### 14. Deploy To Staging And Run Public-Style Smoke Tests
+### 15. Deploy To Staging And Run Public-Style Smoke Tests
 
 Deploy to a staging or temporary public URL and test with real browsers on separate networks if possible.
 
