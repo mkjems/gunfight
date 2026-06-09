@@ -1,3 +1,14 @@
+root {
+    /* Palette */
+    --yellow: rgb(255,244,0);
+    --light-black: rgb(30,30,30);
+    --black: rgb(0,0,0);
+
+    /* semantic mapping*/
+    --bg-color: var(--light-black);
+    --primary-color: var(--yellow); 
+}
+
 
 @font-face { 
     font-family: Press Start; 
@@ -13,7 +24,7 @@ html{
 
 body{
     background-color: rgb(30,30,30);
-    color: rgb(255,244,0);
+    color: var(--yellow);
     font-family: Press Start, sans-serif;
     line-height:25px;
     margin: 0;
@@ -70,7 +81,7 @@ body{
     inset: 0;
     position: absolute;
     width: 100%;
-    border: 1px solid yellow;
+    border: 0px solid var(--yellow);
 }
 
 #canvas{
@@ -101,8 +112,8 @@ body{
 
 #touchControls button{
     background: rgba(30,30,30,0.86);
-    border: 2px solid rgb(255,244,0);
-    color: rgb(255,244,0);
+    border: 2px solid var(--yellow);
+    color: var(--yellow);
     font: 10px Press Start, sans-serif;
     pointer-events: auto;
     touch-action: none;
@@ -133,7 +144,7 @@ body{
 
 #touchJoystick{
     background: rgba(30,30,30,0.42);
-    border: 2px solid rgba(255,244,0,0.9);
+    border: 2px solid var(--yellow);
     border-radius: 50%;
     bottom: max(22px, env(safe-area-inset-bottom, 0));
     height: 126px;
