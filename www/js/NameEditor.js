@@ -77,7 +77,6 @@ GF.NameEditor = function(options){
 
         if(value === 'RND'){
             name = randomNames[Math.floor(Math.random() * randomNames.length)];
-            onSubmit(name);
             onChange();
             return;
         }

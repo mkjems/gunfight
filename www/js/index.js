@@ -1002,7 +1002,7 @@ GF.Game = (function(){
                 var button = document.createElement('button');
 
                 button.type = 'button';
-                button.className = 'name-editor-key' + (state.cursorRow === rowIndex && state.cursorCol === colIndex ? ' is-selected' : '');
+                button.className = 'name-editor-key' + (state.cursorRow === rowIndex && state.cursorCol === colIndex ? ' is-selected negative-text' : '');
                 button.textContent = value;
                 button.addEventListener('pointerdown', function(evt){
                     evt.preventDefault();

@@ -54,12 +54,12 @@ Roadmap for making the game match `Specification-main.md` and feel like a polish
 
 ## P1 - Core User Experience
 
-- [ ] Make first visit feel instant and obvious.
+- [x] Make first visit feel instant and obvious.
   - Lobby should explain status with very little text.
   - Primary action should be obvious on keyboard and touch.
   - Avoid showing instructions that do not apply to the current device.
 
-- [ ] Polish the name editor.
+- [x] Polish the name editor.
   - Use `DEL`, `RND`, and `OK` consistently.
   - Make the selected key unmistakable.
   - Prevent layout shift when moving selection.
