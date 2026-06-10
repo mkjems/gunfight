@@ -106,7 +106,7 @@ Each match lasts 70 seconds total. The timer starts when the first duel begins a
 4. The screen shows `DRAW !` at the center of the screen.
 5. The duel begins.
 6. A hit pauses the game, awards one point, reloads both players, and starts the next duel.
-7. When the match timer ends, the game shows `GAME OVER` and returns to the lobby.
+7. When the match timer ends, the game shows `GAME OVER` with the winning player name or `TIE`, keeps it visible briefly, and returns to the lobby.
 
 ### Gameplay rules
 
@@ -147,6 +147,36 @@ Expected columns:
 - deaths
 
 Scores are stored in server memory. They survive while the server process is running and are lost on restart.
+
+## Authoring tools
+
+The app should include browser-based editor pages for game content.
+
+### Rock editor
+
+The rock editor is a WYSIWYG page for editing the dimensions and polygon shape of a rock.
+
+Expected behavior:
+
+- The page is reachable separately from normal play.
+- The editor shows a visual preview of the rock.
+- The user can edit rock dimensions and shape directly in the preview.
+- The editor accepts rock JSON as input.
+- The editor outputs rock JSON that can be copied into the project data files.
+- Invalid JSON or invalid rock geometry is shown clearly without crashing the editor.
+
+### Scenario editor
+
+The scenario editor is a WYSIWYG page for editing a full game scenario.
+
+Expected behavior:
+
+- The page is reachable separately from normal play.
+- The editor shows a visual preview of the scenario in the game arena.
+- The user can place and adjust scenario elements such as rocks, cacti, wagons, saloons, decorations, and player start positions.
+- The editor accepts scenario JSON as input.
+- The editor outputs scenario JSON that can be copied into the project data files.
+- Invalid JSON or invalid scenario geometry is shown clearly without crashing the editor.
 
 ## Matchmaking and networking
 
