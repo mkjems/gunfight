@@ -45,8 +45,9 @@ Roadmap for making the game match `Specification-main.md` and feel like a polish
   - Reload both players if both run out of bullets.
   - Keep ammo HUD in sync after reloads.
 
-- [ ] Confirm match timing.
+- [x] Confirm match timing.
   - Match timer starts only when the duel begins.
+  - Match timer does not reset between duels.
   - Match ends at 70 seconds.
   - Winner is the player with the highest score when time expires.
   - Handle ties intentionally.

@@ -53,6 +53,7 @@ GF.Game = (function(){
         ritualTimer,
         hitTimer,
         resetTimer,
+        matchEndTimer,
         abandonedRequeueTimer,
         scenarioStartedAt,
         roundIntro,
@@ -308,6 +309,7 @@ GF.Game = (function(){
         ritualTimer = null;
         hitTimer = null;
         resetTimer = null;
+        matchEndTimer = null;
         abandonedRequeueTimer = null;
         scenarioStartedAt = null;
         roundIntro = null;
@@ -1438,11 +1440,11 @@ GF.Game = (function(){
 
         if(options.resetScores){
             scores = [0, 0];
+            roundEndsAt = null;
         }
 
         roundState = 'ritual';
         closeNameEditor();
-        roundEndsAt = null;
         scenarioStartedAt = new Date().getTime();
         obstacleDamage = {};
         bullets.reset();
@@ -1456,18 +1458,55 @@ GF.Game = (function(){
         }
 
         ritualTimer = setTimeout(function(){
+            if(hasMatchTimeExpired()){
+                ritualTimer = null;
+                endGame();
+                return;
+            }
+
             completeRoundIntro();
             setRoundMessage('DRAW!');
 
             ritualTimer = setTimeout(function(){
                 ritualTimer = null;
+                if(hasMatchTimeExpired()){
+                    endGame();
+                    return;
+                }
+
                 setRoundMessage('');
-                roundEndsAt = new Date().getTime() + (GF.Config.round.seconds * 1000);
+                if(!roundEndsAt){
+                    roundEndsAt = new Date().getTime() + (GF.Config.round.seconds * 1000);
+                    scheduleMatchEnd();
+                }
                 resetAmmo();
                 roundState = 'playing';
                 renderHud();
             }, GF.Config.round.drawDelay);
         }, getReadyDelay);
+    }
+
+    function hasMatchTimeExpired(){
+        return !!(roundEndsAt && new Date().getTime() >= roundEndsAt);
+    }
+
+    function scheduleMatchEnd(){
+        var delay;
+
+        if(matchEndTimer){
+            clearTimeout(matchEndTimer);
+            matchEndTimer = null;
+        }
+
+        if(!roundEndsAt){
+            return;
+        }
+
+        delay = Math.max(0, roundEndsAt - new Date().getTime());
+        matchEndTimer = setTimeout(function(){
+            matchEndTimer = null;
+            endGame();
+        }, delay);
     }
 
     function startRoundIntro(){
@@ -1624,7 +1663,7 @@ GF.Game = (function(){
         var obstacleHit;
 
         if(roundState !== 'playing'){
-            if(roundState === 'hitPause' && roundEndsAt && new Date().getTime() >= roundEndsAt){
+            if(roundState === 'hitPause' && hasMatchTimeExpired()){
                 endGame();
             }
             return;
@@ -1645,7 +1684,7 @@ GF.Game = (function(){
             handlePlayerHit(hit);
         }
 
-        if(roundEndsAt && new Date().getTime() >= roundEndsAt){
+        if(hasMatchTimeExpired()){
             endGame();
         }
     }
@@ -1786,7 +1825,7 @@ GF.Game = (function(){
         hitTimer = null;
         clearPlayerDeathAnimations();
 
-        if(roundEndsAt && new Date().getTime() >= roundEndsAt){
+        if(hasMatchTimeExpired()){
             endGame();
             return;
         }
@@ -1831,6 +1870,11 @@ GF.Game = (function(){
             clearTimeout(resetTimer);
         }
 
+        if(matchEndTimer){
+            clearTimeout(matchEndTimer);
+            matchEndTimer = null;
+        }
+
         if(ritualTimer){
             clearTimeout(ritualTimer);
             ritualTimer = null;
@@ -1854,13 +1898,18 @@ GF.Game = (function(){
         hitMessage = null;
         advanceRoundAfterHit = false;
         obstacleDamage = {};
-        setRoundMessage('');
+        setRoundMessage(getGameOverMessage());
         renderHud();
         players.clearKeys();
         bullets.clear();
 
         if(resetTimer){
             clearTimeout(resetTimer);
+        }
+
+        if(matchEndTimer){
+            clearTimeout(matchEndTimer);
+            matchEndTimer = null;
         }
 
         if(ritualTimer){
@@ -1876,6 +1925,14 @@ GF.Game = (function(){
         }
 
         resetTimer = setTimeout(resetToStartScreen, GF.Config.round.gameOverDelay);
+    }
+
+    function getGameOverMessage(){
+        if((scores[0] || 0) === (scores[1] || 0)){
+            return 'TIE';
+        }
+
+        return 'PLAYER ' + ((scores[0] || 0) > (scores[1] || 0) ? 1 : 2) + ' WINS';
     }
 
     function recordGameResult(){
@@ -1916,6 +1973,11 @@ GF.Game = (function(){
         obstacleDamage = {};
         resetTimer = null;
 
+        if(matchEndTimer){
+            clearTimeout(matchEndTimer);
+            matchEndTimer = null;
+        }
+
         if(latestModel && isReadyToStart(latestModel)){
             startRoundRitual({ resetScores: false });
             return;
@@ -1936,6 +1998,10 @@ GF.Game = (function(){
         advanceRoundAfterHit = false;
         obstacleDamage = {};
         resetTimer = null;
+        if(matchEndTimer){
+            clearTimeout(matchEndTimer);
+            matchEndTimer = null;
+        }
         roundState = 'waiting';
         syncNameEditor();
         renderHud();

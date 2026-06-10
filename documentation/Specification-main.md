@@ -89,7 +89,7 @@ Name is stored in the browser (session or local storage ) so you can work on tha
 
 The game screen contains the battlefield, players, bullets, obstacles, HUD, score, timer, and hit messages.
 
-Each match lasts 70 seconds. Players may score as many kills as possible before time runs out. The winner is the player with the highest score when the timer reaches zero.
+Each match lasts 70 seconds total. The timer starts when the first duel begins and does not reset between kills, reloads, or later duels. Players may score as many kills as possible before time runs out. The winner is the player with the highest score when the timer reaches zero.
 
 ### HUD layout
 
