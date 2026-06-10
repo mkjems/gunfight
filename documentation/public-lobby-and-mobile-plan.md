@@ -196,6 +196,8 @@ Expected behavior:
 
 - Lobby shows `PRESS E TO EDIT NAME`.
 - Pressing `E` switches the lobby into name-entry mode.
+- After the local player presses `P` and becomes ready, hide `PRESS E TO EDIT NAME` and ignore `E`.
+- Re-enable the edit prompt and `E` input only when the local player returns to `WAITING`.
 - `h j k l` move a highlight through a matrix of letters/actions.
 - Space selects a character or action.
 - Include letters, numbers, backspace, random, and OK.

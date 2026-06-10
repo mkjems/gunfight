@@ -99,8 +99,15 @@ function getNameFromPayload(data){
   return data && data.name;
 }
 
+function getNameFromSocketHandshake(socket){
+  return getNameFromPayload(socket.handshake.auth) ||
+    getNameFromPayload(socket.handshake.query);
+}
+
 io.on('connection', function(socket) {
-  const joined = joinSocketGame(socket);
+  const joined = joinSocketGame(socket, {
+    name: getNameFromSocketHandshake(socket)
+  });
   const client = joined.client;
 
   socket.emit('highScores', highScores.getTable());

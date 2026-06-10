@@ -11,7 +11,7 @@ Roadmap for making the game match `Specification-main.md` and feel like a polish
   - There is no direct way to open the High score screen from the lobby.
     While no user has pressed Ready, the lobby alternates every 7 seconds between the High score screen and the main lobby. `PRESS P TO PLAY` still flashes on desktop, and the Play button still appears on mobile.
 
-- [ ] Persist the player name in the browser.
+- [x] Persist the player name in the browser.
   - Save the submitted name to `localStorage` or `sessionStorage`.
   - Send the saved name when joining the lobby.
   - Keep server-side sanitizing and duplicate-name suffixes.
@@ -27,6 +27,8 @@ Roadmap for making the game match `Specification-main.md` and feel like a polish
   - `READY`
   - `OPPONENT LEFT`
   - Ensure each state appears in the correct player slot.
+  - Hide `PRESS E TO EDIT NAME` after the local player presses `P`.
+  - Ignore `E` while the local player is `READY`; allow editing again only after returning to `WAITING`.
 
 - [ ] Complete abandoned-game recovery.
   - When an opponent leaves mid-game, show `OPPONENT LEFT`.

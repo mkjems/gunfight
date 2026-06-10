@@ -46,10 +46,11 @@ The lobby background shows the player's avatar. If an opponent is connected, bot
 
 When both players are ready, the game starts.
 
+When the local player has pressed `P` and entered `READY`, the lobby does not show `PRESS E TO EDIT NAME`, and pressing `E` does not open the edit name screen. Name editing becomes available again only after the local player returns to `WAITING`.
 
 ### Desktop lobby controls
 
-- `E`: edit name
+- `E`: edit name, only while the local player is `WAITING`
 - `P`: ready/play
 - `H J K L`: move left, down, up, right
 - `A Z`: aim up and down

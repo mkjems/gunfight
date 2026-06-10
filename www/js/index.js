@@ -61,6 +61,7 @@ GF.Game = (function(){
         lastRecordedResultId,
         localReadyRequested,
         playerId;
+    var playerNameStorageKey = 'gunfight-player-name';
 
     function initCanvas(){
         canvas = document.getElementById('canvas');
@@ -312,6 +313,7 @@ GF.Game = (function(){
         lastPositionSyncAt = 0;
         obstacleDamage = {};
         lastRecordedResultId = null;
+        localReadyRequested = false;
         GF.Bullet.onRicochet = playRicochetSound;
     }
 
@@ -1203,6 +1205,24 @@ GF.Game = (function(){
         return client.name || ('PLAYER ' + ((client.slot || 0) + 1));
     }
 
+    function getStoredPlayerName(){
+        try {
+            return window.localStorage.getItem(playerNameStorageKey) || '';
+        } catch(error){
+            return '';
+        }
+    }
+
+    function storePlayerName(name){
+        if(!name){
+            return;
+        }
+
+        try {
+            window.localStorage.setItem(playerNameStorageKey, name);
+        } catch(error){}
+    }
+
     function submitNameChange(name){
         if(!socket){
             return;
@@ -1223,6 +1243,7 @@ GF.Game = (function(){
         client = getLocalClient();
 
         if(client){
+            storePlayerName(getClientName(client));
             nameEditor.setName(getClientName(client));
         }
     }
@@ -1314,6 +1335,7 @@ GF.Game = (function(){
 
         latestModel = model;
         syncLocalReadyRequest();
+        syncStoredPlayerName();
 
         if(model.status === 'abandoned'){
             enterLobbyState();
@@ -1334,6 +1356,14 @@ GF.Game = (function(){
         }
 
         renderHud();
+    }
+
+    function syncStoredPlayerName(){
+        var client = getLocalClient();
+
+        if(client){
+            storePlayerName(getClientName(client));
+        }
     }
 
     function syncLocalReadyRequest(){
@@ -2024,7 +2054,13 @@ GF.Game = (function(){
     }
 
     function setupSocket(callback){
-        socket = io();
+        var storedPlayerName = getStoredPlayerName();
+
+        socket = io({
+            auth: storedPlayerName ? {
+                name: storedPlayerName
+            } : {}
+        });
 
         socket.on('highScores', function(nextHighScores){
             highScores = Array.isArray(nextHighScores) ? nextHighScores : [];
