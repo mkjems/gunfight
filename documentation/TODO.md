@@ -130,6 +130,9 @@ Roadmap for making the game match `Specification-main.md` and feel like a polish
 
 - [ ] Polish HUD layout.
   - Score, timer, ammo, round messages, and hit messages should have stable positions.
+  - Put player names on the bottom line next to the ammo graphics.
+  - Place each name on the inside of its ammo display, facing toward the centerline.
+  - Keep left and right name placement symmetrical.
   - Nothing should overlap on desktop or mobile.
   - Text should remain readable over all scenarios.
 

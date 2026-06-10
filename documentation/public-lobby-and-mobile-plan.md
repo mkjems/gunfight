@@ -332,6 +332,7 @@ Implementation notes:
 - Add a DOM overlay inside `#gameStage`, likely between the canvases and `#touchControls`, for text/HUD elements.
 - Keep overlay dimensions locked to the canvas aspect ratio through the existing `#gameStage` scaling.
 - Convert existing `drawHudText()` call sites into semantic overlay regions, such as lobby header, controls, player status, prompts, score row, timer, ammo row, hit message, and name editor.
+- In the game HUD, place player names on the bottom line next to the ammo graphics: each name sits on the inside of its player's ammo display, mirrored left/right and facing toward the centerline.
 - Use CSS grid/flex layouts for those regions instead of preserving the old canvas text coordinates.
 - Replace canvas-drawn name-editor rectangles/text with HTML buttons that support keyboard focus, keyboard selection, joystick selection, and direct tapping.
 - Ensure pointer events are enabled only where elements are interactive; passive labels should not block gameplay controls.

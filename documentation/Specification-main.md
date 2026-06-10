@@ -90,6 +90,13 @@ The game screen contains the battlefield, players, bullets, obstacles, HUD, scor
 
 Each match lasts 70 seconds. Players may score as many kills as possible before time runs out. The winner is the player with the highest score when the timer reaches zero.
 
+### HUD layout
+
+- Player names appear on the bottom HUD line next to the ammo graphics.
+- Each name is placed on the inside edge of its player's ammo display, between that ammo display and the centerline.
+- The left and right name placements are symmetrical.
+- Names face inward toward the centerline, matching the opposing ammo layout.
+
 ### Round flow
 
 1. Both players enter ready state.
