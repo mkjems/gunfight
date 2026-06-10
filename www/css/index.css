@@ -68,6 +68,9 @@
     --font-size-proggy-square: clamp(20px, 2.5cqw, 38px);
     --line-height-proggy-square: 1.1;
 
+    --large-text-size: clamp(12px, 5cqw, 42px);
+
+
     /* Semantic Mapping*/
 
     --font-family: var(--font-family-proggy-square);
@@ -87,7 +90,7 @@
     --shadow-color: var(--black);
     --shadow-offset-x: 1px;
     --shadow-offset-y: 1px;
-}
+}   
 
 
 html{
@@ -225,6 +228,11 @@ body.install-prompt-visible #touchControls{
     position: absolute;
 }
 
+#gameHud{
+    display: grid;
+    grid-template-rows: 1fr auto 1fr;
+}
+
 #gameHud[hidden],
 #lobbyHud[hidden],
 #lobby-main[hidden],
@@ -235,9 +243,14 @@ body.install-prompt-visible #touchControls{
 
 #scoreRow{
     align-items: start;
+    box-sizing: border-box;
     display: grid;
     grid-template-columns: 1fr auto 1fr;
+    left: 0;
     padding: clamp(12px, 3.4cqh, 24px) clamp(56px, 12.8cqw, 122px) 0;
+    position: absolute;
+    right: 0;
+    top: 0;
 }
 
 #scoreLeft{
@@ -254,7 +267,10 @@ body.install-prompt-visible #touchControls{
 
 #roundMessage{
     align-self: center;
+    grid-row: 2;
     justify-self: center;
+    max-width: 100%;
+    white-space: nowrap;
 }
 
 #hitMessage{
@@ -641,4 +657,9 @@ h2{
 
 .blink-text {
   animation: blink-animation 2s steps(1, end) infinite;
+}
+
+.large-text {
+    font-size: var(--large-text-size);
+    font-family: var(--font-family-h1);
 }

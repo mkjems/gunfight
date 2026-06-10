@@ -16,7 +16,7 @@ Roadmap for making the game match `Specification-main.md` and feel like a polish
   - Send the saved name when joining the lobby.
   - Keep server-side sanitizing and duplicate-name suffixes.
 
-- [ ] Verify `GET READY` and `DRAW !` are centered.
+- [x] Verify `GET READY` and `DRAW !` are centered.
   - Center both messages on desktop.
   - Center both messages on mobile camera view.
   - Messages can overlap whatever is in the center.

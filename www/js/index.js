@@ -1421,7 +1421,7 @@ GF.Game = (function(){
 
         ritualTimer = setTimeout(function(){
             completeRoundIntro();
-            setRoundMessage('DRAW !');
+            setRoundMessage('DRAW!');
 
             ritualTimer = setTimeout(function(){
                 ritualTimer = null;
