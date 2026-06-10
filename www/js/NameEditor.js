@@ -13,7 +13,7 @@ GF.NameEditor = function(options){
         ['J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R'],
         ['S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0'],
         ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
-        ['<', 'RND', 'OK']
+        ['DEL', 'RND', 'OK']
     ];
     var randomNames = [
         'ACE',
@@ -69,7 +69,7 @@ GF.NameEditor = function(options){
 
     function selectValue(value){
 
-        if(value === '<'){
+        if(value === 'DEL'){
             name = name.slice(0, -1);
             onChange();
             return;

@@ -8,6 +8,6 @@
 - If you run out of bullets, you get fresh bullets if the opponent also runs out (in which case you both reload)
 - The winner is the player with most kills when the time runs out.
 
-The running server should keep a record of the high scores
+
 
 
