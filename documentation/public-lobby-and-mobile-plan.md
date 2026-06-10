@@ -84,8 +84,8 @@ Important behavior:
 
 Progress note:
 
-- Steps 1 through 14 are implemented in the current working app, with local small-screen and two-client QA completed.
-- The next implementation slice should focus on getting the Hetzner VPS serving the game over HTTPS at `gunfight.mkjems.dk`.
+- Steps 1 through 15 are implemented.
+- The game is running over HTTPS at `https://gunfight.mkjems.dk`, and real mobile-vs-desktop play has been verified on that domain.
 
 ### 1. Refactor The Game Model Into Instances
 
@@ -370,21 +370,25 @@ Checks:
 
 ### 15. Configure Hetzner VPS HTTPS For Mobile Testing
 
-The next goal is to make Gunfight run on a mobile device at:
+Status: completed.
+
+Gunfight now runs on a mobile device at:
 
 - `https://gunfight.mkjems.dk`
 
 This step is intentionally limited to the production-style hosting foundation. More public-play specifications, smoke tests, and real-device acceptance tests should be planned separately afterwards.
 
-Required outcome:
+Verified outcome:
 
 - DNS for `gunfight.mkjems.dk` points to the Hetzner VPS.
 - The game server is reachable behind a reverse proxy on the VPS.
+- Caddy is used as the reverse proxy and certificate manager.
 - HTTPS is enabled with a valid certificate for `gunfight.mkjems.dk`.
 - HTTP redirects to HTTPS.
 - Socket.IO works over HTTPS/WSS.
 - The mobile browser no longer shows `Not Secure`.
-- The install/PWA path can be tested from the real domain.
+- Phone-vs-desktop gameplay works on the real domain.
+- The install/PWA path can now be tested from the real domain.
 
 Why HTTPS matters here:
 

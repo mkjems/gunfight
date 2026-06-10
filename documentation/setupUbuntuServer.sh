@@ -26,7 +26,7 @@ mkdir -p /opt/gunfight
 cd /opt/gunfight
 
 
-## create compose.yaml
+## create /opt/gunfight/compose.yaml
 ## services:
 ##   gunfight:
 ##     image: ghcr.io/mkjems/gunfight:latest
@@ -34,8 +34,15 @@ cd /opt/gunfight
 ##       PORT: 8080
 ##       NODE_ENV: production
 ##     ports:
-##       - "80:8080"
+##       - "127.0.0.1:8080:8080"
 ##     restart: unless-stopped
+##
+## Caddy handles public HTTP/HTTPS and proxies to the container:
+##
+## /etc/caddy/Caddyfile
+## gunfight.mkjems.dk {
+##     reverse_proxy 127.0.0.1:8080
+## }
 
 
 echo YOUR_READ_ONLY_GHCR_TOKEN | docker login ghcr.io -u mkjems --password-stdin
