@@ -1050,7 +1050,7 @@ GF.Game = (function(){
     function shouldShowLobbyMessage(){
         var message = getLobbyMessage();
 
-        return message !== 'PRESS P TO PLAY' && message !== 'LOOKING FOR CHALLENGER';
+        return message !== 'PRESS P TO PLAY' && !isOpponentSlotMessage(message);
     }
 
     function getLobbyPlayerLabel(){
@@ -1137,15 +1137,29 @@ GF.Game = (function(){
     }
 
     function getLobbySlotLabel(client, index){
+        var opponentMessage;
+
         if(!client){
-            if(getLobbyMessage() === 'LOOKING FOR CHALLENGER'){
-                return 'PLAYER ' + (index + 1) + ' : LOOKING FOR CHALLENGER';
+            opponentMessage = getOpponentSlotMessage();
+
+            if(opponentMessage){
+                return 'PLAYER ' + (index + 1) + ' : ' + opponentMessage;
             }
 
             return 'PLAYER ' + (index + 1) + ' : WAITING';
         }
 
         return getClientName(client) + ' - PLAYER ' + (index + 1) + ' : ' + (client.ready ? 'READY' : 'WAITING');
+    }
+
+    function getOpponentSlotMessage(){
+        var message = getLobbyMessage();
+
+        return isOpponentSlotMessage(message) ? message : '';
+    }
+
+    function isOpponentSlotMessage(message){
+        return message === 'LOOKING FOR CHALLENGER' || message === 'OPPONENT LEFT';
     }
 
     function getLobbyMessage(){

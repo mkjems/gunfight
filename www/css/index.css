@@ -1,25 +1,89 @@
+@font-face {
+    font-family: 'Press Start';
+    font-display: swap;
+    src: url('../fonts/PressStartK.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Arcade';
+    font-display: swap;
+    src: url('../fonts/Arcade.woff2') format('woff2'),
+        url('../fonts/ARCADE.TTF') format('truetype');
+}
+
+@font-face {
+    font-family: 'Game Over';
+    font-display: swap;
+    src: url('../fonts/GameOver.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Game Pocket';
+    font-display: swap;
+    src: url('../fonts/GamePocket-Regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Ducoil Sans';
+    font-display: swap;
+    src: url('../fonts/DucoilSans-Regular.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'Proggy Square';
+    font-display: swap;
+    src: url('../fonts/ProggySquareTT.woff2') format('woff2');
+}
+
 :root {
-    /* Palette */
+    /* Color Palette */
+
     --yellow: rgb(255,244,0);
     --light-black: rgb(30,30,30);
     --black: rgb(0,0,0);
 
-    /* semantic mapping*/
-    --bg-color: var(--light-black);
+    /* Typography Palette */
+
+    --font-family-arcade: 'Arcade', monospace;
+    --font-size-arcade: clamp(22px, 2.9cqw, 36px);
+    --line-height-arcade: 1.1;
+
+    --font-family-press-start: 'Press Start', monospace;
+    --font-size-press-start: clamp(6px, 1.5cqw, 15px);
+    --line-height-press-start: 1.55;
+
+    --font-family-game-pocket: 'Game Pocket', monospace;
+    --font-size-game-pocket: clamp(12px, 2.5cqw, 28px);
+    --line-height-game-pocket: 1.2;
+
+    --font-family-ducoil-sans: 'Ducoil Sans', monospace;
+    --font-size-ducoil-sans: clamp(10px, 1.5cqw, 18px);
+    --line-height-ducoil-sans: 1.4;
+
+    --font-family-game-over: 'Game Over', monospace;
+    --font-size-game-over: clamp(8px, 1.1cqw, 26px);
+    --line-height-game-over: 2.1;
+    
+    --font-family-proggy-square: 'Proggy Square', monospace;
+    --font-size-proggy-square: clamp(20px, 2.5cqw, 38px);
+    --line-height-proggy-square: 1.1;
+
+    /* Semantic Mapping*/
+
+    --font-family: var(--font-family-proggy-square);
+    --font-size: var(--font-size-proggy-square);
+    --line-height: var(--line-height-proggy-square);
+
+    --text-transform: uppercase;
+    --color: var(--yellow);
+    
     --primary-color: var(--yellow); 
-    --font-color: var(--yellow);
+    --bg-color: var(--light-black);
     --shadow-color: var(--black);
     --shadow-offset-x: 1px;
     --shadow-offset-y: 1px;
-    --font-family: 'Press Start', sans-serif;
-    --font-size: clamp(8px, 1.45cqw, 18px);
 }
 
-
-@font-face { 
-    font-family: Press Start; 
-    src: url('../fonts/press_start/prstart.ttf'); 
-}
 
 html{
     background-color: rgb(30,30,30);
@@ -30,10 +94,11 @@ html{
 
 body{
     background-color: rgb(30,30,30);
-    color: var(--font-color);
+    text-transform: var(--text-transform);
+    color: var(--color);
     font-family: var(--font-family);
     font-size: var(--font-size);
-    line-height:25px;
+    line-height: var(--line-height);
     margin: 0;
     min-height: 100vh;
     overflow: hidden;
@@ -128,7 +193,7 @@ body{
     font-size: var(--font-size);
     inset: 0;
     letter-spacing: 0;
-    line-height: 1.55;
+    line-height: var(--line-height);
     position: absolute;
     text-align: center;
     text-shadow: 1px 1px 0 rgb(0,0,0);
@@ -196,7 +261,6 @@ body.install-prompt-visible #touchControls{
     align-items: center;
     display: flex;
     flex-direction: column;
-    gap: clamp(14px, 3.2cqh, 24px);
     width: min(78cqw, 760px);
 }
 
@@ -214,7 +278,6 @@ body.install-prompt-visible #touchControls{
     align-items: center;
     display: flex;
     flex-direction: column;
-    gap: clamp(4px, 1cqh, 8px);
 }
 
 #lobbyMessage:empty,
@@ -224,6 +287,10 @@ body.install-prompt-visible #touchControls{
 
 #lobbyPlayPrompt{
     min-height: 1lh;
+}
+
+.lobby-section{
+    margin-bottom: 30px
 }
 
 #nameEditor{
@@ -298,7 +365,8 @@ body.install-prompt-visible #touchControls{
     background: rgba(30,30,30,0.86);
     border: 2px solid var(--yellow);
     color: var(--yellow);
-    font: 10px Press Start, sans-serif;
+    font-family: var(--font-family);
+    font-size: 10px;
     pointer-events: auto;
     touch-action: none;
     user-select: none;
@@ -463,10 +531,11 @@ body.install-prompt-visible #touchControls{
     box-sizing: border-box;
     color: rgb(255,244,0);
     display: none;
-    font: 10px Press Start, sans-serif;
+    font-family: var(--font-family);
+    font-size: var(--font-size);
     gap: 8px;
     left: max(10px, env(safe-area-inset-left, 0));
-    line-height: 1.45;
+    line-height: var(--line-height);
     padding: 9px 34px 9px 10px;
     position: fixed;
     right: max(10px, env(safe-area-inset-right, 0));
@@ -488,7 +557,8 @@ body.install-prompt-visible #touchControls{
     border: 1px solid rgb(255,244,0);
     color: rgb(255,244,0);
     cursor: pointer;
-    font: 10px Press Start, sans-serif;
+    font-family: var(--font-family);
+    font-size: var(--font-size);
 }
 
 #installPromptClose{
