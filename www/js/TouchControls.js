@@ -257,7 +257,11 @@ GF.TouchControls = function(options){
         }
 
         if(editButton){
-            editButton.hidden = !!state.highScoresVisible;
+            editButton.hidden = !!state.highScoresVisible || !!state.ready;
+        }
+
+        if(playButton){
+            playButton.hidden = !!state.highScoresVisible || !!state.ready;
         }
 
         if(actionControls){

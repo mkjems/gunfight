@@ -68,7 +68,7 @@ Roadmap for making the game match `Specification-main.md` and feel like a polish
 
 - [ ] Improve game-over feedback.
   - Show final score clearly.
-  - Show winner or tie state.
+  - Show winner name or tie state.
   - Return to lobby after a readable delay.
   - Reset ready state cleanly before the next match.
 
@@ -153,6 +153,21 @@ Roadmap for making the game match `Specification-main.md` and feel like a polish
   - Keep layouts fair for both players.
   - Avoid spawn positions that create instant unavoidable hits.
   - Use obstacles to create interesting ricochet and movement choices.
+
+## P3.5 - Content Authoring Tools
+
+- [ ] Add a rock editor page.
+  - Provide a WYSIWYG preview for rock dimensions and polygon shape.
+  - Accept rock JSON as input.
+  - Output rock JSON for copying into project data.
+  - Validate JSON and geometry with readable errors.
+
+- [ ] Add a scenario editor page.
+  - Provide a WYSIWYG preview of the full arena scenario.
+  - Let the user place and adjust rocks, cacti, wagons, saloons, decorations, and player start positions.
+  - Accept scenario JSON as input.
+  - Output scenario JSON for copying into project data.
+  - Validate JSON and scenario geometry with readable errors.
 
 ## P4 - Testing And Quality
 

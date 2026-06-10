@@ -9,10 +9,12 @@ GF.Config = {
     debug: {
         showCollisionBodies: false
     },
+    game: {
+        seconds: 70
+    },
     round: {
         resetDelay: 1800,
-        gameOverDelay: 3000,
-        seconds: 70,
+        gameOverDelay: 5000,
         ammo: 6,
         introWalkDelay: 1500,
         getReadyDelay: 1200,

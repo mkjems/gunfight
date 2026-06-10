@@ -445,7 +445,7 @@ GF.Game = (function(){
     }
 
     function renderHud(){
-        var secondsLeft = GF.Config.round.seconds;
+        var secondsLeft = GF.Config.game.seconds;
         var firstClient;
         var secondClient;
         var firstAmmo;
@@ -1501,7 +1501,7 @@ GF.Game = (function(){
 
                 setRoundMessage('');
                 if(!roundEndsAt){
-                    roundEndsAt = new Date().getTime() + (GF.Config.round.seconds * 1000);
+                    roundEndsAt = new Date().getTime() + (GF.Config.game.seconds * 1000);
                     scheduleMatchEnd();
                 }
                 resetAmmo();
@@ -1953,11 +1953,17 @@ GF.Game = (function(){
     }
 
     function getGameOverMessage(){
+        var winnerSlot;
+        var winnerClient;
+
         if((scores[0] || 0) === (scores[1] || 0)){
             return 'TIE';
         }
 
-        return 'PLAYER ' + ((scores[0] || 0) > (scores[1] || 0) ? 1 : 2) + ' WINS';
+        winnerSlot = (scores[0] || 0) > (scores[1] || 0) ? 0 : 1;
+        winnerClient = latestModel && latestModel.clients && latestModel.clients[winnerSlot];
+
+        return (winnerClient ? getClientName(winnerClient) : 'PLAYER ' + (winnerSlot + 1)) + ' WINS';
     }
 
     function recordGameResult(){
@@ -2128,6 +2134,7 @@ GF.Game = (function(){
             playing: roundState === 'playing',
             editing: nameEditor && nameEditor.isActive(),
             highScoresVisible: roundState === 'waiting' && shouldShowHighScoresScreen(),
+            ready: isLocalClientReady(),
             aimLevel: getLocalAimLevel()
         });
     }
