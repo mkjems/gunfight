@@ -47,6 +47,67 @@ test('puts a third client into a different waiting game', function(){
     assert.equal(lobby.getModel(third.game).status, 'waiting');
 });
 
+test('reports lobby states and ready flags for each player slot', function(){
+    const lobby = createTestLobby();
+    const first = lobby.join('socket-1', { name: 'one' });
+    let model = lobby.getModel(first.game);
+
+    assert.equal(model.status, 'waiting');
+    assert.equal(model.message, 'LOOKING FOR CHALLENGER');
+    assert.deepEqual(model.clients.map(function(client){
+        return {
+            name: client.name,
+            ready: client.ready,
+            slot: client.slot
+        };
+    }), [
+        { name: 'ONE', ready: false, slot: 0 }
+    ]);
+
+    const second = lobby.join('socket-2', { name: 'two' });
+    model = lobby.getModel(first.game);
+
+    assert.equal(second.game.id, first.game.id);
+    assert.equal(model.status, 'readying');
+    assert.equal(model.message, 'PRESS P TO PLAY');
+    assert.deepEqual(model.clients.map(function(client){
+        return {
+            name: client.name,
+            ready: client.ready,
+            slot: client.slot
+        };
+    }), [
+        { name: 'ONE', ready: false, slot: 0 },
+        { name: 'TWO', ready: false, slot: 1 }
+    ]);
+
+    first.game.model.readyClient(first.client);
+    model = lobby.getModel(first.game);
+
+    assert.equal(model.status, 'readying');
+    assert.equal(model.message, 'PRESS P TO PLAY');
+    assert.deepEqual(model.clients.map(function(client){
+        return {
+            name: client.name,
+            ready: client.ready,
+            slot: client.slot
+        };
+    }), [
+        { name: 'ONE', ready: true, slot: 0 },
+        { name: 'TWO', ready: false, slot: 1 }
+    ]);
+
+    first.game.model.readyClient(second.client);
+    lobby.markPlaying(first.game);
+    model = lobby.getModel(first.game);
+
+    assert.equal(model.status, 'playing');
+    assert.equal(model.message, '');
+    assert.deepEqual(model.clients.map(function(client){
+        return client.ready;
+    }), [true, true]);
+});
+
 test('keeps game rooms and models isolated', function(){
     const lobby = createTestLobby();
     const firstA = lobby.join('a-1', { name: 'ace' });

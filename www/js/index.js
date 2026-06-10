@@ -874,8 +874,8 @@ GF.Game = (function(){
         setLines(lobbySlotsElement, getLobbySlots().map(function(client, index){
             return getLobbySlotLabel(client, index);
         }));
-        showElement(lobbyEditPromptSectionElement, !isTouch);
-        setText(lobbyEditPromptElement, isTouch ? '' : 'PRESS E TO EDIT NAME');
+        showElement(lobbyEditPromptSectionElement, !isTouch && isLocalClientWaiting());
+        setText(lobbyEditPromptElement, !isTouch && isLocalClientWaiting() ? 'PRESS E TO EDIT NAME' : '');
 
         showElement(lobbyPlayPromptElement, true);
         setText(lobbyPlayPromptElement, shouldShowLobbyPrompt() && !isTouch ? 'PRESS P TO PLAY' : '');
@@ -1164,6 +1164,12 @@ GF.Game = (function(){
         var client = getLocalClient();
 
         return localReadyRequested || !!(client && client.ready);
+    }
+
+    function isLocalClientWaiting(){
+        var client = getLocalClient();
+
+        return !!(client && !isLocalClientReady() && latestModel && latestModel.status !== 'abandoned');
     }
 
     function getLobbyPlayerLabel(){
@@ -1512,6 +1518,10 @@ GF.Game = (function(){
 
     function handleKeyEvent(keyEvent){
         var player;
+
+        if(roundState === 'waiting' && keyEvent.player === playerId && keyEvent.key === 'e' && !isLocalClientWaiting()){
+            return false;
+        }
 
         if(roundState === 'waiting' && nameEditor && keyEvent.player === playerId){
             if(nameEditor.handleKeyEvent(keyEvent) === false){

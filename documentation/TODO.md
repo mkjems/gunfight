@@ -21,7 +21,7 @@ Roadmap for making the game match `Specification-main.md` and feel like a polish
   - Center both messages on mobile camera view.
   - Messages can overlap whatever is in the center.
 
-- [ ] Confirm all lobby states match the specification.
+- [x] Confirm all lobby states match the specification.
   - `LOOKING FOR CHALLENGER`
   - `WAITING`
   - `READY`
