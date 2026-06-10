@@ -4,11 +4,12 @@ Roadmap for making the game match `Specification-main.md` and feel like a polish
 
 ## P0 - Spec Compliance
 
-- [ ] Add the High scores screen.
+- [x] Add the High scores screen.
   - Show player name, wins, kills, and deaths.
   - Keep scores in server memory.
   - Clear scores naturally when the server restarts.
-  - Add a simple way to open the screen from the lobby.
+  - There is no direct way to open the High score screen from the lobby.
+    While no user has pressed Ready, the lobby alternates every 7 seconds between the High score screen and the main lobby. `PRESS P TO PLAY` still flashes on desktop, and the Play button still appears on mobile.
 
 - [ ] Persist the player name in the browser.
   - Save the submitted name to `localStorage` or `sessionStorage`.

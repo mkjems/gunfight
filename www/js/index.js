@@ -19,6 +19,9 @@ GF.Game = (function(){
         lobbyEditPromptElement,
         lobbyEditPromptSectionElement,
         lobbyPlayPromptElement,
+        highScoresScreenElement,
+        highScoresTableElement,
+        highScoresPlayPromptElement,
         nameEditorElement,
         nameEditorValueElement,
         nameEditorGridElement,
@@ -41,6 +44,7 @@ GF.Game = (function(){
         bullets,
         roundState,
         latestModel,
+        highScores,
         scores,
         ammo,
         roundEndsAt,
@@ -54,6 +58,8 @@ GF.Game = (function(){
         advanceRoundAfterHit,
         lastPositionSyncAt,
         obstacleDamage,
+        lastRecordedResultId,
+        localReadyRequested,
         playerId;
 
     function initCanvas(){
@@ -110,6 +116,9 @@ GF.Game = (function(){
         lobbyEditPromptElement = document.getElementById('lobbyEditPrompt');
         lobbyEditPromptSectionElement = getLobbySection(lobbyEditPromptElement);
         lobbyPlayPromptElement = document.getElementById('lobbyPlayPrompt');
+        highScoresScreenElement = document.getElementById('highScoresScreen');
+        highScoresTableElement = document.getElementById('highScoresTable');
+        highScoresPlayPromptElement = document.getElementById('highScoresPlayPrompt');
         nameEditorElement = document.getElementById('nameEditor');
         nameEditorValueElement = document.getElementById('nameEditorValue');
         nameEditorGridElement = document.getElementById('nameEditorGrid');
@@ -288,6 +297,7 @@ GF.Game = (function(){
         bullets = new GF.Bullets(scene);
         players = new GF.Players(scene, bullets);
         roundState = 'waiting';
+        highScores = [];
         scores = [0, 0];
         ammo = {};
         roundEndsAt = null;
@@ -301,6 +311,7 @@ GF.Game = (function(){
         advanceRoundAfterHit = false;
         lastPositionSyncAt = 0;
         obstacleDamage = {};
+        lastRecordedResultId = null;
         GF.Bullet.onRicochet = playRicochetSound;
     }
 
@@ -843,8 +854,15 @@ GF.Game = (function(){
 
         showElement(canvas, true);
         showElement(hudCanvas, true);
-        showElement(lobbyMainElement, true);
         showElement(nameEditorElement, false);
+
+        if(shouldShowHighScoresScreen()){
+            renderHighScoresScreen(isTouch);
+            return;
+        }
+
+        showElement(lobbyMainElement, true);
+        showElement(highScoresScreenElement, false);
         setLines(lobbyIdentityElement, [
             getLobbyPlayerLabel(),
             getGameLabel()
@@ -861,6 +879,76 @@ GF.Game = (function(){
         setText(lobbyPlayPromptElement, shouldShowLobbyPrompt() && !isTouch ? 'PRESS P TO PLAY' : '');
     }
 
+    function shouldShowHighScoresScreen(){
+        var clients = latestModel && latestModel.clients || [];
+        var hasReadyClient = clients.some(function(client){
+            return client.ready;
+        });
+
+        if(hasReadyClient || localReadyRequested){
+            return false;
+        }
+
+        return Math.floor(new Date().getTime() / 7000) % 2 === 1;
+    }
+
+    function renderHighScoresScreen(isTouch){
+        showElement(lobbyMainElement, false);
+        showElement(highScoresScreenElement, true);
+        renderHighScoresTable();
+        setText(highScoresPlayPromptElement, shouldShowLobbyPrompt() && !isTouch ? 'PRESS P TO PLAY' : '');
+    }
+
+    function renderHighScoresTable(){
+        var rows = highScores && highScores.length ? highScores : [];
+        var key = rows.map(function(row){
+            return [row.name, row.wins, row.kills, row.deaths].join(':');
+        }).join('|');
+
+        if(!highScoresTableElement){
+            return;
+        }
+
+        if(highScoresTableElement.dataset.highScoresKey === key){
+            return;
+        }
+
+        highScoresTableElement.dataset.highScoresKey = key;
+        highScoresTableElement.innerHTML = '';
+        appendHighScoreRow(['NAME', 'WINS', 'KILLS', 'DEATHS'], true);
+
+        if(!rows.length){
+            var emptyRow = document.createElement('div');
+
+            emptyRow.className = 'high-score-empty';
+            emptyRow.textContent = 'NO SCORES YET';
+            highScoresTableElement.appendChild(emptyRow);
+            return;
+        }
+
+        rows.forEach(function(row){
+            appendHighScoreRow([row.name, row.wins, row.kills, row.deaths], false);
+        });
+    }
+
+    function appendHighScoreRow(values, isHeader){
+        var rowElement;
+
+        if(!highScoresTableElement){
+            return;
+        }
+
+        rowElement = document.createElement('div');
+        rowElement.className = 'high-score-row' + (isHeader ? ' is-header' : '');
+        values.forEach(function(value){
+            var cell = document.createElement('span');
+
+            cell.textContent = value;
+            rowElement.appendChild(cell);
+        });
+        highScoresTableElement.appendChild(rowElement);
+    }
+
     function renderNameEditor(){
         var state = nameEditor.getState();
         var helpLines = isTouchInterface() ? [] : [
@@ -872,6 +960,7 @@ GF.Game = (function(){
         showElement(canvas, false);
         showElement(hudCanvas, false);
         showElement(lobbyMainElement, false);
+        showElement(highScoresScreenElement, false);
         setLines(lobbyIdentityElement, []);
         setLines(lobbyControlsElement, []);
         setLines(lobbySlotsElement, []);
@@ -1066,7 +1155,13 @@ GF.Game = (function(){
     }
 
     function shouldShowLobbyPrompt(){
-        return !latestModel || latestModel.status !== 'abandoned';
+        return (!latestModel || latestModel.status !== 'abandoned') && !isLocalClientReady();
+    }
+
+    function isLocalClientReady(){
+        var client = getLocalClient();
+
+        return localReadyRequested || !!(client && client.ready);
     }
 
     function getLobbyPlayerLabel(){
@@ -1208,6 +1303,7 @@ GF.Game = (function(){
         advanceRoundAfterHit = false;
         obstacleDamage = {};
         roundState = 'waiting';
+        lastRecordedResultId = null;
         players.clearKeys();
         bullets.clear();
         syncNameEditor();
@@ -1217,6 +1313,7 @@ GF.Game = (function(){
         var previousModel = latestModel;
 
         latestModel = model;
+        syncLocalReadyRequest();
 
         if(model.status === 'abandoned'){
             enterLobbyState();
@@ -1237,6 +1334,14 @@ GF.Game = (function(){
         }
 
         renderHud();
+    }
+
+    function syncLocalReadyRequest(){
+        var client = getLocalClient();
+
+        if(client && !client.ready){
+            localReadyRequested = false;
+        }
     }
 
     function didAnyClientBecomeReady(previousModel, model){
@@ -1653,6 +1758,7 @@ GF.Game = (function(){
     function endGame(){
         roundState = 'gameOver';
         closeNameEditor();
+        recordGameResult();
         roundEndsAt = null;
         hitMessage = null;
         advanceRoundAfterHit = false;
@@ -1679,6 +1785,34 @@ GF.Game = (function(){
         }
 
         resetTimer = setTimeout(resetToStartScreen, GF.Config.round.gameOverDelay);
+    }
+
+    function recordGameResult(){
+        var resultId;
+
+        if(!socket || !latestModel || !latestModel.gameId || !latestModel.clients){
+            return;
+        }
+
+        resultId = latestModel.gameId + ':' + latestModel.roundNumber;
+
+        if(lastRecordedResultId === resultId){
+            return;
+        }
+
+        lastRecordedResultId = resultId;
+        socket.emit('recordGameResult', {
+            resultId: resultId,
+            gameId: latestModel.gameId,
+            roundNumber: latestModel.roundNumber,
+            clients: latestModel.clients.map(function(client){
+                return {
+                    name: getClientName(client),
+                    slot: client.slot
+                };
+            }),
+            scores: scores.slice()
+        });
     }
 
     function resetRound(){
@@ -1811,6 +1945,7 @@ GF.Game = (function(){
             waiting: roundState === 'waiting',
             playing: roundState === 'playing',
             editing: nameEditor && nameEditor.isActive(),
+            highScoresVisible: roundState === 'waiting' && shouldShowHighScoresScreen(),
             aimLevel: getLocalAimLevel()
         });
     }
@@ -1891,6 +2026,11 @@ GF.Game = (function(){
     function setupSocket(callback){
         socket = io();
 
+        socket.on('highScores', function(nextHighScores){
+            highScores = Array.isArray(nextHighScores) ? nextHighScores : [];
+            renderHud();
+        });
+
         socket.on('joinedGame', function(data){
             playerId = data.playerId;
             syncPlayers(data.model);
@@ -1917,6 +2057,10 @@ GF.Game = (function(){
             inputController = new GF.KeysModel(socket, playerId, handleKeyEvent, {
                 canReady: function(){
                     return !nameEditor || !nameEditor.isActive();
+                },
+                onReady: function(){
+                    localReadyRequested = true;
+                    renderHud();
                 }
             });
             initTouchControls();

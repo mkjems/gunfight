@@ -4,12 +4,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Server } from 'socket.io';
 import { createLobby } from './gameModules/lobby.js';
+import { createHighScores } from './gameModules/highScores.js';
 
 const portNumber = process.env.PORT || 8080;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const wwwRoot = path.join(__dirname, '..', 'www');
 const lobby = createLobby();
+const highScores = createHighScores();
 
 const app = express();
 const server = http.createServer(app);
@@ -100,6 +102,8 @@ function getNameFromPayload(data){
 io.on('connection', function(socket) {
   const joined = joinSocketGame(socket);
   const client = joined.client;
+
+  socket.emit('highScores', highScores.getTable());
 
   socket.on('disconnect', function(reason) {
     leaveSocketGame(socket);
@@ -230,6 +234,10 @@ io.on('connection', function(socket) {
 
     context.game.model.advanceRound();
     emitGameModel(context.game);
+  });
+
+  socket.on('recordGameResult', function(data) {
+    io.emit('highScores', highScores.recordGame(data));
   });
 
 });

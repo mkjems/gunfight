@@ -228,6 +228,7 @@ body.install-prompt-visible #touchControls{
 #gameHud[hidden],
 #lobbyHud[hidden],
 #lobby-main[hidden],
+#highScoresScreen[hidden],
 #nameEditor[hidden]{
     display: none;
 }
@@ -285,7 +286,8 @@ h2{
 #lobbyIdentity,
 #lobbyControlsText,
 #lobbySlots,
-#nameEditorHelp{
+#nameEditorHelp,
+#highScoresScreen{
     align-items: center;
     display: flex;
     flex-direction: column;
@@ -301,6 +303,32 @@ h2{
 
 .lobby-section{
     margin: var(--lobby-margin);
+}
+
+#highScoresScreen{
+    justify-content: center;
+    width: min(78cqw, 760px);
+}
+
+#highScoresTable{
+    display: grid;
+    gap: clamp(4px, 1.1cqh, 8px);
+    margin: var(--lobby-margin);
+    width: 100%;
+}
+
+.high-score-row{
+    display: grid;
+    grid-template-columns: 1.5fr repeat(3, 1fr);
+    gap: clamp(6px, 1.4cqw, 14px);
+}
+
+.high-score-row span:first-child{
+    text-align: left;
+}
+
+.high-score-empty{
+    min-height: 1lh;
 }
 
 #nameEditor{

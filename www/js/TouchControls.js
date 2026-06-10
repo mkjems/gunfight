@@ -256,6 +256,10 @@ GF.TouchControls = function(options){
             lobbyControls.hidden = !state.waiting || editing;
         }
 
+        if(editButton){
+            editButton.hidden = !!state.highScoresVisible;
+        }
+
         if(actionControls){
             actionControls.hidden = !showGameplayControls;
         }

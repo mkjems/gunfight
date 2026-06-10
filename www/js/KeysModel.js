@@ -55,6 +55,10 @@ GF.KeysModel = function(socket, playerId, onLocalKeyEvent, options){
 
         socket.emit('clientReady');
         internalKeyStatus.p = true;
+
+        if(options.onReady){
+            options.onReady();
+        }
     }
 
     function releaseReady(){
