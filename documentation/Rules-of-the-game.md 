@@ -1,0 +1,13 @@
+
+
+# GUNFIGHT RULES OF THE GAME
+
+- The duration of a game is 70 secs. When the game starts a timer starts counting down from 70 seconds. When the timer hits 0 the game is over.
+- You may play as many rounds (kills) as you can, during the duration of the game.
+- You get a fresh reload of bullets after each kill.
+- If you run out of bullets, you get fresh bullets if the opponent also runs out (in which case you both reload)
+- The winner is the player with most kills when the time runs out.
+
+The running server should keep a record of the high scores
+
+
