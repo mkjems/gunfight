@@ -66,13 +66,13 @@ Roadmap for making the game match `Specification-main.md` and feel like a polish
   - Make touch targets comfortable on phones.
   - Submit and close behavior should feel immediate.
 
-- [ ] Improve game-over feedback.
+- [x] Improve game-over feedback.
   - Show final score clearly.
   - Show winner name or tie state.
   - Return to lobby after a readable delay.
   - Reset ready state cleanly before the next match.
 
-- [ ] Improve hit feedback.
+- [x] Improve hit feedback.
   - Keep hit pause short and satisfying.
   - Show hit message near the correct player or in a consistent arcade position.
   - Ensure death animation, sound, score, and reload happen together.

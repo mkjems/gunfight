@@ -1,15 +1,15 @@
 GF.Players = function(scene, bullets){
     var players = {};
 
-    function getSlot(index){
-        var slots = GF.Config.player.slots;
+    function getSlot(index, slotSet){
+        var slots = slotSet || GF.Config.player.slots;
 
         return slots[index % slots.length];
     }
 
     function ensure(client, index, options){
         options = options || {};
-        var slot = getSlot(index);
+        var slot = getSlot(index, options.slots);
         var id = client.id;
         var slotChanged;
 
@@ -53,10 +53,12 @@ GF.Players = function(scene, bullets){
         });
     }
 
-    function resetAll(){
+    function resetAll(options){
+        options = options || {};
+
         Object.keys(players).forEach(function(id){
             var player = players[id];
-            var slot = getSlot(player.slot);
+            var slot = getSlot(player.slot, options.slots);
 
             player.resetTo(slot);
         });

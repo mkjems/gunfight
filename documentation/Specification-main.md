@@ -106,7 +106,7 @@ Each match lasts 70 seconds total. The timer starts when the first duel begins a
 4. The screen shows `DRAW !` at the center of the screen.
 5. The duel begins.
 6. A hit pauses the game, awards one point, reloads both players, and starts the next duel.
-7. When the match timer ends, the game shows `GAME OVER` with the winning player name or `TIE`, keeps it visible briefly, and returns to the lobby.
+7. When the match timer ends, the game shows `GAME OVER` with the winning player name or `TIE` and the final score, keeps it visible briefly, and returns to the lobby.
 
 ### Gameplay rules
 

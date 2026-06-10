@@ -1389,7 +1389,8 @@ GF.Game = (function(){
         }
 
         players.sync(model, {
-            resetChangedSlots: roundState === 'waiting'
+            resetChangedSlots: roundState === 'waiting',
+            slots: getCurrentPlayerSlots()
         });
         syncNameEditor();
 
@@ -1435,6 +1436,10 @@ GF.Game = (function(){
         if(client && !client.ready){
             localReadyRequested = false;
         }
+    }
+
+    function getCurrentPlayerSlots(){
+        return roundState === 'waiting' ? GF.Config.player.lobbySlots : GF.Config.player.slots;
     }
 
     function didAnyClientBecomeReady(previousModel, model){
@@ -1955,15 +1960,20 @@ GF.Game = (function(){
     function getGameOverMessage(){
         var winnerSlot;
         var winnerClient;
+        var scoreLabel = getFinalScoreLabel();
 
         if((scores[0] || 0) === (scores[1] || 0)){
-            return 'TIE';
+            return 'TIE ' + scoreLabel;
         }
 
         winnerSlot = (scores[0] || 0) > (scores[1] || 0) ? 0 : 1;
         winnerClient = latestModel && latestModel.clients && latestModel.clients[winnerSlot];
 
-        return (winnerClient ? getClientName(winnerClient) : 'PLAYER ' + (winnerSlot + 1)) + ' WINS';
+        return (winnerClient ? getClientName(winnerClient) : 'PLAYER ' + (winnerSlot + 1)) + ' WINS ' + scoreLabel;
+    }
+
+    function getFinalScoreLabel(){
+        return (scores[0] || 0) + '-' + (scores[1] || 0);
     }
 
     function recordGameResult(){
@@ -1995,7 +2005,11 @@ GF.Game = (function(){
     }
 
     function resetRound(){
-        players.resetAll();
+        var readyToStart = latestModel && isReadyToStart(latestModel);
+
+        players.resetAll({
+            slots: readyToStart ? GF.Config.player.slots : GF.Config.player.lobbySlots
+        });
         bullets.reset();
         setRoundMessage('');
         roundEndsAt = null;
@@ -2009,7 +2023,7 @@ GF.Game = (function(){
             matchEndTimer = null;
         }
 
-        if(latestModel && isReadyToStart(latestModel)){
+        if(readyToStart){
             startRoundRitual({ resetScores: false });
             return;
         }
@@ -2020,7 +2034,9 @@ GF.Game = (function(){
     }
 
     function resetToStartScreen(){
-        players.resetAll();
+        players.resetAll({
+            slots: GF.Config.player.lobbySlots
+        });
         bullets.reset();
         resetAmmo();
         setRoundMessage('');

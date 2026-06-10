@@ -81,9 +81,11 @@ GF.Config = {
         },
         slots: [
             { x: 150, y: 430, facing: 1, frame: 0 },
-            { x: 800, y: 430, facing: -1, frame: 2 },
-            { x: 260, y: 260, facing: 1, frame: 1 },
-            { x: 540, y: 260, facing: -1, frame: 3 }
+            { x: 800, y: 430, facing: -1, frame: 2 }
+        ],
+        lobbySlots: [
+            { x: 120, y: 430, facing: 1, frame: 0 },
+            { x: 830, y: 430, facing: -1, frame: 2 }
         ]
     },
     bullet: {
