@@ -446,6 +446,7 @@ GF.Game = (function(){
 
         if(roundState === 'waiting'){
             renderLobbyHud();
+            updateTouchControls();
             return;
         }
 
@@ -468,6 +469,7 @@ GF.Game = (function(){
         renderGameHud(secondsLeft);
         drawAmmo(firstAmmo, 122, 606, 1);
         drawAmmo(secondAmmo, 828, 606, -1);
+        updateTouchControls();
     }
 
     function renderGameHud(secondsLeft){

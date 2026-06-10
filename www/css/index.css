@@ -362,6 +362,11 @@ h2{
 }
 
 @media (pointer: coarse){
+    #gameHud{
+        inset: 0;
+        position: fixed;
+    }
+
     #touchControls{
         position: fixed;
     }
