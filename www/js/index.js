@@ -1584,6 +1584,7 @@ GF.Game = (function(){
 
             if(bullet){
                 ammo[player.playerId]--;
+                reloadIfBothPlayersAreOutOfAmmo();
                 playGunSound();
 
                 if(!keyEvent.shot){
@@ -1596,6 +1597,26 @@ GF.Game = (function(){
         }
 
         player.respondToKeyEvent(keyEvent);
+    }
+
+    function reloadIfBothPlayersAreOutOfAmmo(){
+        var clients;
+
+        if(roundState !== 'playing' || !latestModel){
+            return;
+        }
+
+        clients = latestModel.clients || [];
+
+        if(clients.length < 2){
+            return;
+        }
+
+        if(clients.every(function(client){
+            return (ammo[client.id] || 0) <= 0;
+        })){
+            resetAmmo();
+        }
     }
 
     function checkForHits(){

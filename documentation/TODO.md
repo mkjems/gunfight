@@ -40,7 +40,7 @@ Roadmap for making the game match `Specification-main.md` and feel like a polish
   - Space must not fire bullets before gameplay.
   - Touch fire control must stay hidden before gameplay.
 
-- [ ] Confirm reload rules.
+- [x] Confirm reload rules.
   - Reload both players after every kill.
   - Reload both players if both run out of bullets.
   - Keep ammo HUD in sync after reloads.
