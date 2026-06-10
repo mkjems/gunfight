@@ -84,8 +84,8 @@ Important behavior:
 
 Progress note:
 
-- Steps 1 through 13 are implemented in the current working app.
-- The next implementation slice should focus on small-screen and multiplayer QA.
+- Steps 1 through 14 are implemented in the current working app, with local small-screen and two-client QA completed.
+- The next implementation slice should focus on getting the Hetzner VPS serving the game over HTTPS at `gunfight.mkjems.dk`.
 
 ### 1. Refactor The Game Model Into Instances
 
@@ -368,20 +368,28 @@ Checks:
 - Audio still warms up after first user interaction.
 - Events from one game do not leak into another game.
 
-### 15. Deploy To Staging And Run Public-Style Smoke Tests
+### 15. Configure Hetzner VPS HTTPS For Mobile Testing
 
-Deploy to a staging or temporary public URL and test with real browsers on separate networks if possible.
+The next goal is to make Gunfight run on a mobile device at:
 
-Smoke-test:
+- `https://gunfight.mkjems.dk`
 
-- Two players can pair and complete a round.
-- Four players become two separate games.
-- A player can leave before ready.
-- A player can leave during play.
-- A new visitor can be paired after another game is abandoned.
-- A touch device can join, ready, move, aim, and shoot.
-- HTTPS is enabled on the public/staging domain.
-- PWA install prompt/instructions are visible before install and hidden in standalone mode.
+This step is intentionally limited to the production-style hosting foundation. More public-play specifications, smoke tests, and real-device acceptance tests should be planned separately afterwards.
+
+Required outcome:
+
+- DNS for `gunfight.mkjems.dk` points to the Hetzner VPS.
+- The game server is reachable behind a reverse proxy on the VPS.
+- HTTPS is enabled with a valid certificate for `gunfight.mkjems.dk`.
+- HTTP redirects to HTTPS.
+- Socket.IO works over HTTPS/WSS.
+- The mobile browser no longer shows `Not Secure`.
+- The install/PWA path can be tested from the real domain.
+
+Why HTTPS matters here:
+
+- Mobile browsers require a secure context for service workers and reliable PWA install behavior.
+- iPhone/Android home-screen testing is only meaningful once the game is served from the real HTTPS domain.
 
 ## Concerns And Decisions To Make
 
