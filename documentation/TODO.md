@@ -35,7 +35,7 @@ Roadmap for making the game match `Specification-main.md` and feel like a polish
   - Return the remaining player to a useful lobby state.
   - Decide whether recovery is automatic requeue or a visible Play/Requeue action.
 
-- [ ] Confirm shooting is impossible in the lobby.
+- [x] Confirm shooting is impossible in the lobby.
   - Desktop movement and aim may work.
   - Space must not fire bullets before gameplay.
   - Touch fire control must stay hidden before gameplay.
