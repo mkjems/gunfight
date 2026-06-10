@@ -16,7 +16,8 @@ GF.Config = {
         ammo: 6,
         introWalkDelay: 1500,
         getReadyDelay: 1200,
-        drawDelay: 700
+        drawDelay: 700,
+        abandonedRequeueDelay: 2500
     },
     player: {
         speed: 120,

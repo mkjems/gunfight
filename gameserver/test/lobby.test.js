@@ -176,6 +176,35 @@ test('disconnect during play abandons the game and avoids pairing new clients in
     assert.equal(lobby.getModel(third.game).status, 'waiting');
 });
 
+test('requeue moves the remaining abandoned player into a fresh waiting game', function(){
+    const lobby = createTestLobby();
+    const first = lobby.join('socket-1', { name: 'one' });
+    const second = lobby.join('socket-2', { name: 'two' });
+
+    lobby.markPlaying(first.game);
+    lobby.leave('socket-1');
+
+    const abandonedModel = lobby.getModel(second.game);
+    const requeued = lobby.requeue('socket-2');
+    const requeuedModel = lobby.getModel(requeued.game);
+
+    assert.equal(abandonedModel.status, 'abandoned');
+    assert.equal(abandonedModel.message, 'OPPONENT LEFT');
+    assert.notEqual(requeued.game.id, second.game.id);
+    assert.equal(requeuedModel.status, 'waiting');
+    assert.equal(requeuedModel.message, 'LOOKING FOR CHALLENGER');
+    assert.deepEqual(requeuedModel.clients.map(function(client){
+        return {
+            name: client.name,
+            ready: client.ready,
+            slot: client.slot
+        };
+    }), [
+        { name: 'TWO', ready: false, slot: 0 }
+    ]);
+    assert.equal(lobby.getGame(second.game.id), null);
+});
+
 test('removes empty games', function(){
     const lobby = createTestLobby();
     const first = lobby.join('socket-1', { name: 'one' });

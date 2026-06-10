@@ -68,7 +68,7 @@
     --font-size-proggy-square: clamp(20px, 2.5cqw, 38px);
     --line-height-proggy-square: 1.1;
 
-    --large-text-size: clamp(12px, 5cqw, 42px);
+    --large-text-size: clamp(12px, 4cqw, 32px);
 
 
     /* Semantic Mapping*/

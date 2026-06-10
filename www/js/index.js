@@ -53,6 +53,7 @@ GF.Game = (function(){
         ritualTimer,
         hitTimer,
         resetTimer,
+        abandonedRequeueTimer,
         scenarioStartedAt,
         roundIntro,
         advanceRoundAfterHit,
@@ -307,6 +308,7 @@ GF.Game = (function(){
         ritualTimer = null;
         hitTimer = null;
         resetTimer = null;
+        abandonedRequeueTimer = null;
         scenarioStartedAt = null;
         roundIntro = null;
         advanceRoundAfterHit = false;
@@ -1324,6 +1326,11 @@ GF.Game = (function(){
             resetTimer = null;
         }
 
+        if(abandonedRequeueTimer){
+            clearTimeout(abandonedRequeueTimer);
+            abandonedRequeueTimer = null;
+        }
+
         roundIntro = null;
         roundEndsAt = null;
         hitMessage = null;
@@ -1345,6 +1352,9 @@ GF.Game = (function(){
 
         if(model.status === 'abandoned'){
             enterLobbyState();
+            scheduleAbandonedRequeue();
+        } else {
+            clearAbandonedRequeue();
         }
 
         if(didAnyClientBecomeReady(previousModel, model)){
@@ -1362,6 +1372,26 @@ GF.Game = (function(){
         }
 
         renderHud();
+    }
+
+    function scheduleAbandonedRequeue(){
+        if(abandonedRequeueTimer || !socket){
+            return;
+        }
+
+        abandonedRequeueTimer = setTimeout(function(){
+            abandonedRequeueTimer = null;
+            socket.emit('requeue');
+        }, GF.Config.round.abandonedRequeueDelay);
+    }
+
+    function clearAbandonedRequeue(){
+        if(!abandonedRequeueTimer){
+            return;
+        }
+
+        clearTimeout(abandonedRequeueTimer);
+        abandonedRequeueTimer = null;
     }
 
     function syncStoredPlayerName(){

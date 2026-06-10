@@ -30,7 +30,7 @@ Roadmap for making the game match `Specification-main.md` and feel like a polish
   - Hide `PRESS E TO EDIT NAME` after the local player presses `P`.
   - Ignore `E` while the local player is `READY`; allow editing again only after returning to `WAITING`.
 
-- [ ] Complete abandoned-game recovery.
+- [x] Complete abandoned-game recovery.
   - When an opponent leaves mid-game, show `OPPONENT LEFT`.
   - Return the remaining player to a useful lobby state.
   - Decide whether recovery is automatic requeue or a visible Play/Requeue action.
