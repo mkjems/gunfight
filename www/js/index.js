@@ -875,9 +875,7 @@ GF.Game = (function(){
         ]);
         showElement(lobbyControlsSectionElement, !isTouch);
         setLines(lobbyControlsElement, isTouch ? [] : controls);
-        setLines(lobbySlotsElement, getLobbySlots().map(function(client, index){
-            return getLobbySlotLabel(client, index);
-        }));
+        renderLobbySlots();
         showElement(lobbyEditPromptSectionElement, !isTouch && isLocalClientWaiting());
         setText(lobbyEditPromptElement, !isTouch && isLocalClientWaiting() ? 'PRESS E TO EDIT NAME' : '');
 
@@ -1276,6 +1274,33 @@ GF.Game = (function(){
         }
 
         return slots;
+    }
+
+    function renderLobbySlots(){
+        var slots = getLobbySlots();
+        var key;
+
+        if(!lobbySlotsElement){
+            return;
+        }
+
+        key = slots.map(function(client, index){
+            return getLobbySlotLabel(client, index) + ':' + !!(client && client.ready);
+        }).join('\n');
+
+        if(lobbySlotsElement.dataset.linesKey === key){
+            return;
+        }
+
+        lobbySlotsElement.dataset.linesKey = key;
+        lobbySlotsElement.innerHTML = '';
+        slots.forEach(function(client, index){
+            var slotElement = document.createElement('div');
+
+            slotElement.className = 'lobby-slot' + (client && client.ready ? ' negative-text' : '');
+            slotElement.textContent = getLobbySlotLabel(client, index);
+            lobbySlotsElement.appendChild(slotElement);
+        });
     }
 
     function getLobbySlotLabel(client, index){
