@@ -77,6 +77,8 @@
     --font-size-h1: clamp(14px, 2.7cqw, 30px);
     --font-family-h1: var(--font-family-press-start);
 
+    --lobby-margin: 0 0 clamp(6px, 5cqh, 24px) 0;
+
     --text-transform: uppercase;
     --color: var(--yellow);
     
@@ -181,6 +183,11 @@ body{
     border: 0px solid var(--yellow);
 }
 
+#canvas[hidden],
+#hudCanvas[hidden]{
+    display: none;
+}
+
 #canvas{
     z-index: 0;
 }
@@ -220,6 +227,7 @@ body.install-prompt-visible #touchControls{
 
 #gameHud[hidden],
 #lobbyHud[hidden],
+#lobby-main[hidden],
 #nameEditor[hidden]{
     display: none;
 }
@@ -256,21 +264,16 @@ body.install-prompt-visible #touchControls{
 
 #lobbyHud{
     box-sizing: border-box;
-    display: grid;
-    place-items: center;
-}
-
-.lobby-stack{
-    align-items: center;
     display: flex;
     flex-direction: column;
-    width: min(78cqw, 760px);
+    justify-content: center;
+    align-items: center;
 }
 
 h1 {
     font-family: var(--font-family-h1);
     font-size: var(--font-size-h1);
-    margin: 0 0 clamp(12px, 3.4cqh, 24px) 0;
+    margin: var(--lobby-margin);
 }
 
 h2{
@@ -297,11 +300,12 @@ h2{
 }
 
 .lobby-section{
-    margin-bottom: 24px
+    margin: var(--lobby-margin);
 }
 
 #nameEditor{
     align-items: center;
+    justify-content: center;
     display: flex;
     flex-direction: column;
     gap: clamp(14px, 3cqh, 22px);
@@ -369,12 +373,19 @@ h2{
 
 #touchControls button,
 #touchLobbyControls button{
+    align-items: center;
     background: rgba(30,30,30,0.86);
     border: 2px solid var(--yellow);
+    box-sizing: border-box;
     color: var(--yellow);
+    display: inline-flex;
     font-family: var(--font-family);
     font-size: var(--font-size);
+    justify-content: center;
+    line-height: normal;
     pointer-events: auto;
+    text-align: center;
+    text-shadow: 1px 1px 0 var(--shadow-color);
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
@@ -383,7 +394,7 @@ h2{
 #touchLobbyControls{
     align-items: center;
     display: flex;
-    gap: 12px;
+    gap: clamp(8px, 1.4cqw, 14px);
     justify-content: center;
 }
 
@@ -393,9 +404,9 @@ h2{
 
 #touchEditButton,
 #touchPlayButton{
-    min-height: 44px;
-    min-width: 128px;
-    padding: 0 14px;
+    min-height: 1.65em;
+    min-width: 0;
+    padding: 0 0.65em;
     white-space: nowrap;
 }
 

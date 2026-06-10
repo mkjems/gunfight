@@ -12,9 +12,12 @@ GF.Game = (function(){
         roundMessageElement,
         hitMessageElement,
         lobbyIdentityElement,
+        lobbyMainElement,
         lobbyControlsElement,
+        lobbyControlsSectionElement,
         lobbySlotsElement,
         lobbyEditPromptElement,
+        lobbyEditPromptSectionElement,
         lobbyPlayPromptElement,
         nameEditorElement,
         nameEditorValueElement,
@@ -100,9 +103,12 @@ GF.Game = (function(){
         roundMessageElement = document.getElementById('roundMessage');
         hitMessageElement = document.getElementById('hitMessage');
         lobbyIdentityElement = document.getElementById('lobbyIdentity');
+        lobbyMainElement = document.getElementById('lobby-main');
         lobbyControlsElement = document.getElementById('lobbyControlsText');
+        lobbyControlsSectionElement = getLobbySection(lobbyControlsElement);
         lobbySlotsElement = document.getElementById('lobbySlots');
         lobbyEditPromptElement = document.getElementById('lobbyEditPrompt');
+        lobbyEditPromptSectionElement = getLobbySection(lobbyEditPromptElement);
         lobbyPlayPromptElement = document.getElementById('lobbyPlayPrompt');
         nameEditorElement = document.getElementById('nameEditor');
         nameEditorValueElement = document.getElementById('nameEditorValue');
@@ -443,6 +449,8 @@ GF.Game = (function(){
             return;
         }
 
+        showElement(canvas, true);
+        showElement(hudCanvas, true);
         showElement(gameHud, true);
         showElement(lobbyHud, false);
 
@@ -817,6 +825,7 @@ GF.Game = (function(){
     }
 
     function renderLobbyHud(){
+        var isTouch = isTouchInterface();
         var controls = [
             'h j k l - left down up right',
             'a z - aim up down',
@@ -830,19 +839,24 @@ GF.Game = (function(){
             return;
         }
 
+        showElement(canvas, true);
+        showElement(hudCanvas, true);
+        showElement(lobbyMainElement, true);
         showElement(nameEditorElement, false);
         setLines(lobbyIdentityElement, [
             getLobbyPlayerLabel(),
             getGameLabel()
         ]);
-        setLines(lobbyControlsElement, isTouchInterface() ? [] : controls);
+        showElement(lobbyControlsSectionElement, !isTouch);
+        setLines(lobbyControlsElement, isTouch ? [] : controls);
         setLines(lobbySlotsElement, getLobbySlots().map(function(client, index){
             return getLobbySlotLabel(client, index);
         }));
-        setText(lobbyEditPromptElement, isTouchInterface() ? '' : 'PRESS E TO EDIT NAME');
+        showElement(lobbyEditPromptSectionElement, !isTouch);
+        setText(lobbyEditPromptElement, isTouch ? '' : 'PRESS E TO EDIT NAME');
 
         showElement(lobbyPlayPromptElement, true);
-        setText(lobbyPlayPromptElement, shouldShowLobbyPrompt() && !isTouchInterface() ? 'PRESS P TO PLAY' : '');
+        setText(lobbyPlayPromptElement, shouldShowLobbyPrompt() && !isTouch ? 'PRESS P TO PLAY' : '');
     }
 
     function renderNameEditor(){
@@ -853,6 +867,9 @@ GF.Game = (function(){
             'E DONE'
         ];
 
+        showElement(canvas, false);
+        showElement(hudCanvas, false);
+        showElement(lobbyMainElement, false);
         setLines(lobbyIdentityElement, []);
         setLines(lobbyControlsElement, []);
         setLines(lobbySlotsElement, []);
@@ -937,6 +954,18 @@ GF.Game = (function(){
             lineElement.textContent = line;
             element.appendChild(lineElement);
         });
+    }
+
+    function getLobbySection(element){
+        if(!element){
+            return null;
+        }
+
+        if(element.closest){
+            return element.closest('.lobby-section');
+        }
+
+        return element.parentNode;
     }
 
     function showElement(element, visible){
