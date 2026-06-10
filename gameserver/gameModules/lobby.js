@@ -88,7 +88,7 @@ function getGameMessage(game){
     if(game.clients.every(function(client){
         return client.ready;
     })){
-        return 'GET READY';
+        return '';
     }
 
     return 'PRESS P TO PLAY';

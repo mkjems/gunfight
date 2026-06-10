@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gunfight-v11';
+const CACHE_NAME = 'gunfight-v12';
 const LOCAL_DEVELOPMENT_HOSTS = ['localhost', '127.0.0.1'];
 const IS_LOCAL_DEVELOPMENT = LOCAL_DEVELOPMENT_HOSTS.indexOf(self.location.hostname) >= 0;
 const STATIC_ASSETS = [
@@ -22,7 +22,13 @@ const STATIC_ASSETS = [
     '/js/Players.js',
     '/js/Collision.js',
     '/js/index.js',
-    '/fonts/press_start/prstart.ttf',
+    '/fonts/PressStartK.woff2',
+    '/fonts/Arcade.woff2',
+    '/fonts/ARCADE.TTF',
+    '/fonts/GameOver.woff2',
+    '/fonts/GamePocket-Regular.woff2',
+    '/fonts/DucoilSans-Regular.woff2',
+    '/fonts/ProggySquareTT.woff2',
     '/images/bullet.png',
     '/images/cactus-1-4-17X32.png',
     '/images/gunfight_player_spritesheet.png',

@@ -15,12 +15,12 @@
 	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=gunfight-v1" />
 </head>
 
-	<body>
-		<div id="rotatePrompt">
-			<img src="images/RotatePlease.png" alt="Rotate your device to landscape">
-		</div>
-		<div id="installPrompt" hidden>
-			<button type="button" id="installPromptClose" aria-label="Dismiss install instructions">X</button>
+<body>
+	<div id="rotatePrompt">
+		<img src="images/RotatePlease.png" alt="Rotate your device to landscape">
+	</div>
+	<div id="installPrompt" hidden>
+		<button type="button" id="installPromptClose" aria-label="Dismiss install instructions">X</button>
 		<div>FULL SCREEN MODE</div>
 		<div id="installPromptText">SHARE - ADD TO HOME SCREEN</div>
 		<button type="button" id="installPromptButton" hidden>INSTALL</button>
@@ -40,26 +40,31 @@
 			</div>
 			<div id="lobbyHud" hidden>
 				<div class="lobby-stack">
-					<div>
-
-						<h1>GUNFIGHT 1975</h1>
+					<h1>GUNFIGHT 1975</h1>
+					<div class="lobby-section">
 						<div id="lobbyIdentity" class="lobby-lines"></div>
+					</div>
+					<div class="lobby-section">
 						<div id="lobbyControlsText" class="lobby-lines"></div>
+					</div>
+					<div class="lobby-section">
 						<div id="lobbySlots" class="lobby-lines"></div>
+					</div>
+					<div class="lobby-section">
 						<div id="lobbyEditPrompt"></div>
-						<div id="lobbyMessage"></div>
 						<div id="lobbyPlayPrompt" class="blink-text"></div>
-							<div id="touchLobbyControls" hidden>
+						<div id="touchLobbyControls" hidden>
 							<button type="button" id="touchEditButton">EDIT NAME</button>
 							<button type="button" id="touchPlayButton">PRESS TO PLAY</button>
 						</div>
-						<div id="nameEditor" hidden>
-							<h2>EDIT NAME</h2>
-							<div id="nameEditorValue"></div>
-							<div id="nameEditorGrid"></div>
-							<div id="nameEditorHelp" class="lobby-lines"></div>
-						</div>
 					</div>
+					<div id="nameEditor" hidden>
+						<h2>EDIT NAME</h2>
+						<div id="nameEditorValue"></div>
+						<div id="nameEditorGrid"></div>
+						<div id="nameEditorHelp" class="lobby-lines"></div>
+					</div>
+
 				</div>
 			</div>
 		</div>

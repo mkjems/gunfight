@@ -74,6 +74,9 @@
     --font-size: var(--font-size-proggy-square);
     --line-height: var(--line-height-proggy-square);
 
+    --font-size-h1: clamp(14px, 2.7cqw, 30px);
+    --font-family-h1: var(--font-family-press-start);
+
     --text-transform: uppercase;
     --color: var(--yellow);
     
@@ -264,8 +267,13 @@ body.install-prompt-visible #touchControls{
     width: min(78cqw, 760px);
 }
 
-.lobby-stack h1,
-.lobby-stack h2{
+h1 {
+    font-family: var(--font-family-h1);
+    font-size: var(--font-size-h1);
+    margin: 0 0 clamp(12px, 3.4cqh, 24px) 0;
+}
+
+h2{
     font: inherit;
     font-size: var(--font-size);
     margin: 0;
@@ -280,7 +288,6 @@ body.install-prompt-visible #touchControls{
     flex-direction: column;
 }
 
-#lobbyMessage:empty,
 #lobbyEditPrompt:empty{
     display: none;
 }
@@ -290,7 +297,7 @@ body.install-prompt-visible #touchControls{
 }
 
 .lobby-section{
-    margin-bottom: 30px
+    margin-bottom: 24px
 }
 
 #nameEditor{
@@ -366,7 +373,7 @@ body.install-prompt-visible #touchControls{
     border: 2px solid var(--yellow);
     color: var(--yellow);
     font-family: var(--font-family);
-    font-size: 10px;
+    font-size: var(--font-size);
     pointer-events: auto;
     touch-action: none;
     user-select: none;
@@ -378,7 +385,6 @@ body.install-prompt-visible #touchControls{
     display: flex;
     gap: 12px;
     justify-content: center;
-    margin-top: clamp(20px, 4cqh, 32px);
 }
 
 #touchLobbyControls[hidden]{

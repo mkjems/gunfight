@@ -15,7 +15,6 @@ GF.Game = (function(){
         lobbyControlsElement,
         lobbySlotsElement,
         lobbyEditPromptElement,
-        lobbyMessageElement,
         lobbyPlayPromptElement,
         nameEditorElement,
         nameEditorValueElement,
@@ -104,7 +103,6 @@ GF.Game = (function(){
         lobbyControlsElement = document.getElementById('lobbyControlsText');
         lobbySlotsElement = document.getElementById('lobbySlots');
         lobbyEditPromptElement = document.getElementById('lobbyEditPrompt');
-        lobbyMessageElement = document.getElementById('lobbyMessage');
         lobbyPlayPromptElement = document.getElementById('lobbyPlayPrompt');
         nameEditorElement = document.getElementById('nameEditor');
         nameEditorValueElement = document.getElementById('nameEditorValue');
@@ -843,12 +841,6 @@ GF.Game = (function(){
         }));
         setText(lobbyEditPromptElement, isTouchInterface() ? '' : 'PRESS E TO EDIT NAME');
 
-        if(shouldShowLobbyMessage()){
-            setText(lobbyMessageElement, getLobbyMessage());
-        } else {
-            setText(lobbyMessageElement, '');
-        }
-
         showElement(lobbyPlayPromptElement, true);
         setText(lobbyPlayPromptElement, shouldShowLobbyPrompt() && !isTouchInterface() ? 'PRESS P TO PLAY' : '');
     }
@@ -865,7 +857,6 @@ GF.Game = (function(){
         setLines(lobbyControlsElement, []);
         setLines(lobbySlotsElement, []);
         setText(lobbyEditPromptElement, '');
-        setText(lobbyMessageElement, '');
         setText(lobbyPlayPromptElement, '');
         showElement(lobbyPlayPromptElement, false);
         showElement(nameEditorElement, true);
@@ -1047,12 +1038,6 @@ GF.Game = (function(){
         return !latestModel || latestModel.status !== 'abandoned';
     }
 
-    function shouldShowLobbyMessage(){
-        var message = getLobbyMessage();
-
-        return message !== 'PRESS P TO PLAY' && !isOpponentSlotMessage(message);
-    }
-
     function getLobbyPlayerLabel(){
         var client = getLocalClient();
         var playerIndex;
@@ -1065,7 +1050,7 @@ GF.Game = (function(){
             return item.id === playerId;
         });
 
-        return getClientName(client) + ' - PLAYER ' + (playerIndex + 1);
+        return 'PLAYER ' + (playerIndex + 1) + ' - ' + getClientName(client);
     }
 
     function getLocalClient(){
@@ -1149,7 +1134,7 @@ GF.Game = (function(){
             return 'PLAYER ' + (index + 1) + ' : WAITING';
         }
 
-        return getClientName(client) + ' - PLAYER ' + (index + 1) + ' : ' + (client.ready ? 'READY' : 'WAITING');
+        return 'PLAYER ' + (index + 1) + ' - ' + getClientName(client) + ' : ' + (client.ready ? 'READY' : 'WAITING');
     }
 
     function getOpponentSlotMessage(){
@@ -1167,7 +1152,7 @@ GF.Game = (function(){
             return latestModel.message;
         }
 
-        return 'INSERT COIN';
+        return '';
     }
 
     function enterLobbyState(){
