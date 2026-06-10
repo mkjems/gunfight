@@ -1048,7 +1048,9 @@ GF.Game = (function(){
     }
 
     function shouldShowLobbyMessage(){
-        return getLobbyMessage() !== 'PRESS P TO PLAY';
+        var message = getLobbyMessage();
+
+        return message !== 'PRESS P TO PLAY' && message !== 'LOOKING FOR CHALLENGER';
     }
 
     function getLobbyPlayerLabel(){
@@ -1136,6 +1138,10 @@ GF.Game = (function(){
 
     function getLobbySlotLabel(client, index){
         if(!client){
+            if(getLobbyMessage() === 'LOOKING FOR CHALLENGER'){
+                return 'PLAYER ' + (index + 1) + ' : LOOKING FOR CHALLENGER';
+            }
+
             return 'PLAYER ' + (index + 1) + ' : WAITING';
         }
 
