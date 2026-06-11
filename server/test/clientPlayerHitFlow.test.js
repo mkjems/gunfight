@@ -1,39 +1,54 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientPlayerHitFlow() {
-    const context = {
-        GF: {
-            ClientScreens: {
-                RoundState: {
-                    HIT_PAUSE: 'hitPause'
-                }
-            },
-            Config: {
-                round: {
-                    resetDelay: 1800
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientPlayerHitFlow.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.ClientPlayerHitFlow;
+async function loadClientPlayerHitFlow() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('config.ts', 'config.js', tempDirectory);
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientPlayerHitFlow.ts',
+        'clientPlayerHitFlow.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientPlayerHitFlow.js')).href
+    );
+
+    return module.ClientPlayerHitFlow;
 }
 
 function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('handles player hits by entering hit pause and scheduling reset', function () {
-    const flow = loadClientPlayerHitFlow();
+test('handles player hits by entering hit pause and scheduling reset', async function () {
+    const flow = await loadClientPlayerHitFlow();
     const calls = [];
 
     flow.handleHit({
@@ -110,8 +125,8 @@ test('handles player hits by entering hit pause and scheduling reset', function 
     ]);
 });
 
-test('resets after hit and emits advance-round when local player won', function () {
-    const flow = loadClientPlayerHitFlow();
+test('resets after hit and emits advance-round when local player won', async function () {
+    const flow = await loadClientPlayerHitFlow();
     const calls = [];
 
     flow.resetAfterHit({
@@ -166,8 +181,8 @@ test('resets after hit and emits advance-round when local player won', function 
     ]);
 });
 
-test('ends the game after hit pause if match time expired', function () {
-    const flow = loadClientPlayerHitFlow();
+test('ends the game after hit pause if match time expired', async function () {
+    const flow = await loadClientPlayerHitFlow();
     const calls = [];
 
     flow.resetAfterHit({

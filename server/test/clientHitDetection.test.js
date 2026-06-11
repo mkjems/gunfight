@@ -1,39 +1,53 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientHitDetection(findBulletHit = () => null) {
-    const context = {
-        GF: {
-            ClientScreens: {
-                RoundState: {
-                    HIT_PAUSE: 'hitPause',
-                    PLAYING: 'playing',
-                    WAITING: 'waiting'
-                }
-            },
-            Collision: {
-                findBulletHit
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientHitDetection.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.ClientHitDetection;
+async function loadClientHitDetection() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientHitDetection.ts',
+        'clientHitDetection.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientHitDetection.js')).href
+    );
+
+    return module.ClientHitDetection;
 }
 
 function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('reports match expiry during hit pause', function () {
-    const hitDetection = loadClientHitDetection();
+test('reports match expiry during hit pause', async function () {
+    const hitDetection = await loadClientHitDetection();
 
     assert.deepEqual(
         plain(
@@ -48,8 +62,8 @@ test('reports match expiry during hit pause', function () {
     );
 });
 
-test('marks obstacle bullets for deletion before returning obstacle hits', function () {
-    const hitDetection = loadClientHitDetection();
+test('marks obstacle bullets for deletion before returning obstacle hits', async function () {
+    const hitDetection = await loadClientHitDetection();
     const bullet = {
         deleteMe: false
     };
@@ -72,7 +86,7 @@ test('marks obstacle bullets for deletion before returning obstacle hits', funct
     assert.equal(bullet.deleteMe, true);
 });
 
-test('marks player hit bullets for deletion before returning player hits', function () {
+test('marks player hit bullets for deletion before returning player hits', async function () {
     const bullet = {
         deleteMe: false
     };
@@ -81,9 +95,14 @@ test('marks player hit bullets for deletion before returning player hits', funct
         targetId: 'p2',
         winnerId: 'p1'
     };
-    const hitDetection = loadClientHitDetection(() => hit);
+    const hitDetection = await loadClientHitDetection();
     const result = hitDetection.check({
         bullets: { all: () => ({ b1: bullet }) },
+        collision: {
+            findBulletHit() {
+                return hit;
+            }
+        },
         findBulletObstacleHit() {
             return null;
         },
@@ -97,8 +116,8 @@ test('marks player hit bullets for deletion before returning player hits', funct
     assert.equal(bullet.deleteMe, true);
 });
 
-test('reports match expiry after hit checks during active play', function () {
-    const hitDetection = loadClientHitDetection();
+test('reports match expiry after hit checks during active play', async function () {
+    const hitDetection = await loadClientHitDetection();
 
     assert.deepEqual(
         plain(

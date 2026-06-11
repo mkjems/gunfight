@@ -1,32 +1,46 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientRoundResetFlow() {
-    const context = {
-        GF: {
-            ClientScreens: {
-                RoundState: {
-                    WAITING: 'waiting'
-                }
-            },
-            Config: {
-                player: {
-                    lobbySlots: ['lobby-left', 'lobby-right'],
-                    slots: ['left', 'right']
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientRoundResetFlow.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.ClientRoundResetFlow;
+async function loadClientRoundResetFlow() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('config.ts', 'config.js', tempDirectory);
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientRoundResetFlow.ts',
+        'clientRoundResetFlow.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientRoundResetFlow.js')).href
+    );
+
+    return module.ClientRoundResetFlow;
 }
 
 function createResetOptions(overrides = {}) {
@@ -98,8 +112,8 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('resets a round into the next ritual when the model is ready', function () {
-    const flow = loadClientRoundResetFlow();
+test('resets a round into the next ritual when the model is ready', async function () {
+    const flow = await loadClientRoundResetFlow();
     const { calls, options } = createResetOptions({
         isReadyToStart(model) {
             calls.push(['isReadyToStart', model.gameId]);
@@ -112,7 +126,13 @@ test('resets a round into the next ritual when the model is ready', function () 
 
     assert.deepEqual(plain(calls), [
         ['isReadyToStart', 'game-1'],
-        ['players.resetAll', ['left', 'right']],
+        [
+            'players.resetAll',
+            [
+                { x: 150, y: 430, facing: 1, frame: 0 },
+                { x: 800, y: 430, facing: -1, frame: 2 }
+            ]
+        ],
         'bullets.reset',
         ['setRoundMessage', ''],
         'roundData.resetRoundFlags',
@@ -121,15 +141,21 @@ test('resets a round into the next ritual when the model is ready', function () 
     ]);
 });
 
-test('resets a round back to waiting when the model is not ready', function () {
-    const flow = loadClientRoundResetFlow();
+test('resets a round back to waiting when the model is not ready', async function () {
+    const flow = await loadClientRoundResetFlow();
     const { calls, options } = createResetOptions();
 
     flow.resetRound(options);
 
     assert.deepEqual(plain(calls), [
         ['isReadyToStart', 'game-1'],
-        ['players.resetAll', ['lobby-left', 'lobby-right']],
+        [
+            'players.resetAll',
+            [
+                { x: 120, y: 430, facing: 1, frame: 0 },
+                { x: 830, y: 430, facing: -1, frame: 2 }
+            ]
+        ],
         'bullets.reset',
         ['setRoundMessage', ''],
         'roundData.resetRoundFlags',
@@ -140,14 +166,20 @@ test('resets a round back to waiting when the model is not ready', function () {
     ]);
 });
 
-test('resets the game over screen back to the lobby start screen', function () {
-    const flow = loadClientRoundResetFlow();
+test('resets the game over screen back to the lobby start screen', async function () {
+    const flow = await loadClientRoundResetFlow();
     const { calls, options } = createResetOptions();
 
     flow.resetToStartScreen(options);
 
     assert.deepEqual(plain(calls), [
-        ['players.resetAll', ['lobby-left', 'lobby-right']],
+        [
+            'players.resetAll',
+            [
+                { x: 120, y: 430, facing: 1, frame: 0 },
+                { x: 830, y: 430, facing: -1, frame: 2 }
+            ]
+        ],
         'bullets.reset',
         ['setRoundMessage', ''],
         'roundData.resetRoundFlags',

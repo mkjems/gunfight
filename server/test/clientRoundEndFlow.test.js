@@ -1,33 +1,46 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientRoundEndFlow() {
-    const context = {
-        GF: {
-            ClientScreens: {
-                RoundState: {
-                    GAME_OVER: 'gameOver',
-                    ROUND_OVER: 'roundOver'
-                }
-            },
-            Config: {
-                round: {
-                    gameOverDelay: 2400,
-                    resetDelay: 1800
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientRoundEndFlow.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.ClientRoundEndFlow;
+async function loadClientRoundEndFlow() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('config.ts', 'config.js', tempDirectory);
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientRoundEndFlow.ts',
+        'clientRoundEndFlow.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientRoundEndFlow.js')).href
+    );
+
+    return module.ClientRoundEndFlow;
 }
 
 function createRoundOptions(overrides = {}) {
@@ -140,8 +153,8 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('ends a round by scoring the winner and scheduling the reset', function () {
-    const flow = loadClientRoundEndFlow();
+test('ends a round by scoring the winner and scheduling the reset', async function () {
+    const flow = await loadClientRoundEndFlow();
     const { calls, options } = createRoundOptions();
 
     flow.endRound(options);
@@ -161,8 +174,8 @@ test('ends a round by scoring the winner and scheduling the reset', function () 
     ]);
 });
 
-test('ends a round on time without adding a point', function () {
-    const flow = loadClientRoundEndFlow();
+test('ends a round on time without adding a point', async function () {
+    const flow = await loadClientRoundEndFlow();
     const { calls, options } = createRoundOptions({
         winnerId: null
     });
@@ -183,8 +196,8 @@ test('ends a round on time without adding a point', function () {
     ]);
 });
 
-test('ends the game by recording the result and scheduling the start reset', function () {
-    const flow = loadClientRoundEndFlow();
+test('ends the game by recording the result and scheduling the start reset', async function () {
+    const flow = await loadClientRoundEndFlow();
     const { calls, options } = createRoundOptions();
 
     flow.endGame(options);
@@ -202,12 +215,12 @@ test('ends the game by recording the result and scheduling the start reset', fun
         'bullets.clear',
         ['timers.clearMany', ['reset', 'matchEnd', 'ritual', 'hit']],
         'roundIntro.clear',
-        ['timers.set', 'reset', 'function', 2400]
+        ['timers.set', 'reset', 'function', 5000]
     ]);
 });
 
-test('does not record a game result without a socket or result payload', function () {
-    const flow = loadClientRoundEndFlow();
+test('does not record a game result without a socket or result payload', async function () {
+    const flow = await loadClientRoundEndFlow();
     const withoutSocket = createRoundOptions({
         socket: null
     });
