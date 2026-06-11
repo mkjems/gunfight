@@ -12,12 +12,7 @@ GF.Game = (function () {
         highScoresScreen,
         nameEditorScreen,
         ammoHudRenderer,
-        ammoSprite,
-        wagonSprite,
-        cactusSprite,
-        saloonSprite,
-        rockPatternSprite,
-        rockPattern,
+        assets,
         scenarioRenderer,
         collisionDebugRenderer,
         identity,
@@ -55,24 +50,7 @@ GF.Game = (function () {
         canvas.height = GF.Config.canvas.height;
         hudCanvas.width = GF.Config.canvas.width;
         hudCanvas.height = GF.Config.canvas.height;
-        ammoSprite = new Image();
-        ammoSprite.onload = renderHud;
-        ammoSprite.src = 'images/bullet.png';
-        wagonSprite = new Image();
-        wagonSprite.src = 'images/wagon-1-4-37x38.png';
-        cactusSprite = new Image();
-        cactusSprite.src = 'images/cactus-1-4-17X32.png';
-        saloonSprite = new Image();
-        saloonSprite.src = 'images/saloon-64x128.png';
-        rockPatternSprite = new Image();
-        rockPatternSprite.onload = function () {
-            rockPattern = GF.CanvasTools.createScaledPattern({
-                context: context,
-                document: document,
-                image: rockPatternSprite
-            });
-        };
-        rockPatternSprite.src = 'images/rock-pattern.png';
+        initAssets();
         initHudOverlay();
         initAmmoHudRenderer();
         initSoundEffects();
@@ -90,6 +68,21 @@ GF.Game = (function () {
             onChange: renderHud,
             onSubmit: submitNameChange
         });
+    }
+
+    function initAssets() {
+        assets = new GF.ClientAssets({
+            Image: Image,
+            createRockPattern: function (image) {
+                return GF.CanvasTools.createScaledPattern({
+                    context: context,
+                    document: document,
+                    image: image
+                });
+            },
+            onAmmoLoaded: renderHud
+        });
+        assets.load();
     }
 
     function initHudOverlay() {
@@ -138,7 +131,7 @@ GF.Game = (function () {
     function initAmmoHudRenderer() {
         ammoHudRenderer = new GF.AmmoHudRenderer({
             context: hudContext,
-            sprite: ammoSprite
+            sprite: assets.sprites.ammo
         });
     }
 
@@ -169,15 +162,15 @@ GF.Game = (function () {
             context: context,
             getObstacleDamage: getObstacleDamage,
             getRockPattern: function () {
-                return rockPattern;
+                return assets.getRockPattern();
             },
             getScenarioStartedAt: function () {
                 return roundData.getScenarioStartedAt();
             },
             sprites: {
-                cactus: cactusSprite,
-                saloon: saloonSprite,
-                wagon: wagonSprite
+                cactus: assets.sprites.cactus,
+                saloon: assets.sprites.saloon,
+                wagon: assets.sprites.wagon
             }
         });
     }
@@ -601,62 +594,23 @@ GF.Game = (function () {
 
     function startRoundRitual(options) {
         options = options || {};
-        var getReadyDelay = Math.max(
-            GF.Config.round.getReadyDelay,
-            GF.Config.round.introWalkDelay
-        );
 
-        if (options.resetScores) {
-            scoreKeeper.resetScores();
-            roundData.clearRoundEnd();
-        }
-
-        setRoundState(RoundState.RITUAL);
-        closeNameEditor();
-        roundData.startScenario();
-        roundData.clearObstacleDamage();
-        bullets.reset();
-        resetAmmo();
-        roundIntro.start();
-        setRoundMessage('GET READY');
-        renderHud();
-
-        timers.set(
-            'ritual',
-            function () {
-                if (hasMatchTimeExpired()) {
-                    endGame();
-                    return;
-                }
-
-                roundIntro.complete();
-                setRoundMessage('DRAW!');
-
-                timers.set(
-                    'ritual',
-                    function () {
-                        if (hasMatchTimeExpired()) {
-                            endGame();
-                            return;
-                        }
-
-                        setRoundMessage('');
-                        if (!roundData.getRoundEndsAt()) {
-                            roundData.setRoundEndsAt(
-                                new Date().getTime() +
-                                    GF.Config.game.seconds * 1000
-                            );
-                            scheduleMatchEnd();
-                        }
-                        resetAmmo();
-                        setRoundState(RoundState.PLAYING);
-                        renderHud();
-                    },
-                    GF.Config.round.drawDelay
-                );
-            },
-            getReadyDelay
-        );
+        GF.ClientRoundRitual.start({
+            bullets: bullets,
+            closeNameEditor: closeNameEditor,
+            endGame: endGame,
+            hasMatchTimeExpired: hasMatchTimeExpired,
+            renderHud: renderHud,
+            resetAmmo: resetAmmo,
+            resetScores: options.resetScores,
+            roundData: roundData,
+            roundIntro: roundIntro,
+            scheduleMatchEnd: scheduleMatchEnd,
+            scoreKeeper: scoreKeeper,
+            setRoundMessage: setRoundMessage,
+            setRoundState: setRoundState,
+            timers: timers
+        });
     }
 
     function hasMatchTimeExpired() {
@@ -764,30 +718,23 @@ GF.Game = (function () {
     }
 
     function handleObstacleHit(hit) {
-        if (hit.bullet.ownerId !== playerId) {
-            return;
-        }
-
-        applyObstacleDamage({
-            id: hit.obstacleId,
-            ownerId: hit.bullet.ownerId,
-            roundNumber: latestModel && latestModel.roundNumber
-        });
-        socket.emit('obstacleDamage', {
-            id: hit.obstacleId,
-            ownerId: hit.bullet.ownerId,
-            roundNumber: latestModel && latestModel.roundNumber
+        GF.ClientObstacleSync.handleLocalHit({
+            applyDamage: applyObstacleDamage,
+            hit: hit,
+            model: latestModel,
+            playerId: playerId,
+            socket: socket
         });
     }
 
     function applyObstacleDamage(data) {
-        if (latestModel && data.roundNumber !== latestModel.roundNumber) {
-            return;
-        }
-
-        damageObstacle(data.id);
-        gameSounds.playObstacleHit(data.id);
-        bullets.remove(data.ownerId);
+        GF.ClientObstacleSync.applyDamage({
+            bullets: bullets,
+            damageObstacle: damageObstacle,
+            data: data,
+            model: latestModel,
+            playObstacleHit: gameSounds.playObstacleHit
+        });
     }
 
     function handlePlayerHit(hit) {
