@@ -11,6 +11,7 @@ GF.Game = (function () {
         highScoresScreenElement,
         highScoresScreen,
         nameEditorScreen,
+        ammoHudRenderer,
         ammoSprite,
         wagonSprite,
         cactusSprite,
@@ -64,10 +65,15 @@ GF.Game = (function () {
         saloonSprite.src = 'images/saloon-64x128.png';
         rockPatternSprite = new Image();
         rockPatternSprite.onload = function () {
-            rockPattern = createScaledPattern(rockPatternSprite);
+            rockPattern = GF.CanvasTools.createScaledPattern({
+                context: context,
+                document: document,
+                image: rockPatternSprite
+            });
         };
         rockPatternSprite.src = 'images/rock-pattern.png';
         initHudOverlay();
+        initAmmoHudRenderer();
         initSoundEffects();
         initScenarioRenderer();
         initCollisionDebugRenderer();
@@ -128,6 +134,13 @@ GF.Game = (function () {
         });
     }
 
+    function initAmmoHudRenderer() {
+        ammoHudRenderer = new GF.AmmoHudRenderer({
+            context: hudContext,
+            sprite: ammoSprite
+        });
+    }
+
     function initCamera() {
         camera = new GF.Camera({
             worldWidth: GF.Config.canvas.width,
@@ -178,14 +191,8 @@ GF.Game = (function () {
     }
 
     function disableImageSmoothing() {
-        context.imageSmoothingEnabled = false;
-        context.webkitImageSmoothingEnabled = false;
-        context.mozImageSmoothingEnabled = false;
-        context.msImageSmoothingEnabled = false;
-        hudContext.imageSmoothingEnabled = false;
-        hudContext.webkitImageSmoothingEnabled = false;
-        hudContext.mozImageSmoothingEnabled = false;
-        hudContext.msImageSmoothingEnabled = false;
+        GF.CanvasTools.disableImageSmoothing(context);
+        GF.CanvasTools.disableImageSmoothing(hudContext);
     }
 
     function initGameState() {
@@ -256,22 +263,6 @@ GF.Game = (function () {
         }
     }
 
-    function createScaledPattern(image) {
-        var scale = GF.Config.graphics.scale;
-        var tile = document.createElement('canvas');
-        var tileContext = tile.getContext('2d');
-
-        tile.width = image.width * scale;
-        tile.height = image.height * scale;
-        tileContext.imageSmoothingEnabled = false;
-        tileContext.webkitImageSmoothingEnabled = false;
-        tileContext.mozImageSmoothingEnabled = false;
-        tileContext.msImageSmoothingEnabled = false;
-        tileContext.drawImage(image, 0, 0, tile.width, tile.height);
-
-        return context.createPattern(tile, 'repeat');
-    }
-
     function setRoundMessage(message) {
         roundData.setRoundMessage(message);
         renderHud();
@@ -329,8 +320,8 @@ GF.Game = (function () {
         secondAmmo = ammo.get(secondClient.id);
 
         renderGameHud(secondsLeft);
-        drawAmmo(firstAmmo, 122, 606, 1);
-        drawAmmo(secondAmmo, 828, 606, -1);
+        ammoHudRenderer.render(firstAmmo, 122, 606, 1);
+        ammoHudRenderer.render(secondAmmo, 828, 606, -1);
         updateTouchControls();
     }
 
@@ -375,39 +366,6 @@ GF.Game = (function () {
             x: x,
             y: y
         });
-    }
-
-    function drawAmmo(count, x, y, direction) {
-        var i;
-        var roundX;
-        var scale = GF.Config.graphics.scale;
-        var spriteWidth = 7 * scale;
-        var spriteHeight = 16 * scale;
-        var spacing = 10 * scale;
-
-        hudContext.save();
-        hudContext.fillStyle = GF.Config.colors.yellow;
-        hudContext.shadowColor = 'rgb(0,0,0)';
-        hudContext.shadowOffsetX = 3;
-        hudContext.shadowOffsetY = 3;
-
-        for (i = 0; i < count; i++) {
-            roundX = x + i * spacing * direction;
-
-            if (ammoSprite && ammoSprite.complete) {
-                hudContext.drawImage(
-                    ammoSprite,
-                    roundX,
-                    y,
-                    spriteWidth,
-                    spriteHeight
-                );
-            } else {
-                hudContext.fillRect(roundX, y, spriteWidth, spriteHeight);
-            }
-        }
-
-        hudContext.restore();
     }
 
     function getCurrentScenario() {

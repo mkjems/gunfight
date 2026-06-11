@@ -74,6 +74,8 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract ammo handling.
     - [x] Extract gameplay key handling.
     - [x] Extract hit detection.
+    - [x] Extract ammo HUD rendering.
+    - [x] Extract canvas utilities.
     - [x] Extract lobby view-model decisions.
     - [x] Extract camera and viewport decisions.
     - [x] Extract touch-control state decisions.
