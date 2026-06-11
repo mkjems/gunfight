@@ -1,4 +1,10 @@
 import { createGameModel } from './gfmodel.js';
+import type {
+    GameModelClient,
+    GameStatus,
+    PublicClient,
+    PublicGameModel
+} from '../../shared/contracts.js';
 
 const MAX_PLAYERS_PER_GAME = 2;
 const DEFAULT_NAMES = [
@@ -16,64 +22,69 @@ const DEFAULT_NAMES = [
     'SAM'
 ];
 
-/**
- * @typedef {import('../../shared/contracts.js').GameStatus} GameStatus
- * @typedef {import('../../shared/contracts.js').PublicClient} PublicClient
- * @typedef {import('../../shared/contracts.js').PublicGameModel} PublicGameModel
- * @typedef {{ id: number, ready: boolean, gameId: string, socketId: string, name: string }} LobbyClient
- * @typedef {{ id: string, room: string, status: GameStatus, model: ReturnType<typeof createGameModel>, clients: LobbyClient[], createdAt: number, updatedAt: number }} GameSession
- * @typedef {{ now?: () => number }} LobbyOptions
- * @typedef {{ name?: unknown }} JoinOptions
- * @typedef {{ client: LobbyClient, game: GameSession, model: PublicGameModel }} LobbyJoinResult
- * @typedef {{ client: LobbyClient, game: GameSession, model: PublicGameModel | null }} LobbyLeaveResult
- */
+interface LobbyClient extends GameModelClient {
+    gameId: string;
+    socketId: string;
+    name: string;
+}
 
-/** @returns {number} */
-function defaultNow() {
+interface GameSession {
+    id: string;
+    room: string;
+    status: GameStatus;
+    model: ReturnType<typeof createGameModel>;
+    clients: LobbyClient[];
+    createdAt: number;
+    updatedAt: number;
+}
+
+interface LobbyOptions {
+    now?: () => number;
+}
+
+interface JoinOptions {
+    name?: unknown;
+}
+
+interface LobbyJoinResult {
+    client: LobbyClient;
+    game: GameSession;
+    model: PublicGameModel;
+}
+
+interface LobbyLeaveResult {
+    client: LobbyClient;
+    game: GameSession;
+    model: PublicGameModel | null;
+}
+
+function defaultNow(): number {
     return Date.now();
 }
 
-/**
- * @param {number} id
- * @returns {string}
- */
-function padGameId(id) {
+function padGameId(id: number): string {
     return String(id).padStart(4, '0');
 }
 
-/**
- * @param {string} gameId
- * @returns {string}
- */
-function createRoomName(gameId) {
+function createRoomName(gameId: string): string {
     return 'game:' + gameId;
 }
 
-/**
- * @param {unknown} name
- * @returns {string}
- */
-function sanitizeName(name) {
+function sanitizeName(name: unknown): string {
     return String(name || '')
         .toUpperCase()
         .replace(/[^A-Z0-9]/g, '')
         .slice(0, 8);
 }
 
-/**
- * @param {unknown} name
- * @returns {string | null}
- */
-function createSafeName(name) {
+function createSafeName(name: unknown): string | null {
     return sanitizeName(name) || null;
 }
 
-/**
- * @param {unknown} name
- * @param {{ clients: LobbyClient[] }} game
- * @returns {string}
- */
-function resolveUniqueName(name, game) {
+function resolveUniqueName(
+    name: unknown,
+    game: { clients: LobbyClient[] }
+): string {
     const baseName =
         createSafeName(name) ||
         DEFAULT_NAMES[Math.floor(Math.random() * DEFAULT_NAMES.length)];
@@ -92,12 +103,7 @@ function resolveUniqueName(name, game) {
     return resolvedName;
 }
 
-/**
- * @param {LobbyClient} client
- * @param {number} index
- * @returns {PublicClient}
- */
-function toPublicClient(client, index) {
+function toPublicClient(client: LobbyClient, index: number): PublicClient {
     return {
         id: client.id,
         name: client.name,
@@ -106,11 +112,7 @@ function toPublicClient(client, index) {
     };
 }
 
-/**
- * @param {GameSession} game
- * @returns {string}
- */
-function getGameMessage(game) {
+function getGameMessage(game: GameSession): string {
     if (game.status === 'abandoned') {
         return 'OPPONENT LEFT';
     }
@@ -134,8 +136,7 @@ function getGameMessage(game) {
     return 'PRESS P TO PLAY';
 }
 
-/** @param {GameSession} game */
-function updateGameStatus(game) {
+function updateGameStatus(game: GameSession): void {
     if (game.clients.length === 0) {
         game.status = 'closed';
         return;
@@ -153,24 +154,28 @@ function updateGameStatus(game) {
     game.status = 'waiting';
 }
 
-/**
- * @param {LobbyOptions=} options
- */
-export function createLobby(options) {
-    options = options || {};
+function createLobbyClient(
+    modelClient: GameModelClient,
+    game: GameSession,
+    socketId: string,
+    name: unknown
+): LobbyClient {
+    return Object.assign(modelClient, {
+        gameId: game.id,
+        socketId: socketId,
+        name: resolveUniqueName(name, game)
+    });
+}
 
+export function createLobby(options: LobbyOptions = {}) {
     const now = options.now || defaultNow;
-    /** @type {Map<string, GameSession>} */
-    const games = new Map();
-    /** @type {Map<string, LobbyClient>} */
-    const clientsBySocketId = new Map();
+    const games = new Map<string, GameSession>();
+    const clientsBySocketId = new Map<string, LobbyClient>();
     let nextGameId = 1;
 
-    /** @returns {GameSession} */
-    function createGame() {
+    function createGame(): GameSession {
         const gameId = 'G' + padGameId(nextGameId);
-        /** @type {GameSession} */
-        const game = {
+        const game: GameSession = {
             id: gameId,
             room: createRoomName(gameId),
             status: 'waiting',
@@ -185,10 +190,8 @@ export function createLobby(options) {
         return game;
     }
 
-    /** @returns {GameSession | null} */
-    function findWaitingGame() {
-        /** @type {GameSession | null} */
-        let waitingGame = null;
+    function findWaitingGame(): GameSession | null {
+        let waitingGame: GameSession | null = null;
 
         games.forEach(function (game) {
             if (waitingGame) {
@@ -206,42 +209,26 @@ export function createLobby(options) {
         return waitingGame;
     }
 
-    /**
-     * @param {string} socketId
-     * @returns {GameSession | null}
-     */
-    function getGameForSocket(socketId) {
+    function getGameForSocket(socketId: string): GameSession | null {
         const client = clientsBySocketId.get(socketId);
 
-        return client ? games.get(client.gameId) : null;
+        return client ? games.get(client.gameId) || null : null;
     }
 
-    /**
-     * @param {string} socketId
-     * @returns {LobbyClient | null}
-     */
-    function getClientForSocket(socketId) {
+    function getClientForSocket(socketId: string): LobbyClient | null {
         return clientsBySocketId.get(socketId) || null;
     }
 
-    /**
-     * @param {string} gameId
-     * @returns {GameSession | null}
-     */
-    function getGame(gameId) {
+    function getGame(gameId: string): GameSession | null {
         return games.get(gameId) || null;
     }
 
-    /**
-     * @param {string} socketId
-     * @param {JoinOptions=} options
-     * @returns {LobbyJoinResult}
-     */
-    function join(socketId, options) {
-        options = options || {};
-
+    function join(
+        socketId: string,
+        joinOptions: JoinOptions = {}
+    ): LobbyJoinResult {
         const existingGame = getGameForSocket(socketId);
-        let game = existingGame || findWaitingGame() || createGame();
+        const game = existingGame || findWaitingGame() || createGame();
         let client = clientsBySocketId.get(socketId);
 
         if (client) {
@@ -252,10 +239,12 @@ export function createLobby(options) {
             };
         }
 
-        client = /** @type {LobbyClient} */ (game.model.getNewClient());
-        client.gameId = game.id;
-        client.socketId = socketId;
-        client.name = resolveUniqueName(options.name, game);
+        client = createLobbyClient(
+            game.model.getNewClient(),
+            game,
+            socketId,
+            joinOptions.name
+        );
         game.clients.push(client);
         game.updatedAt = now();
         clientsBySocketId.set(socketId, client);
@@ -268,13 +257,9 @@ export function createLobby(options) {
         };
     }
 
-    /**
-     * @param {string} socketId
-     * @returns {LobbyLeaveResult | null}
-     */
-    function leave(socketId) {
+    function leave(socketId: string): LobbyLeaveResult | null {
         const client = clientsBySocketId.get(socketId);
-        const game = client ? games.get(client.gameId) : null;
+        const game = client ? games.get(client.gameId) || null : null;
 
         if (!client || !game) {
             return null;
@@ -303,11 +288,7 @@ export function createLobby(options) {
         };
     }
 
-    /**
-     * @param {string} socketId
-     * @returns {LobbyJoinResult}
-     */
-    function requeue(socketId) {
+    function requeue(socketId: string): LobbyJoinResult {
         const client = clientsBySocketId.get(socketId);
         const name = client && client.name;
 
@@ -315,14 +296,12 @@ export function createLobby(options) {
         return join(socketId, { name: name });
     }
 
-    /**
-     * @param {string} socketId
-     * @param {unknown} name
-     * @returns {LobbyJoinResult | null}
-     */
-    function updateName(socketId, name) {
+    function updateName(
+        socketId: string,
+        name: unknown
+    ): LobbyJoinResult | null {
         const client = clientsBySocketId.get(socketId);
-        const game = client ? games.get(client.gameId) : null;
+        const game = client ? games.get(client.gameId) || null : null;
 
         if (!client || !game) {
             return null;
@@ -342,23 +321,17 @@ export function createLobby(options) {
         };
     }
 
-    /** @param {GameSession} game */
-    function markPlaying(game) {
+    function markPlaying(game: GameSession): void {
         game.status = 'playing';
         game.updatedAt = now();
     }
 
-    /** @param {GameSession} game */
-    function refreshStatus(game) {
+    function refreshStatus(game: GameSession): void {
         updateGameStatus(game);
         game.updatedAt = now();
     }
 
-    /**
-     * @param {GameSession} game
-     * @returns {PublicGameModel}
-     */
-    function getModel(game) {
+    function getModel(game: GameSession): PublicGameModel {
         const model = game.model.getModel();
 
         return {
@@ -371,8 +344,7 @@ export function createLobby(options) {
         };
     }
 
-    /** @returns {GameSession[]} */
-    function getGames() {
+    function getGames(): GameSession[] {
         return Array.from(games.values());
     }
 

@@ -1,3 +1,18 @@
+FROM node:22-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
+COPY tsconfig*.json ./
+COPY scripts ./scripts
+COPY shared ./shared
+COPY server ./server
+COPY client ./client
+
+RUN npm run build
+
 FROM node:22-alpine AS runtime
 
 ENV NODE_ENV=production
@@ -8,8 +23,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY server ./server
-COPY client ./client
+COPY --from=build /app/dist ./dist
 
 USER node
 

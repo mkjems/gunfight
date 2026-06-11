@@ -4,8 +4,18 @@ A web remake of the classic arcade game, that used to be the hottest thing in my
 
 ## Running with Docker or OrbStack
 
-This app is packaged as one Node.js container. The server in `server/server.js`
-serves the static files from `client` and runs the Socket.IO game server.
+This app is packaged as one Node.js container. The source server entrypoint is
+`server/server.js`; the container builds TypeScript server/shared modules and
+runs the compiled server from `dist/server/server.js`.
+
+For local Node development:
+
+```sh
+npm run dev
+```
+
+That builds `dist/`, copies the static client assets, and starts the compiled
+server.
 
 Build and run locally:
 

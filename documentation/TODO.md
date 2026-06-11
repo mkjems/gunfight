@@ -168,23 +168,23 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 
 ### P1.4.6 - Add A Server TypeScript Build And Convert Shared/Server Files
 
-- [ ] Add a server/shared TypeScript build step.
+- [x] Add a server/shared TypeScript build step.
     - Compile server and shared `.ts` files with `tsc`.
     - Emit JavaScript in a predictable build output folder such as `dist/`.
     - Keep this separate from the later browser/Vite build step.
     - Do not make production depend on runtime TypeScript transpilation.
 
-- [ ] Convert shared contracts first.
+- [x] Convert shared contracts first.
     - Rename stable shared contract files from `.js` to `.ts`.
     - Keep runtime validators next to their exported types.
     - Import compiled shared contracts from compiled server code.
 
-- [ ] Convert server modules incrementally.
+- [x] Convert server modules incrementally.
     - Start with high scores, lobby, and game model modules.
     - Keep Express and Socket.IO entrypoints working during each step.
     - Avoid changing gameplay behavior during type-only conversions.
 
-- [ ] Update server scripts and deployment.
+- [x] Update server scripts and deployment.
     - Add build, start, dev, check, and test commands that work with compiled server output.
     - Run production with Node against compiled JavaScript, not `.ts` sources.
     - Update Dockerfile and compose commands if build output paths change.

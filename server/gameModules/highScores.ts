@@ -1,16 +1,15 @@
+import type {
+    GameResultPayload,
+    HighScoreEntry
+} from '../../shared/contracts.js';
+
 const DEFAULT_LIMIT = 10;
 
-/**
- * @typedef {import('../../shared/contracts.js').GameResultPayload} GameResultPayload
- * @typedef {import('../../shared/contracts.js').HighScoreEntry} HighScoreEntry
- * @typedef {{ limit?: number }} HighScoresOptions
- */
+interface HighScoresOptions {
+    limit?: number;
+}
 
-/**
- * @param {unknown} name
- * @returns {string}
- */
-function sanitizeName(name) {
+function sanitizeName(name: unknown): string {
     return (
         String(name || '')
             .toUpperCase()
@@ -19,11 +18,7 @@ function sanitizeName(name) {
     );
 }
 
-/**
- * @param {unknown} score
- * @returns {number}
- */
-function normalizeScore(score) {
+function normalizeScore(score: unknown): number {
     const value = Number(score);
 
     if (!Number.isFinite(value) || value < 0) {
@@ -33,12 +28,7 @@ function normalizeScore(score) {
     return Math.floor(value);
 }
 
-/**
- * @param {HighScoreEntry} first
- * @param {HighScoreEntry} second
- * @returns {number}
- */
-function sortEntries(first, second) {
+function sortEntries(first: HighScoreEntry, second: HighScoreEntry): number {
     if (second.wins !== first.wins) {
         return second.wins - first.wins;
     }
@@ -54,23 +44,12 @@ function sortEntries(first, second) {
     return first.name.localeCompare(second.name);
 }
 
-/**
- * @param {HighScoresOptions=} options
- */
-export function createHighScores(options) {
-    options = options || {};
-
+export function createHighScores(options: HighScoresOptions = {}) {
     const limit = options.limit || DEFAULT_LIMIT;
-    /** @type {Map<string, HighScoreEntry>} */
-    const entriesByName = new Map();
-    /** @type {Set<string>} */
-    const recordedResults = new Set();
+    const entriesByName = new Map<string, HighScoreEntry>();
+    const recordedResults = new Set<string>();
 
-    /**
-     * @param {string} name
-     * @returns {HighScoreEntry}
-     */
-    function getEntry(name) {
+    function getEntry(name: string): HighScoreEntry {
         const safeName = sanitizeName(name);
         let entry = entriesByName.get(safeName);
 
@@ -87,8 +66,7 @@ export function createHighScores(options) {
         return entry;
     }
 
-    /** @returns {HighScoreEntry[]} */
-    function getTable() {
+    function getTable(): HighScoreEntry[] {
         return Array.from(entriesByName.values())
             .map(function (entry) {
                 return {
@@ -102,11 +80,7 @@ export function createHighScores(options) {
             .slice(0, limit);
     }
 
-    /**
-     * @param {GameResultPayload} result
-     * @returns {HighScoreEntry[]}
-     */
-    function recordGame(result) {
+    function recordGame(result: GameResultPayload): HighScoreEntry[] {
         const clients = result.clients;
         const scores = result.scores;
         const resultId = result.resultId;

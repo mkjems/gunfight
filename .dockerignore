@@ -2,6 +2,7 @@
 .agents
 .codex
 node_modules
+dist
 npm-debug.log
 Dockerfile
 compose.yaml

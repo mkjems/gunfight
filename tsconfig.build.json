@@ -1,11 +1,13 @@
 {
     "compilerOptions": {
         "allowJs": true,
-        "checkJs": true,
+        "checkJs": false,
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
-        "noEmit": true,
-        "strict": false,
+        "noEmitOnError": true,
+        "outDir": "dist",
+        "rootDir": ".",
+        "strict": true,
         "target": "ES2022"
     },
     "include": ["server/**/*.js", "server/**/*.ts", "shared/**/*.ts"],

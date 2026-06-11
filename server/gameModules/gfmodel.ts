@@ -2,15 +2,11 @@ import { readFileSync } from 'node:fs';
 import {
     parseRockDefinitions,
     parseScenarioSources,
-    resolveScenarioSource
+    resolveScenarioSource,
+    type GameModelClient,
+    type GameModelSnapshot,
+    type Scenario
 } from '../../shared/contracts.js';
-
-/**
- * @typedef {import('../../shared/contracts.js').GameModelClient} GameModelClient
- * @typedef {import('../../shared/contracts.js').GameModelSnapshot} GameModelSnapshot
- * @typedef {import('../../shared/contracts.js').Scenario} Scenario
- * @typedef {import('../../shared/contracts.js').ScenarioSource} ScenarioSource
- */
 
 const rockDefinitions = parseRockDefinitions(
     JSON.parse(readFileSync(new URL('../rocks.json', import.meta.url), 'utf8')),
@@ -26,13 +22,11 @@ const scenarios = parseScenarioSources(
 
 export function createGameModel() {
     let counter = 0;
-    /** @type {GameModelClient[]} */
-    const clients = [];
+    const clients: GameModelClient[] = [];
     let currentScenarioIndex = -1;
     let roundNumber = 0;
 
-    /** @returns {Scenario | null} */
-    function getCurrentScenario() {
+    function getCurrentScenario(): Scenario | null {
         if (currentScenarioIndex < 0 || scenarios.length === 0) {
             return null;
         }
@@ -43,7 +37,7 @@ export function createGameModel() {
         );
     }
 
-    function areAllReady() {
+    function areAllReady(): boolean {
         return (
             clients.length >= 2 &&
             clients.every(function (client) {
@@ -52,7 +46,7 @@ export function createGameModel() {
         );
     }
 
-    function advanceRound() {
+    function advanceRound(): void {
         if (scenarios.length === 0) {
             currentScenarioIndex = -1;
             return;
@@ -63,12 +57,10 @@ export function createGameModel() {
     }
 
     return {
-        /** @returns {GameModelClient} */
-        getNewClient: function () {
+        getNewClient: function (): GameModelClient {
             counter++;
 
-            /** @type {GameModelClient} */
-            const newClient = {
+            const newClient: GameModelClient = {
                 id: counter,
                 ready: false
             };
@@ -77,8 +69,7 @@ export function createGameModel() {
             return newClient;
         },
 
-        /** @param {GameModelClient} client */
-        disconnect: function (client) {
+        disconnect: function (client: GameModelClient): void {
             let i;
 
             for (i = clients.length - 1; i >= 0; i--) {
@@ -88,8 +79,7 @@ export function createGameModel() {
             }
         },
 
-        /** @returns {GameModelSnapshot} */
-        getModel: function () {
+        getModel: function (): GameModelSnapshot {
             return {
                 clients: clients.slice(),
                 currentScenario: getCurrentScenario(),
@@ -97,8 +87,7 @@ export function createGameModel() {
             };
         },
 
-        /** @param {GameModelClient} client */
-        readyClient: function (client) {
+        readyClient: function (client: GameModelClient): void {
             const wasReadyToStart = areAllReady();
             const existingClient = clients.find(function (item) {
                 return item.id === client.id;
@@ -113,7 +102,7 @@ export function createGameModel() {
             }
         },
 
-        resetReady: function () {
+        resetReady: function (): void {
             clients.forEach(function (client) {
                 client.ready = false;
             });
