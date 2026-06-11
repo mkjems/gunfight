@@ -1,11 +1,7 @@
-import scenarioRendererSource from '../js/ScenarioRenderer.js?raw';
-import sceneSource from '../js/Scene.js?raw';
-import obstaclesSource from '../js/Obstacles.js?raw';
 import controllableSource from '../js/Controllable.js?raw';
 import bulletSource from '../js/Bullet.js?raw';
 import bulletsSource from '../js/Bullets.js?raw';
 import playersSource from '../js/Players.js?raw';
-import collisionSource from '../js/Collision.js?raw';
 import indexSource from '../js/index.js?raw';
 import { CanvasTools } from './modules/canvasTools';
 import { Camera } from './modules/camera';
@@ -48,6 +44,7 @@ import { ClientTouchEnvironment } from './modules/clientTouchEnvironment';
 import { ClientTouchState } from './modules/clientTouchState';
 import { ClientTouchControlsFlow } from './modules/clientTouchControlsFlow';
 import { ClientTimers } from './modules/clientTimers';
+import { Collision } from './modules/collision';
 import { CollisionDebugRenderer } from './modules/collisionDebugRenderer';
 import { AmmoHudRenderer } from './modules/ammoHudRenderer';
 import { Color } from './modules/color';
@@ -59,10 +56,13 @@ import { KeysModel } from './modules/keysModel';
 import { LobbyScreen } from './modules/lobbyScreen';
 import { NameEditorScreen } from './modules/nameEditorScreen';
 import { NameEditor } from './modules/nameEditor';
+import { Obstacles } from './modules/obstacles';
 import { Pen } from './modules/pen';
 import { PlayerPositionSync } from './modules/playerPositionSync';
 import { requestAnimFrame } from './modules/requestAnimationFrame';
 import { RoundIntro } from './modules/roundIntro';
+import { ScenarioRenderer } from './modules/scenarioRenderer';
+import { Scene } from './modules/scene';
 import { ScoreKeeper } from './modules/scoreKeeper';
 import { SoundEffects } from './modules/soundEffects';
 import { TouchControls } from './modules/touchControls';
@@ -87,14 +87,10 @@ function loadScript(src) {
 }
 
 const scripts = [
-    ['js/ScenarioRenderer.js', scenarioRendererSource],
-    ['js/Scene.js', sceneSource],
-    ['js/Obstacles.js', obstaclesSource],
     ['js/Controllable.js', controllableSource],
     ['js/Bullet.js', bulletSource],
     ['js/Bullets.js', bulletsSource],
     ['js/Players.js', playersSource],
-    ['js/Collision.js', collisionSource],
     ['js/index.js', indexSource]
 ];
 
@@ -144,6 +140,7 @@ globalThis.GF.ClientTouchEnvironment = ClientTouchEnvironment;
 globalThis.GF.ClientTouchState = ClientTouchState;
 globalThis.GF.ClientTouchControlsFlow = ClientTouchControlsFlow;
 globalThis.GF.ClientTimers = ClientTimers;
+globalThis.GF.Collision = Collision;
 globalThis.GF.CollisionDebugRenderer = CollisionDebugRenderer;
 globalThis.GF.Color = Color;
 globalThis.GF.GameHud = GameHud;
@@ -154,9 +151,12 @@ globalThis.GF.KeysModel = KeysModel;
 globalThis.GF.LobbyScreen = LobbyScreen;
 globalThis.GF.NameEditorScreen = NameEditorScreen;
 globalThis.GF.NameEditor = NameEditor;
+globalThis.GF.Obstacles = Obstacles;
 globalThis.GF.Pen = Pen;
 globalThis.GF.PlayerPositionSync = PlayerPositionSync;
 globalThis.GF.RoundIntro = RoundIntro;
+globalThis.GF.ScenarioRenderer = ScenarioRenderer;
+globalThis.GF.Scene = Scene;
 globalThis.GF.ScoreKeeper = ScoreKeeper;
 globalThis.GF.SoundEffects = SoundEffects;
 globalThis.GF.TouchControls = TouchControls;

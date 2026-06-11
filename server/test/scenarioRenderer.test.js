@@ -1,56 +1,77 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadScenarioRenderer() {
-    const context = {
-        GF: {
-            Collision: {
-                boxesOverlap(a, b) {
-                    return (
-                        a.x < b.x + b.width &&
-                        a.x + a.width > b.x &&
-                        a.y < b.y + b.height &&
-                        a.y + a.height > b.y
-                    );
-                }
-            },
-            Config: {
-                colors: {
-                    yellow: 'yellow'
-                },
-                graphics: {
-                    scale: 2
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ScenarioRenderer.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ScenarioRenderer;
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
 }
 
-function createRenderer(options = {}) {
-    const ScenarioRenderer = loadScenarioRenderer();
+async function loadScenarioRenderer() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
 
-    return new ScenarioRenderer({
-        context: {},
+    compileClientModule('collision.ts', 'collision.js', tempDirectory);
+    compileClientModule('config.ts', 'config.js', tempDirectory);
+    compileClientModule(
+        'scenarioRenderer.ts',
+        'scenarioRenderer.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'scenarioRenderer.js')).href
+    );
+
+    return module.ScenarioRenderer;
+}
+
+async function createRenderer(options = {}) {
+    const ScenarioRenderer = await loadScenarioRenderer();
+
+    return ScenarioRenderer({
+        context: createContext(),
         ...options
     });
+}
+
+function createContext() {
+    return {
+        beginPath() {},
+        closePath() {},
+        drawImage() {},
+        fill() {},
+        fillRect() {},
+        lineTo() {},
+        moveTo() {},
+        restore() {},
+        save() {}
+    };
 }
 
 function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('builds rock collision lines and obstacle bodies from a scenario', function () {
-    const renderer = createRenderer({
+test('builds rock collision lines and obstacle bodies from a scenario', async function () {
+    const renderer = await createRenderer({
         getObstacleDamage(id) {
             return id === 'cactus:0' ? 1 : 0;
         },
@@ -130,8 +151,8 @@ test('builds rock collision lines and obstacle bodies from a scenario', function
     ]);
 });
 
-test('finds bullet hits against damageable obstacles', function () {
-    const renderer = createRenderer();
+test('finds bullet hits against damageable obstacles', async function () {
+    const renderer = await createRenderer();
     const bullet = {
         deleteMe: false,
         getHitBox() {

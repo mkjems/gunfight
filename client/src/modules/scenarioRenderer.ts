@@ -1,30 +1,133 @@
-GF.ScenarioRenderer = function (options) {
-    options = options || {};
+import { Collision } from './collision.js';
+import { Config } from './config.js';
 
-    var context = options.context;
-    var getTime =
+type ContextLike = {
+    beginPath: () => void;
+    closePath: () => void;
+    drawImage: (...args: unknown[]) => void;
+    fill: () => void;
+    fillRect: (x: number, y: number, width: number, height: number) => void;
+    fillStyle: unknown;
+    lineTo: (x: number, y: number) => void;
+    moveTo: (x: number, y: number) => void;
+    restore: () => void;
+    save: () => void;
+    shadowColor: string;
+    shadowOffsetX: number;
+    shadowOffsetY: number;
+};
+
+type SpriteLike = {
+    complete?: boolean;
+};
+
+type ScenarioRendererOptions = {
+    context: ContextLike;
+    getObstacleDamage?: (id: string) => number;
+    getRockPattern?: () => unknown;
+    getScenarioStartedAt?: () => number | null;
+    getTime?: () => number;
+    sprites?: {
+        cactus?: SpriteLike;
+        saloon?: SpriteLike;
+        wagon?: SpriteLike;
+    };
+};
+
+type Scenario = {
+    cacti?: Array<{
+        x: number;
+        y: number;
+    }>;
+    decorations?: Array<{
+        type: string;
+        x: number;
+        y: number;
+    }>;
+    rocks?: Rock[];
+    wagon?: Wagon;
+};
+
+type Rock = {
+    lines?: RockLine[];
+    x: number;
+    y: number;
+};
+
+type RockLine = {
+    from: [number, number];
+    to: [number, number];
+};
+
+type Wagon = {
+    duration?: number;
+    fromY: number;
+    toY: number;
+    x: number;
+};
+
+type Box = {
+    height: number;
+    width: number;
+    x: number;
+    y: number;
+};
+
+type CircleBody = {
+    damage?: number;
+    id?: string;
+    radius: number;
+    type: 'circle';
+    x: number;
+    y: number;
+};
+
+type RectBody = Box & {
+    damage: number;
+    id: string;
+    type: 'rect';
+};
+
+type PolygonBody = {
+    points: Array<{
+        x: number;
+        y: number;
+    }>;
+    type: 'polygon';
+};
+
+type ObstacleBody = CircleBody | PolygonBody | RectBody;
+
+type BulletLike = {
+    deleteMe?: boolean;
+    getHitBox: () => Box;
+};
+
+export function ScenarioRenderer(options: ScenarioRendererOptions) {
+    const context = options.context;
+    const getTime =
         options.getTime ||
         function () {
             return new Date().getTime();
         };
-    var getObstacleDamage =
+    const getObstacleDamage =
         options.getObstacleDamage ||
         function () {
             return 0;
         };
-    var getScenarioStartedAt =
+    const getScenarioStartedAt =
         options.getScenarioStartedAt ||
         function () {
             return null;
         };
-    var getRockPattern =
+    const getRockPattern =
         options.getRockPattern ||
         function () {
             return null;
         };
-    var sprites = options.sprites || {};
+    const sprites = options.sprites || {};
 
-    function render(scenario) {
+    function render(scenario: Scenario | null | undefined) {
         if (!scenario) {
             return;
         }
@@ -42,7 +145,7 @@ GF.ScenarioRenderer = function (options) {
         }
     }
 
-    function drawDecorations(scenario) {
+    function drawDecorations(scenario: Scenario) {
         (scenario.decorations || []).forEach(function (decoration) {
             if (decoration.type === 'saloon') {
                 drawSaloon(decoration.x, decoration.y);
@@ -50,11 +153,11 @@ GF.ScenarioRenderer = function (options) {
         });
     }
 
-    function drawSaloon(x, y) {
-        var scale = GF.Config.graphics.scale;
-        var width = 64 * scale;
-        var height = 128 * scale;
-        var saloonSprite = sprites.saloon;
+    function drawSaloon(x: number, y: number) {
+        const scale = Config.graphics.scale;
+        const width = 64 * scale;
+        const height = 128 * scale;
+        const saloonSprite = sprites.saloon;
 
         if (!saloonSprite || !saloonSprite.complete) {
             return;
@@ -63,17 +166,17 @@ GF.ScenarioRenderer = function (options) {
         context.drawImage(saloonSprite, x, y, width, height);
     }
 
-    function drawRocks(scenario) {
+    function drawRocks(scenario: Scenario) {
         (scenario.rocks || []).forEach(function (rock) {
-            var lines = rock.lines || [];
-            var firstLine = lines[0];
+            const lines = rock.lines || [];
+            const firstLine = lines[0];
 
             if (!firstLine) {
                 return;
             }
 
             context.save();
-            context.fillStyle = getRockPattern() || GF.Config.colors.yellow;
+            context.fillStyle = getRockPattern() || Config.colors.yellow;
             context.shadowColor = 'rgb(0,0,0)';
             context.shadowOffsetX = 2;
             context.shadowOffsetY = 2;
@@ -93,8 +196,13 @@ GF.ScenarioRenderer = function (options) {
         });
     }
 
-    function getRockLines(scenario) {
-        var lines = [];
+    function getRockLines(scenario: Scenario | null | undefined) {
+        const lines: Array<{
+            x1: number;
+            x2: number;
+            y1: number;
+            y2: number;
+        }> = [];
 
         if (!scenario) {
             return lines;
@@ -114,15 +222,15 @@ GF.ScenarioRenderer = function (options) {
         return lines;
     }
 
-    function getObstacleBodies(scenario) {
-        var bodies = [];
+    function getObstacleBodies(scenario: Scenario | null | undefined) {
+        const bodies: ObstacleBody[] = [];
 
         if (!scenario) {
             return bodies;
         }
 
         (scenario.cacti || []).forEach(function (cactus, index) {
-            var body = getCactusBody(cactus, index);
+            const body = getCactusBody(cactus, index);
 
             if (body) {
                 bodies.push(body);
@@ -142,15 +250,17 @@ GF.ScenarioRenderer = function (options) {
         return bodies;
     }
 
-    function getDamageableObstacleBodies(scenario) {
-        var bodies = [];
+    function getDamageableObstacleBodies(
+        scenario: Scenario | null | undefined
+    ) {
+        const bodies: Array<CircleBody | RectBody> = [];
 
         if (!scenario) {
             return bodies;
         }
 
         (scenario.cacti || []).forEach(function (cactus, index) {
-            var body = getCactusBody(cactus, index);
+            const body = getCactusBody(cactus, index);
 
             if (body) {
                 bodies.push(body);
@@ -166,14 +276,14 @@ GF.ScenarioRenderer = function (options) {
         return bodies;
     }
 
-    function getRockPolygonBody(rock) {
+    function getRockPolygonBody(rock: Rock): PolygonBody {
         return {
             type: 'polygon',
             points: getRockPolygonPoints(rock)
         };
     }
 
-    function getRockPolygonPoints(rock) {
+    function getRockPolygonPoints(rock: Rock) {
         return (rock.lines || []).map(function (line) {
             return {
                 x: rock.x + line.from[0],
@@ -182,10 +292,10 @@ GF.ScenarioRenderer = function (options) {
         });
     }
 
-    function getWagonObstacleCircles(wagon) {
-        var position = getWagonPosition(wagon);
-        var scale = GF.Config.graphics.scale;
-        var colliders = [
+    function getWagonObstacleCircles(wagon: Wagon): CircleBody[] {
+        const position = getWagonPosition(wagon);
+        const scale = Config.graphics.scale;
+        const colliders = [
             { x: -7, y: 7, radius: 9 },
             { x: 7, y: 7, radius: 9 },
             { x: 0, y: -10, radius: 10 }
@@ -203,12 +313,15 @@ GF.ScenarioRenderer = function (options) {
         });
     }
 
-    function getCactusBody(cactus, index) {
-        var scale = GF.Config.graphics.scale;
-        var damage = getCactusDamageStage(index);
-        var width = 5 * scale;
-        var heights = [29, 22, 15, 0];
-        var height = heights[damage] * scale;
+    function getCactusBody(
+        cactus: { x: number; y: number },
+        index: number
+    ): RectBody | null {
+        const scale = Config.graphics.scale;
+        const damage = getCactusDamageStage(index);
+        const width = 5 * scale;
+        const heights = [29, 22, 15, 0];
+        const height = heights[damage] * scale;
 
         if (!height) {
             return null;
@@ -217,30 +330,30 @@ GF.ScenarioRenderer = function (options) {
         return {
             type: 'rect',
             id: getCactusId(index),
-            damage: damage,
+            damage,
             x: cactus.x - width / 2,
             y: cactus.y - height,
-            width: width,
-            height: height
+            width,
+            height
         };
     }
 
-    function getCactusId(index) {
+    function getCactusId(index: number) {
         return 'cactus:' + index;
     }
 
-    function getCactusDamageStage(index) {
+    function getCactusDamageStage(index: number) {
         return Math.min(3, getObstacleDamage(getCactusId(index)));
     }
 
-    function drawCactus(x, y, damage) {
-        var scale = GF.Config.graphics.scale;
-        var sourceWidth = 17;
-        var sourceHeight = 32;
-        var frame = Math.min(3, damage);
-        var width = sourceWidth * scale;
-        var height = sourceHeight * scale;
-        var cactusSprite = sprites.cactus;
+    function drawCactus(x: number, y: number, damage: number) {
+        const scale = Config.graphics.scale;
+        const sourceWidth = 17;
+        const sourceHeight = 32;
+        const frame = Math.min(3, damage);
+        const width = sourceWidth * scale;
+        const height = sourceHeight * scale;
+        const cactusSprite = sprites.cactus;
 
         context.save();
 
@@ -257,22 +370,22 @@ GF.ScenarioRenderer = function (options) {
                 height
             );
         } else {
-            context.fillStyle = GF.Config.colors.yellow;
+            context.fillStyle = Config.colors.yellow;
             context.fillRect(x - width / 2, y - height, width, height);
         }
 
         context.restore();
     }
 
-    function drawWagon(wagon) {
-        var position = getWagonPosition(wagon);
-        var scale = GF.Config.graphics.scale;
-        var sourceWidth = 37;
-        var sourceHeight = 38;
-        var damage = Math.min(3, getObstacleDamage('wagon'));
-        var width = sourceWidth * scale;
-        var height = sourceHeight * scale;
-        var wagonSprite = sprites.wagon;
+    function drawWagon(wagon: Wagon) {
+        const position = getWagonPosition(wagon);
+        const scale = Config.graphics.scale;
+        const sourceWidth = 37;
+        const sourceHeight = 38;
+        const damage = Math.min(3, getObstacleDamage('wagon'));
+        const width = sourceWidth * scale;
+        const height = sourceHeight * scale;
+        const wagonSprite = sprites.wagon;
 
         context.save();
 
@@ -289,7 +402,7 @@ GF.ScenarioRenderer = function (options) {
                 height
             );
         } else {
-            context.fillStyle = GF.Config.colors.yellow;
+            context.fillStyle = Config.colors.yellow;
             context.fillRect(
                 position.x - width / 2,
                 position.y - height / 2,
@@ -301,11 +414,11 @@ GF.ScenarioRenderer = function (options) {
         context.restore();
     }
 
-    function getWagonPosition(wagon) {
-        var scenarioStartedAt = getScenarioStartedAt();
-        var elapsed = scenarioStartedAt ? getTime() - scenarioStartedAt : 0;
-        var duration = wagon.duration || 10000;
-        var progress = Math.min(1, Math.max(0, elapsed / duration));
+    function getWagonPosition(wagon: Wagon) {
+        const scenarioStartedAt = getScenarioStartedAt();
+        const elapsed = scenarioStartedAt ? getTime() - scenarioStartedAt : 0;
+        const duration = wagon.duration || 10000;
+        const progress = Math.min(1, Math.max(0, elapsed / duration));
 
         return {
             x: wagon.x,
@@ -313,19 +426,24 @@ GF.ScenarioRenderer = function (options) {
         };
     }
 
-    function findBulletObstacleHit(allBullets, scenario) {
-        var hit = null;
-        var bodies = getDamageableObstacleBodies(scenario);
+    function findBulletObstacleHit(
+        allBullets: Record<string, BulletLike | null | undefined>,
+        scenario: Scenario | null | undefined
+    ) {
+        let hit: {
+            bullet: BulletLike;
+            obstacleId: string | undefined;
+        } | null = null;
+        const bodies = getDamageableObstacleBodies(scenario);
 
         Object.keys(allBullets).forEach(function (bulletId) {
-            var bullet = allBullets[bulletId];
-            var bulletBox;
+            const bullet = allBullets[bulletId];
 
             if (hit || !bullet || bullet.deleteMe) {
                 return;
             }
 
-            bulletBox = bullet.getHitBox();
+            const bulletBox = bullet.getHitBox();
 
             bodies.forEach(function (body) {
                 if (hit) {
@@ -334,7 +452,7 @@ GF.ScenarioRenderer = function (options) {
 
                 if (bulletBoxOverlapsBody(bulletBox, body)) {
                     hit = {
-                        bullet: bullet,
+                        bullet,
                         obstacleId: body.id
                     };
                 }
@@ -344,29 +462,32 @@ GF.ScenarioRenderer = function (options) {
         return hit;
     }
 
-    function bulletBoxOverlapsBody(box, body) {
+    function bulletBoxOverlapsBody(box: Box, body: CircleBody | RectBody) {
         if (body.type === 'rect') {
-            return GF.Collision.boxesOverlap(box, body);
+            return Collision.boxesOverlap(box, body);
         }
 
         return boxOverlapsCircle(box, body);
     }
 
-    function boxOverlapsCircle(box, circle) {
-        var closestX = Math.max(box.x, Math.min(circle.x, box.x + box.width));
-        var closestY = Math.max(box.y, Math.min(circle.y, box.y + box.height));
-        var dx = circle.x - closestX;
-        var dy = circle.y - closestY;
+    function boxOverlapsCircle(box: Box, circle: CircleBody) {
+        const closestX = Math.max(box.x, Math.min(circle.x, box.x + box.width));
+        const closestY = Math.max(
+            box.y,
+            Math.min(circle.y, box.y + box.height)
+        );
+        const dx = circle.x - closestX;
+        const dy = circle.y - closestY;
 
         return dx * dx + dy * dy < circle.radius * circle.radius;
     }
 
     return {
-        findBulletObstacleHit: findBulletObstacleHit,
-        getDamageableObstacleBodies: getDamageableObstacleBodies,
-        getObstacleBodies: getObstacleBodies,
-        getRockLines: getRockLines,
-        getWagonPosition: getWagonPosition,
-        render: render
+        findBulletObstacleHit,
+        getDamageableObstacleBodies,
+        getObstacleBodies,
+        getRockLines,
+        getWagonPosition,
+        render
     };
-};
+}
