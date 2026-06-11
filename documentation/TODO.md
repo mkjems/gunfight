@@ -142,6 +142,71 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - Keep the current static-file setup until bundling solves real pain.
     - Make sure service worker caching and deployment stay simple.
 
+### P1.4.5 - Stabilize Shared And Server Types
+
+- [ ] Make shared contracts the single source of truth.
+    - Keep public game, client, scenario, obstacle, bullet, score, and Socket.IO payload shapes in `shared/`.
+    - Replace duplicate local typedefs with imports from shared contracts.
+    - Keep browser-only state types separate from server-owned public contracts.
+
+- [ ] Strengthen server module annotations.
+    - Type lobby inputs, outputs, game sessions, and public models.
+    - Type high score game results and table rows.
+    - Type game model clients, round numbers, and resolved scenarios.
+    - Treat incoming socket data as `unknown` until normalized.
+
+- [ ] Validate JSON-backed game content.
+    - Add runtime validation for `server/scenarios.json`.
+    - Add runtime validation for `server/rocks.json`.
+    - Keep source JSON types separate from resolved runtime scenario types.
+    - Fail clearly when authoring data is malformed.
+
+- [ ] Tighten type checking gradually.
+    - Extend `checkJs` coverage only where it is useful and stable.
+    - Try stricter TypeScript flags on `shared/` first.
+    - Convert `shared/` to `.ts` only after the contracts stop moving.
+
+### P1.4.6 - Convert Shared And Server Files To TypeScript
+
+- [ ] Convert shared contracts first.
+    - Rename stable shared contract files from `.js` to `.ts`.
+    - Keep runtime validators next to their exported types.
+    - Emit JavaScript in a predictable build output folder.
+
+- [ ] Convert server modules incrementally.
+    - Start with high scores, lobby, and game model modules.
+    - Keep Express and Socket.IO entrypoints working during each step.
+    - Avoid changing gameplay behavior during type-only conversions.
+
+- [ ] Update server scripts and deployment.
+    - Add build, start, dev, check, and test commands that work with compiled server output.
+    - Update Dockerfile and compose commands if build output paths change.
+    - Keep local development simple.
+
+### P1.4.7 - Introduce A Client Build Step
+
+- [ ] Add a browser build tool only when client imports are ready.
+    - Prefer Vite unless a simpler tool fits the static app better.
+    - Keep Socket.IO client loading, PWA manifest, service worker, and assets working.
+    - Verify cache-busted builds do not make deployment or service worker updates harder.
+
+- [ ] Move the browser entrypoint to modules.
+    - Replace ordered script tags with a single built entrypoint.
+    - Import shared contracts where useful for type checking.
+    - Keep the first bundled version visually and behaviorally identical.
+
+### P1.4.8 - Convert Client Modules Incrementally
+
+- [ ] Replace broad `GF.*` namespace mutation with imports.
+    - Convert extracted UI and state modules before gameplay simulation.
+    - Keep canvas gameplay readable and testable during conversion.
+    - Remove script-order coupling as modules are converted.
+
+- [ ] Convert browser files to TypeScript in low-risk groups.
+    - Start with pure decision modules and view-model helpers.
+    - Then convert networking, screens, input, and HUD modules.
+    - Convert gameplay simulation files after shared contracts and client imports are stable.
+
 ### P1.5 - Keep The Architecture Healthy
 
 - [ ] Improve shared configuration.

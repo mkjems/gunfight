@@ -1,53 +1,47 @@
 # TypeScript migration
 
-P1.4 introduces TypeScript deliberately without converting the browser app to
-modules yet.
+This file records the TypeScript migration decisions. The task checklist lives
+in `documentation/TODO.md` under P1.4.5 through P1.4.8.
 
-## Current path
+## Decision
 
-- Keep the app playable with the existing Express server and static client
-  scripts.
-- Keep `checkJs` enabled for server-side JavaScript and shared contracts.
-- Put public data contracts and runtime payload guards in `shared/contracts.js`.
-- Use JSDoc typedef imports from shared contracts while files remain `.js`.
-- Convert files incrementally only when a module boundary is already clear.
+Introduce TypeScript incrementally. Do not rewrite the app, and do not add a
+client bundler until browser modules are ready to use imports deliberately.
 
-## Migration order
+The current static client is playable and simple to deploy. The most valuable
+first step is to stabilize data contracts and runtime validation, especially at
+the Socket.IO boundary, before changing how the browser code is loaded.
 
-1. Shared contracts and networking boundaries.
-2. Server lobby, high score, and game model modules.
-3. Extracted client state and UI modules after the browser has an import path.
-4. Gameplay simulation files after public model and networking contracts are
-   stable.
+## Principles
 
-The broad `GF.*` namespace should stay in place until the client has a build
-step. Replacing it with imports should happen as part of that build step, not as
-ad hoc script-tag churn.
+- Keep every step playable and deployable.
+- Treat network input as untrusted until normalized.
+- Keep shared public contracts in `shared/`.
+- Prefer JSDoc and `checkJs` while contracts are still moving.
+- Convert files to `.ts` only after the module boundary is stable.
+- Replace broad `GF.*` namespace mutation only after a client build step exists.
+- Keep source JSON types separate from resolved runtime game data.
 
-## Runtime validation
+## Sequence
 
-The server validates incoming Socket.IO payloads at the boundary for:
+1. Stabilize shared and server types.
+2. Convert shared and server files to TypeScript.
+3. Add a client build step.
+4. Convert client modules incrementally.
 
-- player names and leave/rejoin intent
-- key events and bullet snapshots
-- player position snapshots
-- obstacle damage
-- game result submissions
+Shared contracts and networking come first. Extracted client state and UI
+modules come after the browser has an import path. Gameplay simulation comes
+last because it has the largest behavioral surface.
 
-Invalid payloads are ignored instead of being relayed or recorded.
+## Build Tool Trigger
 
-## Build tool decision
-
-Do not add Vite or another bundler yet. The static-file setup still serves the
-game and PWA assets simply, and the current pain is contract drift rather than
-module loading.
-
-Revisit Vite when one of these becomes true:
+Do not add Vite or another bundler yet. Revisit this when one of these is true:
 
 - client files are ready to import shared contracts at runtime
 - cache-busted production bundles would simplify service worker updates
 - converting many client modules to `.ts` would be less risky with a dev server
   and bundler
 
-When a bundler is added, verify service worker caching and Docker deployment in
-the same change.
+When a bundler is added, verify Socket.IO client loading, PWA manifest behavior,
+service worker caching, static assets, Docker, and deployment in the same
+change.
