@@ -22,17 +22,17 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 
 ### P1.1.5 - Move Tooling To The Repo Root
 
-- [ ] Move the project package to the repository root.
-    - Move `gameserver/package.json`, `gameserver/package-lock.json`, and `gameserver/tsconfig.json` to the root.
+- [x] Move the project package to the repository root.
+    - Move `package.json`, `package-lock.json`, and `tsconfig.json` to the root.
     - Make root-level commands work naturally: `npm run dev`, `npm run check`, and `npm test`.
     - Keep this as a structural move with no gameplay behavior changes.
 
-- [ ] Rename the main app folders for the TypeScript/component path.
-    - Move `gameserver/` code to `server/`.
-    - Move `www/` to `client/`.
+- [x] Rename the main app folders for the TypeScript/component path.
+    - Move server code to `server/`.
+    - Move browser client code to `client/`.
     - Add `shared/` when shared contracts are ready to move out of client-only code.
 
-- [ ] Update paths after the move.
+- [x] Update paths after the move.
     - Update server static-file paths.
     - Update Dockerfile and compose paths.
     - Update GitHub Actions paths and cache settings.

@@ -14,10 +14,7 @@ module.exports = {
         io: 'readonly',
         requestAnimFrame: 'readonly'
     },
-    ignorePatterns: [
-        'gameserver/node_modules/',
-        'gameserver/package-lock.json'
-    ],
+    ignorePatterns: ['node_modules/', 'package-lock.json'],
     rules: {
         eqeqeq: ['error', 'always'],
         'no-undef': 'error',
@@ -25,13 +22,13 @@ module.exports = {
     },
     overrides: [
         {
-            files: ['www/js/**/*.js'],
+            files: ['client/js/**/*.js'],
             parserOptions: {
                 sourceType: 'script'
             }
         },
         {
-            files: ['gameserver/test/**/*.js'],
+            files: ['server/test/**/*.js'],
             env: {
                 node: true
             }

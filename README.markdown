@@ -1,12 +1,11 @@
-
 # Gunfight
 
 A web remake of the classic arcade game, that used to be the hottest thing in my local grill.
 
 ## Running with Docker or OrbStack
 
-This app is packaged as one Node.js container. The server in `gameserver/server.js`
-serves the static files from `www` and runs the Socket.IO game server.
+This app is packaged as one Node.js container. The server in `server/server.js`
+serves the static files from `client` and runs the Socket.IO game server.
 
 Build and run locally:
 
@@ -70,7 +69,7 @@ public domain.
 ## How It Works
 
 The server serves the web client, assigns player IDs, tracks ready state, chooses
-the current scenario from `gameserver/scenarios.json`, and relays Socket.IO
+the current scenario from `server/scenarios.json`, and relays Socket.IO
 input events between browsers.
 
 Each browser applies local input immediately, applies remote input when it

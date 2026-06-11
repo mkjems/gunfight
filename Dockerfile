@@ -3,13 +3,13 @@ FROM node:22-alpine AS runtime
 ENV NODE_ENV=production
 ENV PORT=8080
 
-WORKDIR /app/gameserver
+WORKDIR /app
 
-COPY gameserver/package*.json ./
+COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY gameserver ./
-COPY www /app/www
+COPY server ./server
+COPY client ./client
 
 USER node
 

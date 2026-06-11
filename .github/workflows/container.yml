@@ -20,14 +20,12 @@ jobs:
               with:
                   node-version: 22
                   cache: npm
-                  cache-dependency-path: gameserver/package-lock.json
+                  cache-dependency-path: package-lock.json
 
             - name: Install dependencies
-              working-directory: gameserver
               run: npm ci
 
             - name: Run checks
-              working-directory: gameserver
               run: npm run check
 
     build:

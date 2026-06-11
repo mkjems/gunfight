@@ -1,0 +1,24 @@
+{
+    "name": "gunfight",
+    "version": "0.0.1",
+    "type": "module",
+    "scripts": {
+        "check": "npm run format:check && npm run lint && npm run typecheck && npm test",
+        "start": "node server/server.js",
+        "dev": "node server/server.js",
+        "format": "prettier --write --ignore-unknown package.json tsconfig.json server client compose.yaml .github/workflows/container.yml documentation/TODO.md documentation/State-ownership.md README.markdown",
+        "format:check": "prettier --check --ignore-unknown package.json tsconfig.json server client compose.yaml .github/workflows/container.yml documentation/TODO.md documentation/State-ownership.md README.markdown",
+        "lint": "eslint server client/js",
+        "typecheck": "tsc --project tsconfig.json",
+        "test": "node --test server/test/*.test.js"
+    },
+    "dependencies": {
+        "express": "^5.1.0",
+        "socket.io": "^4.8.1"
+    },
+    "devDependencies": {
+        "eslint": "^8.57.1",
+        "prettier": "^3.3.3",
+        "typescript": "^5.5.4"
+    }
+}

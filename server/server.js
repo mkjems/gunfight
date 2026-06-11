@@ -9,7 +9,7 @@ import { createHighScores } from './gameModules/highScores.js';
 const portNumber = process.env.PORT || 8080;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const wwwRoot = path.join(__dirname, '..', 'www');
+const clientRoot = path.join(__dirname, '..', 'client');
 const lobby = createLobby();
 const highScores = createHighScores();
 
@@ -18,7 +18,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 app.use(
-    express.static(wwwRoot, {
+    express.static(clientRoot, {
         setHeaders: function (res, filePath) {
             if (path.basename(filePath) === 'sw.js') {
                 res.setHeader(
@@ -35,7 +35,7 @@ app.get('/api', function (req, res) {
 });
 
 app.get('/', function (req, res) {
-    res.sendFile(path.join(wwwRoot, 'index.html'));
+    res.sendFile(path.join(clientRoot, 'index.html'));
 });
 
 function getSocketGameContext(socket) {
@@ -266,7 +266,7 @@ io.on('connection', function (socket) {
 
 server.listen(portNumber, function () {
     console.log(
-        'Gunfight gameserver running on port: ' +
+        'Gunfight server running on port: ' +
             portNumber +
             ', http://localhost:' +
             portNumber
