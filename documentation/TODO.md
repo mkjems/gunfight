@@ -1,56 +1,82 @@
 # Gunfight TODO
 
 
+## P1 - Code Architecture
 
-## P2 
+Goal: move the client toward TypeScript and componentized UI without stopping normal feature work. Each step should leave the game playable and easier to change than before.
 
-- Show main lobby screen for 30 secs and high score screen for 7 secs -> update documentation/Specification-main.md
-- Do not show game ID in the main-lobby. Remove line -> update documentation/Specification-main.md
-- Do not show characters in the background on the high-scores-page. -> update documentation/Specification-main.md
--
-
-
-## P3 - Code Architecture
+### P1.1 - Stabilize The Current Code
 
 - [ ] Add code formatting and linting.
   - Pick one formatter.
   - Add lint rules that catch accidental globals and unsafe equality.
   - Run checks in CI before deploy.
 
-- [ ] Split the large client game module into clearer systems.
-  - Keep `index.js` as orchestration only.
-  - Move lobby UI, game HUD, round flow, sound, networking, and input into focused modules.
-  - Keep rendering, simulation, and network synchronization easy to reason about separately.
+- [ ] Add lightweight type checking before converting files.
+  - Enable `checkJs` for JavaScript where practical.
+  - Add JSDoc typedefs for the most important shared shapes.
+  - Start with Socket.IO payloads, public game model, high score rows, scenarios, obstacles, players, bullets, and round state.
+
+- [ ] Document current client state ownership.
+  - List which state is owned by the server, which is owned by the browser, and which is relayed between players.
+  - Keep this near the implementation or in `documentation/` so later refactors have a map.
+
+### P1.2 - Make Screens And State Explicit
 
 - [ ] Create an explicit client state model.
-  - Define states such as lobby, name editing, round intro, playing, hit pause, game over, and abandoned.
+  - Define states such as lobby, name editing, high scores, round intro, playing, hit pause, game over, and abandoned.
   - Make legal state transitions visible in one place.
   - Avoid scattered checks against string state values.
 
-- [ ] Introduce typed data contracts.
-  - Document or type Socket.IO payloads.
-  - Define client, game model, scenario, obstacle, player, bullet, and score shapes.
-  - Validate incoming server and client payloads at runtime where needed.
+- [ ] Add a small screen controller.
+  - Decide the active screen from client state instead of hiding/showing screens in many places.
+  - Keep the four main specification screens visible in code: Lobby-main, Lobby-Edit-name, Game, and High scores.
+  - Keep screen selection separate from screen rendering.
 
-- [ ] Decide on TypeScript.
-  - Start with `checkJs` and JSDoc if a low-risk migration is preferred.
-  - Move shared model and networking files first if adopting TypeScript.
-  - Avoid converting everything at once.
+- [ ] Extract the high scores screen first.
+  - Move high score table rendering out of `index.js`.
+  - Give it a small input contract: rows, visible state, and prompt state.
+  - Use this as the first example for future UI components.
 
-- [ ] Decide on a build tool.
-  - Consider Vite for module bundling, dev server, cache-busted builds, and TypeScript support.
-  - Keep the current static-file setup until bundling solves a real pain.
-  - Make sure service worker caching and deployment still stay simple.
+### P1.3 - Split The Client Into Focused Modules
 
-- [ ] Decide on UI component strategy.
-  - Keep canvas gameplay outside any component framework.
-  - Consider small DOM-rendering helpers or lightweight components for lobby, HUD, name editor, install prompt, and high scores.
-  - Avoid a full React migration unless UI complexity grows beyond the current arcade overlay.
+- [ ] Keep `index.js` as orchestration only.
+  - It should initialize systems, wire them together, and start the loop.
+  - It should not contain detailed rendering for lobby, high scores, name editor, game HUD, sound, networking, or input.
+
+- [ ] Move UI into small component-like modules.
+  - Create focused renderers for lobby, high scores, name editor, game HUD, install prompt, and touch controls.
+  - Each UI module should own its DOM lookups and rendering for one screen or panel.
+  - Prefer plain lightweight components first; do not move canvas gameplay into a component framework.
+
+- [ ] Move non-UI systems into focused modules.
+  - Extract networking, input, sound, round flow, score handling, and client synchronization.
+  - Keep rendering, simulation, round flow, and network synchronization easy to reason about separately.
 
 - [ ] Reduce global namespace coupling.
-  - Replace broad `GF.*` mutation with imports when a build step exists.
   - Keep module boundaries explicit.
   - Make dependencies injectable for tests where practical.
+  - Replace broad `GF.*` mutation with imports once a build step exists.
+
+### P1.4 - Introduce TypeScript Deliberately
+
+- [ ] Decide on the TypeScript migration path.
+  - Prefer an incremental migration over a full rewrite.
+  - Move shared model and networking files first.
+  - Then move extracted UI components and state modules.
+  - Convert gameplay simulation files after the public contracts are stable.
+
+- [ ] Introduce typed data contracts.
+  - Type Socket.IO payloads.
+  - Type client, game model, scenario, obstacle, player, bullet, score, and screen-state shapes.
+  - Validate incoming server and client payloads at runtime where needed.
+
+- [ ] Decide on a build tool before `.ts` files become normal.
+  - Consider Vite for module bundling, dev server, cache-busted builds, and TypeScript support.
+  - Keep the current static-file setup until bundling solves real pain.
+  - Make sure service worker caching and deployment stay simple.
+
+### P1.5 - Keep The Architecture Healthy
 
 - [ ] Improve shared configuration.
   - Keep gameplay constants in one place.
@@ -61,6 +87,17 @@
   - Keep comments short and specific.
   - Prefer TODO entries for larger refactors.
   - Remove stale plans once work is complete.
+
+
+## P2 
+
+- Show main lobby screen for 30 secs and high score screen for 7 secs -> update documentation/Specification-main.md
+- Do not show game ID in the main-lobby. Remove line -> update documentation/Specification-main.md
+- Do not show characters in the background on the high-scores-page. -> update documentation/Specification-main.md
+-
+
+
+
 
 ## P3.5 - Content Authoring Tools
 
