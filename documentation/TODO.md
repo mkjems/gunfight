@@ -166,12 +166,18 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - Try stricter TypeScript flags on `shared/` first.
     - Convert `shared/` to `.ts` only after the contracts stop moving.
 
-### P1.4.6 - Convert Shared And Server Files To TypeScript
+### P1.4.6 - Add A Server TypeScript Build And Convert Shared/Server Files
+
+- [ ] Add a server/shared TypeScript build step.
+    - Compile server and shared `.ts` files with `tsc`.
+    - Emit JavaScript in a predictable build output folder such as `dist/`.
+    - Keep this separate from the later browser/Vite build step.
+    - Do not make production depend on runtime TypeScript transpilation.
 
 - [ ] Convert shared contracts first.
     - Rename stable shared contract files from `.js` to `.ts`.
     - Keep runtime validators next to their exported types.
-    - Emit JavaScript in a predictable build output folder.
+    - Import compiled shared contracts from compiled server code.
 
 - [ ] Convert server modules incrementally.
     - Start with high scores, lobby, and game model modules.
@@ -180,13 +186,15 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 
 - [ ] Update server scripts and deployment.
     - Add build, start, dev, check, and test commands that work with compiled server output.
+    - Run production with Node against compiled JavaScript, not `.ts` sources.
     - Update Dockerfile and compose commands if build output paths change.
     - Keep local development simple.
 
-### P1.4.7 - Introduce A Client Build Step
+### P1.4.7 - Introduce A Client Browser Build Step
 
 - [ ] Add a browser build tool only when client imports are ready.
     - Prefer Vite unless a simpler tool fits the static app better.
+    - Do not treat the P1.4.6 server TypeScript build as the browser build step.
     - Keep Socket.IO client loading, PWA manifest, service worker, and assets working.
     - Verify cache-busted builds do not make deployment or service worker updates harder.
 
