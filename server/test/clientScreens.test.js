@@ -1,24 +1,28 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientScreens() {
-    const context = {
-        GF: {}
-    };
+async function loadClientScreens() {
     const source = readFileSync(
-        new URL('../../client/js/ClientScreens.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientScreens.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientScreens;
+    return module.ClientScreens;
 }
 
-test('selects active screens from explicit client state', function () {
-    const screens = loadClientScreens();
+test('selects active screens from explicit client state', async function () {
+    const screens = await loadClientScreens();
     const RoundState = screens.RoundState;
     const Screen = screens.Screen;
 
@@ -56,8 +60,8 @@ test('selects active screens from explicit client state', function () {
     );
 });
 
-test('documents legal round state transitions', function () {
-    const screens = loadClientScreens();
+test('documents legal round state transitions', async function () {
+    const screens = await loadClientScreens();
     const RoundState = screens.RoundState;
 
     assert.equal(

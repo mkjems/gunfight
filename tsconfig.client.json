@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+        "noEmit": true,
+        "strict": true,
+        "target": "ES2022"
+    },
+    "include": ["client/src/**/*.ts"],
+    "exclude": ["dist", "node_modules"]
+}

@@ -7,10 +7,10 @@
         "build": "tsc --project tsconfig.build.json && vite build && node scripts/copy-build-assets.js",
         "start": "node dist/server/server.js",
         "dev": "npm run build && node dist/server/server.js",
-        "format": "prettier --write --ignore-unknown package.json tsconfig.json tsconfig.shared.json tsconfig.build.json playwright.config.js vite.config.js scripts server shared client browser-smoke compose.yaml .github/workflows/container.yml documentation/TODO.md documentation/State-ownership.md documentation/TypeScript-migration.md README.markdown",
-        "format:check": "prettier --check --ignore-unknown package.json tsconfig.json tsconfig.shared.json tsconfig.build.json playwright.config.js vite.config.js scripts server shared client browser-smoke compose.yaml .github/workflows/container.yml documentation/TODO.md documentation/State-ownership.md documentation/TypeScript-migration.md README.markdown",
+        "format": "prettier --write --ignore-unknown package.json tsconfig.json tsconfig.shared.json tsconfig.build.json tsconfig.client.json playwright.config.js vite.config.js scripts server shared client browser-smoke compose.yaml .github/workflows/container.yml documentation/TODO.md documentation/State-ownership.md documentation/TypeScript-migration.md README.markdown",
+        "format:check": "prettier --check --ignore-unknown package.json tsconfig.json tsconfig.shared.json tsconfig.build.json tsconfig.client.json playwright.config.js vite.config.js scripts server shared client browser-smoke compose.yaml .github/workflows/container.yml documentation/TODO.md documentation/State-ownership.md documentation/TypeScript-migration.md README.markdown",
         "lint": "eslint scripts \"server/**/*.js\" client/js client/src browser-smoke playwright.config.js",
-        "typecheck": "tsc --project tsconfig.json && tsc --project tsconfig.shared.json",
+        "typecheck": "tsc --project tsconfig.json && tsc --project tsconfig.shared.json && tsc --project tsconfig.client.json",
         "test": "npm run build && node --test dist/server/test/*.test.js",
         "test:browser": "npm run build && playwright test"
     },

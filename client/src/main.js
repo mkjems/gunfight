@@ -3,7 +3,6 @@ import requestAnimationFrameSource from '../js/requestAnimationFrame.js?raw';
 import ammoHudRendererSource from '../js/AmmoHudRenderer.js?raw';
 import canvasToolsSource from '../js/CanvasTools.js?raw';
 import installPromptSource from '../js/InstallPrompt.js?raw';
-import clientScreensSource from '../js/ClientScreens.js?raw';
 import clientAmmoSource from '../js/ClientAmmo.js?raw';
 import clientAmmoFlowSource from '../js/ClientAmmoFlow.js?raw';
 import clientCanvasSetupSource from '../js/ClientCanvasSetup.js?raw';
@@ -66,6 +65,7 @@ import bulletsSource from '../js/Bullets.js?raw';
 import playersSource from '../js/Players.js?raw';
 import collisionSource from '../js/Collision.js?raw';
 import indexSource from '../js/index.js?raw';
+import { ClientScreens } from './modules/clientScreens';
 
 function loadScript(src) {
     if (src === '/socket.io/socket.io.js' && globalThis.io) {
@@ -92,7 +92,6 @@ const scripts = [
     ['js/AmmoHudRenderer.js', ammoHudRendererSource],
     ['js/CanvasTools.js', canvasToolsSource],
     ['js/InstallPrompt.js', installPromptSource],
-    ['js/ClientScreens.js', clientScreensSource],
     ['js/ClientAmmo.js', clientAmmoSource],
     ['js/ClientAmmoFlow.js', clientAmmoFlowSource],
     ['js/ClientCanvasSetup.js', clientCanvasSetupSource],
@@ -160,6 +159,7 @@ const scripts = [
 await loadScript('/socket.io/socket.io.js');
 
 globalThis.GF = globalThis.GF || {};
+globalThis.GF.ClientScreens = ClientScreens;
 (0, eval)('var GF = globalThis.GF;');
 
 scripts.forEach(function ([name, source]) {
