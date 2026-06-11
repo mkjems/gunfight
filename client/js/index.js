@@ -623,19 +623,11 @@ GF.Game = (function () {
     }
 
     function reloadIfBothPlayersAreOutOfAmmo() {
-        var clients;
-
-        if (roundState !== RoundState.PLAYING || !latestModel) {
-            return;
-        }
-
-        clients = latestModel.clients || [];
-
-        if (clients.length < 2) {
-            return;
-        }
-
-        ammo.reloadIfAllEmpty(clients);
+        GF.ClientAmmoFlow.reloadIfBothPlayersAreOut({
+            ammo: ammo,
+            model: latestModel,
+            roundState: roundState
+        });
     }
 
     function checkForHits() {
@@ -788,29 +780,30 @@ GF.Game = (function () {
     }
 
     function updateFrame() {
-        updateBulletCollisionEnvironment();
-        updateMovementObstacleEnvironment();
-        scene.moveAll();
-        roundIntro.update();
-        syncLocalPlayerPosition();
-        checkForHits();
-        updateCamera();
+        GF.ClientFrameFlow.update({
+            checkForHits: checkForHits,
+            roundIntro: roundIntro,
+            scene: scene,
+            syncLocalPlayerPosition: syncLocalPlayerPosition,
+            updateBulletCollisionEnvironment: updateBulletCollisionEnvironment,
+            updateCamera: updateCamera,
+            updateMovementObstacleEnvironment: updateMovementObstacleEnvironment
+        });
     }
 
     function renderFrame() {
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.save();
-        if (shouldUseCamera()) {
-            camera.apply(context);
-        }
-        if (roundState !== RoundState.WAITING) {
-            drawScenario();
-        }
-        scene.drawAll(context);
-        drawCollisionBodies();
-        context.restore();
-        renderHud();
-        updateTouchControls();
+        GF.ClientFrameFlow.render({
+            camera: camera,
+            canvas: canvas,
+            context: context,
+            drawCollisionBodies: drawCollisionBodies,
+            drawScenario: drawScenario,
+            renderHud: renderHud,
+            roundState: roundState,
+            scene: scene,
+            shouldUseCamera: shouldUseCamera,
+            updateTouchControls: updateTouchControls
+        });
     }
 
     function syncLocalPlayerPosition() {

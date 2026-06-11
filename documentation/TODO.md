@@ -73,6 +73,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract sound.
     - [x] Extract gameplay sound mapping.
     - [x] Extract ammo handling.
+    - [x] Extract ammo reload flow.
     - [x] Extract gameplay key handling.
     - [x] Extract hit detection.
     - [x] Extract player-hit flow.
@@ -89,6 +90,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract model update side-effect flow.
     - [x] Extract model-update planning.
     - [x] Extract game loop runner.
+    - [x] Extract frame update and render flow.
     - [x] Extract round intro flow.
     - [x] Extract round ritual orchestration.
     - [x] Extract round timer bookkeeping.
