@@ -29,7 +29,7 @@ GF.Game = (function () {
         roundState,
         latestModel,
         highScores,
-        scores,
+        scoreKeeper,
         ammo,
         roundEndsAt,
         roundMessageText,
@@ -44,7 +44,6 @@ GF.Game = (function () {
         advanceRoundAfterHit,
         lastPositionSyncAt,
         obstacleDamage,
-        lastRecordedResultId,
         localReadyRequested,
         playerId;
     var playerNameStorageKey = 'gunfight-player-name';
@@ -160,9 +159,12 @@ GF.Game = (function () {
         scene = new GF.Scene();
         bullets = new GF.Bullets(scene);
         players = new GF.Players(scene, bullets);
+        roundIntro = new GF.RoundIntro({
+            players: players
+        });
         roundState = RoundState.WAITING;
         highScores = [];
-        scores = [0, 0];
+        scoreKeeper = new GF.ScoreKeeper();
         ammo = {};
         roundEndsAt = null;
         roundMessageText = '';
@@ -173,11 +175,9 @@ GF.Game = (function () {
         matchEndTimer = null;
         abandonedRequeueTimer = null;
         scenarioStartedAt = null;
-        roundIntro = null;
         advanceRoundAfterHit = false;
         lastPositionSyncAt = 0;
         obstacleDamage = {};
-        lastRecordedResultId = null;
         localReadyRequested = false;
         GF.Bullet.onRicochet = playRicochetSound;
     }
@@ -325,8 +325,8 @@ GF.Game = (function () {
 
     function renderGameHud(secondsLeft) {
         gameHudScreen.render({
-            leftScore: scores[0] || 0,
-            rightScore: scores[1] || 0,
+            leftScore: scoreKeeper.getScore(0),
+            rightScore: scoreKeeper.getScore(1),
             timerLabel: secondsLeft,
             roundMessage: roundMessageText || '',
             hitMessage: getHitHudMessage()
@@ -950,17 +950,7 @@ GF.Game = (function () {
     }
 
     function getLocalClient() {
-        var model = latestModel;
-
-        if (!model) {
-            return null;
-        }
-
-        return (
-            (model.clients || []).find(function (client) {
-                return client.id === playerId;
-            }) || null
-        );
+        return GF.ClientModelSync.getLocalClient(latestModel, playerId);
     }
 
     function getGameLabel() {
@@ -1111,13 +1101,13 @@ GF.Game = (function () {
             abandonedRequeueTimer = null;
         }
 
-        roundIntro = null;
+        roundIntro.clear();
         roundEndsAt = null;
         hitMessage = null;
         advanceRoundAfterHit = false;
         obstacleDamage = {};
         setRoundState(RoundState.WAITING);
-        lastRecordedResultId = null;
+        scoreKeeper.resetRecordedResult();
         players.clearKeys();
         bullets.clear();
         syncNameEditor();
@@ -1125,19 +1115,25 @@ GF.Game = (function () {
 
     function syncPlayers(model) {
         var previousModel = latestModel;
+        var syncState;
 
         latestModel = model;
-        syncLocalReadyRequest();
+        syncState = GF.ClientModelSync.analyze(previousModel, model, playerId);
+
+        if (syncState.clearLocalReadyRequest) {
+            localReadyRequested = false;
+        }
+
         syncStoredPlayerName();
 
-        if (model.status === 'abandoned') {
+        if (syncState.abandoned) {
             enterLobbyState();
             scheduleAbandonedRequeue();
         } else {
             clearAbandonedRequeue();
         }
 
-        if (didAnyClientBecomeReady(previousModel, model)) {
+        if (syncState.clientBecameReady) {
             playReadySound();
         }
 
@@ -1147,7 +1143,7 @@ GF.Game = (function () {
         });
         syncNameEditor();
 
-        if (roundState === RoundState.WAITING && isReadyToStart(model)) {
+        if (roundState === RoundState.WAITING && syncState.readyToStart) {
             startRoundRitual({ resetScores: true });
             return;
         }
@@ -1183,43 +1179,14 @@ GF.Game = (function () {
         }
     }
 
-    function syncLocalReadyRequest() {
-        var client = getLocalClient();
-
-        if (client && !client.ready) {
-            localReadyRequested = false;
-        }
-    }
-
     function getCurrentPlayerSlots() {
         return roundState === RoundState.WAITING
             ? GF.Config.player.lobbySlots
             : GF.Config.player.slots;
     }
 
-    function didAnyClientBecomeReady(previousModel, model) {
-        var previousReady = {};
-
-        if (!previousModel || !model) {
-            return false;
-        }
-
-        (previousModel.clients || []).forEach(function (client) {
-            previousReady[client.id] = client.ready;
-        });
-
-        return (model.clients || []).some(function (client) {
-            return client.ready && !previousReady[client.id];
-        });
-    }
-
     function isReadyToStart(model) {
-        return (
-            model.clients.length >= 2 &&
-            model.clients.every(function (client) {
-                return client.ready;
-            })
-        );
+        return GF.ClientModelSync.isReadyToStart(model);
     }
 
     function startRoundRitual(options) {
@@ -1230,7 +1197,7 @@ GF.Game = (function () {
         );
 
         if (options.resetScores) {
-            scores = [0, 0];
+            scoreKeeper.resetScores();
             roundEndsAt = null;
         }
 
@@ -1240,7 +1207,7 @@ GF.Game = (function () {
         obstacleDamage = {};
         bullets.reset();
         resetAmmo();
-        startRoundIntro();
+        roundIntro.start();
         setRoundMessage('GET READY');
         renderHud();
 
@@ -1255,7 +1222,7 @@ GF.Game = (function () {
                 return;
             }
 
-            completeRoundIntro();
+            roundIntro.complete();
             setRoundMessage('DRAW!');
 
             ritualTimer = setTimeout(function () {
@@ -1299,87 +1266,6 @@ GF.Game = (function () {
             matchEndTimer = null;
             endGame();
         }, delay);
-    }
-
-    function startRoundIntro() {
-        var startedAt = new Date().getTime();
-        var duration = GF.Config.round.introWalkDelay;
-        var targets = [];
-
-        players.clearKeys();
-
-        Object.keys(players.all).forEach(function (id) {
-            var player = players.all[id];
-            var slot =
-                GF.Config.player.slots[
-                    player.slot % GF.Config.player.slots.length
-                ];
-            var bounds;
-
-            player.resetTo(slot);
-            bounds = player.getBounds();
-
-            targets.push({
-                player: player,
-                fromX: slot.facing > 0 ? bounds.minX : bounds.maxX,
-                fromY: slot.y,
-                toX: slot.x,
-                toY: slot.y,
-                idleFrame: slot.frame
-            });
-        });
-
-        roundIntro = {
-            startedAt: startedAt,
-            duration: duration,
-            targets: targets
-        };
-
-        updateRoundIntro();
-    }
-
-    function updateRoundIntro() {
-        var elapsed;
-        var progress;
-        var eased;
-
-        if (!roundIntro) {
-            return;
-        }
-
-        elapsed = new Date().getTime() - roundIntro.startedAt;
-        progress = Math.min(1, Math.max(0, elapsed / roundIntro.duration));
-        eased = 1 - Math.pow(1 - progress, 3);
-
-        roundIntro.targets.forEach(function (target) {
-            var player = target.player;
-
-            player.x = target.fromX + (target.toX - target.fromX) * eased;
-            player.y = target.fromY + (target.toY - target.fromY) * eased;
-            player.frame =
-                player.animationFrames[
-                    Math.floor(elapsed / (player.animationFrameTime * 1000)) %
-                        player.animationFrames.length
-                ];
-        });
-
-        if (progress >= 1) {
-            completeRoundIntro();
-        }
-    }
-
-    function completeRoundIntro() {
-        if (!roundIntro) {
-            return;
-        }
-
-        roundIntro.targets.forEach(function (target) {
-            target.player.x = target.toX;
-            target.player.y = target.toY;
-            target.player.frame = target.idleFrame;
-        });
-
-        roundIntro = null;
     }
 
     function handleKeyEvent(keyEvent) {
@@ -1619,9 +1505,7 @@ GF.Game = (function () {
             target.playDeathAnimation();
         }
 
-        if (winnerSlot >= 0 && winnerSlot < scores.length) {
-            scores[winnerSlot]++;
-        }
+        scoreKeeper.addPoint(winnerSlot);
 
         advanceRoundAfterHit = hit.winnerId === playerId;
 
@@ -1671,8 +1555,8 @@ GF.Game = (function () {
         hitMessage = null;
         advanceRoundAfterHit = false;
 
-        if (winnerSlot >= 0 && winnerSlot < scores.length) {
-            scores[winnerSlot]++;
+        if (winnerSlot >= 0) {
+            scoreKeeper.addPoint(winnerSlot);
             setRoundMessage('PLAYER ' + players.label(winnerId) + ' WINS');
         } else {
             setRoundMessage('TIME');
@@ -1696,7 +1580,7 @@ GF.Game = (function () {
             ritualTimer = null;
         }
 
-        roundIntro = null;
+        roundIntro.clear();
 
         if (hitTimer) {
             clearTimeout(hitTimer);
@@ -1714,7 +1598,12 @@ GF.Game = (function () {
         hitMessage = null;
         advanceRoundAfterHit = false;
         obstacleDamage = {};
-        setRoundMessage(getGameOverMessage());
+        setRoundMessage(
+            scoreKeeper.getGameOverMessage(
+                latestModel && latestModel.clients,
+                getClientName
+            )
+        );
         renderHud();
         players.clearKeys();
         bullets.clear();
@@ -1733,7 +1622,7 @@ GF.Game = (function () {
             ritualTimer = null;
         }
 
-        roundIntro = null;
+        roundIntro.clear();
 
         if (hitTimer) {
             clearTimeout(hitTimer);
@@ -1746,65 +1635,20 @@ GF.Game = (function () {
         );
     }
 
-    function getGameOverMessage() {
-        var winnerSlot;
-        var winnerClient;
-        var scoreLabel = getFinalScoreLabel();
-
-        if ((scores[0] || 0) === (scores[1] || 0)) {
-            return 'TIE ' + scoreLabel;
-        }
-
-        winnerSlot = (scores[0] || 0) > (scores[1] || 0) ? 0 : 1;
-        winnerClient =
-            latestModel &&
-            latestModel.clients &&
-            latestModel.clients[winnerSlot];
-
-        return (
-            (winnerClient
-                ? getClientName(winnerClient)
-                : 'PLAYER ' + (winnerSlot + 1)) +
-            ' WINS ' +
-            scoreLabel
-        );
-    }
-
-    function getFinalScoreLabel() {
-        return (scores[0] || 0) + '-' + (scores[1] || 0);
-    }
-
     function recordGameResult() {
-        var resultId;
+        var result;
 
-        if (
-            !socket ||
-            !latestModel ||
-            !latestModel.gameId ||
-            !latestModel.clients
-        ) {
+        if (!socket) {
             return;
         }
 
-        resultId = latestModel.gameId + ':' + latestModel.roundNumber;
+        result = scoreKeeper.createGameResult(latestModel, getClientName);
 
-        if (lastRecordedResultId === resultId) {
+        if (!result) {
             return;
         }
 
-        lastRecordedResultId = resultId;
-        socket.emit('recordGameResult', {
-            resultId: resultId,
-            gameId: latestModel.gameId,
-            roundNumber: latestModel.roundNumber,
-            clients: latestModel.clients.map(function (client) {
-                return {
-                    name: getClientName(client),
-                    slot: client.slot
-                };
-            }),
-            scores: scores.slice()
-        });
+        socket.emit('recordGameResult', result);
     }
 
     function resetRound() {
@@ -1864,7 +1708,7 @@ GF.Game = (function () {
         updateBulletCollisionEnvironment();
         updateMovementObstacleEnvironment();
         scene.moveAll();
-        updateRoundIntro();
+        roundIntro.update();
         syncLocalPlayerPosition();
         checkForHits();
         updateCamera();
