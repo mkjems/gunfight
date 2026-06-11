@@ -179,7 +179,7 @@ GF.Game = (function () {
         roundData = new GF.ClientRoundState();
         timers = new GF.ClientTimers();
         positionSync = new GF.PlayerPositionSync();
-        ammo = {};
+        ammo = new GF.ClientAmmo();
         localReadyRequested = false;
         GF.Bullet.onRicochet = playRicochetSound;
     }
@@ -266,15 +266,7 @@ GF.Game = (function () {
     }
 
     function resetAmmo() {
-        ammo = {};
-
-        if (!latestModel) {
-            return;
-        }
-
-        latestModel.clients.forEach(function (client) {
-            ammo[client.id] = GF.Config.round.ammo;
-        });
+        ammo.reset(latestModel && latestModel.clients);
     }
 
     function renderHud() {
@@ -311,8 +303,8 @@ GF.Game = (function () {
             return;
         }
 
-        firstAmmo = ammo[firstClient.id] || 0;
-        secondAmmo = ammo[secondClient.id] || 0;
+        firstAmmo = ammo.get(firstClient.id);
+        secondAmmo = ammo.get(secondClient.id);
 
         renderGameHud(secondsLeft);
         drawAmmo(firstAmmo, 122, 606, 1);
@@ -978,8 +970,6 @@ GF.Game = (function () {
     }
 
     function handleKeyEvent(keyEvent) {
-        var player;
-
         if (
             roundState === RoundState.WAITING &&
             keyEvent.player === playerId &&
@@ -1000,51 +990,19 @@ GF.Game = (function () {
             }
         }
 
-        player = players.all[keyEvent.player];
-
-        if (!player) {
-            return;
-        }
-
-        if (
-            roundState === RoundState.RITUAL ||
-            roundState === RoundState.ROUND_OVER ||
-            roundState === RoundState.HIT_PAUSE ||
-            roundState === RoundState.GAME_OVER
-        ) {
-            if (keyEvent.action === 'up') {
-                player.respondToKeyEvent(keyEvent);
-            }
-            return;
-        }
-
-        if (keyEvent.key === ' ' && keyEvent.action === 'down') {
-            var bullet;
-
-            if (
-                roundState === RoundState.PLAYING &&
-                ammo[player.playerId] > 0
-            ) {
-                bullet = bullets.fire(player, keyEvent.shot);
-            } else if (roundState === RoundState.PLAYING) {
-                playEmptyGunSound();
-            }
-
-            if (bullet) {
-                ammo[player.playerId]--;
+        GF.ClientGameplayInput.handle({
+            ammo: ammo,
+            bullets: bullets,
+            keyEvent: keyEvent,
+            player: players.all[keyEvent.player],
+            roundState: roundState,
+            onBulletFired: function () {
                 reloadIfBothPlayersAreOutOfAmmo();
                 playGunSound();
-
-                if (!keyEvent.shot) {
-                    keyEvent.shot = bullet.toSnapshot();
-                }
-
                 renderHud();
-            }
-            return;
-        }
-
-        player.respondToKeyEvent(keyEvent);
+            },
+            onEmptyGun: playEmptyGunSound
+        });
     }
 
     function reloadIfBothPlayersAreOutOfAmmo() {
@@ -1060,13 +1018,7 @@ GF.Game = (function () {
             return;
         }
 
-        if (
-            clients.every(function (client) {
-                return (ammo[client.id] || 0) <= 0;
-            })
-        ) {
-            resetAmmo();
-        }
+        ammo.reloadIfAllEmpty(clients);
     }
 
     function checkForHits() {
