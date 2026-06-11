@@ -30,6 +30,7 @@ GF.ClientKeyEventFlow = (function () {
             keyEvent: keyEvent,
             player: options.player,
             roundState: options.roundState,
+            onGunFired: options.onGunFired,
             onBulletFired: options.onBulletFired,
             onEmptyGun: options.onEmptyGun
         });

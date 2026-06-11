@@ -470,9 +470,9 @@ GF.Game = (function () {
             isLocalClientWaiting: isLocalClientWaiting,
             keyEvent: keyEvent,
             nameEditor: nameEditor,
+            onGunFired: gameSounds.playGun,
             onBulletFired: function () {
                 reloadIfBothPlayersAreOutOfAmmo();
-                gameSounds.playGun();
                 renderHud();
             },
             onEmptyGun: gameSounds.playEmptyGun,

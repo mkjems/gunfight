@@ -16,6 +16,7 @@ function loadClientKeyEventFlow(gameplayCalls) {
                 handle(options) {
                     gameplayCalls.push({
                         keyEvent: options.keyEvent,
+                        onGunFired: Boolean(options.onGunFired),
                         player: options.player,
                         roundState: options.roundState
                     });
@@ -57,6 +58,9 @@ function createOptions(overrides = {}) {
                 player: 'p1'
             },
             nameEditor: null,
+            onGunFired() {
+                calls.push('onGunFired');
+            },
             onBulletFired() {
                 calls.push('onBulletFired');
             },
@@ -142,6 +146,7 @@ test('delegates gameplay key events to gameplay input', function () {
                 key: ' ',
                 player: 'p1'
             },
+            onGunFired: true,
             player: {
                 id: 'p1'
             },

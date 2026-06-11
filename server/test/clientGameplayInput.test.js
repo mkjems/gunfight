@@ -65,6 +65,9 @@ test('fires bullets and stores the shot snapshot on the key event', function () 
         keyEvent,
         player,
         roundState: 'playing',
+        onGunFired(firedBullet) {
+            calls.push(['gun', firedBullet]);
+        },
         onBulletFired(firedBullet) {
             calls.push(['fired', firedBullet]);
         },
@@ -73,8 +76,54 @@ test('fires bullets and stores the shot snapshot on the key event', function () 
         }
     });
 
-    assert.deepEqual(calls, [['fire'], ['spend', 'p1'], ['fired', bullet]]);
+    assert.deepEqual(calls, [
+        ['fire'],
+        ['gun', bullet],
+        ['spend', 'p1'],
+        ['fired', bullet]
+    ]);
     assert.deepEqual(keyEvent.shot, { id: 'shot-1' });
+});
+
+test('does not play gun sound when the shot is rejected', function () {
+    const input = loadClientGameplayInput();
+    const calls = [];
+
+    input.handle({
+        ammo: {
+            hasAmmo() {
+                return true;
+            },
+            spend() {
+                calls.push('spend');
+            }
+        },
+        bullets: {
+            fire() {
+                calls.push('fire');
+                return false;
+            }
+        },
+        keyEvent: {
+            action: 'down',
+            key: ' '
+        },
+        player: {
+            playerId: 'p1'
+        },
+        roundState: 'playing',
+        onGunFired() {
+            calls.push('gun');
+        },
+        onBulletFired() {
+            calls.push('fired');
+        },
+        onEmptyGun() {
+            calls.push('empty');
+        }
+    });
+
+    assert.deepEqual(calls, ['fire']);
 });
 
 test('plays empty gun sound when firing without ammo', function () {

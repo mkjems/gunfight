@@ -37,6 +37,10 @@ GF.ClientGameplayInput = (function () {
             }
 
             if (bullet) {
+                if (options.onGunFired) {
+                    options.onGunFired(bullet);
+                }
+
                 options.ammo.spend(player.playerId);
                 options.onBulletFired(bullet);
 
