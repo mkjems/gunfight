@@ -203,6 +203,15 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - Keep shared contracts available for later client imports where useful.
     - Keep the first bundled version visually and behaviorally identical.
 
+### P1.4.7.5 - Add A Browser Build Smoke Test
+
+- [ ] Add a small Playwright smoke test before client module conversion.
+    - Start the built server from `dist/`.
+    - Open `http://localhost:8080`.
+    - Fail on browser page errors and console errors.
+    - Assert the lobby or HUD becomes visible so the app is actually started.
+    - Keep this as a narrow build/startup guardrail, not the full P4 browser test suite.
+
 ### P1.4.8 - Convert Client Modules Incrementally
 
 - [ ] Replace broad `GF.*` namespace mutation with imports.
