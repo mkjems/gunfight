@@ -19,6 +19,7 @@ GF.Game = (function () {
         rockPattern,
         scenarioRenderer,
         nameEditor,
+        cameraController,
         camera,
         soundEffects,
         scene,
@@ -69,6 +70,7 @@ GF.Game = (function () {
         initSoundEffects();
         initScenarioRenderer();
         initNameEditor();
+        initCameraController();
         initCamera();
         disableImageSmoothing();
     }
@@ -129,12 +131,18 @@ GF.Game = (function () {
             worldHeight: GF.Config.canvas.height,
             screenWidth: GF.Config.canvas.width,
             screenHeight: GF.Config.canvas.height,
-            scale: getCameraScale()
+            scale: cameraController.getCameraScale()
         });
     }
 
     function initSoundEffects() {
         soundEffects = new GF.SoundEffects();
+    }
+
+    function initCameraController() {
+        cameraController = new GF.ClientCameraController({
+            window: window
+        });
     }
 
     function initScenarioRenderer() {
@@ -347,17 +355,12 @@ GF.Game = (function () {
     }
 
     function worldToHudPoint(x, y) {
-        if (shouldUseCamera()) {
-            return {
-                x: (x - camera.x) * camera.scale,
-                y: (y - camera.y) * camera.scale
-            };
-        }
-
-        return {
+        return cameraController.worldToHudPoint({
+            camera: camera,
+            roundState: roundState,
             x: x,
             y: y
-        };
+        });
     }
 
     function drawAmmo(count, x, y, direction) {
@@ -425,11 +428,6 @@ GF.Game = (function () {
     function renderLobbyHud() {
         var isTouch = isTouchInterface();
         var activeScreen = getActiveScreen();
-        var controls = [
-            'h j k l - left down up right',
-            'a z - aim up down',
-            'Space - shoot'
-        ];
         showElement(gameHud, false);
         showElement(lobbyHud, true);
 
@@ -447,19 +445,14 @@ GF.Game = (function () {
             return;
         }
 
-        lobbyScreen.render({
-            identityLines: [getLobbyPlayerLabel(), getGameLabel()],
-            controls: isTouch ? [] : controls,
-            showControls: !isTouch,
-            slots: getLobbySlotViewModels(),
-            showEditPrompt: !isTouch && isLocalClientWaiting(),
-            editPrompt:
-                !isTouch && isLocalClientWaiting()
-                    ? 'PRESS E TO EDIT NAME'
-                    : '',
-            playPrompt:
-                shouldShowLobbyPrompt() && !isTouch ? 'PRESS P TO PLAY' : ''
-        });
+        lobbyScreen.render(
+            GF.ClientLobbyViewModel.getLobbyViewModel({
+                isTouch: isTouch,
+                localReadyRequested: localReadyRequested,
+                model: latestModel,
+                playerId: playerId
+            })
+        );
     }
 
     function getActiveScreen() {
@@ -471,16 +464,10 @@ GF.Game = (function () {
     }
 
     function shouldShowHighScoresScreen() {
-        var clients = (latestModel && latestModel.clients) || [];
-        var hasReadyClient = clients.some(function (client) {
-            return client.ready;
+        return GF.ClientLobbyViewModel.shouldShowHighScoresScreen({
+            localReadyRequested: localReadyRequested,
+            model: latestModel
         });
-
-        if (hasReadyClient || localReadyRequested) {
-            return false;
-        }
-
-        return Math.floor(new Date().getTime() / 7000) % 2 === 1;
     }
 
     function renderHighScoresScreen(isTouch) {
@@ -539,152 +526,51 @@ GF.Game = (function () {
     }
 
     function shouldUseCamera() {
-        if (!camera || roundState === RoundState.WAITING) {
-            return false;
-        }
-
-        if (window.location.search.indexOf('camera=1') >= 0) {
-            return true;
-        }
-
-        return (
-            window.matchMedia && window.matchMedia('(pointer: coarse)').matches
-        );
-    }
-
-    function getCameraScale() {
-        var queryScale = getQueryNumber('cameraScale');
-
-        if (queryScale) {
-            return queryScale;
-        }
-
-        if (window.location.search.indexOf('camera=1') >= 0) {
-            return 1.85;
-        }
-
-        if (
-            window.matchMedia &&
-            window.matchMedia('(pointer: coarse)').matches
-        ) {
-            return 1.15;
-        }
-
-        return 1;
-    }
-
-    function getQueryNumber(name) {
-        var match = new RegExp('[?&]' + name + '=([^&]+)').exec(
-            window.location.search
-        );
-        var value = match ? parseFloat(decodeURIComponent(match[1])) : 0;
-
-        return isNaN(value) ? 0 : value;
+        return cameraController.shouldUseCamera({
+            camera: camera,
+            roundState: roundState
+        });
     }
 
     function updateCamera() {
-        var visibleScreen;
-        var player;
-
-        if (!camera) {
-            return;
-        }
-
-        camera.setScreenSize(canvas.width, canvas.height);
-        visibleScreen = getVisibleCanvasScreen();
-        camera.setVisibleScreen(
-            visibleScreen.x,
-            visibleScreen.y,
-            visibleScreen.width,
-            visibleScreen.height
-        );
-        camera.setScale(getCameraScale());
-
-        if (!shouldUseCamera()) {
-            camera.reset();
-            return;
-        }
-
-        player = players.all[playerId];
-        camera.follow(player);
-    }
-
-    function getVisibleCanvasScreen() {
-        var rect = canvas.getBoundingClientRect();
-        var visibleLeft = Math.max(0, rect.left);
-        var visibleTop = Math.max(0, rect.top);
-        var visibleRight = Math.min(
-            window.innerWidth || rect.right,
-            rect.right
-        );
-        var visibleBottom = Math.min(
-            window.innerHeight || rect.bottom,
-            rect.bottom
-        );
-        var scaleX = rect.width ? canvas.width / rect.width : 1;
-        var scaleY = rect.height ? canvas.height / rect.height : 1;
-
-        return {
-            x: Math.max(0, (visibleLeft - rect.left) * scaleX),
-            y: Math.max(0, (visibleTop - rect.top) * scaleY),
-            width: Math.max(1, (visibleRight - visibleLeft) * scaleX),
-            height: Math.max(1, (visibleBottom - visibleTop) * scaleY)
-        };
+        cameraController.update({
+            camera: camera,
+            canvas: canvas,
+            player: players.all[playerId],
+            roundState: roundState
+        });
     }
 
     function shouldShowLobbyPrompt() {
-        return (
-            (!latestModel || latestModel.status !== 'abandoned') &&
-            !isLocalClientReady()
-        );
+        return GF.ClientLobbyViewModel.shouldShowLobbyPrompt({
+            localReadyRequested: localReadyRequested,
+            model: latestModel,
+            playerId: playerId
+        });
     }
 
     function isLocalClientReady() {
-        var client = getLocalClient();
-
-        return localReadyRequested || !!(client && client.ready);
+        return GF.ClientLobbyViewModel.isLocalClientReady({
+            localReadyRequested: localReadyRequested,
+            model: latestModel,
+            playerId: playerId
+        });
     }
 
     function isLocalClientWaiting() {
-        var client = getLocalClient();
-
-        return !!(
-            client &&
-            !isLocalClientReady() &&
-            latestModel &&
-            latestModel.status !== 'abandoned'
-        );
-    }
-
-    function getLobbyPlayerLabel() {
-        var client = getLocalClient();
-        var playerIndex;
-
-        if (!latestModel || !client) {
-            return '';
-        }
-
-        playerIndex = (latestModel.clients || []).findIndex(function (item) {
-            return item.id === playerId;
+        return GF.ClientLobbyViewModel.isLocalClientWaiting({
+            localReadyRequested: localReadyRequested,
+            model: latestModel,
+            playerId: playerId
         });
-
-        return 'PLAYER ' + (playerIndex + 1) + ' - ' + getClientName(client);
     }
 
     function getLocalClient() {
-        return GF.ClientModelSync.getLocalClient(latestModel, playerId);
-    }
-
-    function getGameLabel() {
-        if (!latestModel || !latestModel.gameId) {
-            return '';
-        }
-
-        return 'GAME ' + latestModel.gameId;
+        return GF.ClientLobbyViewModel.getLocalClient(latestModel, playerId);
     }
 
     function getClientName(client) {
-        return client.name || 'PLAYER ' + ((client.slot || 0) + 1);
+        return GF.ClientLobbyViewModel.getClientName(client);
     }
 
     function getStoredPlayerName() {
@@ -734,72 +620,6 @@ GF.Game = (function () {
         if (nameEditor && nameEditor.isActive()) {
             nameEditor.close();
         }
-    }
-
-    function getLobbySlots() {
-        var slots = [];
-        var model = latestModel || {};
-        var clients = model.clients || [];
-        var playerLimit = model.playerLimit || Math.max(2, clients.length);
-        var i;
-
-        for (i = 0; i < playerLimit; i++) {
-            slots.push(clients[i] || null);
-        }
-
-        return slots;
-    }
-
-    function getLobbySlotViewModels() {
-        return getLobbySlots().map(function (client, index) {
-            return {
-                label: getLobbySlotLabel(client, index),
-                ready: !!(client && client.ready)
-            };
-        });
-    }
-
-    function getLobbySlotLabel(client, index) {
-        var opponentMessage;
-
-        if (!client) {
-            opponentMessage = getOpponentSlotMessage();
-
-            if (opponentMessage) {
-                return 'PLAYER ' + (index + 1) + ' : ' + opponentMessage;
-            }
-
-            return 'PLAYER ' + (index + 1) + ' : WAITING';
-        }
-
-        return (
-            'PLAYER ' +
-            (index + 1) +
-            ' - ' +
-            getClientName(client) +
-            ' : ' +
-            (client.ready ? 'READY' : 'WAITING')
-        );
-    }
-
-    function getOpponentSlotMessage() {
-        var message = getLobbyMessage();
-
-        return isOpponentSlotMessage(message) ? message : '';
-    }
-
-    function isOpponentSlotMessage(message) {
-        return (
-            message === 'LOOKING FOR CHALLENGER' || message === 'OPPONENT LEFT'
-        );
-    }
-
-    function getLobbyMessage() {
-        if (latestModel && latestModel.message) {
-            return latestModel.message;
-        }
-
-        return '';
     }
 
     function enterLobbyState() {
