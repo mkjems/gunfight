@@ -1,4 +1,4 @@
-GF.Config = {
+export const Config = {
     canvas: {
         width: 950,
         height: 640

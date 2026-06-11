@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
 import ts from 'typescript';
 
-async function loadClientModelSync() {
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientModelSync.ts'),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {
@@ -16,38 +17,35 @@ async function loadClientModelSync() {
             target: ts.ScriptTarget.ES2022
         }
     });
-    const encoded = Buffer.from(transpiled.outputText).toString('base64');
-    const module = await import('data:text/javascript;base64,' + encoded);
 
-    return module.ClientModelSync;
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
 }
 
 async function loadClientModelUpdatePlan() {
-    const context = {
-        GF: {
-            ClientModelSync: await loadClientModelSync(),
-            ClientScreens: {
-                RoundState: {
-                    PLAYING: 'playing',
-                    WAITING: 'waiting'
-                }
-            },
-            Config: {
-                player: {
-                    lobbySlots: [{ x: 1 }],
-                    slots: [{ x: 2 }]
-                }
-            }
-        }
-    };
-    const planSource = readFileSync(
-        new URL('../../client/js/ClientModelUpdatePlan.js', import.meta.url),
-        'utf8'
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('config.ts', 'config.js', tempDirectory);
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientModelSync.ts',
+        'clientModelSync.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'clientModelUpdatePlan.ts',
+        'clientModelUpdatePlan.js',
+        tempDirectory
     );
 
-    vm.runInNewContext(planSource, context);
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientModelUpdatePlan.js')).href
+    );
 
-    return context.GF.ClientModelUpdatePlan;
+    return module.ClientModelUpdatePlan;
 }
 
 function plain(value) {
@@ -91,7 +89,10 @@ test('plans a round start when a waiting game becomes ready', async function () 
             syncStoredPlayerName: true,
             syncPlayers: {
                 resetChangedSlots: true,
-                slots: [{ x: 1 }]
+                slots: [
+                    { x: 120, y: 430, facing: 1, frame: 0 },
+                    { x: 830, y: 430, facing: -1, frame: 2 }
+                ]
             }
         }
     );
@@ -124,7 +125,10 @@ test('plans abandoned-game recovery', async function () {
             syncStoredPlayerName: true,
             syncPlayers: {
                 resetChangedSlots: false,
-                slots: [{ x: 2 }]
+                slots: [
+                    { x: 150, y: 430, facing: 1, frame: 0 },
+                    { x: 800, y: 430, facing: -1, frame: 2 }
+                ]
             }
         }
     );

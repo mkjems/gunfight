@@ -221,6 +221,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Move `ClientTouchEnvironment`, `ClientTouchState`, and `ClientRoundTransition` behind imported module bridges.
     - [x] Move `ClientMatchTimer` and `ClientRoundState` behind imported module bridges.
     - [x] Move `ClientModelSync` and `ClientTimers` behind imported module bridges.
+    - [x] Move `Config` and `ClientModelUpdatePlan` behind imported module bridges.
     - Convert extracted UI and state modules before gameplay simulation.
     - Keep canvas gameplay readable and testable during conversion.
     - Remove script-order coupling as modules are converted.
@@ -232,6 +233,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Convert touch-state and round-transition decision helpers to TypeScript.
     - [x] Convert match timer and round data state helpers to TypeScript.
     - [x] Convert model sync and timer utility helpers to TypeScript.
+    - [x] Convert shared client config and model update planning to TypeScript.
     - Start with pure decision modules and view-model helpers.
     - Then convert networking, screens, input, and HUD modules.
     - Convert gameplay simulation files after shared contracts and client imports are stable.

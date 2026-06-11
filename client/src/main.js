@@ -1,4 +1,3 @@
-import configSource from '../js/Config.js?raw';
 import requestAnimationFrameSource from '../js/requestAnimationFrame.js?raw';
 import ammoHudRendererSource from '../js/AmmoHudRenderer.js?raw';
 import canvasToolsSource from '../js/CanvasTools.js?raw';
@@ -24,7 +23,6 @@ import clientLobbyHudFlowSource from '../js/ClientLobbyHudFlow.js?raw';
 import clientLobbyFlowSource from '../js/ClientLobbyFlow.js?raw';
 import clientNetworkSource from '../js/ClientNetwork.js?raw';
 import clientModelUpdateFlowSource from '../js/ClientModelUpdateFlow.js?raw';
-import clientModelUpdatePlanSource from '../js/ClientModelUpdatePlan.js?raw';
 import clientNameEditorFlowSource from '../js/ClientNameEditorFlow.js?raw';
 import clientObstacleSyncSource from '../js/ClientObstacleSync.js?raw';
 import clientPlayerHitFlowSource from '../js/ClientPlayerHitFlow.js?raw';
@@ -56,9 +54,11 @@ import bulletsSource from '../js/Bullets.js?raw';
 import playersSource from '../js/Players.js?raw';
 import collisionSource from '../js/Collision.js?raw';
 import indexSource from '../js/index.js?raw';
+import { Config } from './modules/config';
 import { ClientLobbyViewModel } from './modules/clientLobbyViewModel';
 import { ClientMatchTimer } from './modules/clientMatchTimer';
 import { ClientModelSync } from './modules/clientModelSync';
+import { ClientModelUpdatePlan } from './modules/clientModelUpdatePlan';
 import { ClientRoundState } from './modules/clientRoundState';
 import { ClientRoundTransition } from './modules/clientRoundTransition';
 import { ClientScreens } from './modules/clientScreens';
@@ -87,7 +87,6 @@ function loadScript(src) {
 }
 
 const scripts = [
-    ['js/Config.js', configSource],
     ['js/requestAnimationFrame.js', requestAnimationFrameSource],
     ['js/AmmoHudRenderer.js', ammoHudRendererSource],
     ['js/CanvasTools.js', canvasToolsSource],
@@ -113,7 +112,6 @@ const scripts = [
     ['js/ClientLobbyFlow.js', clientLobbyFlowSource],
     ['js/ClientNetwork.js', clientNetworkSource],
     ['js/ClientModelUpdateFlow.js', clientModelUpdateFlowSource],
-    ['js/ClientModelUpdatePlan.js', clientModelUpdatePlanSource],
     ['js/ClientNameEditorFlow.js', clientNameEditorFlowSource],
     ['js/ClientObstacleSync.js', clientObstacleSyncSource],
     ['js/ClientPlayerHitFlow.js', clientPlayerHitFlowSource],
@@ -150,9 +148,11 @@ const scripts = [
 await loadScript('/socket.io/socket.io.js');
 
 globalThis.GF = globalThis.GF || {};
+globalThis.GF.Config = Config;
 globalThis.GF.ClientLobbyViewModel = ClientLobbyViewModel;
 globalThis.GF.ClientMatchTimer = ClientMatchTimer;
 globalThis.GF.ClientModelSync = ClientModelSync;
+globalThis.GF.ClientModelUpdatePlan = ClientModelUpdatePlan;
 globalThis.GF.ClientRoundState = ClientRoundState;
 globalThis.GF.ClientRoundTransition = ClientRoundTransition;
 globalThis.GF.ClientScreens = ClientScreens;
