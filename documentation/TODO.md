@@ -84,6 +84,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract camera and viewport decisions.
     - [x] Extract touch-control state decisions.
     - [x] Extract client identity and name-editor sync.
+    - [x] Extract lobby entry and abandoned-game recovery flow.
     - [x] Extract model-update planning.
     - [x] Extract game loop runner.
     - [x] Extract round intro flow.
@@ -91,6 +92,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract round timer bookkeeping.
     - [x] Extract round state data and flags.
     - [x] Extract round ending flow.
+    - [x] Extract round reset flow.
     - [ ] Extract round state orchestration.
     - [x] Extract score handling.
     - [x] Extract client synchronization.

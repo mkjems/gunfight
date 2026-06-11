@@ -503,15 +503,16 @@ GF.Game = (function () {
     }
 
     function enterLobbyState() {
-        timers.clearMany(['ritual', 'hit', 'reset', 'abandonedRequeue']);
-
-        roundIntro.clear();
-        roundData.resetRoundFlags();
-        setRoundState(RoundState.WAITING);
-        scoreKeeper.resetRecordedResult();
-        players.clearKeys();
-        bullets.clear();
-        syncNameEditor();
+        GF.ClientLobbyFlow.enter({
+            bullets: bullets,
+            players: players,
+            roundData: roundData,
+            roundIntro: roundIntro,
+            scoreKeeper: scoreKeeper,
+            setRoundState: setRoundState,
+            syncNameEditor: syncNameEditor,
+            timers: timers
+        });
     }
 
     function syncPlayers(model) {
@@ -567,21 +568,16 @@ GF.Game = (function () {
     }
 
     function scheduleAbandonedRequeue() {
-        if (timers.has('abandonedRequeue') || !socket) {
-            return;
-        }
-
-        timers.set(
-            'abandonedRequeue',
-            function () {
-                socket.emit('requeue');
-            },
-            GF.Config.round.abandonedRequeueDelay
-        );
+        GF.ClientLobbyFlow.scheduleAbandonedRequeue({
+            socket: socket,
+            timers: timers
+        });
     }
 
     function clearAbandonedRequeue() {
-        timers.clear('abandonedRequeue');
+        GF.ClientLobbyFlow.clearAbandonedRequeue({
+            timers: timers
+        });
     }
 
     function syncStoredPlayerName() {
@@ -797,42 +793,34 @@ GF.Game = (function () {
     }
 
     function resetRound() {
-        var readyToStart =
-            latestModel && GF.ClientModelSync.isReadyToStart(latestModel);
-
-        players.resetAll({
-            slots: readyToStart
-                ? GF.Config.player.slots
-                : GF.Config.player.lobbySlots
+        GF.ClientRoundResetFlow.resetRound({
+            bullets: bullets,
+            isReadyToStart: GF.ClientModelSync.isReadyToStart,
+            model: latestModel,
+            players: players,
+            renderHud: renderHud,
+            roundData: roundData,
+            setRoundMessage: setRoundMessage,
+            setRoundState: setRoundState,
+            startRoundRitual: startRoundRitual,
+            syncNameEditor: syncNameEditor,
+            timers: timers
         });
-        bullets.reset();
-        setRoundMessage('');
-        roundData.resetRoundFlags();
-        timers.clearMany(['reset', 'matchEnd']);
-
-        if (readyToStart) {
-            startRoundRitual({ resetScores: false });
-            return;
-        }
-
-        setRoundState(RoundState.WAITING);
-        syncNameEditor();
-        renderHud();
     }
 
     function resetToStartScreen() {
-        players.resetAll({
-            slots: GF.Config.player.lobbySlots
+        GF.ClientRoundResetFlow.resetToStartScreen({
+            bullets: bullets,
+            players: players,
+            renderHud: renderHud,
+            resetAmmo: resetAmmo,
+            roundData: roundData,
+            setRoundMessage: setRoundMessage,
+            setRoundState: setRoundState,
+            socket: socket,
+            syncNameEditor: syncNameEditor,
+            timers: timers
         });
-        bullets.reset();
-        resetAmmo();
-        setRoundMessage('');
-        roundData.resetRoundFlags();
-        timers.clearMany(['reset', 'matchEnd']);
-        setRoundState(RoundState.WAITING);
-        syncNameEditor();
-        renderHud();
-        socket.emit('resetReady');
     }
 
     function updateFrame() {
