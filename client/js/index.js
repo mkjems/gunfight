@@ -25,6 +25,7 @@ GF.Game = (function () {
         cameraController,
         camera,
         gameSounds,
+        gameLoop,
         scene,
         socket,
         inputController,
@@ -213,6 +214,13 @@ GF.Game = (function () {
         ammo = new GF.ClientAmmo();
         localReadyRequested = false;
         GF.Bullet.onRicochet = gameSounds.playRicochet;
+    }
+
+    function initGameLoop() {
+        gameLoop = new GF.ClientGameLoop({
+            render: renderFrame,
+            update: updateFrame
+        });
     }
 
     function setRoundState(nextState) {
@@ -515,40 +523,54 @@ GF.Game = (function () {
 
     function syncPlayers(model) {
         var previousModel = latestModel;
-        var syncState;
+        var plan;
 
         latestModel = model;
-        syncState = GF.ClientModelSync.analyze(previousModel, model, playerId);
+        plan = GF.ClientModelUpdatePlan.create({
+            model: model,
+            playerId: playerId,
+            previousModel: previousModel,
+            roundState: roundState
+        });
 
-        if (syncState.clearLocalReadyRequest) {
+        if (plan.clearLocalReadyRequest) {
             localReadyRequested = false;
         }
 
-        syncStoredPlayerName();
+        if (plan.syncStoredPlayerName) {
+            syncStoredPlayerName();
+        }
 
-        if (syncState.abandoned) {
+        if (plan.enterLobbyState) {
             enterLobbyState();
+        }
+
+        if (plan.scheduleAbandonedRequeue) {
             scheduleAbandonedRequeue();
-        } else {
+        }
+
+        if (plan.clearAbandonedRequeue) {
             clearAbandonedRequeue();
         }
 
-        if (syncState.clientBecameReady) {
+        if (plan.playReadySound) {
             gameSounds.playReady();
         }
 
-        players.sync(model, {
-            resetChangedSlots: roundState === RoundState.WAITING,
-            slots: getCurrentPlayerSlots()
-        });
-        syncNameEditor();
+        players.sync(model, plan.syncPlayers);
 
-        if (roundState === RoundState.WAITING && syncState.readyToStart) {
+        if (plan.syncNameEditor) {
+            syncNameEditor();
+        }
+
+        if (plan.startRoundRitual) {
             startRoundRitual({ resetScores: true });
             return;
         }
 
-        renderHud();
+        if (plan.renderHud) {
+            renderHud();
+        }
     }
 
     function scheduleAbandonedRequeue() {
@@ -571,12 +593,6 @@ GF.Game = (function () {
 
     function syncStoredPlayerName() {
         identity.syncStoredPlayerName(getLocalClient());
-    }
-
-    function getCurrentPlayerSlots() {
-        return roundState === RoundState.WAITING
-            ? GF.Config.player.lobbySlots
-            : GF.Config.player.slots;
     }
 
     function isReadyToStart(model) {
@@ -925,7 +941,7 @@ GF.Game = (function () {
         socket.emit('resetReady');
     }
 
-    function animate() {
+    function updateFrame() {
         updateBulletCollisionEnvironment();
         updateMovementObstacleEnvironment();
         scene.moveAll();
@@ -933,7 +949,9 @@ GF.Game = (function () {
         syncLocalPlayerPosition();
         checkForHits();
         updateCamera();
+    }
 
+    function renderFrame() {
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.save();
         if (shouldUseCamera()) {
@@ -947,10 +965,6 @@ GF.Game = (function () {
         context.restore();
         renderHud();
         updateTouchControls();
-
-        setTimeout(function () {
-            requestAnimFrame(animate);
-        }, 0);
     }
 
     function syncLocalPlayerPosition() {
@@ -1052,7 +1066,8 @@ GF.Game = (function () {
                 }
             );
             initTouchControls();
-            animate();
+            initGameLoop();
+            gameLoop.start();
         }
     }
 
