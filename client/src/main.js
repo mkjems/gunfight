@@ -2,16 +2,12 @@ import requestAnimationFrameSource from '../js/requestAnimationFrame.js?raw';
 import ammoHudRendererSource from '../js/AmmoHudRenderer.js?raw';
 import installPromptSource from '../js/InstallPrompt.js?raw';
 import clientCollisionEnvironmentSource from '../js/ClientCollisionEnvironment.js?raw';
-import clientGameplayInputSource from '../js/ClientGameplayInput.js?raw';
 import clientHitDetectionSource from '../js/ClientHitDetection.js?raw';
-import clientKeyEventFlowSource from '../js/ClientKeyEventFlow.js?raw';
 import clientLobbyFlowSource from '../js/ClientLobbyFlow.js?raw';
-import clientNetworkSource from '../js/ClientNetwork.js?raw';
 import clientPlayerHitFlowSource from '../js/ClientPlayerHitFlow.js?raw';
 import clientRoundEndFlowSource from '../js/ClientRoundEndFlow.js?raw';
 import clientRoundResetFlowSource from '../js/ClientRoundResetFlow.js?raw';
 import clientRoundRitualSource from '../js/ClientRoundRitual.js?raw';
-import clientTouchControlsFlowSource from '../js/ClientTouchControlsFlow.js?raw';
 import collisionDebugRendererSource from '../js/CollisionDebugRenderer.js?raw';
 import scenarioRendererSource from '../js/ScenarioRenderer.js?raw';
 import gameHudSource from '../js/GameHud.js?raw';
@@ -42,6 +38,7 @@ import { ClientAssets } from './modules/clientAssets';
 import { ClientCameraController } from './modules/clientCameraController';
 import { ClientCanvasSetup } from './modules/clientCanvasSetup';
 import { ClientFrameFlow } from './modules/clientFrameFlow';
+import { ClientGameplayInput } from './modules/clientGameplayInput';
 import { ClientGameLoop } from './modules/clientGameLoop';
 import { ClientGameSystems } from './modules/clientGameSystems';
 import { ClientGameSounds } from './modules/clientGameSounds';
@@ -49,6 +46,7 @@ import { ClientHudFlow } from './modules/clientHudFlow';
 import { ClientHudOverlay } from './modules/clientHudOverlay';
 import { ClientIdentity } from './modules/clientIdentity';
 import { ClientInputStartup } from './modules/clientInputStartup';
+import { ClientKeyEventFlow } from './modules/clientKeyEventFlow';
 import { ClientLobbyHudFlow } from './modules/clientLobbyHudFlow';
 import { Config } from './modules/config';
 import { ClientLobbyViewModel } from './modules/clientLobbyViewModel';
@@ -57,12 +55,14 @@ import { ClientModelSync } from './modules/clientModelSync';
 import { ClientModelUpdateFlow } from './modules/clientModelUpdateFlow';
 import { ClientModelUpdatePlan } from './modules/clientModelUpdatePlan';
 import { ClientNameEditorFlow } from './modules/clientNameEditorFlow';
+import { ClientNetwork } from './modules/clientNetwork';
 import { ClientObstacleSync } from './modules/clientObstacleSync';
 import { ClientRoundState } from './modules/clientRoundState';
 import { ClientRoundTransition } from './modules/clientRoundTransition';
 import { ClientScreens } from './modules/clientScreens';
 import { ClientTouchEnvironment } from './modules/clientTouchEnvironment';
 import { ClientTouchState } from './modules/clientTouchState';
+import { ClientTouchControlsFlow } from './modules/clientTouchControlsFlow';
 import { ClientTimers } from './modules/clientTimers';
 import { GameHudViewModel } from './modules/gameHudViewModel';
 import { PlayerPositionSync } from './modules/playerPositionSync';
@@ -91,16 +91,12 @@ const scripts = [
     ['js/AmmoHudRenderer.js', ammoHudRendererSource],
     ['js/InstallPrompt.js', installPromptSource],
     ['js/ClientCollisionEnvironment.js', clientCollisionEnvironmentSource],
-    ['js/ClientGameplayInput.js', clientGameplayInputSource],
     ['js/ClientHitDetection.js', clientHitDetectionSource],
-    ['js/ClientKeyEventFlow.js', clientKeyEventFlowSource],
     ['js/ClientLobbyFlow.js', clientLobbyFlowSource],
-    ['js/ClientNetwork.js', clientNetworkSource],
     ['js/ClientPlayerHitFlow.js', clientPlayerHitFlowSource],
     ['js/ClientRoundEndFlow.js', clientRoundEndFlowSource],
     ['js/ClientRoundResetFlow.js', clientRoundResetFlowSource],
     ['js/ClientRoundRitual.js', clientRoundRitualSource],
-    ['js/ClientTouchControlsFlow.js', clientTouchControlsFlowSource],
     ['js/CollisionDebugRenderer.js', collisionDebugRendererSource],
     ['js/ScenarioRenderer.js', scenarioRendererSource],
     ['js/GameHud.js', gameHudSource],
@@ -136,6 +132,7 @@ globalThis.GF.ClientAssets = ClientAssets;
 globalThis.GF.ClientCameraController = ClientCameraController;
 globalThis.GF.ClientCanvasSetup = ClientCanvasSetup;
 globalThis.GF.ClientFrameFlow = ClientFrameFlow;
+globalThis.GF.ClientGameplayInput = ClientGameplayInput;
 globalThis.GF.ClientGameLoop = ClientGameLoop;
 globalThis.GF.ClientGameSystems = ClientGameSystems;
 globalThis.GF.ClientGameSounds = ClientGameSounds;
@@ -143,6 +140,7 @@ globalThis.GF.ClientHudFlow = ClientHudFlow;
 globalThis.GF.ClientHudOverlay = ClientHudOverlay;
 globalThis.GF.ClientIdentity = ClientIdentity;
 globalThis.GF.ClientInputStartup = ClientInputStartup;
+globalThis.GF.ClientKeyEventFlow = ClientKeyEventFlow;
 globalThis.GF.ClientLobbyHudFlow = ClientLobbyHudFlow;
 globalThis.GF.Config = Config;
 globalThis.GF.ClientLobbyViewModel = ClientLobbyViewModel;
@@ -151,12 +149,14 @@ globalThis.GF.ClientModelSync = ClientModelSync;
 globalThis.GF.ClientModelUpdateFlow = ClientModelUpdateFlow;
 globalThis.GF.ClientModelUpdatePlan = ClientModelUpdatePlan;
 globalThis.GF.ClientNameEditorFlow = ClientNameEditorFlow;
+globalThis.GF.ClientNetwork = ClientNetwork;
 globalThis.GF.ClientObstacleSync = ClientObstacleSync;
 globalThis.GF.ClientRoundState = ClientRoundState;
 globalThis.GF.ClientRoundTransition = ClientRoundTransition;
 globalThis.GF.ClientScreens = ClientScreens;
 globalThis.GF.ClientTouchEnvironment = ClientTouchEnvironment;
 globalThis.GF.ClientTouchState = ClientTouchState;
+globalThis.GF.ClientTouchControlsFlow = ClientTouchControlsFlow;
 globalThis.GF.ClientTimers = ClientTimers;
 globalThis.GF.GameHudViewModel = GameHudViewModel;
 globalThis.GF.PlayerPositionSync = PlayerPositionSync;

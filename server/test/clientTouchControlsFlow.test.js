@@ -1,36 +1,59 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientTouchControlsFlow() {
-    const context = {
-        GF: {
-            ClientTouchState: {
-                getTouchState(options) {
-                    return {
-                        touchState: options
-                    };
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientTouchControlsFlow.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.ClientTouchControlsFlow;
+async function loadClientTouchControlsFlow() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientTouchState.ts',
+        'clientTouchState.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'clientTouchControlsFlow.ts',
+        'clientTouchControlsFlow.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientTouchControlsFlow.js'))
+            .href
+    );
+
+    return module.ClientTouchControlsFlow;
 }
 
 function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('reads local aim from the active player', function () {
-    const flow = loadClientTouchControlsFlow();
+test('reads local aim from the active player', async function () {
+    const flow = await loadClientTouchControlsFlow();
 
     assert.equal(
         flow.getLocalAimLevel({
@@ -45,8 +68,8 @@ test('reads local aim from the active player', function () {
     );
 });
 
-test('falls back to default aim without an active player', function () {
-    const flow = loadClientTouchControlsFlow();
+test('falls back to default aim without an active player', async function () {
+    const flow = await loadClientTouchControlsFlow();
 
     assert.equal(
         flow.getLocalAimLevel({
@@ -57,8 +80,8 @@ test('falls back to default aim without an active player', function () {
     );
 });
 
-test('updates touch controls with derived touch state', function () {
-    const flow = loadClientTouchControlsFlow();
+test('updates touch controls with derived touch state', async function () {
+    const flow = await loadClientTouchControlsFlow();
     const calls = [];
 
     assert.equal(
@@ -66,6 +89,11 @@ test('updates touch controls with derived touch state', function () {
             aimLevel: 4,
             editing: false,
             highScoresVisible: true,
+            getTouchState(options) {
+                return {
+                    touchState: options
+                };
+            },
             ready: false,
             roundState: 'waiting',
             touchControls: {
@@ -90,8 +118,8 @@ test('updates touch controls with derived touch state', function () {
     ]);
 });
 
-test('does not update missing touch controls', function () {
-    const flow = loadClientTouchControlsFlow();
+test('does not update missing touch controls', async function () {
+    const flow = await loadClientTouchControlsFlow();
 
     assert.equal(
         flow.update({

@@ -228,6 +228,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Move `ClientAmmo`, `ClientAmmoFlow`, `PlayerPositionSync`, and `ClientObstacleSync` behind imported module bridges.
     - [x] Move `ClientGameLoop`, `ClientFrameFlow`, `ClientGameSystems`, and `ClientInputStartup` behind imported module bridges.
     - [x] Move `ClientHudFlow`, `ClientHudOverlay`, `ClientLobbyHudFlow`, and `ClientNameEditorFlow` behind imported module bridges.
+    - [x] Move `ClientGameplayInput`, `ClientKeyEventFlow`, `ClientTouchControlsFlow`, and `ClientNetwork` behind imported module bridges.
     - Convert extracted UI and state modules before gameplay simulation.
     - Keep canvas gameplay readable and testable during conversion.
     - Remove script-order coupling as modules are converted.
@@ -246,6 +247,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Convert ammo and lightweight synchronization helpers to TypeScript.
     - [x] Convert game loop, frame flow, system construction, and input startup helpers to TypeScript.
     - [x] Convert HUD/lobby HUD and name-editor flow helpers to TypeScript.
+    - [x] Convert gameplay input, key-event routing, touch-control flow, and client networking helpers to TypeScript.
     - Start with pure decision modules and view-model helpers.
     - Then convert networking, screens, input, and HUD modules.
     - Convert gameplay simulation files after shared contracts and client imports are stable.

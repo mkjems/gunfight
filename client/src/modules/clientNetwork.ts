@@ -1,10 +1,35 @@
-GF.ClientNetwork = function (options) {
-    options = options || {};
+type Socket = {
+    on: (event: string, callback: (data: unknown) => void) => void;
+};
 
-    var storedPlayerName = options.getStoredPlayerName
+type IoFactory = (options: { auth: { name?: string } }) => Socket;
+
+type ClientNetworkOptions = {
+    getStoredPlayerName?: () => string;
+    io?: IoFactory;
+    onHighScores?: (data: unknown) => void;
+    onJoinedGame?: (data: unknown) => void;
+    onKeyEvent?: (data: unknown) => void;
+    onModelUpdate?: (data: unknown) => void;
+    onObstacleDamage?: (data: unknown) => void;
+    onPlayerPosition?: (data: unknown) => void;
+};
+
+type GlobalWithIo = typeof globalThis & {
+    io?: IoFactory;
+};
+
+export function ClientNetwork(options: ClientNetworkOptions = {}) {
+    const storedPlayerName = options.getStoredPlayerName
         ? options.getStoredPlayerName()
         : '';
-    var socket = io({
+    const ioFactory = options.io || (globalThis as GlobalWithIo).io;
+
+    if (!ioFactory) {
+        throw new Error('Socket.IO client is not available');
+    }
+
+    const socket = ioFactory({
         auth: storedPlayerName
             ? {
                   name: storedPlayerName
@@ -55,6 +80,6 @@ GF.ClientNetwork = function (options) {
     });
 
     return {
-        socket: socket
+        socket
     };
-};
+}

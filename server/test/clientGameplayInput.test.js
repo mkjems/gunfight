@@ -1,35 +1,49 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientGameplayInput() {
-    const context = {
-        GF: {
-            ClientScreens: {
-                RoundState: {
-                    WAITING: 'waiting',
-                    RITUAL: 'ritual',
-                    PLAYING: 'playing',
-                    HIT_PAUSE: 'hitPause',
-                    ROUND_OVER: 'roundOver',
-                    GAME_OVER: 'gameOver'
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientGameplayInput.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientGameplayInput;
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
 }
 
-test('fires bullets and stores the shot snapshot on the key event', function () {
-    const input = loadClientGameplayInput();
+async function loadClientGameplayInput() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientGameplayInput.ts',
+        'clientGameplayInput.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientGameplayInput.js')).href
+    );
+
+    return module.ClientGameplayInput;
+}
+
+test('fires bullets and stores the shot snapshot on the key event', async function () {
+    const input = await loadClientGameplayInput();
     const calls = [];
     const keyEvent = {
         action: 'down',
@@ -85,8 +99,8 @@ test('fires bullets and stores the shot snapshot on the key event', function () 
     assert.deepEqual(keyEvent.shot, { id: 'shot-1' });
 });
 
-test('does not play gun sound when the shot is rejected', function () {
-    const input = loadClientGameplayInput();
+test('does not play gun sound when the shot is rejected', async function () {
+    const input = await loadClientGameplayInput();
     const calls = [];
 
     input.handle({
@@ -126,8 +140,8 @@ test('does not play gun sound when the shot is rejected', function () {
     assert.deepEqual(calls, ['fire']);
 });
 
-test('plays empty gun sound when firing without ammo', function () {
-    const input = loadClientGameplayInput();
+test('plays empty gun sound when firing without ammo', async function () {
+    const input = await loadClientGameplayInput();
     const calls = [];
 
     input.handle({
@@ -163,8 +177,8 @@ test('plays empty gun sound when firing without ammo', function () {
     assert.deepEqual(calls, ['empty']);
 });
 
-test('only releases keys during locked round states', function () {
-    const input = loadClientGameplayInput();
+test('only releases keys during locked round states', async function () {
+    const input = await loadClientGameplayInput();
     const events = [];
     const player = {
         respondToKeyEvent(keyEvent) {
