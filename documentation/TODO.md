@@ -269,11 +269,24 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 
 ### P1.4.9 - Retire Client Bootstrap Debt
 
-- [ ] Convert `client/src/main.js` to TypeScript.
-- [ ] Type the client dependency bag passed into `createGame`.
-- [ ] Remove `// @ts-nocheck` from `client/src/modules/game.ts` incrementally.
-- [ ] Keep dependency injection where tests need it, but make runtime construction easier to read.
-- [ ] Decide whether Socket.IO should remain loaded by script injection or become an explicit client entry boundary.
+- [x] Convert `client/src/main.js` to TypeScript.
+    - Rename the browser entrypoint to `client/src/main.ts`.
+    - Keep the Vite HTML entrypoint pointed at the typed module source.
+
+- [x] Type the client dependency bag passed into `createGame`.
+    - Add a named `ClientGameDependencies` contract.
+    - Keep dependency value shapes broad while old factory-style modules are narrowed incrementally.
+
+- [x] Remove `// @ts-nocheck` from `client/src/modules/game.ts` incrementally.
+    - Add explicit bootstrap state and callback parameter types.
+    - Leave deeper runtime object typing for later architecture-health work.
+
+- [x] Keep dependency injection where tests need it, but make runtime construction easier to read.
+    - Build the dependency bag in one typed place in `main.ts`.
+    - Preserve injected `document`, `window`, and `Image` browser dependencies.
+
+- [x] Decide whether Socket.IO should remain loaded by script injection or become an explicit client entry boundary.
+    - Keep Socket.IO loaded through the existing explicit bootstrap script boundary for now.
 
 ### P1.4.10 - Define The UI Ownership Boundary
 
