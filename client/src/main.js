@@ -21,7 +21,6 @@ import clientIdentitySource from '../js/ClientIdentity.js?raw';
 import clientInputStartupSource from '../js/ClientInputStartup.js?raw';
 import clientKeyEventFlowSource from '../js/ClientKeyEventFlow.js?raw';
 import clientLobbyHudFlowSource from '../js/ClientLobbyHudFlow.js?raw';
-import clientLobbyViewModelSource from '../js/ClientLobbyViewModel.js?raw';
 import clientLobbyFlowSource from '../js/ClientLobbyFlow.js?raw';
 import clientMatchTimerSource from '../js/ClientMatchTimer.js?raw';
 import clientNetworkSource from '../js/ClientNetwork.js?raw';
@@ -65,6 +64,7 @@ import bulletsSource from '../js/Bullets.js?raw';
 import playersSource from '../js/Players.js?raw';
 import collisionSource from '../js/Collision.js?raw';
 import indexSource from '../js/index.js?raw';
+import { ClientLobbyViewModel } from './modules/clientLobbyViewModel';
 import { ClientScreens } from './modules/clientScreens';
 
 function loadScript(src) {
@@ -110,7 +110,6 @@ const scripts = [
     ['js/ClientInputStartup.js', clientInputStartupSource],
     ['js/ClientKeyEventFlow.js', clientKeyEventFlowSource],
     ['js/ClientLobbyHudFlow.js', clientLobbyHudFlowSource],
-    ['js/ClientLobbyViewModel.js', clientLobbyViewModelSource],
     ['js/ClientLobbyFlow.js', clientLobbyFlowSource],
     ['js/ClientMatchTimer.js', clientMatchTimerSource],
     ['js/ClientNetwork.js', clientNetworkSource],
@@ -159,6 +158,7 @@ const scripts = [
 await loadScript('/socket.io/socket.io.js');
 
 globalThis.GF = globalThis.GF || {};
+globalThis.GF.ClientLobbyViewModel = ClientLobbyViewModel;
 globalThis.GF.ClientScreens = ClientScreens;
 (0, eval)('var GF = globalThis.GF;');
 

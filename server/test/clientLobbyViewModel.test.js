@@ -1,28 +1,32 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientLobbyViewModel() {
-    const context = {
-        GF: {}
-    };
+async function loadClientLobbyViewModel() {
     const source = readFileSync(
-        new URL('../../client/js/ClientLobbyViewModel.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientLobbyViewModel.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientLobbyViewModel;
+    return module.ClientLobbyViewModel;
 }
 
 function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('builds lobby view models for keyboard clients', function () {
-    const lobby = loadClientLobbyViewModel();
+test('builds lobby view models for keyboard clients', async function () {
+    const lobby = await loadClientLobbyViewModel();
     const model = {
         gameId: 'abc',
         playerLimit: 2,
@@ -61,8 +65,8 @@ test('builds lobby view models for keyboard clients', function () {
     );
 });
 
-test('uses opponent messages for empty lobby slots', function () {
-    const lobby = loadClientLobbyViewModel();
+test('uses opponent messages for empty lobby slots', async function () {
+    const lobby = await loadClientLobbyViewModel();
     const model = {
         message: 'LOOKING FOR CHALLENGER',
         playerLimit: 2,
@@ -81,8 +85,8 @@ test('uses opponent messages for empty lobby slots', function () {
     );
 });
 
-test('decides lobby prompts and high score rotation', function () {
-    const lobby = loadClientLobbyViewModel();
+test('decides lobby prompts and high score rotation', async function () {
+    const lobby = await loadClientLobbyViewModel();
     const model = {
         status: 'waiting',
         clients: [{ id: 'p1', ready: false, slot: 0 }]
