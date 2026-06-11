@@ -20,6 +20,25 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - List which state is owned by the server, which is owned by the browser, and which is relayed between players.
     - Keep this near the implementation or in `documentation/` so later refactors have a map.
 
+### P1.1.5 - Move Tooling To The Repo Root
+
+- [ ] Move the project package to the repository root.
+    - Move `gameserver/package.json`, `gameserver/package-lock.json`, and `gameserver/tsconfig.json` to the root.
+    - Make root-level commands work naturally: `npm run dev`, `npm run check`, and `npm test`.
+    - Keep this as a structural move with no gameplay behavior changes.
+
+- [ ] Rename the main app folders for the TypeScript/component path.
+    - Move `gameserver/` code to `server/`.
+    - Move `www/` to `client/`.
+    - Add `shared/` when shared contracts are ready to move out of client-only code.
+
+- [ ] Update paths after the move.
+    - Update server static-file paths.
+    - Update Dockerfile and compose paths.
+    - Update GitHub Actions paths and cache settings.
+    - Update formatter, linter, and type-check includes.
+    - Verify browser asset paths still resolve from the served client root.
+
 ### P1.2 - Make Screens And State Explicit
 
 - [ ] Create an explicit client state model.
