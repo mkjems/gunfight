@@ -15,6 +15,14 @@ function copyFile(source, destination) {
 }
 
 mkdirSync('dist/server', { recursive: true });
-copyDirectory('client', 'dist/client');
+mkdirSync('dist/client', { recursive: true });
+copyDirectory('client/css', 'dist/client/css');
+copyDirectory('client/fonts', 'dist/client/fonts');
+copyDirectory('client/images', 'dist/client/images');
+copyDirectory('client/js', 'dist/client/js');
+copyDirectory('client/sounds', 'dist/client/sounds');
+copyFile('client/favicon.ico', 'dist/client/favicon.ico');
+copyFile('client/manifest.webmanifest', 'dist/client/manifest.webmanifest');
+copyFile('client/sw.js', 'dist/client/sw.js');
 copyFile('server/rocks.json', 'dist/server/rocks.json');
 copyFile('server/scenarios.json', 'dist/server/scenarios.json');

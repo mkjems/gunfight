@@ -192,15 +192,15 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 
 ### P1.4.7 - Introduce A Client Browser Build Step
 
-- [ ] Add a browser build tool only when client imports are ready.
+- [x] Add a browser build tool only when client imports are ready.
     - Prefer Vite unless a simpler tool fits the static app better.
     - Do not treat the P1.4.6 server TypeScript build as the browser build step.
     - Keep Socket.IO client loading, PWA manifest, service worker, and assets working.
-    - Verify cache-busted builds do not make deployment or service worker updates harder.
+    - Keep first-build asset names stable until hashed service-worker manifest generation is useful.
 
-- [ ] Move the browser entrypoint to modules.
+- [x] Move the browser entrypoint to modules.
     - Replace ordered script tags with a single built entrypoint.
-    - Import shared contracts where useful for type checking.
+    - Keep shared contracts available for later client imports where useful.
     - Keep the first bundled version visually and behaviorally identical.
 
 ### P1.4.8 - Convert Client Modules Incrementally

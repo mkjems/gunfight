@@ -1,28 +1,15 @@
-const CACHE_NAME = 'gunfight-v13';
+const CACHE_NAME = 'gunfight-v14';
 const LOCAL_DEVELOPMENT_HOSTS = ['localhost', '127.0.0.1'];
 const IS_LOCAL_DEVELOPMENT =
     LOCAL_DEVELOPMENT_HOSTS.indexOf(self.location.hostname) >= 0;
 const STATIC_ASSETS = [
     '/',
     '/index.html',
-    '/css/index.css',
-    '/js/Config.js',
-    '/js/requestAnimationFrame.js',
-    '/js/InstallPrompt.js',
-    '/js/KeysModel.js',
-    '/js/NameEditor.js',
-    '/js/Camera.js',
-    '/js/TouchControls.js',
-    '/js/Color.js',
-    '/js/Pen.js',
-    '/js/Scene.js',
-    '/js/Obstacles.js',
-    '/js/Controllable.js',
-    '/js/Bullet.js',
-    '/js/Bullets.js',
-    '/js/Players.js',
-    '/js/Collision.js',
-    '/js/index.js',
+    '/assets/index.css',
+    '/assets/client.js',
+    '/assets/RotatePlease.png',
+    '/assets/favicon.ico?v=gunfight-v1',
+    '/assets/manifest.webmanifest',
     '/fonts/PressStartK.woff2',
     '/fonts/Arcade.woff2',
     '/fonts/ARCADE.TTF',
@@ -34,7 +21,6 @@ const STATIC_ASSETS = [
     '/images/cactus-1-4-17X32.png',
     '/images/gunfight_player_spritesheet.png',
     '/images/rock-pattern.png',
-    '/images/RotatePlease.png',
     '/images/saloon-64x128.png',
     '/images/wagon-1-4-37x38.png',
     '/sounds/ready.mp3',

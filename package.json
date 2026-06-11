@@ -4,12 +4,12 @@
     "type": "module",
     "scripts": {
         "check": "npm run format:check && npm run lint && npm run typecheck && npm test",
-        "build": "tsc --project tsconfig.build.json && node scripts/copy-build-assets.js",
+        "build": "tsc --project tsconfig.build.json && vite build && node scripts/copy-build-assets.js",
         "start": "node dist/server/server.js",
         "dev": "npm run build && node dist/server/server.js",
-        "format": "prettier --write --ignore-unknown package.json tsconfig.json tsconfig.shared.json tsconfig.build.json scripts server shared client compose.yaml .github/workflows/container.yml documentation/TODO.md documentation/State-ownership.md documentation/TypeScript-migration.md README.markdown",
-        "format:check": "prettier --check --ignore-unknown package.json tsconfig.json tsconfig.shared.json tsconfig.build.json scripts server shared client compose.yaml .github/workflows/container.yml documentation/TODO.md documentation/State-ownership.md documentation/TypeScript-migration.md README.markdown",
-        "lint": "eslint scripts \"server/**/*.js\" client/js",
+        "format": "prettier --write --ignore-unknown package.json tsconfig.json tsconfig.shared.json tsconfig.build.json vite.config.js scripts server shared client compose.yaml .github/workflows/container.yml documentation/TODO.md documentation/State-ownership.md documentation/TypeScript-migration.md README.markdown",
+        "format:check": "prettier --check --ignore-unknown package.json tsconfig.json tsconfig.shared.json tsconfig.build.json vite.config.js scripts server shared client compose.yaml .github/workflows/container.yml documentation/TODO.md documentation/State-ownership.md documentation/TypeScript-migration.md README.markdown",
+        "lint": "eslint scripts \"server/**/*.js\" client/js client/src",
         "typecheck": "tsc --project tsconfig.json && tsc --project tsconfig.shared.json",
         "test": "npm run build && node --test dist/server/test/*.test.js"
     },
@@ -20,6 +20,7 @@
     "devDependencies": {
         "eslint": "^8.57.1",
         "prettier": "^3.3.3",
-        "typescript": "^5.5.4"
+        "typescript": "^5.5.4",
+        "vite": "^8.0.16"
     }
 }

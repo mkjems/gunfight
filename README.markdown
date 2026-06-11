@@ -17,6 +17,11 @@ npm run dev
 That builds `dist/`, copies the static client assets, and starts the compiled
 server.
 
+The build has two parts:
+
+- `tsc` compiles the server and shared TypeScript.
+- Vite builds the browser entrypoint into `dist/client/assets/client.js`.
+
 Build and run locally:
 
 ```sh

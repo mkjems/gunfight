@@ -37,6 +37,7 @@ GF.Game = (function () {
         localReadyRequested,
         playerId;
     var RoundState = GF.ClientScreens.RoundState;
+    var hasStarted = false;
 
     function initCanvas() {
         var surfaces = GF.ClientCanvasSetup.create({
@@ -741,6 +742,15 @@ GF.Game = (function () {
         }).socket;
     }
 
+    function startOnce() {
+        if (hasStarted) {
+            return;
+        }
+
+        hasStarted = true;
+        start();
+    }
+
     function startInputAndAnimation() {
         inputController = GF.ClientInputStartup.start({
             createInputController: function () {
@@ -763,9 +773,13 @@ GF.Game = (function () {
         });
     }
 
-    document.addEventListener('DOMContentLoaded', start);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startOnce);
+    } else {
+        startOnce();
+    }
 
     return {
-        start: start
+        start: startOnce
     };
 })();
