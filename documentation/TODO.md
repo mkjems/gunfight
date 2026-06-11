@@ -214,7 +214,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 
 ### P1.4.8 - Convert Client Modules Incrementally
 
-- [ ] Replace broad `GF.*` namespace mutation with imports.
+- [x] Replace broad `GF.*` namespace mutation with imports.
     - [x] Move `ClientScreens` behind an imported module bridge first.
     - [x] Move `ClientLobbyViewModel` behind an imported module bridge.
     - [x] Move `GameHudViewModel` behind an imported module bridge.
@@ -238,7 +238,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Move `Scene`, `Obstacles`, `Collision`, and `ScenarioRenderer` behind imported module bridges.
     - [x] Move `Bullet`, `Bullets`, `Controllable`, `Players`, and game startup behind imported module bridges.
     - [x] Retire the `client/js` static-script compatibility path.
-    - [ ] Remove the remaining `GF` compatibility surface from `main.js` and `game.ts`.
+    - [x] Remove the remaining `GF` compatibility surface from `main.js` and `game.ts`.
 
 - [x] Convert browser files to TypeScript in low-risk groups.
     - [x] Convert `ClientScreens` to TypeScript as the first pure decision module.

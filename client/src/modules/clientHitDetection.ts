@@ -23,14 +23,6 @@ type ClientHitDetectionOptions = {
     roundState: RoundState;
 };
 
-type GlobalWithCollision = typeof globalThis & {
-    GF?: {
-        Collision?: {
-            findBulletHit: (bullets: unknown, players: unknown) => Hit | null;
-        };
-    };
-};
-
 export function check(options: ClientHitDetectionOptions) {
     if (options.roundState !== RoundState.PLAYING) {
         if (
@@ -58,8 +50,7 @@ export function check(options: ClientHitDetectionOptions) {
         };
     }
 
-    const collision =
-        options.collision || (globalThis as GlobalWithCollision).GF?.Collision;
+    const collision = options.collision;
     const playerHit =
         collision && options.bullets && options.players
             ? collision.findBulletHit(

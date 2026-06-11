@@ -59,7 +59,7 @@ async function loadClientGame(readyState) {
     const createGame = await loadCreateGame();
     const document = createDocument(readyState);
     let networkStarts = 0;
-    const GF = {
+    const dependencies = {
         AmmoHudRenderer: function () {},
         Camera: function () {},
         ClientAssets: function () {
@@ -150,7 +150,7 @@ async function loadClientGame(readyState) {
         ScenarioRenderer: function () {},
         SoundEffects: function () {}
     };
-    const game = createGame(GF, {
+    const game = createGame(dependencies, {
         document: document,
         Image: function () {},
         window: {

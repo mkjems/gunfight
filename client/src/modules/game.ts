@@ -1,5 +1,5 @@
 // @ts-nocheck
-export function createGame(GF, browser = {}) {
+export function createGame(dependencies, browser = {}) {
     const document = browser.document || globalThis.document;
     const window = browser.window || globalThis.window;
     const Image = browser.Image || globalThis.Image;
@@ -42,13 +42,13 @@ export function createGame(GF, browser = {}) {
             roundIntro,
             localReadyRequested,
             playerId;
-        var RoundState = GF.ClientScreens.RoundState;
+        var RoundState = dependencies.ClientScreens.RoundState;
         var hasStarted = false;
 
         function initCanvas() {
-            var surfaces = GF.ClientCanvasSetup.create({
-                CanvasTools: GF.CanvasTools,
-                canvasConfig: GF.Config.canvas,
+            var surfaces = dependencies.ClientCanvasSetup.create({
+                CanvasTools: dependencies.CanvasTools,
+                canvasConfig: dependencies.Config.canvas,
                 document: document
             });
 
@@ -69,17 +69,17 @@ export function createGame(GF, browser = {}) {
         }
 
         function initNameEditor() {
-            nameEditor = new GF.NameEditor({
+            nameEditor = new dependencies.NameEditor({
                 onChange: renderHud,
                 onSubmit: submitNameChange
             });
         }
 
         function initAssets() {
-            assets = new GF.ClientAssets({
+            assets = new dependencies.ClientAssets({
                 Image: Image,
                 createRockPattern: function (image) {
-                    return GF.CanvasTools.createScaledPattern({
+                    return dependencies.CanvasTools.createScaledPattern({
                         context: context,
                         document: document,
                         image: image
@@ -91,8 +91,12 @@ export function createGame(GF, browser = {}) {
         }
 
         function initHudOverlay() {
-            var overlay = GF.ClientHudOverlay.create({
-                document: document
+            var overlay = dependencies.ClientHudOverlay.create({
+                document: document,
+                GameHud: dependencies.GameHud,
+                HighScoresScreen: dependencies.HighScoresScreen,
+                LobbyScreen: dependencies.LobbyScreen,
+                NameEditorScreen: dependencies.NameEditorScreen
             });
 
             gameHud = overlay.gameHud;
@@ -104,36 +108,36 @@ export function createGame(GF, browser = {}) {
         }
 
         function initAmmoHudRenderer() {
-            ammoHudRenderer = new GF.AmmoHudRenderer({
+            ammoHudRenderer = new dependencies.AmmoHudRenderer({
                 context: hudContext,
                 sprite: assets.sprites.ammo
             });
         }
 
         function initCamera() {
-            camera = new GF.Camera({
-                worldWidth: GF.Config.canvas.width,
-                worldHeight: GF.Config.canvas.height,
-                screenWidth: GF.Config.canvas.width,
-                screenHeight: GF.Config.canvas.height,
+            camera = new dependencies.Camera({
+                worldWidth: dependencies.Config.canvas.width,
+                worldHeight: dependencies.Config.canvas.height,
+                screenWidth: dependencies.Config.canvas.width,
+                screenHeight: dependencies.Config.canvas.height,
                 scale: cameraController.getCameraScale()
             });
         }
 
         function initSoundEffects() {
-            gameSounds = new GF.ClientGameSounds({
-                soundEffects: new GF.SoundEffects()
+            gameSounds = new dependencies.ClientGameSounds({
+                soundEffects: new dependencies.SoundEffects()
             });
         }
 
         function initCameraController() {
-            cameraController = new GF.ClientCameraController({
+            cameraController = new dependencies.ClientCameraController({
                 window: window
             });
         }
 
         function initScenarioRenderer() {
-            scenarioRenderer = new GF.ScenarioRenderer({
+            scenarioRenderer = new dependencies.ScenarioRenderer({
                 context: context,
                 getObstacleDamage: getObstacleDamage,
                 getRockPattern: function () {
@@ -151,28 +155,30 @@ export function createGame(GF, browser = {}) {
         }
 
         function initCollisionDebugRenderer() {
-            collisionDebugRenderer = new GF.CollisionDebugRenderer(context);
+            collisionDebugRenderer = new dependencies.CollisionDebugRenderer(
+                context
+            );
         }
 
         function initIdentity() {
-            identity = new GF.ClientIdentity({
+            identity = new dependencies.ClientIdentity({
                 getClientName: getClientName,
                 storage: window.localStorage
             });
         }
 
         function initGameState() {
-            var systems = GF.ClientGameSystems.create({
-                Bullet: GF.Bullet,
-                Bullets: GF.Bullets,
-                ClientAmmo: GF.ClientAmmo,
-                ClientRoundState: GF.ClientRoundState,
-                ClientTimers: GF.ClientTimers,
-                PlayerPositionSync: GF.PlayerPositionSync,
-                Players: GF.Players,
-                RoundIntro: GF.RoundIntro,
-                Scene: GF.Scene,
-                ScoreKeeper: GF.ScoreKeeper,
+            var systems = dependencies.ClientGameSystems.create({
+                Bullet: dependencies.Bullet,
+                Bullets: dependencies.Bullets,
+                ClientAmmo: dependencies.ClientAmmo,
+                ClientRoundState: dependencies.ClientRoundState,
+                ClientTimers: dependencies.ClientTimers,
+                PlayerPositionSync: dependencies.PlayerPositionSync,
+                Players: dependencies.Players,
+                RoundIntro: dependencies.RoundIntro,
+                Scene: dependencies.Scene,
+                ScoreKeeper: dependencies.ScoreKeeper,
                 initialRoundState: RoundState.WAITING,
                 playRicochet: gameSounds.playRicochet
             });
@@ -192,15 +198,16 @@ export function createGame(GF, browser = {}) {
         }
 
         function initGameLoop() {
-            gameLoop = new GF.ClientGameLoop({
+            gameLoop = new dependencies.ClientGameLoop({
                 render: renderFrame,
+                scheduleFrame: dependencies.requestAnimFrame,
                 update: updateFrame
             });
         }
 
         function setRoundState(nextState) {
-            roundState = GF.ClientRoundTransition.resolve({
-                canTransition: GF.ClientScreens.canTransition,
+            roundState = dependencies.ClientRoundTransition.resolve({
+                canTransition: dependencies.ClientScreens.canTransition,
                 currentState: roundState,
                 nextState: nextState
             });
@@ -226,13 +233,13 @@ export function createGame(GF, browser = {}) {
         }
 
         function renderHud() {
-            GF.ClientHudFlow.render({
+            dependencies.ClientHudFlow.render({
                 ammo: ammo,
                 ammoHudRenderer: ammoHudRenderer,
                 camera: camera,
                 cameraController: cameraController,
                 canvas: canvas,
-                defaultSeconds: GF.Config.game.seconds,
+                defaultSeconds: dependencies.Config.game.seconds,
                 gameHud: gameHud,
                 gameHudScreen: gameHudScreen,
                 hudCanvas: hudCanvas,
@@ -257,16 +264,16 @@ export function createGame(GF, browser = {}) {
         }
 
         function updateBulletCollisionEnvironment() {
-            GF.ClientCollisionEnvironment.updateBulletLines({
-                Bullet: GF.Bullet,
+            dependencies.ClientCollisionEnvironment.updateBulletLines({
+                Bullet: dependencies.Bullet,
                 scenario: getCurrentScenario(),
                 scenarioRenderer: scenarioRenderer
             });
         }
 
         function updateMovementObstacleEnvironment() {
-            GF.ClientCollisionEnvironment.updateObstacleBodies({
-                Obstacles: GF.Obstacles,
+            dependencies.ClientCollisionEnvironment.updateObstacleBodies({
+                Obstacles: dependencies.Obstacles,
                 roundState: roundState,
                 scenario: getCurrentScenario(),
                 scenarioRenderer: scenarioRenderer
@@ -282,7 +289,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function renderLobbyHud() {
-            GF.ClientLobbyHudFlow.render({
+            dependencies.ClientLobbyHudFlow.render({
                 canvas: canvas,
                 gameHud: gameHud,
                 highScores: highScores,
@@ -305,14 +312,16 @@ export function createGame(GF, browser = {}) {
         }
 
         function shouldShowHighScoresScreen() {
-            return GF.ClientLobbyViewModel.shouldShowHighScoresScreen({
-                localReadyRequested: localReadyRequested,
-                model: latestModel
-            });
+            return dependencies.ClientLobbyViewModel.shouldShowHighScoresScreen(
+                {
+                    localReadyRequested: localReadyRequested,
+                    model: latestModel
+                }
+            );
         }
 
         function isTouchInterface() {
-            return GF.ClientTouchEnvironment.isTouchInterface(window);
+            return dependencies.ClientTouchEnvironment.isTouchInterface(window);
         }
 
         function shouldUseCamera() {
@@ -332,7 +341,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function shouldShowLobbyPrompt() {
-            return GF.ClientLobbyViewModel.shouldShowLobbyPrompt({
+            return dependencies.ClientLobbyViewModel.shouldShowLobbyPrompt({
                 localReadyRequested: localReadyRequested,
                 model: latestModel,
                 playerId: playerId
@@ -340,7 +349,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function isLocalClientReady() {
-            return GF.ClientLobbyViewModel.isLocalClientReady({
+            return dependencies.ClientLobbyViewModel.isLocalClientReady({
                 localReadyRequested: localReadyRequested,
                 model: latestModel,
                 playerId: playerId
@@ -348,7 +357,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function isLocalClientWaiting() {
-            return GF.ClientLobbyViewModel.isLocalClientWaiting({
+            return dependencies.ClientLobbyViewModel.isLocalClientWaiting({
                 localReadyRequested: localReadyRequested,
                 model: latestModel,
                 playerId: playerId
@@ -356,14 +365,14 @@ export function createGame(GF, browser = {}) {
         }
 
         function getLocalClient() {
-            return GF.ClientLobbyViewModel.getLocalClient(
+            return dependencies.ClientLobbyViewModel.getLocalClient(
                 latestModel,
                 playerId
             );
         }
 
         function getClientName(client) {
-            return GF.ClientLobbyViewModel.getClientName(client);
+            return dependencies.ClientLobbyViewModel.getClientName(client);
         }
 
         function getStoredPlayerName() {
@@ -371,14 +380,14 @@ export function createGame(GF, browser = {}) {
         }
 
         function submitNameChange(name) {
-            GF.ClientNameEditorFlow.submitNameChange({
+            dependencies.ClientNameEditorFlow.submitNameChange({
                 name: name,
                 socket: socket
             });
         }
 
         function syncNameEditor() {
-            GF.ClientNameEditorFlow.sync({
+            dependencies.ClientNameEditorFlow.sync({
                 client: getLocalClient(),
                 identity: identity,
                 editor: nameEditor
@@ -386,11 +395,11 @@ export function createGame(GF, browser = {}) {
         }
 
         function closeNameEditor() {
-            GF.ClientNameEditorFlow.close(nameEditor);
+            dependencies.ClientNameEditorFlow.close(nameEditor);
         }
 
         function enterLobbyState() {
-            GF.ClientLobbyFlow.enter({
+            dependencies.ClientLobbyFlow.enter({
                 bullets: bullets,
                 players: players,
                 roundData: roundData,
@@ -407,7 +416,7 @@ export function createGame(GF, browser = {}) {
 
             latestModel = model;
 
-            GF.ClientModelUpdateFlow.sync({
+            dependencies.ClientModelUpdateFlow.sync({
                 clearAbandonedRequeue: clearAbandonedRequeue,
                 clearLocalReadyRequest: function () {
                     localReadyRequested = false;
@@ -428,14 +437,14 @@ export function createGame(GF, browser = {}) {
         }
 
         function scheduleAbandonedRequeue() {
-            GF.ClientLobbyFlow.scheduleAbandonedRequeue({
+            dependencies.ClientLobbyFlow.scheduleAbandonedRequeue({
                 socket: socket,
                 timers: timers
             });
         }
 
         function clearAbandonedRequeue() {
-            GF.ClientLobbyFlow.clearAbandonedRequeue({
+            dependencies.ClientLobbyFlow.clearAbandonedRequeue({
                 timers: timers
             });
         }
@@ -447,7 +456,7 @@ export function createGame(GF, browser = {}) {
         function startRoundRitual(options) {
             options = options || {};
 
-            GF.ClientRoundRitual.start({
+            dependencies.ClientRoundRitual.start({
                 bullets: bullets,
                 closeNameEditor: closeNameEditor,
                 endGame: endGame,
@@ -466,7 +475,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function scheduleMatchEnd() {
-            GF.ClientMatchTimer.scheduleEnd({
+            dependencies.ClientMatchTimer.scheduleEnd({
                 endGame: endGame,
                 roundData: roundData,
                 timers: timers
@@ -474,7 +483,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function handleKeyEvent(keyEvent) {
-            return GF.ClientKeyEventFlow.handle({
+            return dependencies.ClientKeyEventFlow.handle({
                 ammo: ammo,
                 bullets: bullets,
                 isLocalClientWaiting: isLocalClientWaiting,
@@ -494,7 +503,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function reloadIfBothPlayersAreOutOfAmmo() {
-            GF.ClientAmmoFlow.reloadIfBothPlayersAreOut({
+            dependencies.ClientAmmoFlow.reloadIfBothPlayersAreOut({
                 ammo: ammo,
                 model: latestModel,
                 roundState: roundState
@@ -502,8 +511,9 @@ export function createGame(GF, browser = {}) {
         }
 
         function checkForHits() {
-            var result = GF.ClientHitDetection.check({
+            var result = dependencies.ClientHitDetection.check({
                 bullets: bullets,
+                collision: dependencies.Collision,
                 findBulletObstacleHit: findBulletObstacleHit,
                 matchTimeExpired: roundData.hasMatchTimeExpired(),
                 players: players,
@@ -533,7 +543,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function handleObstacleHit(hit) {
-            GF.ClientObstacleSync.handleLocalHit({
+            dependencies.ClientObstacleSync.handleLocalHit({
                 applyDamage: applyObstacleDamage,
                 hit: hit,
                 model: latestModel,
@@ -543,7 +553,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function applyObstacleDamage(data) {
-            GF.ClientObstacleSync.applyDamage({
+            dependencies.ClientObstacleSync.applyDamage({
                 bullets: bullets,
                 damageObstacle: damageObstacle,
                 data: data,
@@ -553,7 +563,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function handlePlayerHit(hit) {
-            GF.ClientPlayerHitFlow.handleHit({
+            dependencies.ClientPlayerHitFlow.handleHit({
                 bullets: bullets,
                 hit: hit,
                 playerId: playerId,
@@ -570,7 +580,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function resetAfterHit() {
-            GF.ClientPlayerHitFlow.resetAfterHit({
+            dependencies.ClientPlayerHitFlow.resetAfterHit({
                 bullets: bullets,
                 endGame: endGame,
                 hasMatchTimeExpired: roundData.hasMatchTimeExpired,
@@ -583,7 +593,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function endRound(winnerId) {
-            GF.ClientRoundEndFlow.endRound({
+            dependencies.ClientRoundEndFlow.endRound({
                 bullets: bullets,
                 closeNameEditor: closeNameEditor,
                 getPlayerSlot: getPlayerSlot,
@@ -601,7 +611,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function endGame() {
-            GF.ClientRoundEndFlow.endGame({
+            dependencies.ClientRoundEndFlow.endGame({
                 bullets: bullets,
                 closeNameEditor: closeNameEditor,
                 getClientName: getClientName,
@@ -620,9 +630,9 @@ export function createGame(GF, browser = {}) {
         }
 
         function resetRound() {
-            GF.ClientRoundResetFlow.resetRound({
+            dependencies.ClientRoundResetFlow.resetRound({
                 bullets: bullets,
-                isReadyToStart: GF.ClientModelSync.isReadyToStart,
+                isReadyToStart: dependencies.ClientModelSync.isReadyToStart,
                 model: latestModel,
                 players: players,
                 renderHud: renderHud,
@@ -636,7 +646,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function resetToStartScreen() {
-            GF.ClientRoundResetFlow.resetToStartScreen({
+            dependencies.ClientRoundResetFlow.resetToStartScreen({
                 bullets: bullets,
                 players: players,
                 renderHud: renderHud,
@@ -651,7 +661,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function updateFrame() {
-            GF.ClientFrameFlow.update({
+            dependencies.ClientFrameFlow.update({
                 checkForHits: checkForHits,
                 roundIntro: roundIntro,
                 scene: scene,
@@ -665,7 +675,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function renderFrame() {
-            GF.ClientFrameFlow.render({
+            dependencies.ClientFrameFlow.render({
                 camera: camera,
                 canvas: canvas,
                 context: context,
@@ -697,7 +707,7 @@ export function createGame(GF, browser = {}) {
         }
 
         function initTouchControls() {
-            touchControls = new GF.TouchControls({
+            touchControls = new dependencies.TouchControls({
                 input: inputController,
                 getAimLevel: getLocalAimLevel
             });
@@ -705,14 +715,14 @@ export function createGame(GF, browser = {}) {
         }
 
         function getLocalAimLevel() {
-            return GF.ClientTouchControlsFlow.getLocalAimLevel({
-                defaultAim: GF.Config.player.defaultAim,
+            return dependencies.ClientTouchControlsFlow.getLocalAimLevel({
+                defaultAim: dependencies.Config.player.defaultAim,
                 player: players.all[playerId]
             });
         }
 
         function updateTouchControls() {
-            GF.ClientTouchControlsFlow.update({
+            dependencies.ClientTouchControlsFlow.update({
                 aimLevel: getLocalAimLevel(),
                 editing: nameEditor && nameEditor.isActive(),
                 highScoresVisible: shouldShowHighScoresScreen(),
@@ -724,7 +734,7 @@ export function createGame(GF, browser = {}) {
 
         function drawCollisionBodies() {
             collisionDebugRenderer.render({
-                obstacleBodies: GF.Obstacles.all(),
+                obstacleBodies: dependencies.Obstacles.all(),
                 players: players.all
             });
         }
@@ -733,7 +743,7 @@ export function createGame(GF, browser = {}) {
             initCanvas();
             initGameState();
 
-            socket = new GF.ClientNetwork({
+            socket = new dependencies.ClientNetwork({
                 getStoredPlayerName: getStoredPlayerName,
                 onHighScores: function (nextHighScores) {
                     highScores = Array.isArray(nextHighScores)
@@ -763,17 +773,22 @@ export function createGame(GF, browser = {}) {
         }
 
         function startInputAndAnimation() {
-            inputController = GF.ClientInputStartup.start({
+            inputController = dependencies.ClientInputStartup.start({
                 createInputController: function () {
-                    return new GF.KeysModel(socket, playerId, handleKeyEvent, {
-                        canReady: function () {
-                            return !nameEditor || !nameEditor.isActive();
-                        },
-                        onReady: function () {
-                            localReadyRequested = true;
-                            renderHud();
+                    return new dependencies.KeysModel(
+                        socket,
+                        playerId,
+                        handleKeyEvent,
+                        {
+                            canReady: function () {
+                                return !nameEditor || !nameEditor.isActive();
+                            },
+                            onReady: function () {
+                                localReadyRequested = true;
+                                renderHud();
+                            }
                         }
-                    });
+                    );
                 },
                 initTouchControls: initTouchControls,
                 inputController: inputController,

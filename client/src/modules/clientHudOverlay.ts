@@ -36,20 +36,15 @@ type OverlayConstructors = {
     }) => unknown;
 };
 
-type ClientHudOverlayOptions = Partial<OverlayConstructors> & {
+type ClientHudOverlayOptions = OverlayConstructors & {
     document: Document;
-};
-
-type GlobalWithHudConstructors = typeof globalThis & {
-    GF?: Partial<OverlayConstructors>;
 };
 
 function getConstructor<K extends keyof OverlayConstructors>(
     options: ClientHudOverlayOptions,
     key: K
 ): OverlayConstructors[K] {
-    const constructor =
-        options[key] || (globalThis as GlobalWithHudConstructors).GF?.[key];
+    const constructor = options[key];
 
     if (!constructor) {
         throw new Error('Missing HUD overlay constructor: ' + key);

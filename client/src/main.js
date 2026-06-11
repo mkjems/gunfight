@@ -88,76 +88,79 @@ function loadScript(src) {
 
 await loadScript('/socket.io/socket.io.js');
 
-globalThis.GF = globalThis.GF || {};
-globalThis.requestAnimFrame = requestAnimFrame;
-globalThis.GF.AmmoHudRenderer = AmmoHudRenderer;
-globalThis.GF.Bullet = Bullet;
-globalThis.GF.Bullets = Bullets;
-globalThis.GF.Camera = Camera;
-globalThis.GF.CanvasTools = CanvasTools;
-globalThis.GF.ClientAmmo = ClientAmmo;
-globalThis.GF.ClientAmmoFlow = ClientAmmoFlow;
-globalThis.GF.ClientAssets = ClientAssets;
-globalThis.GF.ClientCameraController = ClientCameraController;
-globalThis.GF.ClientCanvasSetup = ClientCanvasSetup;
-globalThis.GF.ClientCollisionEnvironment = ClientCollisionEnvironment;
-globalThis.GF.ClientFrameFlow = ClientFrameFlow;
-globalThis.GF.ClientGameplayInput = ClientGameplayInput;
-globalThis.GF.ClientGameLoop = ClientGameLoop;
-globalThis.GF.ClientGameSystems = ClientGameSystems;
-globalThis.GF.ClientGameSounds = ClientGameSounds;
-globalThis.GF.ClientHitDetection = ClientHitDetection;
-globalThis.GF.ClientHudFlow = ClientHudFlow;
-globalThis.GF.ClientHudOverlay = ClientHudOverlay;
-globalThis.GF.ClientIdentity = ClientIdentity;
-globalThis.GF.ClientInputStartup = ClientInputStartup;
-globalThis.GF.ClientKeyEventFlow = ClientKeyEventFlow;
-globalThis.GF.ClientLobbyFlow = ClientLobbyFlow;
-globalThis.GF.ClientLobbyHudFlow = ClientLobbyHudFlow;
-globalThis.GF.Config = Config;
-globalThis.GF.ClientLobbyViewModel = ClientLobbyViewModel;
-globalThis.GF.ClientMatchTimer = ClientMatchTimer;
-globalThis.GF.ClientModelSync = ClientModelSync;
-globalThis.GF.ClientModelUpdateFlow = ClientModelUpdateFlow;
-globalThis.GF.ClientModelUpdatePlan = ClientModelUpdatePlan;
-globalThis.GF.ClientNameEditorFlow = ClientNameEditorFlow;
-globalThis.GF.ClientNetwork = ClientNetwork;
-globalThis.GF.ClientObstacleSync = ClientObstacleSync;
-globalThis.GF.ClientPlayerHitFlow = ClientPlayerHitFlow;
-globalThis.GF.ClientRoundEndFlow = ClientRoundEndFlow;
-globalThis.GF.ClientRoundResetFlow = ClientRoundResetFlow;
-globalThis.GF.ClientRoundRitual = ClientRoundRitual;
-globalThis.GF.ClientRoundState = ClientRoundState;
-globalThis.GF.ClientRoundTransition = ClientRoundTransition;
-globalThis.GF.ClientScreens = ClientScreens;
-globalThis.GF.ClientTouchEnvironment = ClientTouchEnvironment;
-globalThis.GF.ClientTouchState = ClientTouchState;
-globalThis.GF.ClientTouchControlsFlow = ClientTouchControlsFlow;
-globalThis.GF.ClientTimers = ClientTimers;
-globalThis.GF.Collision = Collision;
-globalThis.GF.CollisionDebugRenderer = CollisionDebugRenderer;
-globalThis.GF.Color = Color;
-globalThis.GF.Controllable = Controllable;
-globalThis.GF.GameHud = GameHud;
-globalThis.GF.GameHudViewModel = GameHudViewModel;
-globalThis.GF.HighScoresScreen = HighScoresScreen;
-globalThis.GF.InstallPrompt = InstallPrompt;
-globalThis.GF.KeysModel = KeysModel;
-globalThis.GF.LobbyScreen = LobbyScreen;
-globalThis.GF.NameEditorScreen = NameEditorScreen;
-globalThis.GF.NameEditor = NameEditor;
-globalThis.GF.Obstacles = Obstacles;
-globalThis.GF.Pen = Pen;
-globalThis.GF.Players = Players;
-globalThis.GF.PlayerPositionSync = PlayerPositionSync;
-globalThis.GF.RoundIntro = RoundIntro;
-globalThis.GF.ScenarioRenderer = ScenarioRenderer;
-globalThis.GF.Scene = Scene;
-globalThis.GF.ScoreKeeper = ScoreKeeper;
-globalThis.GF.SoundEffects = SoundEffects;
-globalThis.GF.TouchControls = TouchControls;
-globalThis.GF.Game = createGame(globalThis.GF, {
-    document,
-    Image,
-    window
-});
+createGame(
+    {
+        AmmoHudRenderer,
+        Bullet,
+        Bullets,
+        Camera,
+        CanvasTools,
+        ClientAmmo,
+        ClientAmmoFlow,
+        ClientAssets,
+        ClientCameraController,
+        ClientCanvasSetup,
+        ClientCollisionEnvironment,
+        ClientFrameFlow,
+        ClientGameplayInput,
+        ClientGameLoop,
+        ClientGameSystems,
+        ClientGameSounds,
+        ClientHitDetection,
+        ClientHudFlow,
+        ClientHudOverlay,
+        ClientIdentity,
+        ClientInputStartup,
+        ClientKeyEventFlow,
+        ClientLobbyFlow,
+        ClientLobbyHudFlow,
+        ClientLobbyViewModel,
+        ClientMatchTimer,
+        ClientModelSync,
+        ClientModelUpdateFlow,
+        ClientModelUpdatePlan,
+        ClientNameEditorFlow,
+        ClientNetwork,
+        ClientObstacleSync,
+        ClientPlayerHitFlow,
+        ClientRoundEndFlow,
+        ClientRoundResetFlow,
+        ClientRoundRitual,
+        ClientRoundState,
+        ClientRoundTransition,
+        ClientScreens,
+        ClientTimers,
+        ClientTouchControlsFlow,
+        ClientTouchEnvironment,
+        ClientTouchState,
+        Collision,
+        CollisionDebugRenderer,
+        Color,
+        Config,
+        Controllable,
+        GameHud,
+        GameHudViewModel,
+        HighScoresScreen,
+        InstallPrompt,
+        KeysModel,
+        LobbyScreen,
+        NameEditor,
+        NameEditorScreen,
+        Obstacles,
+        Pen,
+        PlayerPositionSync,
+        Players,
+        requestAnimFrame,
+        RoundIntro,
+        ScenarioRenderer,
+        Scene,
+        ScoreKeeper,
+        SoundEffects,
+        TouchControls
+    },
+    {
+        document,
+        Image,
+        window
+    }
+);
