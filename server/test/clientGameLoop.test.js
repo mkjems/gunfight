@@ -1,24 +1,28 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientGameLoop() {
-    const context = {
-        GF: {}
-    };
+async function loadClientGameLoop() {
     const source = readFileSync(
-        new URL('../../client/js/ClientGameLoop.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientGameLoop.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientGameLoop;
+    return module.ClientGameLoop;
 }
 
-test('runs update and render once when started', function () {
-    const ClientGameLoop = loadClientGameLoop();
+test('runs update and render once when started', async function () {
+    const ClientGameLoop = await loadClientGameLoop();
     const calls = [];
     const loop = new ClientGameLoop({
         render() {
@@ -37,8 +41,8 @@ test('runs update and render once when started', function () {
     assert.equal(loop.start(), false);
 });
 
-test('stops future ticks', function () {
-    const ClientGameLoop = loadClientGameLoop();
+test('stops future ticks', async function () {
+    const ClientGameLoop = await loadClientGameLoop();
     const calls = [];
     /** @type {undefined | (() => void)} */
     let scheduled;

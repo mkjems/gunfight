@@ -3,13 +3,9 @@ import ammoHudRendererSource from '../js/AmmoHudRenderer.js?raw';
 import installPromptSource from '../js/InstallPrompt.js?raw';
 import clientCollisionEnvironmentSource from '../js/ClientCollisionEnvironment.js?raw';
 import clientGameplayInputSource from '../js/ClientGameplayInput.js?raw';
-import clientFrameFlowSource from '../js/ClientFrameFlow.js?raw';
-import clientGameSystemsSource from '../js/ClientGameSystems.js?raw';
-import clientGameLoopSource from '../js/ClientGameLoop.js?raw';
 import clientHitDetectionSource from '../js/ClientHitDetection.js?raw';
 import clientHudFlowSource from '../js/ClientHudFlow.js?raw';
 import clientHudOverlaySource from '../js/ClientHudOverlay.js?raw';
-import clientInputStartupSource from '../js/ClientInputStartup.js?raw';
 import clientKeyEventFlowSource from '../js/ClientKeyEventFlow.js?raw';
 import clientLobbyHudFlowSource from '../js/ClientLobbyHudFlow.js?raw';
 import clientLobbyFlowSource from '../js/ClientLobbyFlow.js?raw';
@@ -49,8 +45,12 @@ import { ClientAmmoFlow } from './modules/clientAmmoFlow';
 import { ClientAssets } from './modules/clientAssets';
 import { ClientCameraController } from './modules/clientCameraController';
 import { ClientCanvasSetup } from './modules/clientCanvasSetup';
+import { ClientFrameFlow } from './modules/clientFrameFlow';
+import { ClientGameLoop } from './modules/clientGameLoop';
+import { ClientGameSystems } from './modules/clientGameSystems';
 import { ClientGameSounds } from './modules/clientGameSounds';
 import { ClientIdentity } from './modules/clientIdentity';
+import { ClientInputStartup } from './modules/clientInputStartup';
 import { Config } from './modules/config';
 import { ClientLobbyViewModel } from './modules/clientLobbyViewModel';
 import { ClientMatchTimer } from './modules/clientMatchTimer';
@@ -92,13 +92,9 @@ const scripts = [
     ['js/InstallPrompt.js', installPromptSource],
     ['js/ClientCollisionEnvironment.js', clientCollisionEnvironmentSource],
     ['js/ClientGameplayInput.js', clientGameplayInputSource],
-    ['js/ClientFrameFlow.js', clientFrameFlowSource],
-    ['js/ClientGameSystems.js', clientGameSystemsSource],
-    ['js/ClientGameLoop.js', clientGameLoopSource],
     ['js/ClientHitDetection.js', clientHitDetectionSource],
     ['js/ClientHudFlow.js', clientHudFlowSource],
     ['js/ClientHudOverlay.js', clientHudOverlaySource],
-    ['js/ClientInputStartup.js', clientInputStartupSource],
     ['js/ClientKeyEventFlow.js', clientKeyEventFlowSource],
     ['js/ClientLobbyHudFlow.js', clientLobbyHudFlowSource],
     ['js/ClientLobbyFlow.js', clientLobbyFlowSource],
@@ -143,8 +139,12 @@ globalThis.GF.ClientAmmoFlow = ClientAmmoFlow;
 globalThis.GF.ClientAssets = ClientAssets;
 globalThis.GF.ClientCameraController = ClientCameraController;
 globalThis.GF.ClientCanvasSetup = ClientCanvasSetup;
+globalThis.GF.ClientFrameFlow = ClientFrameFlow;
+globalThis.GF.ClientGameLoop = ClientGameLoop;
+globalThis.GF.ClientGameSystems = ClientGameSystems;
 globalThis.GF.ClientGameSounds = ClientGameSounds;
 globalThis.GF.ClientIdentity = ClientIdentity;
+globalThis.GF.ClientInputStartup = ClientInputStartup;
 globalThis.GF.Config = Config;
 globalThis.GF.ClientLobbyViewModel = ClientLobbyViewModel;
 globalThis.GF.ClientMatchTimer = ClientMatchTimer;

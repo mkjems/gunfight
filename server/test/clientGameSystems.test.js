@@ -1,20 +1,24 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientGameSystems() {
-    const context = {
-        GF: {}
-    };
+async function loadClientGameSystems() {
     const source = readFileSync(
-        new URL('../../client/js/ClientGameSystems.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientGameSystems.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientGameSystems;
+    return module.ClientGameSystems;
 }
 
 function createConstructors(calls) {
@@ -75,8 +79,8 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('creates game systems with injectable constructors', function () {
-    const systemsModule = loadClientGameSystems();
+test('creates game systems with injectable constructors', async function () {
+    const systemsModule = await loadClientGameSystems();
     const calls = [];
     const constructors = createConstructors(calls);
     function playRicochet() {}

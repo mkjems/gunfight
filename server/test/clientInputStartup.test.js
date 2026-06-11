@@ -1,24 +1,28 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientInputStartup() {
-    const context = {
-        GF: {}
-    };
+async function loadClientInputStartup() {
     const source = readFileSync(
-        new URL('../../client/js/ClientInputStartup.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientInputStartup.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientInputStartup;
+    return module.ClientInputStartup;
 }
 
-test('creates input and starts touch controls before the game loop', function () {
-    const startup = loadClientInputStartup();
+test('creates input and starts touch controls before the game loop', async function () {
+    const startup = await loadClientInputStartup();
     const calls = [];
     const input = {
         id: 'input'
@@ -48,8 +52,8 @@ test('creates input and starts touch controls before the game loop', function ()
     ]);
 });
 
-test('does not restart input when an input controller already exists', function () {
-    const startup = loadClientInputStartup();
+test('does not restart input when an input controller already exists', async function () {
+    const startup = await loadClientInputStartup();
     const input = {
         id: 'input'
     };

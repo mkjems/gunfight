@@ -1,27 +1,45 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientFrameFlow() {
-    const context = {
-        GF: {
-            ClientScreens: {
-                RoundState: {
-                    PLAYING: 'playing',
-                    WAITING: 'waiting'
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientFrameFlow.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.ClientFrameFlow;
+async function loadClientFrameFlow() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientFrameFlow.ts',
+        'clientFrameFlow.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientFrameFlow.js')).href
+    );
+
+    return module.ClientFrameFlow;
 }
 
 function createUpdateOptions() {
@@ -118,8 +136,8 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('updates one frame in simulation order', function () {
-    const frameFlow = loadClientFrameFlow();
+test('updates one frame in simulation order', async function () {
+    const frameFlow = await loadClientFrameFlow();
     const { calls, options } = createUpdateOptions();
 
     frameFlow.update(options);
@@ -135,8 +153,8 @@ test('updates one frame in simulation order', function () {
     ]);
 });
 
-test('renders one gameplay frame with camera and scenario', function () {
-    const frameFlow = loadClientFrameFlow();
+test('renders one gameplay frame with camera and scenario', async function () {
+    const frameFlow = await loadClientFrameFlow();
     const { calls, options } = createRenderOptions();
 
     frameFlow.render(options);
@@ -154,8 +172,8 @@ test('renders one gameplay frame with camera and scenario', function () {
     ]);
 });
 
-test('renders waiting frame without camera or scenario', function () {
-    const frameFlow = loadClientFrameFlow();
+test('renders waiting frame without camera or scenario', async function () {
+    const frameFlow = await loadClientFrameFlow();
     const { calls, options } = createRenderOptions({
         roundState: 'waiting',
         shouldUseCamera() {
