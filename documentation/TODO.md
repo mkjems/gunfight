@@ -232,6 +232,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Move `ClientHitDetection`, `ClientPlayerHitFlow`, `ClientRoundEndFlow`, and `ClientRoundResetFlow` behind imported module bridges.
     - [x] Move `ClientRoundRitual`, `ClientLobbyFlow`, `ClientCollisionEnvironment`, and `CollisionDebugRenderer` behind imported module bridges.
     - [x] Move `GameHud`, `HighScoresScreen`, `LobbyScreen`, and `NameEditorScreen` behind imported module bridges.
+    - [x] Move `AmmoHudRenderer`, `InstallPrompt`, `Color`, `Pen`, and `requestAnimFrame` behind imported module bridges.
     - Convert extracted UI and state modules before gameplay simulation.
     - Keep canvas gameplay readable and testable during conversion.
     - Remove script-order coupling as modules are converted.
@@ -254,6 +255,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Convert hit detection and round-ending/reset flow helpers to TypeScript.
     - [x] Convert round ritual, lobby entry, and collision environment/debug helpers to TypeScript.
     - [x] Convert HUD screen wrappers to TypeScript.
+    - [x] Convert small drawing/PWA utility wrappers to TypeScript.
     - Start with pure decision modules and view-model helpers.
     - Then convert networking, screens, input, and HUD modules.
     - Convert gameplay simulation files after shared contracts and client imports are stable.

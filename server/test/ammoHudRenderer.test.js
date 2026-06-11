@@ -1,29 +1,45 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadAmmoHudRenderer() {
-    const context = {
-        GF: {
-            Config: {
-                colors: {
-                    yellow: 'yellow'
-                },
-                graphics: {
-                    scale: 2
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/AmmoHudRenderer.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.AmmoHudRenderer;
+async function loadAmmoHudRenderer() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('config.ts', 'config.js', tempDirectory);
+    compileClientModule(
+        'ammoHudRenderer.ts',
+        'ammoHudRenderer.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'ammoHudRenderer.js')).href
+    );
+
+    return module.AmmoHudRenderer;
 }
 
 function createContext() {
@@ -46,8 +62,8 @@ function createContext() {
     };
 }
 
-test('draws ammo with the sprite when it is loaded', function () {
-    const AmmoHudRenderer = loadAmmoHudRenderer();
+test('draws ammo with the sprite when it is loaded', async function () {
+    const AmmoHudRenderer = await loadAmmoHudRenderer();
     const context = createContext();
     const renderer = new AmmoHudRenderer({
         context,
@@ -67,8 +83,8 @@ test('draws ammo with the sprite when it is loaded', function () {
     ]);
 });
 
-test('draws fallback rectangles when the sprite is not loaded', function () {
-    const AmmoHudRenderer = loadAmmoHudRenderer();
+test('draws fallback rectangles when the sprite is not loaded', async function () {
+    const AmmoHudRenderer = await loadAmmoHudRenderer();
     const context = createContext();
     const renderer = new AmmoHudRenderer({
         context,

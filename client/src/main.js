@@ -1,6 +1,3 @@
-import requestAnimationFrameSource from '../js/requestAnimationFrame.js?raw';
-import ammoHudRendererSource from '../js/AmmoHudRenderer.js?raw';
-import installPromptSource from '../js/InstallPrompt.js?raw';
 import scenarioRendererSource from '../js/ScenarioRenderer.js?raw';
 import soundEffectsSource from '../js/SoundEffects.js?raw';
 import scoreKeeperSource from '../js/ScoreKeeper.js?raw';
@@ -9,8 +6,6 @@ import keysModelSource from '../js/KeysModel.js?raw';
 import nameEditorSource from '../js/NameEditor.js?raw';
 import cameraSource from '../js/Camera.js?raw';
 import touchControlsSource from '../js/TouchControls.js?raw';
-import colorSource from '../js/Color.js?raw';
-import penSource from '../js/Pen.js?raw';
 import sceneSource from '../js/Scene.js?raw';
 import obstaclesSource from '../js/Obstacles.js?raw';
 import controllableSource from '../js/Controllable.js?raw';
@@ -60,12 +55,17 @@ import { ClientTouchState } from './modules/clientTouchState';
 import { ClientTouchControlsFlow } from './modules/clientTouchControlsFlow';
 import { ClientTimers } from './modules/clientTimers';
 import { CollisionDebugRenderer } from './modules/collisionDebugRenderer';
+import { AmmoHudRenderer } from './modules/ammoHudRenderer';
+import { Color } from './modules/color';
 import { GameHud } from './modules/gameHud';
 import { GameHudViewModel } from './modules/gameHudViewModel';
 import { HighScoresScreen } from './modules/highScoresScreen';
+import { InstallPrompt } from './modules/installPrompt';
 import { LobbyScreen } from './modules/lobbyScreen';
 import { NameEditorScreen } from './modules/nameEditorScreen';
+import { Pen } from './modules/pen';
 import { PlayerPositionSync } from './modules/playerPositionSync';
+import { requestAnimFrame } from './modules/requestAnimationFrame';
 
 function loadScript(src) {
     if (src === '/socket.io/socket.io.js' && globalThis.io) {
@@ -87,9 +87,6 @@ function loadScript(src) {
 }
 
 const scripts = [
-    ['js/requestAnimationFrame.js', requestAnimationFrameSource],
-    ['js/AmmoHudRenderer.js', ammoHudRendererSource],
-    ['js/InstallPrompt.js', installPromptSource],
     ['js/ScenarioRenderer.js', scenarioRendererSource],
     ['js/SoundEffects.js', soundEffectsSource],
     ['js/ScoreKeeper.js', scoreKeeperSource],
@@ -98,8 +95,6 @@ const scripts = [
     ['js/NameEditor.js', nameEditorSource],
     ['js/Camera.js', cameraSource],
     ['js/TouchControls.js', touchControlsSource],
-    ['js/Color.js', colorSource],
-    ['js/Pen.js', penSource],
     ['js/Scene.js', sceneSource],
     ['js/Obstacles.js', obstaclesSource],
     ['js/Controllable.js', controllableSource],
@@ -113,6 +108,8 @@ const scripts = [
 await loadScript('/socket.io/socket.io.js');
 
 globalThis.GF = globalThis.GF || {};
+globalThis.requestAnimFrame = requestAnimFrame;
+globalThis.GF.AmmoHudRenderer = AmmoHudRenderer;
 globalThis.GF.CanvasTools = CanvasTools;
 globalThis.GF.ClientAmmo = ClientAmmo;
 globalThis.GF.ClientAmmoFlow = ClientAmmoFlow;
@@ -154,11 +151,14 @@ globalThis.GF.ClientTouchState = ClientTouchState;
 globalThis.GF.ClientTouchControlsFlow = ClientTouchControlsFlow;
 globalThis.GF.ClientTimers = ClientTimers;
 globalThis.GF.CollisionDebugRenderer = CollisionDebugRenderer;
+globalThis.GF.Color = Color;
 globalThis.GF.GameHud = GameHud;
 globalThis.GF.GameHudViewModel = GameHudViewModel;
 globalThis.GF.HighScoresScreen = HighScoresScreen;
+globalThis.GF.InstallPrompt = InstallPrompt;
 globalThis.GF.LobbyScreen = LobbyScreen;
 globalThis.GF.NameEditorScreen = NameEditorScreen;
+globalThis.GF.Pen = Pen;
 globalThis.GF.PlayerPositionSync = PlayerPositionSync;
 (0, eval)('var GF = globalThis.GF;');
 
