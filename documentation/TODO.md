@@ -267,6 +267,45 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - Then convert networking, screens, input, and HUD modules.
     - Convert gameplay simulation files after shared contracts and client imports are stable.
 
+### P1.4.9 - Retire Client Bootstrap Debt
+
+- [ ] Convert `client/src/main.js` to TypeScript.
+- [ ] Type the client dependency bag passed into `createGame`.
+- [ ] Remove `// @ts-nocheck` from `client/src/modules/game.ts` incrementally.
+- [ ] Keep dependency injection where tests need it, but make runtime construction easier to read.
+- [ ] Decide whether Socket.IO should remain loaded by script injection or become an explicit client entry boundary.
+
+### P1.4.10 - Define The UI Ownership Boundary
+
+- [ ] Document that canvas gameplay remains outside the component framework.
+- [ ] Make the DOM HUD/lobby/high-score/name-editor overlay the component-owned area.
+- [ ] Keep view-model modules framework-independent.
+- [ ] Components receive render props and emit actions; they should not own game state.
+- [ ] Keep screen-state transitions in `ClientScreens`, not inside components.
+
+### P1.4.11 - Choose And Spike A Component Renderer
+
+- [ ] Compare vanilla DOM modules, Preact, Lit, and Svelte/Solid against this project.
+- [ ] Prefer Preact unless the spike shows it adds more complexity than it removes.
+- [ ] Add the smallest possible Preact island behind the existing HUD overlay.
+- [ ] Migrate one low-risk screen first, likely high scores.
+- [ ] Verify build, browser smoke test, service worker behavior, and mobile layout.
+
+### P1.4.12 - Migrate UI Screens To Components Incrementally
+
+- [ ] Convert high scores screen first.
+- [ ] Convert lobby screen after high scores.
+- [ ] Convert name editor after lobby.
+- [ ] Convert game HUD last because it is closest to active gameplay.
+- [ ] Remove old imperative DOM screen modules only after their replacement is covered by tests.
+- [ ] Keep touch controls separate until the component boundary is stable.
+
+### P1.4.13 - Prepare Future Tooling UI
+
+- [ ] Decide whether P3.5 rock/scenario editors should use the same component setup.
+- [ ] Create reusable UI primitives only when the second screen needs them.
+- [ ] Keep editor state separate from live gameplay state.
+
 ### P1.5 - Keep The Architecture Healthy
 
 - [ ] Improve shared configuration.
