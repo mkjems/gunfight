@@ -6,9 +6,9 @@
         "check": "npm run format:check && npm run lint && npm run typecheck && npm test",
         "start": "node server/server.js",
         "dev": "node server/server.js",
-        "format": "prettier --write --ignore-unknown package.json tsconfig.json server client compose.yaml .github/workflows/container.yml documentation/TODO.md documentation/State-ownership.md README.markdown",
-        "format:check": "prettier --check --ignore-unknown package.json tsconfig.json server client compose.yaml .github/workflows/container.yml documentation/TODO.md documentation/State-ownership.md README.markdown",
-        "lint": "eslint server client/js",
+        "format": "prettier --write --ignore-unknown package.json tsconfig.json server shared client compose.yaml .github/workflows/container.yml documentation/TODO.md documentation/State-ownership.md documentation/TypeScript-migration.md README.markdown",
+        "format:check": "prettier --check --ignore-unknown package.json tsconfig.json server shared client compose.yaml .github/workflows/container.yml documentation/TODO.md documentation/State-ownership.md documentation/TypeScript-migration.md README.markdown",
+        "lint": "eslint server shared client/js",
         "typecheck": "tsc --project tsconfig.json",
         "test": "node --test server/test/*.test.js"
     },

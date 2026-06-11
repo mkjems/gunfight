@@ -17,11 +17,11 @@ const DEFAULT_NAMES = [
 ];
 
 /**
- * @typedef {'waiting' | 'readying' | 'playing' | 'abandoned' | 'closed'} GameStatus
+ * @typedef {import('../../shared/contracts.js').GameStatus} GameStatus
+ * @typedef {import('../../shared/contracts.js').PublicClient} PublicClient
+ * @typedef {import('../../shared/contracts.js').PublicGameModel} PublicGameModel
  * @typedef {{ id: number, ready: boolean, gameId: string, socketId: string, name: string }} LobbyClient
  * @typedef {{ id: string, room: string, status: GameStatus, model: ReturnType<typeof createGameModel>, clients: LobbyClient[], createdAt: number, updatedAt: number }} GameSession
- * @typedef {{ id: number, name: string, ready: boolean, slot: number }} PublicClient
- * @typedef {{ gameId: string, status: GameStatus, message: string, playerLimit: number, clients: PublicClient[], currentScenario: object | null, roundNumber: number }} PublicGameModel
  */
 
 function defaultNow() {

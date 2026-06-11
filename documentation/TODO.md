@@ -125,19 +125,19 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 
 ### P1.4 - Introduce TypeScript Deliberately
 
-- [ ] Decide on the TypeScript migration path.
+- [x] Decide on the TypeScript migration path.
     - Prefer an incremental migration over a full rewrite.
     - Move shared model and networking files first.
     - Then move extracted UI components and state modules.
     - Convert gameplay simulation files after the public contracts are stable.
     - Replace broad `GF.*` namespace mutation with imports after the build step exists.
 
-- [ ] Introduce typed data contracts.
+- [x] Introduce typed data contracts.
     - Type Socket.IO payloads.
     - Type client, game model, scenario, obstacle, player, bullet, score, and screen-state shapes.
     - Validate incoming server and client payloads at runtime where needed.
 
-- [ ] Decide on a build tool before `.ts` files become normal.
+- [x] Decide on a build tool before `.ts` files become normal.
     - Consider Vite for module bundling, dev server, cache-busted builds, and TypeScript support.
     - Keep the current static-file setup until bundling solves real pain.
     - Make sure service worker caching and deployment stay simple.

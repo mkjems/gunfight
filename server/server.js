@@ -5,6 +5,14 @@ import { fileURLToPath } from 'node:url';
 import { Server } from 'socket.io';
 import { createLobby } from './gameModules/lobby.js';
 import { createHighScores } from './gameModules/highScores.js';
+import {
+    createKeyEventPayload,
+    createPlayerPositionPayload,
+    getNameFromPayload,
+    normalizeGameResultPayload,
+    normalizeObstacleDamagePayload,
+    shouldRejoinAfterLeave
+} from '../shared/contracts.js';
 
 const portNumber = process.env.PORT || 8080;
 const __filename = fileURLToPath(import.meta.url);
@@ -105,14 +113,6 @@ function leaveSocketGame(socket) {
     return left;
 }
 
-function getNameFromPayload(data) {
-    if (typeof data === 'string') {
-        return data;
-    }
-
-    return data && data.name;
-}
-
 function getNameFromSocketHandshake(socket) {
     return (
         getNameFromPayload(socket.handshake.auth) ||
@@ -157,7 +157,7 @@ io.on('connection', function (socket) {
             gameId: left && left.game.id
         });
 
-        if (data && data.rejoin) {
+        if (shouldRejoinAfterLeave(data)) {
             joinSocketGame(socket, {
                 name: left && left.client.name
             });
@@ -176,46 +176,47 @@ io.on('connection', function (socket) {
 
     socket.on('clientKeyEvent', function (data) {
         const context = getSocketGameContext(socket);
+        let keyEvent;
 
         if (!context) {
             return;
         }
 
-        const keyEvent = {
-            action: data.action,
-            key: data.key,
-            player: context.client.id,
-            shot: data.shot
-        };
+        keyEvent = createKeyEventPayload(data, context.client.id);
+
+        if (!keyEvent) {
+            return;
+        }
 
         socket.to(context.game.room).emit('keyEvent', keyEvent);
     });
 
     socket.on('playerPosition', function (data) {
         const context = getSocketGameContext(socket);
+        let position;
 
         if (!context) {
             return;
         }
 
-        socket.to(context.game.room).emit('playerPosition', {
-            player: context.client.id,
-            x: data.x,
-            y: data.y,
-            frame: data.frame,
-            aim: data.aim,
-            facing: data.facing
-        });
+        position = createPlayerPositionPayload(data, context.client.id);
+
+        if (!position) {
+            return;
+        }
+
+        socket.to(context.game.room).emit('playerPosition', position);
     });
 
     socket.on('obstacleDamage', function (data) {
         const context = getSocketGameContext(socket);
+        const payload = normalizeObstacleDamagePayload(data);
 
-        if (!context) {
+        if (!context || !payload || payload.ownerId !== context.client.id) {
             return;
         }
 
-        socket.to(context.game.room).emit('obstacleDamage', data);
+        socket.to(context.game.room).emit('obstacleDamage', payload);
     });
 
     socket.on('clientReady', function () {
@@ -260,7 +261,13 @@ io.on('connection', function (socket) {
     });
 
     socket.on('recordGameResult', function (data) {
-        io.emit('highScores', highScores.recordGame(data));
+        const result = normalizeGameResultPayload(data);
+
+        if (!result) {
+            return;
+        }
+
+        io.emit('highScores', highScores.recordGame(result));
     });
 });
 
