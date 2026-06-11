@@ -24,7 +24,7 @@ GF.Game = (function () {
         nameEditor,
         cameraController,
         camera,
-        soundEffects,
+        gameSounds,
         scene,
         socket,
         inputController,
@@ -152,7 +152,9 @@ GF.Game = (function () {
     }
 
     function initSoundEffects() {
-        soundEffects = new GF.SoundEffects();
+        gameSounds = new GF.ClientGameSounds({
+            soundEffects: new GF.SoundEffects()
+        });
     }
 
     function initCameraController() {
@@ -210,7 +212,7 @@ GF.Game = (function () {
         positionSync = new GF.PlayerPositionSync();
         ammo = new GF.ClientAmmo();
         localReadyRequested = false;
-        GF.Bullet.onRicochet = playRicochetSound;
+        GF.Bullet.onRicochet = gameSounds.playRicochet;
     }
 
     function setRoundState(nextState) {
@@ -224,43 +226,6 @@ GF.Game = (function () {
         }
 
         roundState = nextState;
-    }
-
-    function playGunSound() {
-        playSoundEffect('gunshot');
-    }
-
-    function playEmptyGunSound() {
-        playSoundEffect('emptyGun');
-    }
-
-    function playRicochetSound() {
-        playSoundEffect('ricochet');
-    }
-
-    function playPainSound() {
-        playSoundEffect('pain');
-    }
-
-    function playReadySound() {
-        playSoundEffect('ready');
-    }
-
-    function playObstacleHitSound(id) {
-        if (id === 'wagon') {
-            playSoundEffect('wagonHit');
-            return;
-        }
-
-        if (id && id.indexOf('cactus:') === 0) {
-            playSoundEffect('cactusHit');
-        }
-    }
-
-    function playSoundEffect(name) {
-        if (soundEffects) {
-            soundEffects.play(name);
-        }
     }
 
     function setRoundMessage(message) {
@@ -283,17 +248,10 @@ GF.Game = (function () {
     }
 
     function renderHud() {
-        var secondsLeft = GF.Config.game.seconds;
         var firstClient;
         var secondClient;
         var firstAmmo;
         var secondAmmo;
-
-        secondsLeft = roundData.getSecondsLeft(secondsLeft);
-
-        if (roundState === RoundState.GAME_OVER) {
-            secondsLeft = 'GAME OVER';
-        }
 
         hudContext.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
 
@@ -312,60 +270,31 @@ GF.Game = (function () {
         secondClient = latestModel && latestModel.clients[1];
 
         if (!firstClient || !secondClient) {
-            renderGameHud(secondsLeft);
+            renderGameHud();
             return;
         }
 
         firstAmmo = ammo.get(firstClient.id);
         secondAmmo = ammo.get(secondClient.id);
 
-        renderGameHud(secondsLeft);
+        renderGameHud();
         ammoHudRenderer.render(firstAmmo, 122, 606, 1);
         ammoHudRenderer.render(secondAmmo, 828, 606, -1);
         updateTouchControls();
     }
 
-    function renderGameHud(secondsLeft) {
-        gameHudScreen.render({
-            leftScore: scoreKeeper.getScore(0),
-            rightScore: scoreKeeper.getScore(1),
-            timerLabel: secondsLeft,
-            roundMessage: roundData.getRoundMessage(),
-            hitMessage: getHitHudMessage()
-        });
-    }
-
-    function getHitHudMessage() {
-        var hitMessage = roundData.getHitMessage();
-        var target;
-        var point;
-
-        if (!hitMessage) {
-            return null;
-        }
-
-        target = players.all[hitMessage.targetId];
-
-        if (!target) {
-            return null;
-        }
-
-        point = worldToHudPoint(target.x, Math.max(80, target.y - 150));
-
-        return {
-            text: hitMessage.text,
-            x: point.x,
-            y: point.y
-        };
-    }
-
-    function worldToHudPoint(x, y) {
-        return cameraController.worldToHudPoint({
-            camera: camera,
-            roundState: roundState,
-            x: x,
-            y: y
-        });
+    function renderGameHud() {
+        gameHudScreen.render(
+            GF.GameHudViewModel.getState({
+                camera: camera,
+                cameraController: cameraController,
+                defaultSeconds: GF.Config.game.seconds,
+                players: players,
+                roundData: roundData,
+                roundState: roundState,
+                scoreKeeper: scoreKeeper
+            })
+        );
     }
 
     function getCurrentScenario() {
@@ -605,7 +534,7 @@ GF.Game = (function () {
         }
 
         if (syncState.clientBecameReady) {
-            playReadySound();
+            gameSounds.playReady();
         }
 
         players.sync(model, {
@@ -764,10 +693,10 @@ GF.Game = (function () {
             roundState: roundState,
             onBulletFired: function () {
                 reloadIfBothPlayersAreOutOfAmmo();
-                playGunSound();
+                gameSounds.playGun();
                 renderHud();
             },
-            onEmptyGun: playEmptyGunSound
+            onEmptyGun: gameSounds.playEmptyGun
         });
     }
 
@@ -841,7 +770,7 @@ GF.Game = (function () {
         }
 
         damageObstacle(data.id);
-        playObstacleHitSound(data.id);
+        gameSounds.playObstacleHit(data.id);
         bullets.remove(data.ownerId);
     }
 
@@ -854,7 +783,7 @@ GF.Game = (function () {
             targetId: hit.targetId,
             text: 'Got me!'
         });
-        playPainSound();
+        gameSounds.playPain();
 
         if (target) {
             target.playDeathAnimation();
