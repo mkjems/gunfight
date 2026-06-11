@@ -23,6 +23,13 @@ This is the current state split before the P1 architecture refactor. Keep it upd
 - Name editor interaction state.
 - Stored player name in `localStorage`.
 
+## UI rendering ownership
+
+Component rendering ownership is defined in `documentation/UI-ownership.md`.
+Canvas gameplay remains outside the component tree. Future components may own
+DOM overlay markup, but screen-state decisions stay in `ClientScreens`, and
+side effects stay in flow modules.
+
 ## Relayed state
 
 - Key events are applied locally and relayed through the server to the opponent.

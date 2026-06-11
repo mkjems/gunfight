@@ -290,11 +290,21 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 
 ### P1.4.10 - Define The UI Ownership Boundary
 
-- [ ] Document that canvas gameplay remains outside the component framework.
-- [ ] Make the DOM HUD/lobby/high-score/name-editor overlay the component-owned area.
-- [ ] Keep view-model modules framework-independent.
-- [ ] Components receive render props and emit actions; they should not own game state.
-- [ ] Keep screen-state transitions in `ClientScreens`, not inside components.
+- [x] Document that canvas gameplay remains outside the component framework.
+    - Keep the boundary in `documentation/UI-ownership.md`.
+
+- [x] Make the DOM HUD/lobby/high-score/name-editor overlay the component-owned area.
+    - Include the mobile virtual joystick, aim slider, fire button, and touch lobby buttons in the eventual component-owned DOM surface.
+    - Treat touch controls as a later migration after the safer overlay screens prove the boundary.
+
+- [x] Keep view-model modules framework-independent.
+    - Keep Preact or any later renderer out of view-model helpers.
+
+- [x] Components receive render props and emit actions; they should not own game state.
+    - Keep persistent state, network state, round state, and name editor value state in existing client modules.
+
+- [x] Keep screen-state transitions in `ClientScreens`, not inside components.
+    - Flow modules continue to choose when rendering happens and when side effects run.
 
 ### P1.4.11 - Choose And Spike A Component Renderer
 
@@ -311,7 +321,8 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 - [ ] Convert name editor after lobby.
 - [ ] Convert game HUD last because it is closest to active gameplay.
 - [ ] Remove old imperative DOM screen modules only after their replacement is covered by tests.
-- [ ] Keep touch controls separate until the component boundary is stable.
+- [ ] Convert touch controls after the screen/HUD component boundary is stable.
+    - Keep joystick, aim, and fire input state in the existing input/touch flow modules.
 
 ### P1.4.13 - Prepare Future Tooling UI
 
