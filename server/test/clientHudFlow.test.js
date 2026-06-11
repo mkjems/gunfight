@@ -1,35 +1,46 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientHudFlow() {
-    const context = {
-        GF: {
-            ClientScreens: {
-                RoundState: {
-                    PLAYING: 'playing',
-                    WAITING: 'waiting'
-                }
-            },
-            GameHudViewModel: {
-                getState(options) {
-                    return {
-                        defaultSeconds: options.defaultSeconds,
-                        roundState: options.roundState
-                    };
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientHudFlow.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.ClientHudFlow;
+async function loadClientHudFlow() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'gameHudViewModel.ts',
+        'gameHudViewModel.js',
+        tempDirectory
+    );
+    compileClientModule('clientHudFlow.ts', 'clientHudFlow.js', tempDirectory);
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientHudFlow.js')).href
+    );
+
+    return module.ClientHudFlow;
 }
 
 function createOptions(overrides = {}) {
@@ -65,6 +76,14 @@ function createOptions(overrides = {}) {
                 calls.push(['gameHudScreen.render', state]);
             }
         },
+        gameHudViewModel: {
+            getState(options) {
+                return {
+                    defaultSeconds: options.defaultSeconds,
+                    roundState: options.roundState
+                };
+            }
+        },
         hudContext: {
             clearRect(x, y, width, height) {
                 calls.push(['hudContext.clearRect', x, y, width, height]);
@@ -97,8 +116,8 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('renders waiting HUD through the lobby branch', function () {
-    const hudFlow = loadClientHudFlow();
+test('renders waiting HUD through the lobby branch', async function () {
+    const hudFlow = await loadClientHudFlow();
     const { calls, options } = createOptions({
         roundState: 'waiting'
     });
@@ -112,8 +131,8 @@ test('renders waiting HUD through the lobby branch', function () {
     ]);
 });
 
-test('renders active game HUD and both ammo displays', function () {
-    const hudFlow = loadClientHudFlow();
+test('renders active game HUD and both ammo displays', async function () {
+    const hudFlow = await loadClientHudFlow();
     const { calls, elements, options } = createOptions();
 
     hudFlow.render(options);
@@ -139,8 +158,8 @@ test('renders active game HUD and both ammo displays', function () {
     ]);
 });
 
-test('renders active game HUD without ammo when clients are missing', function () {
-    const hudFlow = loadClientHudFlow();
+test('renders active game HUD without ammo when clients are missing', async function () {
+    const hudFlow = await loadClientHudFlow();
     const { calls, options } = createOptions({
         model: {
             clients: []

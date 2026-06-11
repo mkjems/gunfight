@@ -1,37 +1,45 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientHudOverlay(calls) {
-    const context = {
-        GF: {
-            GameHud: function (elements) {
-                calls.push(['GameHud', elements]);
-                this.kind = 'gameHudScreen';
-            },
-            HighScoresScreen: function (elements) {
-                calls.push(['HighScoresScreen', elements]);
-                this.kind = 'highScoresScreen';
-            },
-            LobbyScreen: function (elements) {
-                calls.push(['LobbyScreen', elements]);
-                this.kind = 'lobbyScreen';
-            },
-            NameEditorScreen: function (elements) {
-                calls.push(['NameEditorScreen', elements]);
-                this.kind = 'nameEditorScreen';
-            }
-        }
-    };
+async function loadClientHudOverlay() {
     const source = readFileSync(
-        new URL('../../client/js/ClientHudOverlay.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientHudOverlay.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
+    return module.ClientHudOverlay;
+}
 
-    return context.GF.ClientHudOverlay;
+function createConstructors(calls) {
+    return {
+        GameHud: function (elements) {
+            calls.push(['GameHud', elements]);
+            this.kind = 'gameHudScreen';
+        },
+        HighScoresScreen: function (elements) {
+            calls.push(['HighScoresScreen', elements]);
+            this.kind = 'highScoresScreen';
+        },
+        LobbyScreen: function (elements) {
+            calls.push(['LobbyScreen', elements]);
+            this.kind = 'lobbyScreen';
+        },
+        NameEditorScreen: function (elements) {
+            calls.push(['NameEditorScreen', elements]);
+            this.kind = 'nameEditorScreen';
+        }
+    };
 }
 
 function createDocument() {
@@ -65,12 +73,13 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('creates HUD screens from DOM elements', function () {
+test('creates HUD screens from DOM elements', async function () {
     const calls = [];
-    const overlayModule = loadClientHudOverlay(calls);
+    const overlayModule = await loadClientHudOverlay();
     const fakeDocument = createDocument();
     const overlay = overlayModule.create({
-        document: fakeDocument
+        document: fakeDocument,
+        ...createConstructors(calls)
     });
 
     assert.equal(overlay.gameHud.id, 'gameHud');
@@ -144,8 +153,8 @@ test('creates HUD screens from DOM elements', function () {
     );
 });
 
-test('finds lobby section through closest or parent fallback', function () {
-    const overlayModule = loadClientHudOverlay([]);
+test('finds lobby section through closest or parent fallback', async function () {
+    const overlayModule = await loadClientHudOverlay();
     const parent = {
         id: 'parent'
     };

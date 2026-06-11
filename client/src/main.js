@@ -4,13 +4,9 @@ import installPromptSource from '../js/InstallPrompt.js?raw';
 import clientCollisionEnvironmentSource from '../js/ClientCollisionEnvironment.js?raw';
 import clientGameplayInputSource from '../js/ClientGameplayInput.js?raw';
 import clientHitDetectionSource from '../js/ClientHitDetection.js?raw';
-import clientHudFlowSource from '../js/ClientHudFlow.js?raw';
-import clientHudOverlaySource from '../js/ClientHudOverlay.js?raw';
 import clientKeyEventFlowSource from '../js/ClientKeyEventFlow.js?raw';
-import clientLobbyHudFlowSource from '../js/ClientLobbyHudFlow.js?raw';
 import clientLobbyFlowSource from '../js/ClientLobbyFlow.js?raw';
 import clientNetworkSource from '../js/ClientNetwork.js?raw';
-import clientNameEditorFlowSource from '../js/ClientNameEditorFlow.js?raw';
 import clientPlayerHitFlowSource from '../js/ClientPlayerHitFlow.js?raw';
 import clientRoundEndFlowSource from '../js/ClientRoundEndFlow.js?raw';
 import clientRoundResetFlowSource from '../js/ClientRoundResetFlow.js?raw';
@@ -49,14 +45,18 @@ import { ClientFrameFlow } from './modules/clientFrameFlow';
 import { ClientGameLoop } from './modules/clientGameLoop';
 import { ClientGameSystems } from './modules/clientGameSystems';
 import { ClientGameSounds } from './modules/clientGameSounds';
+import { ClientHudFlow } from './modules/clientHudFlow';
+import { ClientHudOverlay } from './modules/clientHudOverlay';
 import { ClientIdentity } from './modules/clientIdentity';
 import { ClientInputStartup } from './modules/clientInputStartup';
+import { ClientLobbyHudFlow } from './modules/clientLobbyHudFlow';
 import { Config } from './modules/config';
 import { ClientLobbyViewModel } from './modules/clientLobbyViewModel';
 import { ClientMatchTimer } from './modules/clientMatchTimer';
 import { ClientModelSync } from './modules/clientModelSync';
 import { ClientModelUpdateFlow } from './modules/clientModelUpdateFlow';
 import { ClientModelUpdatePlan } from './modules/clientModelUpdatePlan';
+import { ClientNameEditorFlow } from './modules/clientNameEditorFlow';
 import { ClientObstacleSync } from './modules/clientObstacleSync';
 import { ClientRoundState } from './modules/clientRoundState';
 import { ClientRoundTransition } from './modules/clientRoundTransition';
@@ -93,13 +93,9 @@ const scripts = [
     ['js/ClientCollisionEnvironment.js', clientCollisionEnvironmentSource],
     ['js/ClientGameplayInput.js', clientGameplayInputSource],
     ['js/ClientHitDetection.js', clientHitDetectionSource],
-    ['js/ClientHudFlow.js', clientHudFlowSource],
-    ['js/ClientHudOverlay.js', clientHudOverlaySource],
     ['js/ClientKeyEventFlow.js', clientKeyEventFlowSource],
-    ['js/ClientLobbyHudFlow.js', clientLobbyHudFlowSource],
     ['js/ClientLobbyFlow.js', clientLobbyFlowSource],
     ['js/ClientNetwork.js', clientNetworkSource],
-    ['js/ClientNameEditorFlow.js', clientNameEditorFlowSource],
     ['js/ClientPlayerHitFlow.js', clientPlayerHitFlowSource],
     ['js/ClientRoundEndFlow.js', clientRoundEndFlowSource],
     ['js/ClientRoundResetFlow.js', clientRoundResetFlowSource],
@@ -143,14 +139,18 @@ globalThis.GF.ClientFrameFlow = ClientFrameFlow;
 globalThis.GF.ClientGameLoop = ClientGameLoop;
 globalThis.GF.ClientGameSystems = ClientGameSystems;
 globalThis.GF.ClientGameSounds = ClientGameSounds;
+globalThis.GF.ClientHudFlow = ClientHudFlow;
+globalThis.GF.ClientHudOverlay = ClientHudOverlay;
 globalThis.GF.ClientIdentity = ClientIdentity;
 globalThis.GF.ClientInputStartup = ClientInputStartup;
+globalThis.GF.ClientLobbyHudFlow = ClientLobbyHudFlow;
 globalThis.GF.Config = Config;
 globalThis.GF.ClientLobbyViewModel = ClientLobbyViewModel;
 globalThis.GF.ClientMatchTimer = ClientMatchTimer;
 globalThis.GF.ClientModelSync = ClientModelSync;
 globalThis.GF.ClientModelUpdateFlow = ClientModelUpdateFlow;
 globalThis.GF.ClientModelUpdatePlan = ClientModelUpdatePlan;
+globalThis.GF.ClientNameEditorFlow = ClientNameEditorFlow;
 globalThis.GF.ClientObstacleSync = ClientObstacleSync;
 globalThis.GF.ClientRoundState = ClientRoundState;
 globalThis.GF.ClientRoundTransition = ClientRoundTransition;

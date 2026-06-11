@@ -1,28 +1,32 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientNameEditorFlow() {
-    const context = {
-        GF: {}
-    };
+async function loadClientNameEditorFlow() {
     const source = readFileSync(
-        new URL('../../client/js/ClientNameEditorFlow.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientNameEditorFlow.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientNameEditorFlow;
+    return module.ClientNameEditorFlow;
 }
 
 function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('submits name changes through the socket', function () {
-    const flow = loadClientNameEditorFlow();
+test('submits name changes through the socket', async function () {
+    const flow = await loadClientNameEditorFlow();
     const calls = [];
 
     assert.equal(
@@ -46,8 +50,8 @@ test('submits name changes through the socket', function () {
     ]);
 });
 
-test('submits an empty name when name is missing', function () {
-    const flow = loadClientNameEditorFlow();
+test('submits an empty name when name is missing', async function () {
+    const flow = await loadClientNameEditorFlow();
     const calls = [];
 
     flow.submitNameChange({
@@ -68,8 +72,8 @@ test('submits an empty name when name is missing', function () {
     ]);
 });
 
-test('does not submit name changes without a socket', function () {
-    const flow = loadClientNameEditorFlow();
+test('does not submit name changes without a socket', async function () {
+    const flow = await loadClientNameEditorFlow();
 
     assert.equal(
         flow.submitNameChange({
@@ -80,8 +84,8 @@ test('does not submit name changes without a socket', function () {
     );
 });
 
-test('syncs the name editor through identity state', function () {
-    const flow = loadClientNameEditorFlow();
+test('syncs the name editor through identity state', async function () {
+    const flow = await loadClientNameEditorFlow();
     const calls = [];
     const client = {
         id: 'p1'
@@ -110,8 +114,8 @@ test('syncs the name editor through identity state', function () {
     ]);
 });
 
-test('closes active name editors only', function () {
-    const flow = loadClientNameEditorFlow();
+test('closes active name editors only', async function () {
+    const flow = await loadClientNameEditorFlow();
     const calls = [];
 
     assert.equal(

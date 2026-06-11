@@ -1,46 +1,50 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientLobbyHudFlow(screen, viewModel = {}) {
-    const context = {
-        GF: {
-            ClientScreens: {
-                Screen: {
-                    HIGH_SCORES: 'highScores',
-                    LOBBY_EDIT_NAME: 'lobbyEditName',
-                    LOBBY_MAIN: 'lobbyMain'
-                },
-                getActiveScreen() {
-                    return screen;
-                }
-            },
-            ClientLobbyViewModel: {
-                getLobbyViewModel(options) {
-                    return {
-                        model: options.model,
-                        playerId: options.playerId,
-                        view: 'lobby'
-                    };
-                },
-                shouldShowHighScoresScreen() {
-                    return !!viewModel.highScoresVisible;
-                },
-                shouldShowLobbyPrompt() {
-                    return viewModel.showLobbyPrompt !== false;
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientLobbyHudFlow.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.ClientLobbyHudFlow;
+async function loadClientLobbyHudFlow() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientLobbyViewModel.ts',
+        'clientLobbyViewModel.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'clientLobbyHudFlow.ts',
+        'clientLobbyHudFlow.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientLobbyHudFlow.js')).href
+    );
+
+    return module.ClientLobbyHudFlow;
 }
 
 function createRenderOptions(overrides = {}) {
@@ -118,21 +122,36 @@ function plain(value) {
     );
 }
 
-test('renders lobby main through the lobby screen', function () {
-    const flow = loadClientLobbyHudFlow('lobbyMain');
+test('renders lobby main through the lobby screen', async function () {
+    const flow = await loadClientLobbyHudFlow();
     const { calls, elements, options } = createRenderOptions();
 
-    assert.equal(flow.render(options), 'lobbyMain');
+    assert.equal(flow.render(options), 'lobby-main');
     assert.deepEqual(plain(calls), [
         'nameEditorScreen.hide',
         [
             'lobbyScreen.render',
             {
-                model: {
-                    gameId: 'game-1'
-                },
-                playerId: 'p1',
-                view: 'lobby'
+                controls: [
+                    'h j k l - left down up right',
+                    'a z - aim up down',
+                    'Space - shoot'
+                ],
+                editPrompt: '',
+                identityLines: ['', 'GAME game-1'],
+                playPrompt: 'PRESS P TO PLAY',
+                showControls: true,
+                showEditPrompt: false,
+                slots: [
+                    {
+                        label: 'PLAYER 1 : WAITING',
+                        ready: false
+                    },
+                    {
+                        label: 'PLAYER 2 : WAITING',
+                        ready: false
+                    }
+                ]
             }
         ]
     ]);
@@ -142,11 +161,13 @@ test('renders lobby main through the lobby screen', function () {
     assert.equal(elements.hudCanvas.hidden, false);
 });
 
-test('renders high scores with keyboard play prompt', function () {
-    const flow = loadClientLobbyHudFlow('highScores');
-    const { calls, options } = createRenderOptions();
+test('renders high scores with keyboard play prompt', async function () {
+    const flow = await loadClientLobbyHudFlow();
+    const { calls, options } = createRenderOptions({
+        now: 7000
+    });
 
-    assert.equal(flow.render(options), 'highScores');
+    assert.equal(flow.render(options), 'high-scores');
     assert.deepEqual(plain(calls), [
         'nameEditorScreen.hide',
         [
@@ -163,11 +184,22 @@ test('renders high scores with keyboard play prompt', function () {
     ]);
 });
 
-test('renders name editor and passes selection callback', function () {
-    const flow = loadClientLobbyHudFlow('lobbyEditName');
-    const { calls, elements, options } = createRenderOptions();
+test('renders name editor and passes selection callback', async function () {
+    const flow = await loadClientLobbyHudFlow();
+    const { calls, elements, options } = createRenderOptions({
+        nameEditor: {
+            getState() {
+                return {
+                    name: 'ADA'
+                };
+            },
+            isActive() {
+                return true;
+            }
+        }
+    });
 
-    assert.equal(flow.render(options), 'lobbyEditName');
+    assert.equal(flow.render(options), 'lobby-edit-name');
 
     const renderCall = calls[1];
     assert.equal(renderCall[0], 'nameEditorScreen.render');

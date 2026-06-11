@@ -1,0 +1,127 @@
+type HudElement = HTMLElement | null;
+type LobbySection = Element | ParentNode | null;
+
+type OverlayConstructors = {
+    GameHud: new (elements: {
+        hitMessage: HudElement;
+        roundMessage: HudElement;
+        scoreLeft: HudElement;
+        scoreRight: HudElement;
+        timer: HudElement;
+    }) => unknown;
+    HighScoresScreen: new (elements: {
+        lobbyMain: HudElement;
+        playPrompt: HudElement;
+        screen: HudElement;
+        table: HudElement;
+    }) => unknown;
+    LobbyScreen: new (elements: {
+        controls: HudElement;
+        controlsSection: LobbySection;
+        editPrompt: HudElement;
+        editPromptSection: LobbySection;
+        highScores: HudElement;
+        identity: HudElement;
+        main: HudElement;
+        playPrompt: HudElement;
+        slots: HudElement;
+    }) => unknown;
+    NameEditorScreen: new (elements: {
+        editor: HudElement;
+        grid: HudElement;
+        help: HudElement;
+        highScores: HudElement;
+        lobbyMain: HudElement;
+        value: HudElement;
+    }) => unknown;
+};
+
+type ClientHudOverlayOptions = Partial<OverlayConstructors> & {
+    document: Document;
+};
+
+type GlobalWithHudConstructors = typeof globalThis & {
+    GF?: Partial<OverlayConstructors>;
+};
+
+function getConstructor<K extends keyof OverlayConstructors>(
+    options: ClientHudOverlayOptions,
+    key: K
+): OverlayConstructors[K] {
+    const constructor =
+        options[key] || (globalThis as GlobalWithHudConstructors).GF?.[key];
+
+    if (!constructor) {
+        throw new Error('Missing HUD overlay constructor: ' + key);
+    }
+
+    return constructor as OverlayConstructors[K];
+}
+
+export function create(options: ClientHudOverlayOptions) {
+    const document = options.document;
+    const lobbyMain = document.getElementById('lobby-main');
+    const highScores = document.getElementById('highScoresScreen');
+    const GameHud = getConstructor(options, 'GameHud');
+    const HighScoresScreen = getConstructor(options, 'HighScoresScreen');
+    const LobbyScreen = getConstructor(options, 'LobbyScreen');
+    const NameEditorScreen = getConstructor(options, 'NameEditorScreen');
+
+    return {
+        gameHud: document.getElementById('gameHud'),
+        lobbyHud: document.getElementById('lobbyHud'),
+        gameHudScreen: new GameHud({
+            scoreLeft: document.getElementById('scoreLeft'),
+            scoreRight: document.getElementById('scoreRight'),
+            timer: document.getElementById('roundTimer'),
+            roundMessage: document.getElementById('roundMessage'),
+            hitMessage: document.getElementById('hitMessage')
+        }),
+        highScoresScreen: new HighScoresScreen({
+            lobbyMain,
+            screen: highScores,
+            table: document.getElementById('highScoresTable'),
+            playPrompt: document.getElementById('highScoresPlayPrompt')
+        }),
+        lobbyScreen: new LobbyScreen({
+            main: lobbyMain,
+            highScores,
+            identity: document.getElementById('lobbyIdentity'),
+            controls: document.getElementById('lobbyControlsText'),
+            controlsSection: getLobbySection(
+                document.getElementById('lobbyControlsText')
+            ),
+            slots: document.getElementById('lobbySlots'),
+            editPrompt: document.getElementById('lobbyEditPrompt'),
+            editPromptSection: getLobbySection(
+                document.getElementById('lobbyEditPrompt')
+            ),
+            playPrompt: document.getElementById('lobbyPlayPrompt')
+        }),
+        nameEditorScreen: new NameEditorScreen({
+            lobbyMain,
+            highScores,
+            editor: document.getElementById('nameEditor'),
+            value: document.getElementById('nameEditorValue'),
+            grid: document.getElementById('nameEditorGrid'),
+            help: document.getElementById('nameEditorHelp')
+        })
+    };
+}
+
+export function getLobbySection(element: Element | null): LobbySection {
+    if (!element) {
+        return null;
+    }
+
+    if (element.closest) {
+        return element.closest('.lobby-section');
+    }
+
+    return element.parentNode;
+}
+
+export const ClientHudOverlay = {
+    create,
+    getLobbySection
+};
