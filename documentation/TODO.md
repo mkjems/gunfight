@@ -62,13 +62,18 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - It should initialize systems, wire them together, and start the loop.
     - It should not contain detailed rendering for lobby, high scores, name editor, game HUD, sound, networking, or input.
 
-- [ ] Move UI into small component-like modules.
+- [x] Move UI into small component-like modules.
     - Create focused renderers for lobby, high scores, name editor, game HUD, install prompt, and touch controls.
     - Each UI module should own its DOM lookups and rendering for one screen or panel.
     - Prefer plain lightweight components first; do not move canvas gameplay into a component framework.
 
 - [ ] Move non-UI systems into focused modules.
-    - Extract networking, input, sound, round flow, score handling, and client synchronization.
+    - [x] Extract networking.
+    - [x] Keep keyboard and touch input in focused modules.
+    - [x] Extract sound.
+    - [ ] Extract round flow.
+    - [ ] Extract score handling.
+    - [ ] Extract client synchronization.
     - Keep rendering, simulation, round flow, and network synchronization easy to reason about separately.
 
 - [ ] Reduce global namespace coupling.

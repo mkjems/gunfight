@@ -3,28 +3,14 @@ GF.Game = (function () {
         context,
         hudCanvas,
         hudContext,
-        hudOverlay,
         gameHud,
         lobbyHud,
-        scoreLeftElement,
-        scoreRightElement,
-        roundTimerElement,
-        roundMessageElement,
-        hitMessageElement,
-        lobbyIdentityElement,
+        gameHudScreen,
+        lobbyScreen,
         lobbyMainElement,
-        lobbyControlsElement,
-        lobbyControlsSectionElement,
-        lobbySlotsElement,
-        lobbyEditPromptElement,
-        lobbyEditPromptSectionElement,
-        lobbyPlayPromptElement,
         highScoresScreenElement,
         highScoresScreen,
-        nameEditorElement,
-        nameEditorValueElement,
-        nameEditorGridElement,
-        nameEditorHelpElement,
+        nameEditorScreen,
         ammoSprite,
         wagonSprite,
         cactusSprite,
@@ -34,7 +20,6 @@ GF.Game = (function () {
         nameEditor,
         camera,
         soundEffects,
-        audioContext,
         scene,
         socket,
         inputController,
@@ -104,33 +89,46 @@ GF.Game = (function () {
     }
 
     function initHudOverlay() {
-        hudOverlay = document.getElementById('hudOverlay');
         gameHud = document.getElementById('gameHud');
         lobbyHud = document.getElementById('lobbyHud');
-        scoreLeftElement = document.getElementById('scoreLeft');
-        scoreRightElement = document.getElementById('scoreRight');
-        roundTimerElement = document.getElementById('roundTimer');
-        roundMessageElement = document.getElementById('roundMessage');
-        hitMessageElement = document.getElementById('hitMessage');
-        lobbyIdentityElement = document.getElementById('lobbyIdentity');
+        gameHudScreen = new GF.GameHud({
+            scoreLeft: document.getElementById('scoreLeft'),
+            scoreRight: document.getElementById('scoreRight'),
+            timer: document.getElementById('roundTimer'),
+            roundMessage: document.getElementById('roundMessage'),
+            hitMessage: document.getElementById('hitMessage')
+        });
         lobbyMainElement = document.getElementById('lobby-main');
-        lobbyControlsElement = document.getElementById('lobbyControlsText');
-        lobbyControlsSectionElement = getLobbySection(lobbyControlsElement);
-        lobbySlotsElement = document.getElementById('lobbySlots');
-        lobbyEditPromptElement = document.getElementById('lobbyEditPrompt');
-        lobbyEditPromptSectionElement = getLobbySection(lobbyEditPromptElement);
-        lobbyPlayPromptElement = document.getElementById('lobbyPlayPrompt');
         highScoresScreenElement = document.getElementById('highScoresScreen');
+        lobbyScreen = new GF.LobbyScreen({
+            main: lobbyMainElement,
+            highScores: highScoresScreenElement,
+            identity: document.getElementById('lobbyIdentity'),
+            controls: document.getElementById('lobbyControlsText'),
+            controlsSection: getLobbySection(
+                document.getElementById('lobbyControlsText')
+            ),
+            slots: document.getElementById('lobbySlots'),
+            editPrompt: document.getElementById('lobbyEditPrompt'),
+            editPromptSection: getLobbySection(
+                document.getElementById('lobbyEditPrompt')
+            ),
+            playPrompt: document.getElementById('lobbyPlayPrompt')
+        });
         highScoresScreen = new GF.HighScoresScreen({
             lobbyMain: lobbyMainElement,
             screen: highScoresScreenElement,
             table: document.getElementById('highScoresTable'),
             playPrompt: document.getElementById('highScoresPlayPrompt')
         });
-        nameEditorElement = document.getElementById('nameEditor');
-        nameEditorValueElement = document.getElementById('nameEditorValue');
-        nameEditorGridElement = document.getElementById('nameEditorGrid');
-        nameEditorHelpElement = document.getElementById('nameEditorHelp');
+        nameEditorScreen = new GF.NameEditorScreen({
+            lobbyMain: lobbyMainElement,
+            highScores: highScoresScreenElement,
+            editor: document.getElementById('nameEditor'),
+            value: document.getElementById('nameEditorValue'),
+            grid: document.getElementById('nameEditorGrid'),
+            help: document.getElementById('nameEditorHelp')
+        });
     }
 
     function initCamera() {
@@ -144,162 +142,7 @@ GF.Game = (function () {
     }
 
     function initSoundEffects() {
-        soundEffects = {
-            gunshot: createSoundEffect('sounds/gunshot.m4a', 0.8, 5),
-            emptyGun: createSoundEffect('sounds/empty-gun-shot.mp3', 0.8, 3),
-            pain: createSoundEffect('sounds/pain.m4a', 0.8, 3),
-            ricochet: createSoundEffect('sounds/ricochet.mp3', 0.7, 5),
-            ready: createSoundEffect('sounds/ready.mp3', 0.8, 3),
-            cactusHit: createSoundEffect('sounds/cactus-hit.m4a', 0.8, 3),
-            wagonHit: createSoundEffect('sounds/wagon-hit.mp3', 0.8, 3)
-        };
-        bindSoundWarmup();
-    }
-
-    function createSoundEffect(src, volume, poolSize) {
-        var sound = {
-            src: src,
-            buffer: null,
-            fallbackPool: createFallbackAudioPool(src, volume, poolSize),
-            loading: null,
-            nextIndex: 0,
-            volume: volume
-        };
-
-        loadSoundBuffer(sound);
-
-        return sound;
-    }
-
-    function createFallbackAudioPool(src, volume, poolSize) {
-        var pool = [];
-        var i;
-
-        for (i = 0; i < poolSize; i++) {
-            pool.push(createAudioElement(src, volume));
-        }
-
-        return pool;
-    }
-
-    function createAudioElement(src, volume) {
-        var audio = new Audio(src);
-
-        audio.preload = 'auto';
-        audio.volume = volume;
-        audio.load();
-
-        return audio;
-    }
-
-    function getAudioContext() {
-        var AudioContextClass =
-            window.AudioContext || window.webkitAudioContext;
-
-        if (!AudioContextClass) {
-            return null;
-        }
-
-        if (!audioContext) {
-            audioContext = new AudioContextClass();
-        }
-
-        return audioContext;
-    }
-
-    function loadSoundBuffer(sound) {
-        var context = getAudioContext();
-
-        if (!context || !window.fetch || sound.loading) {
-            return;
-        }
-
-        sound.loading = fetch(sound.src)
-            .then(function (response) {
-                if (!response.ok) {
-                    throw new Error('Could not load sound: ' + sound.src);
-                }
-
-                return response.arrayBuffer();
-            })
-            .then(function (arrayBuffer) {
-                return decodeAudioBuffer(context, arrayBuffer);
-            })
-            .then(function (buffer) {
-                sound.buffer = buffer;
-            })
-            .catch(function () {});
-    }
-
-    function decodeAudioBuffer(context, arrayBuffer) {
-        return new Promise(function (resolve, reject) {
-            var decodeResult = context.decodeAudioData(
-                arrayBuffer,
-                resolve,
-                reject
-            );
-
-            if (decodeResult && decodeResult.then) {
-                decodeResult.then(resolve).catch(reject);
-            }
-        });
-    }
-
-    function bindSoundWarmup() {
-        document.addEventListener('keydown', warmSoundEffects, {
-            once: true,
-            capture: true
-        });
-        document.addEventListener('pointerdown', warmSoundEffects, {
-            once: true,
-            capture: true
-        });
-    }
-
-    function warmSoundEffects() {
-        var context = getAudioContext();
-
-        resumeAudioContext(context);
-
-        Object.keys(soundEffects || {}).forEach(function (name) {
-            loadSoundBuffer(soundEffects[name]);
-            soundEffects[name].fallbackPool.forEach(warmAudioElement);
-        });
-    }
-
-    function warmAudioElement(audio) {
-        var warmupAudio = audio.cloneNode();
-        var playRequest;
-
-        warmupAudio.muted = true;
-        warmupAudio.currentTime = 0;
-        playRequest = warmupAudio.play();
-
-        if (playRequest && playRequest.then) {
-            playRequest
-                .then(function () {
-                    warmupAudio.pause();
-                    warmupAudio.currentTime = 0;
-                })
-                .catch(function () {});
-        } else {
-            warmupAudio.pause();
-            warmupAudio.currentTime = 0;
-        }
-    }
-
-    function resumeAudioContext(context) {
-        var resumeRequest;
-
-        if (!context || context.state !== 'suspended' || !context.resume) {
-            return;
-        }
-
-        resumeRequest = context.resume();
-
-        if (resumeRequest && resumeRequest.catch) {
-            resumeRequest.catch(function () {});
-        }
+        soundEffects = new GF.SoundEffects();
     }
 
     function disableImageSmoothing() {
@@ -384,51 +227,8 @@ GF.Game = (function () {
     }
 
     function playSoundEffect(name) {
-        var sound = soundEffects && soundEffects[name];
-        var context;
-        var source;
-        var gain;
-
-        if (!sound) {
-            return;
-        }
-
-        context = getAudioContext();
-
-        if (context && sound.buffer) {
-            resumeAudioContext(context);
-
-            source = context.createBufferSource();
-            gain = context.createGain();
-            source.buffer = sound.buffer;
-            gain.gain.value = sound.volume;
-            source.connect(gain);
-            gain.connect(context.destination);
-            source.start(0);
-            return;
-        }
-
-        playFallbackSoundEffect(sound);
-    }
-
-    function playFallbackSoundEffect(sound) {
-        var audio;
-        var playRequest;
-
-        if (!sound.fallbackPool.length) {
-            return;
-        }
-
-        audio = sound.fallbackPool[sound.nextIndex];
-        sound.nextIndex = (sound.nextIndex + 1) % sound.fallbackPool.length;
-        audio.pause();
-        audio.currentTime = 0;
-        audio.muted = false;
-        audio.volume = sound.volume;
-        playRequest = audio.play();
-
-        if (playRequest && playRequest.catch) {
-            playRequest.catch(function () {});
+        if (soundEffects) {
+            soundEffects.play(name);
         }
     }
 
@@ -524,36 +324,36 @@ GF.Game = (function () {
     }
 
     function renderGameHud(secondsLeft) {
-        setText(scoreLeftElement, scores[0] || 0);
-        setText(scoreRightElement, scores[1] || 0);
-        setText(roundTimerElement, secondsLeft);
-        setText(roundMessageElement, roundMessageText || '');
-        renderHitMessage();
+        gameHudScreen.render({
+            leftScore: scores[0] || 0,
+            rightScore: scores[1] || 0,
+            timerLabel: secondsLeft,
+            roundMessage: roundMessageText || '',
+            hitMessage: getHitHudMessage()
+        });
     }
 
-    function renderHitMessage() {
+    function getHitHudMessage() {
         var target;
         var point;
 
-        if (!hitMessage || !hitMessageElement) {
-            showElement(hitMessageElement, false);
-            return;
+        if (!hitMessage) {
+            return null;
         }
 
         target = players.all[hitMessage.targetId];
 
         if (!target) {
-            showElement(hitMessageElement, false);
-            return;
+            return null;
         }
 
         point = worldToHudPoint(target.x, Math.max(80, target.y - 150));
-        setText(hitMessageElement, hitMessage.text);
-        hitMessageElement.style.left =
-            (point.x / GF.Config.canvas.width) * 100 + '%';
-        hitMessageElement.style.top =
-            (point.y / GF.Config.canvas.height) * 100 + '%';
-        showElement(hitMessageElement, true);
+
+        return {
+            text: hitMessage.text,
+            x: point.x,
+            y: point.y
+        };
     }
 
     function worldToHudPoint(x, y) {
@@ -918,33 +718,26 @@ GF.Game = (function () {
 
         showElement(canvas, true);
         showElement(hudCanvas, true);
-        showElement(nameEditorElement, false);
+        nameEditorScreen.hide();
 
         if (activeScreen === Screen.HIGH_SCORES) {
             renderHighScoresScreen(isTouch);
             return;
         }
 
-        showElement(lobbyMainElement, true);
-        showElement(highScoresScreenElement, false);
-        setLines(lobbyIdentityElement, [getLobbyPlayerLabel(), getGameLabel()]);
-        showElement(lobbyControlsSectionElement, !isTouch);
-        setLines(lobbyControlsElement, isTouch ? [] : controls);
-        renderLobbySlots();
-        showElement(
-            lobbyEditPromptSectionElement,
-            !isTouch && isLocalClientWaiting()
-        );
-        setText(
-            lobbyEditPromptElement,
-            !isTouch && isLocalClientWaiting() ? 'PRESS E TO EDIT NAME' : ''
-        );
-
-        showElement(lobbyPlayPromptElement, true);
-        setText(
-            lobbyPlayPromptElement,
-            shouldShowLobbyPrompt() && !isTouch ? 'PRESS P TO PLAY' : ''
-        );
+        lobbyScreen.render({
+            identityLines: [getLobbyPlayerLabel(), getGameLabel()],
+            controls: isTouch ? [] : controls,
+            showControls: !isTouch,
+            slots: getLobbySlotViewModels(),
+            showEditPrompt: !isTouch && isLocalClientWaiting(),
+            editPrompt:
+                !isTouch && isLocalClientWaiting()
+                    ? 'PRESS E TO EDIT NAME'
+                    : '',
+            playPrompt:
+                shouldShowLobbyPrompt() && !isTouch ? 'PRESS P TO PLAY' : ''
+        });
     }
 
     function getActiveScreen() {
@@ -984,103 +777,15 @@ GF.Game = (function () {
 
         showElement(canvas, false);
         showElement(hudCanvas, false);
-        showElement(lobbyMainElement, false);
-        showElement(highScoresScreenElement, false);
-        setLines(lobbyIdentityElement, []);
-        setLines(lobbyControlsElement, []);
-        setLines(lobbySlotsElement, []);
-        setText(lobbyEditPromptElement, '');
-        setText(lobbyPlayPromptElement, '');
-        showElement(lobbyPlayPromptElement, false);
-        showElement(nameEditorElement, true);
-        setText(nameEditorValueElement, 'NAME: ' + (state.name || ' '));
-        setLines(nameEditorHelpElement, helpLines);
-        renderNameEditorGrid(state);
-    }
-
-    function renderNameEditorGrid(state) {
-        var gridKey;
-
-        if (!nameEditorGridElement) {
-            return;
-        }
-
-        gridKey = state.cursorRow + ':' + state.cursorCol;
-
-        if (nameEditorGridElement.dataset.gridKey === gridKey) {
-            return;
-        }
-
-        nameEditorGridElement.dataset.gridKey = gridKey;
-        nameEditorGridElement.innerHTML = '';
-
-        state.grid.forEach(function (row, rowIndex) {
-            var rowElement = document.createElement('div');
-
-            rowElement.className =
-                'name-editor-row' + (row.length < 9 ? ' is-short' : '');
-
-            row.forEach(function (value, colIndex) {
-                var button = document.createElement('button');
-
-                button.type = 'button';
-                button.className =
-                    'name-editor-key' +
-                    (state.cursorRow === rowIndex &&
-                    state.cursorCol === colIndex
-                        ? ' is-selected negative-text'
-                        : '');
-                button.textContent = value;
-                button.addEventListener('pointerdown', function (evt) {
-                    evt.preventDefault();
-                    nameEditor.select(rowIndex, colIndex);
-                    renderHud();
-                });
-                rowElement.appendChild(button);
-            });
-
-            nameEditorGridElement.appendChild(rowElement);
+        lobbyScreen.clear();
+        nameEditorScreen.render({
+            state: state,
+            helpLines: helpLines,
+            onSelect: function (rowIndex, colIndex) {
+                nameEditor.select(rowIndex, colIndex);
+                renderHud();
+            }
         });
-    }
-
-    function setText(element, text) {
-        if (!element) {
-            return;
-        }
-
-        element.textContent =
-            typeof text === 'undefined' || text === null ? '' : String(text);
-    }
-
-    function setLines(element, lines) {
-        var key;
-
-        if (!element) {
-            return;
-        }
-
-        key = lines
-            .filter(function (line) {
-                return line;
-            })
-            .join('\n');
-
-        if (element.dataset.linesKey === key) {
-            return;
-        }
-
-        element.dataset.linesKey = key;
-        element.innerHTML = '';
-        key.split('\n')
-            .filter(function (line) {
-                return line;
-            })
-            .forEach(function (line) {
-                var lineElement = document.createElement('div');
-
-                lineElement.textContent = line;
-                element.appendChild(lineElement);
-            });
     }
 
     function getLobbySection(element) {
@@ -1333,37 +1038,12 @@ GF.Game = (function () {
         return slots;
     }
 
-    function renderLobbySlots() {
-        var slots = getLobbySlots();
-        var key;
-
-        if (!lobbySlotsElement) {
-            return;
-        }
-
-        key = slots
-            .map(function (client, index) {
-                return (
-                    getLobbySlotLabel(client, index) +
-                    ':' +
-                    !!(client && client.ready)
-                );
-            })
-            .join('\n');
-
-        if (lobbySlotsElement.dataset.linesKey === key) {
-            return;
-        }
-
-        lobbySlotsElement.dataset.linesKey = key;
-        lobbySlotsElement.innerHTML = '';
-        slots.forEach(function (client, index) {
-            var slotElement = document.createElement('div');
-
-            slotElement.className =
-                'lobby-slot' + (client && client.ready ? ' negative-text' : '');
-            slotElement.textContent = getLobbySlotLabel(client, index);
-            lobbySlotsElement.appendChild(slotElement);
+    function getLobbySlotViewModels() {
+        return getLobbySlots().map(function (client, index) {
+            return {
+                label: getLobbySlotLabel(client, index),
+                ready: !!(client && client.ready)
+            };
         });
     }
 
@@ -2364,45 +2044,32 @@ GF.Game = (function () {
         context.stroke();
     }
 
-    function setupSocket(callback) {
-        var storedPlayerName = getStoredPlayerName();
-
-        socket = io({
-            auth: storedPlayerName
-                ? {
-                      name: storedPlayerName
-                  }
-                : {}
-        });
-
-        socket.on('highScores', function (nextHighScores) {
-            highScores = Array.isArray(nextHighScores) ? nextHighScores : [];
-            renderHud();
-        });
-
-        socket.on('joinedGame', function (data) {
-            playerId = data.playerId;
-            syncPlayers(data.model);
-            callback();
-        });
-    }
-
-    function bindSocketEvents() {
-        socket.on('keyEvent', function (keyEvent) {
-            handleKeyEvent(keyEvent);
-        });
-
-        socket.on('playerPosition', applyRemotePlayerPosition);
-        socket.on('obstacleDamage', applyObstacleDamage);
-        socket.on('newClient', syncPlayers);
-        socket.on('modelUpdate', syncPlayers);
-    }
-
     function start() {
         initCanvas();
         initGameState();
 
-        setupSocket(function () {
+        socket = new GF.ClientNetwork({
+            getStoredPlayerName: getStoredPlayerName,
+            onHighScores: function (nextHighScores) {
+                highScores = Array.isArray(nextHighScores)
+                    ? nextHighScores
+                    : [];
+                renderHud();
+            },
+            onJoinedGame: function (data) {
+                playerId = data.playerId;
+                syncPlayers(data.model);
+                startInputAndAnimation();
+            },
+            onKeyEvent: handleKeyEvent,
+            onPlayerPosition: applyRemotePlayerPosition,
+            onObstacleDamage: applyObstacleDamage,
+            onModelUpdate: syncPlayers
+        }).socket;
+    }
+
+    function startInputAndAnimation() {
+        if (!inputController) {
             inputController = new GF.KeysModel(
                 socket,
                 playerId,
@@ -2418,9 +2085,8 @@ GF.Game = (function () {
                 }
             );
             initTouchControls();
-            bindSocketEvents();
             animate();
-        });
+        }
     }
 
     document.addEventListener('DOMContentLoaded', start);
