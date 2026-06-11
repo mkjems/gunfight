@@ -205,9 +205,9 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 
 ### P1.4.7.5 - Add A Browser Build Smoke Test
 
-- [ ] Add a small Playwright smoke test before client module conversion.
+- [x] Add a small Playwright smoke test before client module conversion.
     - Start the built server from `dist/`.
-    - Open `http://localhost:8080`.
+    - Open the built app on an isolated smoke-test localhost port.
     - Fail on browser page errors and console errors.
     - Assert the lobby or HUD becomes visible so the app is actually started.
     - Keep this as a narrow build/startup guardrail, not the full P4 browser test suite.

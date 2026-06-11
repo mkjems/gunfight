@@ -22,6 +22,19 @@ The build has two parts:
 - `tsc` compiles the server and shared TypeScript.
 - Vite builds the browser entrypoint into `dist/client/assets/client.js`.
 
+Run checks:
+
+```sh
+npm run check
+```
+
+The browser smoke test uses Playwright. Install the local Chromium binary once
+before running the full check suite on a fresh machine:
+
+```sh
+npx playwright install chromium
+```
+
 Build and run locally:
 
 ```sh
