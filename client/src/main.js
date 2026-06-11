@@ -43,7 +43,6 @@ import collisionDebugRendererSource from '../js/CollisionDebugRenderer.js?raw';
 import playerPositionSyncSource from '../js/PlayerPositionSync.js?raw';
 import scenarioRendererSource from '../js/ScenarioRenderer.js?raw';
 import gameHudSource from '../js/GameHud.js?raw';
-import gameHudViewModelSource from '../js/GameHudViewModel.js?raw';
 import highScoresScreenSource from '../js/HighScoresScreen.js?raw';
 import lobbyScreenSource from '../js/LobbyScreen.js?raw';
 import nameEditorScreenSource from '../js/NameEditorScreen.js?raw';
@@ -66,6 +65,7 @@ import collisionSource from '../js/Collision.js?raw';
 import indexSource from '../js/index.js?raw';
 import { ClientLobbyViewModel } from './modules/clientLobbyViewModel';
 import { ClientScreens } from './modules/clientScreens';
+import { GameHudViewModel } from './modules/gameHudViewModel';
 
 function loadScript(src) {
     if (src === '/socket.io/socket.io.js' && globalThis.io) {
@@ -132,7 +132,6 @@ const scripts = [
     ['js/PlayerPositionSync.js', playerPositionSyncSource],
     ['js/ScenarioRenderer.js', scenarioRendererSource],
     ['js/GameHud.js', gameHudSource],
-    ['js/GameHudViewModel.js', gameHudViewModelSource],
     ['js/HighScoresScreen.js', highScoresScreenSource],
     ['js/LobbyScreen.js', lobbyScreenSource],
     ['js/NameEditorScreen.js', nameEditorScreenSource],
@@ -160,6 +159,7 @@ await loadScript('/socket.io/socket.io.js');
 globalThis.GF = globalThis.GF || {};
 globalThis.GF.ClientLobbyViewModel = ClientLobbyViewModel;
 globalThis.GF.ClientScreens = ClientScreens;
+globalThis.GF.GameHudViewModel = GameHudViewModel;
 (0, eval)('var GF = globalThis.GF;');
 
 scripts.forEach(function ([name, source]) {

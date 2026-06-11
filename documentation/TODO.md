@@ -217,6 +217,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 - [ ] Replace broad `GF.*` namespace mutation with imports.
     - [x] Move `ClientScreens` behind an imported module bridge first.
     - [x] Move `ClientLobbyViewModel` behind an imported module bridge.
+    - [x] Move `GameHudViewModel` behind an imported module bridge.
     - Convert extracted UI and state modules before gameplay simulation.
     - Keep canvas gameplay readable and testable during conversion.
     - Remove script-order coupling as modules are converted.
@@ -224,6 +225,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 - [ ] Convert browser files to TypeScript in low-risk groups.
     - [x] Convert `ClientScreens` to TypeScript as the first pure decision module.
     - [x] Convert `ClientLobbyViewModel` to TypeScript as the first view-model helper.
+    - [x] Convert `GameHudViewModel` to TypeScript as the first HUD view-model helper.
     - Start with pure decision modules and view-model helpers.
     - Then convert networking, screens, input, and HUD modules.
     - Convert gameplay simulation files after shared contracts and client imports are stable.

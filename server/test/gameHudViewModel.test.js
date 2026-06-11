@@ -1,35 +1,53 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadGameHudViewModel() {
-    const context = {
-        GF: {
-            ClientScreens: {
-                RoundState: {
-                    GAME_OVER: 'gameOver',
-                    PLAYING: 'playing'
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/GameHudViewModel.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.GameHudViewModel;
+async function loadGameHudViewModel() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'gameHudViewModel.ts',
+        'gameHudViewModel.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'gameHudViewModel.js')).href
+    );
+
+    return module.GameHudViewModel;
 }
 
 function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('builds game HUD state from scores and round data', function () {
-    const viewModel = loadGameHudViewModel();
+test('builds game HUD state from scores and round data', async function () {
+    const viewModel = await loadGameHudViewModel();
 
     assert.deepEqual(
         plain(
@@ -71,8 +89,8 @@ test('builds game HUD state from scores and round data', function () {
     );
 });
 
-test('shows game over as the timer label', function () {
-    const viewModel = loadGameHudViewModel();
+test('shows game over as the timer label', async function () {
+    const viewModel = await loadGameHudViewModel();
 
     assert.equal(
         viewModel.getTimerLabel({
@@ -88,8 +106,8 @@ test('shows game over as the timer label', function () {
     );
 });
 
-test('projects hit messages through the camera controller', function () {
-    const viewModel = loadGameHudViewModel();
+test('projects hit messages through the camera controller', async function () {
+    const viewModel = await loadGameHudViewModel();
 
     assert.deepEqual(
         plain(
