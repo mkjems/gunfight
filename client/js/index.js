@@ -31,16 +31,11 @@ GF.Game = (function () {
         latestModel,
         highScores,
         scoreKeeper,
+        roundData,
         timers,
         positionSync,
         ammo,
-        roundEndsAt,
-        roundMessageText,
-        hitMessage,
-        scenarioStartedAt,
         roundIntro,
-        advanceRoundAfterHit,
-        obstacleDamage,
         localReadyRequested,
         playerId;
     var playerNameStorageKey = 'gunfight-player-name';
@@ -150,7 +145,7 @@ GF.Game = (function () {
                 return rockPattern;
             },
             getScenarioStartedAt: function () {
-                return scenarioStartedAt;
+                return roundData.getScenarioStartedAt();
             },
             sprites: {
                 cactus: cactusSprite,
@@ -181,15 +176,10 @@ GF.Game = (function () {
         roundState = RoundState.WAITING;
         highScores = [];
         scoreKeeper = new GF.ScoreKeeper();
+        roundData = new GF.ClientRoundState();
         timers = new GF.ClientTimers();
         positionSync = new GF.PlayerPositionSync();
         ammo = {};
-        roundEndsAt = null;
-        roundMessageText = '';
-        hitMessage = null;
-        scenarioStartedAt = null;
-        advanceRoundAfterHit = false;
-        obstacleDamage = {};
         localReadyRequested = false;
         GF.Bullet.onRicochet = playRicochetSound;
     }
@@ -261,7 +251,7 @@ GF.Game = (function () {
     }
 
     function setRoundMessage(message) {
-        roundMessageText = message;
+        roundData.setRoundMessage(message);
         renderHud();
     }
 
@@ -294,12 +284,7 @@ GF.Game = (function () {
         var firstAmmo;
         var secondAmmo;
 
-        if (roundEndsAt) {
-            secondsLeft = Math.max(
-                0,
-                Math.ceil((roundEndsAt - new Date().getTime()) / 1000)
-            );
-        }
+        secondsLeft = roundData.getSecondsLeft(secondsLeft);
 
         if (roundState === RoundState.GAME_OVER) {
             secondsLeft = 'GAME OVER';
@@ -340,12 +325,13 @@ GF.Game = (function () {
             leftScore: scoreKeeper.getScore(0),
             rightScore: scoreKeeper.getScore(1),
             timerLabel: secondsLeft,
-            roundMessage: roundMessageText || '',
+            roundMessage: roundData.getRoundMessage(),
             hitMessage: getHitHudMessage()
         });
     }
 
     function getHitHudMessage() {
+        var hitMessage = roundData.getHitMessage();
         var target;
         var point;
 
@@ -437,11 +423,11 @@ GF.Game = (function () {
     }
 
     function getObstacleDamage(id) {
-        return obstacleDamage[id] || 0;
+        return roundData.getObstacleDamage(id);
     }
 
     function damageObstacle(id) {
-        obstacleDamage[id] = getObstacleDamage(id) + 1;
+        roundData.damageObstacle(id);
     }
 
     function renderLobbyHud() {
@@ -828,10 +814,7 @@ GF.Game = (function () {
         timers.clearMany(['ritual', 'hit', 'reset', 'abandonedRequeue']);
 
         roundIntro.clear();
-        roundEndsAt = null;
-        hitMessage = null;
-        advanceRoundAfterHit = false;
-        obstacleDamage = {};
+        roundData.resetRoundFlags();
         setRoundState(RoundState.WAITING);
         scoreKeeper.resetRecordedResult();
         players.clearKeys();
@@ -922,13 +905,13 @@ GF.Game = (function () {
 
         if (options.resetScores) {
             scoreKeeper.resetScores();
-            roundEndsAt = null;
+            roundData.clearRoundEnd();
         }
 
         setRoundState(RoundState.RITUAL);
         closeNameEditor();
-        scenarioStartedAt = new Date().getTime();
-        obstacleDamage = {};
+        roundData.startScenario();
+        roundData.clearObstacleDamage();
         bullets.reset();
         resetAmmo();
         roundIntro.start();
@@ -955,10 +938,11 @@ GF.Game = (function () {
                         }
 
                         setRoundMessage('');
-                        if (!roundEndsAt) {
-                            roundEndsAt =
+                        if (!roundData.getRoundEndsAt()) {
+                            roundData.setRoundEndsAt(
                                 new Date().getTime() +
-                                GF.Config.game.seconds * 1000;
+                                    GF.Config.game.seconds * 1000
+                            );
                             scheduleMatchEnd();
                         }
                         resetAmmo();
@@ -973,17 +957,17 @@ GF.Game = (function () {
     }
 
     function hasMatchTimeExpired() {
-        return !!(roundEndsAt && new Date().getTime() >= roundEndsAt);
+        return roundData.hasMatchTimeExpired();
     }
 
     function scheduleMatchEnd() {
         var delay;
 
-        if (!roundEndsAt) {
+        if (!roundData.getRoundEndsAt()) {
             return;
         }
 
-        delay = Math.max(0, roundEndsAt - new Date().getTime());
+        delay = Math.max(0, roundData.getRoundEndsAt() - new Date().getTime());
         timers.set(
             'matchEnd',
             function () {
@@ -1155,10 +1139,10 @@ GF.Game = (function () {
         var target = players.all[hit.targetId];
 
         setRoundState(RoundState.HIT_PAUSE);
-        hitMessage = {
+        roundData.setHitMessage({
             targetId: hit.targetId,
             text: 'Got me!'
-        };
+        });
         playPainSound();
 
         if (target) {
@@ -1167,7 +1151,7 @@ GF.Game = (function () {
 
         scoreKeeper.addPoint(winnerSlot);
 
-        advanceRoundAfterHit = hit.winnerId === playerId;
+        roundData.setAdvanceRoundAfterHit(hit.winnerId === playerId);
 
         renderHud();
         players.clearKeys();
@@ -1177,7 +1161,7 @@ GF.Game = (function () {
     }
 
     function resetAfterHit() {
-        hitMessage = null;
+        roundData.clearHitMessage();
         clearPlayerDeathAnimations();
 
         if (hasMatchTimeExpired()) {
@@ -1185,9 +1169,8 @@ GF.Game = (function () {
             return;
         }
 
-        if (advanceRoundAfterHit) {
+        if (roundData.consumeAdvanceRoundAfterHit()) {
             socket.emit('advanceRound');
-            advanceRoundAfterHit = false;
         }
 
         bullets.reset();
@@ -1206,9 +1189,7 @@ GF.Game = (function () {
 
         setRoundState(RoundState.ROUND_OVER);
         closeNameEditor();
-        roundEndsAt = null;
-        hitMessage = null;
-        advanceRoundAfterHit = false;
+        roundData.clearRoundPauseFlags();
 
         if (winnerSlot >= 0) {
             scoreKeeper.addPoint(winnerSlot);
@@ -1232,10 +1213,7 @@ GF.Game = (function () {
         setRoundState(RoundState.GAME_OVER);
         closeNameEditor();
         recordGameResult();
-        roundEndsAt = null;
-        hitMessage = null;
-        advanceRoundAfterHit = false;
-        obstacleDamage = {};
+        roundData.resetRoundFlags();
         setRoundMessage(
             scoreKeeper.getGameOverMessage(
                 latestModel && latestModel.clients,
@@ -1279,10 +1257,7 @@ GF.Game = (function () {
         });
         bullets.reset();
         setRoundMessage('');
-        roundEndsAt = null;
-        hitMessage = null;
-        advanceRoundAfterHit = false;
-        obstacleDamage = {};
+        roundData.resetRoundFlags();
         timers.clearMany(['reset', 'matchEnd']);
 
         if (readyToStart) {
@@ -1302,10 +1277,7 @@ GF.Game = (function () {
         bullets.reset();
         resetAmmo();
         setRoundMessage('');
-        roundEndsAt = null;
-        hitMessage = null;
-        advanceRoundAfterHit = false;
-        obstacleDamage = {};
+        roundData.resetRoundFlags();
         timers.clearMany(['reset', 'matchEnd']);
         setRoundState(RoundState.WAITING);
         syncNameEditor();

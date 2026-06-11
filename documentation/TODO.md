@@ -73,6 +73,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract sound.
     - [x] Extract round intro flow.
     - [x] Extract round timer bookkeeping.
+    - [x] Extract round state data and flags.
     - [ ] Extract round state orchestration.
     - [x] Extract score handling.
     - [x] Extract client synchronization.
