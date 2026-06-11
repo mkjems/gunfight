@@ -1,18 +1,25 @@
-GF.ClientAssets = function (options) {
-    options = options || {};
+type ImageConstructor = new () => HTMLImageElement;
 
-    var ImageCtor = options.Image || Image;
-    var onAmmoLoaded = options.onAmmoLoaded || function () {};
-    var onRockPatternLoaded = options.onRockPatternLoaded || function () {};
-    var createRockPattern = options.createRockPattern;
-    var sprites = {
+type ClientAssetsOptions = {
+    Image?: ImageConstructor;
+    createRockPattern: (image: HTMLImageElement) => CanvasPattern | null;
+    onAmmoLoaded?: () => void;
+    onRockPatternLoaded?: (pattern: CanvasPattern | null) => void;
+};
+
+export function ClientAssets(options: ClientAssetsOptions) {
+    const ImageCtor = options.Image || Image;
+    const onAmmoLoaded = options.onAmmoLoaded || function () {};
+    const onRockPatternLoaded = options.onRockPatternLoaded || function () {};
+    const createRockPattern = options.createRockPattern;
+    const sprites = {
         ammo: new ImageCtor(),
         cactus: new ImageCtor(),
         rockPattern: new ImageCtor(),
         saloon: new ImageCtor(),
         wagon: new ImageCtor()
     };
-    var rockPattern = null;
+    let rockPattern: CanvasPattern | null = null;
 
     function load() {
         sprites.ammo.onload = onAmmoLoaded;
@@ -32,8 +39,8 @@ GF.ClientAssets = function (options) {
     }
 
     return {
-        getRockPattern: getRockPattern,
-        load: load,
-        sprites: sprites
+        getRockPattern,
+        load,
+        sprites
     };
-};
+}

@@ -6,17 +6,14 @@ import clientAmmoSource from '../js/ClientAmmo.js?raw';
 import clientAmmoFlowSource from '../js/ClientAmmoFlow.js?raw';
 import clientCanvasSetupSource from '../js/ClientCanvasSetup.js?raw';
 import clientCameraControllerSource from '../js/ClientCameraController.js?raw';
-import clientAssetsSource from '../js/ClientAssets.js?raw';
 import clientCollisionEnvironmentSource from '../js/ClientCollisionEnvironment.js?raw';
 import clientGameplayInputSource from '../js/ClientGameplayInput.js?raw';
 import clientFrameFlowSource from '../js/ClientFrameFlow.js?raw';
-import clientGameSoundsSource from '../js/ClientGameSounds.js?raw';
 import clientGameSystemsSource from '../js/ClientGameSystems.js?raw';
 import clientGameLoopSource from '../js/ClientGameLoop.js?raw';
 import clientHitDetectionSource from '../js/ClientHitDetection.js?raw';
 import clientHudFlowSource from '../js/ClientHudFlow.js?raw';
 import clientHudOverlaySource from '../js/ClientHudOverlay.js?raw';
-import clientIdentitySource from '../js/ClientIdentity.js?raw';
 import clientInputStartupSource from '../js/ClientInputStartup.js?raw';
 import clientKeyEventFlowSource from '../js/ClientKeyEventFlow.js?raw';
 import clientLobbyHudFlowSource from '../js/ClientLobbyHudFlow.js?raw';
@@ -53,6 +50,9 @@ import bulletsSource from '../js/Bullets.js?raw';
 import playersSource from '../js/Players.js?raw';
 import collisionSource from '../js/Collision.js?raw';
 import indexSource from '../js/index.js?raw';
+import { ClientAssets } from './modules/clientAssets';
+import { ClientGameSounds } from './modules/clientGameSounds';
+import { ClientIdentity } from './modules/clientIdentity';
 import { Config } from './modules/config';
 import { ClientLobbyViewModel } from './modules/clientLobbyViewModel';
 import { ClientMatchTimer } from './modules/clientMatchTimer';
@@ -95,17 +95,14 @@ const scripts = [
     ['js/ClientAmmoFlow.js', clientAmmoFlowSource],
     ['js/ClientCanvasSetup.js', clientCanvasSetupSource],
     ['js/ClientCameraController.js', clientCameraControllerSource],
-    ['js/ClientAssets.js', clientAssetsSource],
     ['js/ClientCollisionEnvironment.js', clientCollisionEnvironmentSource],
     ['js/ClientGameplayInput.js', clientGameplayInputSource],
     ['js/ClientFrameFlow.js', clientFrameFlowSource],
-    ['js/ClientGameSounds.js', clientGameSoundsSource],
     ['js/ClientGameSystems.js', clientGameSystemsSource],
     ['js/ClientGameLoop.js', clientGameLoopSource],
     ['js/ClientHitDetection.js', clientHitDetectionSource],
     ['js/ClientHudFlow.js', clientHudFlowSource],
     ['js/ClientHudOverlay.js', clientHudOverlaySource],
-    ['js/ClientIdentity.js', clientIdentitySource],
     ['js/ClientInputStartup.js', clientInputStartupSource],
     ['js/ClientKeyEventFlow.js', clientKeyEventFlowSource],
     ['js/ClientLobbyHudFlow.js', clientLobbyHudFlowSource],
@@ -147,6 +144,9 @@ const scripts = [
 await loadScript('/socket.io/socket.io.js');
 
 globalThis.GF = globalThis.GF || {};
+globalThis.GF.ClientAssets = ClientAssets;
+globalThis.GF.ClientGameSounds = ClientGameSounds;
+globalThis.GF.ClientIdentity = ClientIdentity;
 globalThis.GF.Config = Config;
 globalThis.GF.ClientLobbyViewModel = ClientLobbyViewModel;
 globalThis.GF.ClientMatchTimer = ClientMatchTimer;

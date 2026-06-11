@@ -1,24 +1,28 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientGameSounds() {
-    const context = {
-        GF: {}
-    };
+async function loadClientGameSounds() {
     const source = readFileSync(
-        new URL('../../client/js/ClientGameSounds.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientGameSounds.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientGameSounds;
+    return module.ClientGameSounds;
 }
 
-test('maps gameplay sound methods to sound effect names', function () {
-    const ClientGameSounds = loadClientGameSounds();
+test('maps gameplay sound methods to sound effect names', async function () {
+    const ClientGameSounds = await loadClientGameSounds();
     const played = [];
     const sounds = new ClientGameSounds({
         soundEffects: {
@@ -43,8 +47,8 @@ test('maps gameplay sound methods to sound effect names', function () {
     ]);
 });
 
-test('maps obstacle ids to obstacle hit sounds', function () {
-    const ClientGameSounds = loadClientGameSounds();
+test('maps obstacle ids to obstacle hit sounds', async function () {
+    const ClientGameSounds = await loadClientGameSounds();
     const played = [];
     const sounds = new ClientGameSounds({
         soundEffects: {

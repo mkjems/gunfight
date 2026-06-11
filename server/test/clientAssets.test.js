@@ -1,20 +1,24 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientAssets() {
-    const context = {
-        GF: {}
-    };
+async function loadClientAssets() {
     const source = readFileSync(
-        new URL('../../client/js/ClientAssets.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientAssets.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientAssets;
+    return module.ClientAssets;
 }
 
 function createImageConstructor(images) {
@@ -25,8 +29,8 @@ function createImageConstructor(images) {
     };
 }
 
-test('loads client image assets with expected sources', function () {
-    const ClientAssets = loadClientAssets();
+test('loads client image assets with expected sources', async function () {
+    const ClientAssets = await loadClientAssets();
     const images = [];
     let ammoLoaded = false;
     const assets = new ClientAssets({
@@ -50,8 +54,8 @@ test('loads client image assets with expected sources', function () {
     assert.equal(assets.sprites.rockPattern.src, 'images/rock-pattern.png');
 });
 
-test('creates and stores the rock pattern when its image loads', function () {
-    const ClientAssets = loadClientAssets();
+test('creates and stores the rock pattern when its image loads', async function () {
+    const ClientAssets = await loadClientAssets();
     const images = [];
     let notifiedPattern = null;
     const assets = new ClientAssets({

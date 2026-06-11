@@ -223,6 +223,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Move `ClientModelSync` and `ClientTimers` behind imported module bridges.
     - [x] Move `Config` and `ClientModelUpdatePlan` behind imported module bridges.
     - [x] Move `ClientModelUpdateFlow` behind an imported module bridge.
+    - [x] Move `ClientAssets`, `ClientGameSounds`, and `ClientIdentity` behind imported module bridges.
     - Convert extracted UI and state modules before gameplay simulation.
     - Keep canvas gameplay readable and testable during conversion.
     - Remove script-order coupling as modules are converted.
@@ -236,6 +237,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Convert model sync and timer utility helpers to TypeScript.
     - [x] Convert shared client config and model update planning to TypeScript.
     - [x] Convert model update side-effect orchestration to TypeScript.
+    - [x] Convert asset loading, gameplay sound mapping, and identity helpers to TypeScript.
     - Start with pure decision modules and view-model helpers.
     - Then convert networking, screens, input, and HUD modules.
     - Convert gameplay simulation files after shared contracts and client imports are stable.
