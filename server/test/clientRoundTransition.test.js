@@ -1,24 +1,28 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientRoundTransition() {
-    const context = {
-        GF: {}
-    };
+async function loadClientRoundTransition() {
     const source = readFileSync(
-        new URL('../../client/js/ClientRoundTransition.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientRoundTransition.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientRoundTransition;
+    return module.ClientRoundTransition;
 }
 
-test('resolves legal round state transitions', function () {
-    const transition = loadClientRoundTransition();
+test('resolves legal round state transitions', async function () {
+    const transition = await loadClientRoundTransition();
 
     assert.equal(
         transition.resolve({
@@ -35,8 +39,8 @@ test('resolves legal round state transitions', function () {
     );
 });
 
-test('rejects illegal round state transitions', function () {
-    const transition = loadClientRoundTransition();
+test('rejects illegal round state transitions', async function () {
+    const transition = await loadClientRoundTransition();
 
     assert.throws(
         function () {

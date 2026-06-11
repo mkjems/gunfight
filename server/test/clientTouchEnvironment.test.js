@@ -1,24 +1,31 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientTouchEnvironment() {
-    const context = {
-        GF: {}
-    };
+async function loadClientTouchEnvironment() {
     const source = readFileSync(
-        new URL('../../client/js/ClientTouchEnvironment.js', import.meta.url),
+        path.join(
+            process.cwd(),
+            'client/src/modules/clientTouchEnvironment.ts'
+        ),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientTouchEnvironment;
+    return module.ClientTouchEnvironment;
 }
 
-test('detects touch override from query string', function () {
-    const environment = loadClientTouchEnvironment();
+test('detects touch override from query string', async function () {
+    const environment = await loadClientTouchEnvironment();
 
     assert.equal(
         environment.isTouchInterface({
@@ -30,8 +37,8 @@ test('detects touch override from query string', function () {
     );
 });
 
-test('detects coarse pointer touch interface', function () {
-    const environment = loadClientTouchEnvironment();
+test('detects coarse pointer touch interface', async function () {
+    const environment = await loadClientTouchEnvironment();
 
     assert.equal(
         environment.isTouchInterface({
@@ -50,8 +57,8 @@ test('detects coarse pointer touch interface', function () {
     );
 });
 
-test('rejects non-touch pointer interfaces', function () {
-    const environment = loadClientTouchEnvironment();
+test('rejects non-touch pointer interfaces', async function () {
+    const environment = await loadClientTouchEnvironment();
 
     assert.equal(
         environment.isTouchInterface({

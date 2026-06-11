@@ -34,11 +34,8 @@ import clientRoundEndFlowSource from '../js/ClientRoundEndFlow.js?raw';
 import clientRoundResetFlowSource from '../js/ClientRoundResetFlow.js?raw';
 import clientRoundRitualSource from '../js/ClientRoundRitual.js?raw';
 import clientRoundStateSource from '../js/ClientRoundState.js?raw';
-import clientRoundTransitionSource from '../js/ClientRoundTransition.js?raw';
 import clientTimersSource from '../js/ClientTimers.js?raw';
-import clientTouchEnvironmentSource from '../js/ClientTouchEnvironment.js?raw';
 import clientTouchControlsFlowSource from '../js/ClientTouchControlsFlow.js?raw';
-import clientTouchStateSource from '../js/ClientTouchState.js?raw';
 import collisionDebugRendererSource from '../js/CollisionDebugRenderer.js?raw';
 import playerPositionSyncSource from '../js/PlayerPositionSync.js?raw';
 import scenarioRendererSource from '../js/ScenarioRenderer.js?raw';
@@ -64,7 +61,10 @@ import playersSource from '../js/Players.js?raw';
 import collisionSource from '../js/Collision.js?raw';
 import indexSource from '../js/index.js?raw';
 import { ClientLobbyViewModel } from './modules/clientLobbyViewModel';
+import { ClientRoundTransition } from './modules/clientRoundTransition';
 import { ClientScreens } from './modules/clientScreens';
+import { ClientTouchEnvironment } from './modules/clientTouchEnvironment';
+import { ClientTouchState } from './modules/clientTouchState';
 import { GameHudViewModel } from './modules/gameHudViewModel';
 
 function loadScript(src) {
@@ -123,11 +123,8 @@ const scripts = [
     ['js/ClientRoundResetFlow.js', clientRoundResetFlowSource],
     ['js/ClientRoundRitual.js', clientRoundRitualSource],
     ['js/ClientRoundState.js', clientRoundStateSource],
-    ['js/ClientRoundTransition.js', clientRoundTransitionSource],
     ['js/ClientTimers.js', clientTimersSource],
-    ['js/ClientTouchEnvironment.js', clientTouchEnvironmentSource],
     ['js/ClientTouchControlsFlow.js', clientTouchControlsFlowSource],
-    ['js/ClientTouchState.js', clientTouchStateSource],
     ['js/CollisionDebugRenderer.js', collisionDebugRendererSource],
     ['js/PlayerPositionSync.js', playerPositionSyncSource],
     ['js/ScenarioRenderer.js', scenarioRendererSource],
@@ -158,7 +155,10 @@ await loadScript('/socket.io/socket.io.js');
 
 globalThis.GF = globalThis.GF || {};
 globalThis.GF.ClientLobbyViewModel = ClientLobbyViewModel;
+globalThis.GF.ClientRoundTransition = ClientRoundTransition;
 globalThis.GF.ClientScreens = ClientScreens;
+globalThis.GF.ClientTouchEnvironment = ClientTouchEnvironment;
+globalThis.GF.ClientTouchState = ClientTouchState;
 globalThis.GF.GameHudViewModel = GameHudViewModel;
 (0, eval)('var GF = globalThis.GF;');
 

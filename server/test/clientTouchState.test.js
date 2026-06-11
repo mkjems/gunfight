@@ -1,39 +1,52 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientTouchState() {
-    const context = {
-        GF: {
-            ClientScreens: {
-                RoundState: {
-                    WAITING: 'waiting',
-                    RITUAL: 'ritual',
-                    PLAYING: 'playing',
-                    HIT_PAUSE: 'hitPause',
-                    ROUND_OVER: 'roundOver',
-                    GAME_OVER: 'gameOver'
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientTouchState.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.ClientTouchState;
+async function loadClientTouchState() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientTouchState.ts',
+        'clientTouchState.js',
+        tempDirectory
+    );
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientTouchState.js')).href
+    );
+
+    return module.ClientTouchState;
 }
 
 function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('builds touch state for waiting lobby screens', function () {
-    const touchState = loadClientTouchState();
+test('builds touch state for waiting lobby screens', async function () {
+    const touchState = await loadClientTouchState();
 
     assert.deepEqual(
         plain(
@@ -57,8 +70,8 @@ test('builds touch state for waiting lobby screens', function () {
     );
 });
 
-test('builds touch state for active gameplay screens', function () {
-    const touchState = loadClientTouchState();
+test('builds touch state for active gameplay screens', async function () {
+    const touchState = await loadClientTouchState();
 
     assert.deepEqual(
         plain(
@@ -82,8 +95,8 @@ test('builds touch state for active gameplay screens', function () {
     );
 });
 
-test('shows gameplay touch controls during transitional round states', function () {
-    const touchState = loadClientTouchState();
+test('shows gameplay touch controls during transitional round states', async function () {
+    const touchState = await loadClientTouchState();
 
     assert.equal(touchState.shouldShowGameplayTouchControls('ritual'), true);
     assert.equal(touchState.shouldShowGameplayTouchControls('hitPause'), true);
