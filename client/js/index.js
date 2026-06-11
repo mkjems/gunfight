@@ -760,66 +760,40 @@ GF.Game = (function () {
     }
 
     function endRound(winnerId) {
-        var winnerSlot = getPlayerSlot(winnerId);
-
-        setRoundState(RoundState.ROUND_OVER);
-        closeNameEditor();
-        roundData.clearRoundPauseFlags();
-
-        if (winnerSlot >= 0) {
-            scoreKeeper.addPoint(winnerSlot);
-            setRoundMessage('PLAYER ' + players.label(winnerId) + ' WINS');
-        } else {
-            setRoundMessage('TIME');
-        }
-
-        renderHud();
-        players.clearKeys();
-        bullets.clear();
-
-        timers.clearMany(['reset', 'matchEnd', 'ritual', 'hit']);
-
-        roundIntro.clear();
-
-        timers.set('reset', resetRound, GF.Config.round.resetDelay);
+        GF.ClientRoundEndFlow.endRound({
+            bullets: bullets,
+            closeNameEditor: closeNameEditor,
+            getPlayerSlot: getPlayerSlot,
+            players: players,
+            renderHud: renderHud,
+            resetRound: resetRound,
+            roundData: roundData,
+            roundIntro: roundIntro,
+            scoreKeeper: scoreKeeper,
+            setRoundMessage: setRoundMessage,
+            setRoundState: setRoundState,
+            timers: timers,
+            winnerId: winnerId
+        });
     }
 
     function endGame() {
-        setRoundState(RoundState.GAME_OVER);
-        closeNameEditor();
-        recordGameResult();
-        roundData.resetRoundFlags();
-        setRoundMessage(
-            scoreKeeper.getGameOverMessage(
-                latestModel && latestModel.clients,
-                getClientName
-            )
-        );
-        renderHud();
-        players.clearKeys();
-        bullets.clear();
-
-        timers.clearMany(['reset', 'matchEnd', 'ritual', 'hit']);
-
-        roundIntro.clear();
-
-        timers.set('reset', resetToStartScreen, GF.Config.round.gameOverDelay);
-    }
-
-    function recordGameResult() {
-        var result;
-
-        if (!socket) {
-            return;
-        }
-
-        result = scoreKeeper.createGameResult(latestModel, getClientName);
-
-        if (!result) {
-            return;
-        }
-
-        socket.emit('recordGameResult', result);
+        GF.ClientRoundEndFlow.endGame({
+            bullets: bullets,
+            closeNameEditor: closeNameEditor,
+            getClientName: getClientName,
+            model: latestModel,
+            players: players,
+            renderHud: renderHud,
+            resetToStartScreen: resetToStartScreen,
+            roundData: roundData,
+            roundIntro: roundIntro,
+            scoreKeeper: scoreKeeper,
+            setRoundMessage: setRoundMessage,
+            setRoundState: setRoundState,
+            socket: socket,
+            timers: timers
+        });
     }
 
     function resetRound() {
