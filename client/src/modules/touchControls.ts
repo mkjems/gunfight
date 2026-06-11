@@ -1,26 +1,96 @@
-GF.TouchControls = function (options) {
-    options = options || {};
+import { Config } from './config.js';
 
-    var input = options.input;
-    var getAimLevel =
+type InputLike = {
+    press: (key: string) => void;
+    ready: () => void;
+    release: (key: string) => void;
+};
+
+type ClassListLike = {
+    toggle: (className: string, force?: boolean) => void;
+};
+
+type PointerEventLike = {
+    buttons?: number;
+    clientX: number;
+    clientY: number;
+    pointerId: number;
+    preventDefault: () => void;
+};
+
+type ElementLike = {
+    addEventListener: (
+        eventName: string,
+        callback: (evt: PointerEventLike) => void
+    ) => void;
+    classList: ClassListLike;
+    getBoundingClientRect: () => {
+        height: number;
+        left: number;
+        top: number;
+        width: number;
+    };
+    hidden: boolean;
+    setPointerCapture: (pointerId: number) => void;
+    style: {
+        top?: string;
+        transform?: string;
+    };
+};
+
+type DocumentLike = {
+    getElementById: (id: string) => ElementLike | null;
+};
+
+type WindowLike = {
+    location: {
+        search: string;
+    };
+    matchMedia?: (query: string) => {
+        matches: boolean;
+    };
+};
+
+type TouchControlsOptions = {
+    document?: DocumentLike;
+    getAimLevel?: () => number;
+    input?: InputLike;
+    window?: WindowLike;
+};
+
+type TouchControlsState = {
+    aimLevel?: number;
+    editing?: boolean;
+    gameplay?: boolean;
+    highScoresVisible?: boolean;
+    playing?: boolean;
+    ready?: boolean;
+    waiting?: boolean;
+};
+
+export function TouchControls(options: TouchControlsOptions = {}) {
+    const input = options.input;
+    const ownerDocument = (options.document || document) as DocumentLike;
+    const ownerWindow = (options.window || window) as WindowLike;
+    const getAimLevel =
         options.getAimLevel ||
         function () {
-            return GF.Config.player.defaultAim;
+            return Config.player.defaultAim;
         };
-    var maxAimLevel = GF.Config.player.aimLevels.length - 1;
-    var root = document.getElementById('touchControls');
-    var lobbyControls = document.getElementById('touchLobbyControls');
-    var playButton = document.getElementById('touchPlayButton');
-    var editButton = document.getElementById('touchEditButton');
-    var joystick = document.getElementById('touchJoystick');
-    var joystickKnob = document.getElementById('touchJoystickKnob');
-    var actionControls = document.getElementById('touchActionControls');
-    var aimSlider = document.getElementById('touchAimSlider');
-    var aimHandle = document.getElementById('touchAimHandle');
-    var shootButton = document.getElementById('touchShootButton');
-    var activeMoveKeys = {};
-    var visible = false;
-    var editing = false;
+    const maxAimLevel = Config.player.aimLevels.length - 1;
+    const root = ownerDocument.getElementById('touchControls');
+    const lobbyControls = ownerDocument.getElementById('touchLobbyControls');
+    const playButton = ownerDocument.getElementById('touchPlayButton');
+    const editButton = ownerDocument.getElementById('touchEditButton');
+    const joystick = ownerDocument.getElementById('touchJoystick');
+    const joystickKnob = ownerDocument.getElementById('touchJoystickKnob');
+    const actionControls = ownerDocument.getElementById('touchActionControls');
+    const aimSlider = ownerDocument.getElementById('touchAimSlider');
+    const aimHandle = ownerDocument.getElementById('touchAimHandle');
+    const shootButton = ownerDocument.getElementById('touchShootButton');
+    let activeMoveKeys: Record<string, boolean> = {};
+    let visible = false;
+    let editing = false;
 
     function init() {
         if (!root || !input) {
@@ -39,7 +109,7 @@ GF.TouchControls = function (options) {
 
         root.classList.toggle(
             'debug-touch',
-            window.location.search.indexOf('touch=1') >= 0
+            ownerWindow.location.search.indexOf('touch=1') >= 0
         );
         root.hidden = false;
         bindJoystick();
@@ -63,12 +133,13 @@ GF.TouchControls = function (options) {
     }
 
     function shouldEnableTouchControls() {
-        if (window.location.search.indexOf('touch=1') >= 0) {
+        if (ownerWindow.location.search.indexOf('touch=1') >= 0) {
             return true;
         }
 
-        return (
-            window.matchMedia && window.matchMedia('(pointer: coarse)').matches
+        return !!(
+            ownerWindow.matchMedia &&
+            ownerWindow.matchMedia('(pointer: coarse)').matches
         );
     }
 
@@ -97,19 +168,23 @@ GF.TouchControls = function (options) {
         joystick.addEventListener('lostpointercapture', resetJoystick);
     }
 
-    function updateJoystick(evt) {
-        var rect = joystick.getBoundingClientRect();
-        var centerX = rect.left + rect.width / 2;
-        var centerY = rect.top + rect.height / 2;
-        var radius = rect.width / 2;
-        var dx = evt.clientX - centerX;
-        var dy = evt.clientY - centerY;
-        var distance = Math.sqrt(dx * dx + dy * dy);
-        var maxKnobDistance = radius * 0.52;
-        var normalizedX = dx / radius;
-        var normalizedY = dy / radius;
-        var threshold = 0.22;
-        var nextKeys = {};
+    function updateJoystick(evt: PointerEventLike) {
+        if (!joystick) {
+            return;
+        }
+
+        const rect = joystick.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const radius = rect.width / 2;
+        let dx = evt.clientX - centerX;
+        let dy = evt.clientY - centerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const maxKnobDistance = radius * 0.52;
+        const normalizedX = dx / radius;
+        const normalizedY = dy / radius;
+        const threshold = 0.22;
+        const nextKeys: Record<string, boolean> = {};
 
         if (distance > maxKnobDistance) {
             dx = (dx / distance) * maxKnobDistance;
@@ -140,14 +215,14 @@ GF.TouchControls = function (options) {
         applyMoveKeys(nextKeys);
     }
 
-    function applyMoveKeys(nextKeys) {
+    function applyMoveKeys(nextKeys: Record<string, boolean>) {
         ['h', 'j', 'k', 'l'].forEach(function (key) {
             if (nextKeys[key] && !activeMoveKeys[key]) {
-                input.press(key);
+                input?.press(key);
             }
 
             if (!nextKeys[key] && activeMoveKeys[key]) {
-                input.release(key);
+                input?.release(key);
             }
         });
 
@@ -183,42 +258,47 @@ GF.TouchControls = function (options) {
         });
     }
 
-    function updateAim(evt) {
-        var rect = aimSlider.getBoundingClientRect();
-        var progress = (evt.clientY - rect.top) / rect.height;
-        var level = Math.round((1 - clamp(progress, 0, 1)) * maxAimLevel);
+    function updateAim(evt: PointerEventLike) {
+        if (!aimSlider) {
+            return;
+        }
+
+        const rect = aimSlider.getBoundingClientRect();
+        const progress = (evt.clientY - rect.top) / rect.height;
+        const level = Math.round((1 - clamp(progress, 0, 1)) * maxAimLevel);
 
         setAimLevel(level);
     }
 
-    function setAimLevel(level) {
-        var currentLevel = getAimLevel();
-        var key;
+    function setAimLevel(level: number) {
+        let currentLevel = getAimLevel();
 
         level = Math.max(0, Math.min(maxAimLevel, level));
 
         while (currentLevel !== level) {
-            key = level > currentLevel ? 'a' : 'z';
-            input.press(key);
-            input.release(key);
+            const key = level > currentLevel ? 'a' : 'z';
+            input?.press(key);
+            input?.release(key);
             currentLevel += level > currentLevel ? 1 : -1;
         }
 
         updateAimHandle(level);
     }
 
-    function updateAimHandle(level) {
-        var progress;
-
+    function updateAimHandle(level: number) {
         if (!aimHandle) {
             return;
         }
 
-        progress = maxAimLevel ? 1 - level / maxAimLevel : 0;
+        const progress = maxAimLevel ? 1 - level / maxAimLevel : 0;
         aimHandle.style.top = progress * 100 + '%';
     }
 
-    function bindButton(button, onDown, onUp) {
+    function bindButton(
+        button: ElementLike | null,
+        onDown: () => void,
+        onUp: () => void
+    ) {
         if (!button) {
             return;
         }
@@ -238,7 +318,7 @@ GF.TouchControls = function (options) {
         button.addEventListener('lostpointercapture', onUp);
     }
 
-    function bindTap(button, onTap) {
+    function bindTap(button: ElementLike | null, onTap: () => void) {
         if (!button) {
             return;
         }
@@ -249,17 +329,13 @@ GF.TouchControls = function (options) {
         });
     }
 
-    function update(state) {
-        var showGameplayControls;
-
-        state = state || {};
-
+    function update(state: TouchControlsState = {}) {
         if (!root || !visible) {
             return;
         }
 
-        editing = state.editing;
-        showGameplayControls = state.gameplay || state.playing || editing;
+        editing = !!state.editing;
+        const showGameplayControls = state.gameplay || state.playing || editing;
         root.classList.toggle('is-waiting', state.waiting);
         root.classList.toggle('is-playing', state.playing);
         root.classList.toggle('is-editing', editing);
@@ -286,7 +362,7 @@ GF.TouchControls = function (options) {
 
         if (!showGameplayControls) {
             resetJoystick();
-            input.release(' ');
+            input?.release(' ');
         }
 
         if (!editing) {
@@ -298,13 +374,13 @@ GF.TouchControls = function (options) {
         }
     }
 
-    function clamp(value, min, max) {
+    function clamp(value: number, min: number, max: number) {
         return Math.max(min, Math.min(max, value));
     }
 
     init();
 
     return {
-        update: update
+        update
     };
-};
+}

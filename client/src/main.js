@@ -1,7 +1,4 @@
 import scenarioRendererSource from '../js/ScenarioRenderer.js?raw';
-import soundEffectsSource from '../js/SoundEffects.js?raw';
-import cameraSource from '../js/Camera.js?raw';
-import touchControlsSource from '../js/TouchControls.js?raw';
 import sceneSource from '../js/Scene.js?raw';
 import obstaclesSource from '../js/Obstacles.js?raw';
 import controllableSource from '../js/Controllable.js?raw';
@@ -11,6 +8,7 @@ import playersSource from '../js/Players.js?raw';
 import collisionSource from '../js/Collision.js?raw';
 import indexSource from '../js/index.js?raw';
 import { CanvasTools } from './modules/canvasTools';
+import { Camera } from './modules/camera';
 import { ClientAmmo } from './modules/clientAmmo';
 import { ClientAmmoFlow } from './modules/clientAmmoFlow';
 import { ClientAssets } from './modules/clientAssets';
@@ -66,6 +64,8 @@ import { PlayerPositionSync } from './modules/playerPositionSync';
 import { requestAnimFrame } from './modules/requestAnimationFrame';
 import { RoundIntro } from './modules/roundIntro';
 import { ScoreKeeper } from './modules/scoreKeeper';
+import { SoundEffects } from './modules/soundEffects';
+import { TouchControls } from './modules/touchControls';
 
 function loadScript(src) {
     if (src === '/socket.io/socket.io.js' && globalThis.io) {
@@ -88,9 +88,6 @@ function loadScript(src) {
 
 const scripts = [
     ['js/ScenarioRenderer.js', scenarioRendererSource],
-    ['js/SoundEffects.js', soundEffectsSource],
-    ['js/Camera.js', cameraSource],
-    ['js/TouchControls.js', touchControlsSource],
     ['js/Scene.js', sceneSource],
     ['js/Obstacles.js', obstaclesSource],
     ['js/Controllable.js', controllableSource],
@@ -106,6 +103,7 @@ await loadScript('/socket.io/socket.io.js');
 globalThis.GF = globalThis.GF || {};
 globalThis.requestAnimFrame = requestAnimFrame;
 globalThis.GF.AmmoHudRenderer = AmmoHudRenderer;
+globalThis.GF.Camera = Camera;
 globalThis.GF.CanvasTools = CanvasTools;
 globalThis.GF.ClientAmmo = ClientAmmo;
 globalThis.GF.ClientAmmoFlow = ClientAmmoFlow;
@@ -160,6 +158,8 @@ globalThis.GF.Pen = Pen;
 globalThis.GF.PlayerPositionSync = PlayerPositionSync;
 globalThis.GF.RoundIntro = RoundIntro;
 globalThis.GF.ScoreKeeper = ScoreKeeper;
+globalThis.GF.SoundEffects = SoundEffects;
+globalThis.GF.TouchControls = TouchControls;
 (0, eval)('var GF = globalThis.GF;');
 
 scripts.forEach(function ([name, source]) {
