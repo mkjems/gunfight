@@ -1,24 +1,28 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadPlayerPositionSync() {
-    const context = {
-        GF: {}
-    };
+async function loadPlayerPositionSync() {
     const source = readFileSync(
-        new URL('../../client/js/PlayerPositionSync.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/playerPositionSync.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.PlayerPositionSync;
+    return module.PlayerPositionSync;
 }
 
-test('throttles local player position sync', function () {
-    const PlayerPositionSync = loadPlayerPositionSync();
+test('throttles local player position sync', async function () {
+    const PlayerPositionSync = await loadPlayerPositionSync();
     let now = 1000;
     const sent = [];
     const sync = new PlayerPositionSync({
@@ -77,8 +81,8 @@ test('throttles local player position sync', function () {
     );
 });
 
-test('applies remote positions only for active opponents', function () {
-    const PlayerPositionSync = loadPlayerPositionSync();
+test('applies remote positions only for active opponents', async function () {
+    const PlayerPositionSync = await loadPlayerPositionSync();
     const sync = new PlayerPositionSync();
     const players = {
         all: {

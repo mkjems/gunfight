@@ -1,28 +1,32 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientObstacleSync() {
-    const context = {
-        GF: {}
-    };
+async function loadClientObstacleSync() {
     const source = readFileSync(
-        new URL('../../client/js/ClientObstacleSync.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientObstacleSync.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientObstacleSync;
+    return module.ClientObstacleSync;
 }
 
 function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('emits and applies local obstacle hits from the owning player', function () {
-    const sync = loadClientObstacleSync();
+test('emits and applies local obstacle hits from the owning player', async function () {
+    const sync = await loadClientObstacleSync();
     const applied = [];
     const emitted = [];
 
@@ -57,8 +61,8 @@ test('emits and applies local obstacle hits from the owning player', function ()
     ]);
 });
 
-test('ignores obstacle hits owned by another player', function () {
-    const sync = loadClientObstacleSync();
+test('ignores obstacle hits owned by another player', async function () {
+    const sync = await loadClientObstacleSync();
     const calls = [];
 
     assert.equal(
@@ -83,8 +87,8 @@ test('ignores obstacle hits owned by another player', function () {
     assert.deepEqual(calls, []);
 });
 
-test('applies obstacle damage only for the current round', function () {
-    const sync = loadClientObstacleSync();
+test('applies obstacle damage only for the current round', async function () {
+    const sync = await loadClientObstacleSync();
     const calls = [];
 
     assert.equal(

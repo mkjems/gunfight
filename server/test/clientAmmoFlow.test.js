@@ -1,27 +1,45 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientAmmoFlow() {
-    const context = {
-        GF: {
-            ClientScreens: {
-                RoundState: {
-                    PLAYING: 'playing',
-                    WAITING: 'waiting'
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientAmmoFlow.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.ClientAmmoFlow;
+async function loadClientAmmoFlow() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientAmmoFlow.ts',
+        'clientAmmoFlow.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientAmmoFlow.js')).href
+    );
+
+    return module.ClientAmmoFlow;
 }
 
 function createOptions(overrides = {}) {
@@ -49,16 +67,16 @@ function createOptions(overrides = {}) {
     };
 }
 
-test('reloads when playing with both clients in the model', function () {
-    const flow = loadClientAmmoFlow();
+test('reloads when playing with both clients in the model', async function () {
+    const flow = await loadClientAmmoFlow();
     const { calls, options } = createOptions();
 
     assert.equal(flow.reloadIfBothPlayersAreOut(options), true);
     assert.deepEqual(calls, [['ammo.reloadIfAllEmpty', 2]]);
 });
 
-test('does not reload outside active play', function () {
-    const flow = loadClientAmmoFlow();
+test('does not reload outside active play', async function () {
+    const flow = await loadClientAmmoFlow();
     const { calls, options } = createOptions({
         roundState: 'waiting'
     });
@@ -67,8 +85,8 @@ test('does not reload outside active play', function () {
     assert.deepEqual(calls, []);
 });
 
-test('does not reload without two clients', function () {
-    const flow = loadClientAmmoFlow();
+test('does not reload without two clients', async function () {
+    const flow = await loadClientAmmoFlow();
     const { calls, options } = createOptions({
         model: {
             clients: [{ id: 'p1' }]
@@ -79,8 +97,8 @@ test('does not reload without two clients', function () {
     assert.deepEqual(calls, []);
 });
 
-test('does not reload without a model', function () {
-    const flow = loadClientAmmoFlow();
+test('does not reload without a model', async function () {
+    const flow = await loadClientAmmoFlow();
     const { calls, options } = createOptions({
         model: null
     });

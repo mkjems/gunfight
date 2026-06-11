@@ -1,30 +1,45 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientAmmo() {
-    const context = {
-        GF: {
-            Config: {
-                round: {
-                    ammo: 6
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientAmmo.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientAmmo;
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
 }
 
-test('tracks ammo per client', function () {
-    const ClientAmmo = loadClientAmmo();
+async function loadClientAmmo() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('config.ts', 'config.js', tempDirectory);
+    compileClientModule('clientAmmo.ts', 'clientAmmo.js', tempDirectory);
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientAmmo.js')).href
+    );
+
+    return module.ClientAmmo;
+}
+
+test('tracks ammo per client', async function () {
+    const ClientAmmo = await loadClientAmmo();
     const ammo = new ClientAmmo({ maxAmmo: 2 });
 
     ammo.reset([{ id: 'p1' }, { id: 'p2' }]);
@@ -36,8 +51,8 @@ test('tracks ammo per client', function () {
     assert.equal(ammo.spend('unknown'), false);
 });
 
-test('reloads only when both players are out of ammo', function () {
-    const ClientAmmo = loadClientAmmo();
+test('reloads only when both players are out of ammo', async function () {
+    const ClientAmmo = await loadClientAmmo();
     const ammo = new ClientAmmo({ maxAmmo: 1 });
     const clients = [{ id: 'p1' }, { id: 'p2' }];
 
@@ -55,8 +70,8 @@ test('reloads only when both players are out of ammo', function () {
     assert.equal(ammo.get('p2'), 1);
 });
 
-test('reset clears stale players', function () {
-    const ClientAmmo = loadClientAmmo();
+test('reset clears stale players', async function () {
+    const ClientAmmo = await loadClientAmmo();
     const ammo = new ClientAmmo({ maxAmmo: 3 });
 
     ammo.reset([{ id: 'p1' }]);
