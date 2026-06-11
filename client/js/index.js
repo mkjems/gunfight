@@ -328,40 +328,25 @@ GF.Game = (function () {
     }
 
     function renderLobbyHud() {
-        var isTouch = isTouchInterface();
-        var activeScreen = getActiveScreen();
-        showElement(gameHud, false);
-        showElement(lobbyHud, true);
-
-        if (activeScreen === Screen.LOBBY_EDIT_NAME) {
-            renderNameEditor();
-            return;
-        }
-
-        showElement(canvas, true);
-        showElement(hudCanvas, true);
-        nameEditorScreen.hide();
-
-        if (activeScreen === Screen.HIGH_SCORES) {
-            renderHighScoresScreen(isTouch);
-            return;
-        }
-
-        lobbyScreen.render(
-            GF.ClientLobbyViewModel.getLobbyViewModel({
-                isTouch: isTouch,
-                localReadyRequested: localReadyRequested,
-                model: latestModel,
-                playerId: playerId
-            })
-        );
-    }
-
-    function getActiveScreen() {
-        return GF.ClientScreens.getActiveScreen({
-            roundState: roundState,
-            nameEditorActive: nameEditor && nameEditor.isActive(),
-            highScoresVisible: shouldShowHighScoresScreen()
+        GF.ClientLobbyHudFlow.render({
+            canvas: canvas,
+            gameHud: gameHud,
+            highScores: highScores,
+            highScoresScreen: highScoresScreen,
+            hudCanvas: hudCanvas,
+            isTouchInterface: isTouchInterface,
+            lobbyHud: lobbyHud,
+            lobbyScreen: lobbyScreen,
+            localReadyRequested: localReadyRequested,
+            model: latestModel,
+            nameEditor: nameEditor,
+            nameEditorScreen: nameEditorScreen,
+            onNameEditorSelect: function (rowIndex, colIndex) {
+                nameEditor.select(rowIndex, colIndex);
+                renderHud();
+            },
+            playerId: playerId,
+            roundState: roundState
         });
     }
 
@@ -369,33 +354,6 @@ GF.Game = (function () {
         return GF.ClientLobbyViewModel.shouldShowHighScoresScreen({
             localReadyRequested: localReadyRequested,
             model: latestModel
-        });
-    }
-
-    function renderHighScoresScreen(isTouch) {
-        highScoresScreen.render({
-            rows: highScores && highScores.length ? highScores : [],
-            playPrompt:
-                shouldShowLobbyPrompt() && !isTouch ? 'PRESS P TO PLAY' : ''
-        });
-    }
-
-    function renderNameEditor() {
-        var state = nameEditor.getState();
-        var helpLines = isTouchInterface()
-            ? []
-            : ['H J K L MOVE', 'SPACE SELECT', 'E DONE'];
-
-        showElement(canvas, false);
-        showElement(hudCanvas, false);
-        lobbyScreen.clear();
-        nameEditorScreen.render({
-            state: state,
-            helpLines: helpLines,
-            onSelect: function (rowIndex, colIndex) {
-                nameEditor.select(rowIndex, colIndex);
-                renderHud();
-            }
         });
     }
 
@@ -480,26 +438,22 @@ GF.Game = (function () {
     }
 
     function submitNameChange(name) {
-        if (!socket) {
-            return;
-        }
-
-        socket.emit('updateName', {
-            name: name || ''
+        GF.ClientNameEditorFlow.submitNameChange({
+            name: name,
+            socket: socket
         });
     }
 
     function syncNameEditor() {
-        identity.syncNameEditor({
+        GF.ClientNameEditorFlow.sync({
             client: getLocalClient(),
+            identity: identity,
             editor: nameEditor
         });
     }
 
     function closeNameEditor() {
-        if (nameEditor && nameEditor.isActive()) {
-            nameEditor.close();
-        }
+        GF.ClientNameEditorFlow.close(nameEditor);
     }
 
     function enterLobbyState() {

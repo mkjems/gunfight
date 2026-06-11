@@ -79,12 +79,14 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract player-hit flow.
     - [x] Extract ammo HUD rendering.
     - [x] Extract game HUD view-model decisions.
+    - [x] Extract lobby HUD screen routing.
     - [x] Extract canvas utilities.
     - [x] Extract client asset loading.
     - [x] Extract lobby view-model decisions.
     - [x] Extract camera and viewport decisions.
     - [x] Extract touch-control state decisions.
     - [x] Extract client identity and name-editor sync.
+    - [x] Extract name-editor submit and close flow.
     - [x] Extract lobby entry and abandoned-game recovery flow.
     - [x] Extract match-end timer scheduling.
     - [x] Extract model update side-effect flow.
