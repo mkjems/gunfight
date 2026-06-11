@@ -830,33 +830,26 @@ GF.Game = (function () {
     }
 
     function checkForHits() {
-        var hit;
-        var obstacleHit;
+        var result = GF.ClientHitDetection.check({
+            bullets: bullets,
+            findBulletObstacleHit: findBulletObstacleHit,
+            matchTimeExpired: hasMatchTimeExpired(),
+            players: players,
+            roundState: roundState
+        });
 
-        if (roundState !== RoundState.PLAYING) {
-            if (roundState === RoundState.HIT_PAUSE && hasMatchTimeExpired()) {
-                endGame();
-            }
-            return;
-        }
-
-        obstacleHit = findBulletObstacleHit();
-
-        if (obstacleHit) {
-            obstacleHit.bullet.deleteMe = true;
-            handleObstacleHit(obstacleHit);
-            return;
-        }
-
-        hit = GF.Collision.findBulletHit(bullets.all(), players.all);
-
-        if (hit) {
-            hit.bullet.deleteMe = true;
-            handlePlayerHit(hit);
-        }
-
-        if (hasMatchTimeExpired()) {
+        if (result.type === 'matchExpired') {
             endGame();
+            return;
+        }
+
+        if (result.type === 'obstacleHit') {
+            handleObstacleHit(result.hit);
+            return;
+        }
+
+        if (result.type === 'playerHit') {
+            handlePlayerHit(result.hit);
         }
     }
 
