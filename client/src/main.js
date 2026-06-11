@@ -1,10 +1,7 @@
-import controllableSource from '../js/Controllable.js?raw';
-import bulletSource from '../js/Bullet.js?raw';
-import bulletsSource from '../js/Bullets.js?raw';
-import playersSource from '../js/Players.js?raw';
-import indexSource from '../js/index.js?raw';
 import { CanvasTools } from './modules/canvasTools';
 import { Camera } from './modules/camera';
+import { Bullet } from './modules/bullet';
+import { Bullets } from './modules/bullets';
 import { ClientAmmo } from './modules/clientAmmo';
 import { ClientAmmoFlow } from './modules/clientAmmoFlow';
 import { ClientAssets } from './modules/clientAssets';
@@ -48,6 +45,8 @@ import { Collision } from './modules/collision';
 import { CollisionDebugRenderer } from './modules/collisionDebugRenderer';
 import { AmmoHudRenderer } from './modules/ammoHudRenderer';
 import { Color } from './modules/color';
+import { Controllable } from './modules/controllable';
+import { createGame } from './modules/game';
 import { GameHud } from './modules/gameHud';
 import { GameHudViewModel } from './modules/gameHudViewModel';
 import { HighScoresScreen } from './modules/highScoresScreen';
@@ -58,6 +57,7 @@ import { NameEditorScreen } from './modules/nameEditorScreen';
 import { NameEditor } from './modules/nameEditor';
 import { Obstacles } from './modules/obstacles';
 import { Pen } from './modules/pen';
+import { Players } from './modules/players';
 import { PlayerPositionSync } from './modules/playerPositionSync';
 import { requestAnimFrame } from './modules/requestAnimationFrame';
 import { RoundIntro } from './modules/roundIntro';
@@ -86,19 +86,13 @@ function loadScript(src) {
     });
 }
 
-const scripts = [
-    ['js/Controllable.js', controllableSource],
-    ['js/Bullet.js', bulletSource],
-    ['js/Bullets.js', bulletsSource],
-    ['js/Players.js', playersSource],
-    ['js/index.js', indexSource]
-];
-
 await loadScript('/socket.io/socket.io.js');
 
 globalThis.GF = globalThis.GF || {};
 globalThis.requestAnimFrame = requestAnimFrame;
 globalThis.GF.AmmoHudRenderer = AmmoHudRenderer;
+globalThis.GF.Bullet = Bullet;
+globalThis.GF.Bullets = Bullets;
 globalThis.GF.Camera = Camera;
 globalThis.GF.CanvasTools = CanvasTools;
 globalThis.GF.ClientAmmo = ClientAmmo;
@@ -143,6 +137,7 @@ globalThis.GF.ClientTimers = ClientTimers;
 globalThis.GF.Collision = Collision;
 globalThis.GF.CollisionDebugRenderer = CollisionDebugRenderer;
 globalThis.GF.Color = Color;
+globalThis.GF.Controllable = Controllable;
 globalThis.GF.GameHud = GameHud;
 globalThis.GF.GameHudViewModel = GameHudViewModel;
 globalThis.GF.HighScoresScreen = HighScoresScreen;
@@ -153,6 +148,7 @@ globalThis.GF.NameEditorScreen = NameEditorScreen;
 globalThis.GF.NameEditor = NameEditor;
 globalThis.GF.Obstacles = Obstacles;
 globalThis.GF.Pen = Pen;
+globalThis.GF.Players = Players;
 globalThis.GF.PlayerPositionSync = PlayerPositionSync;
 globalThis.GF.RoundIntro = RoundIntro;
 globalThis.GF.ScenarioRenderer = ScenarioRenderer;
@@ -160,12 +156,8 @@ globalThis.GF.Scene = Scene;
 globalThis.GF.ScoreKeeper = ScoreKeeper;
 globalThis.GF.SoundEffects = SoundEffects;
 globalThis.GF.TouchControls = TouchControls;
-(0, eval)('var GF = globalThis.GF;');
-
-scripts.forEach(function ([name, source]) {
-    (0, eval)(source + '\n//# sourceURL=' + location.origin + '/' + name);
+globalThis.GF.Game = createGame(globalThis.GF, {
+    document,
+    Image,
+    window
 });
-
-if (document.readyState !== 'loading' && globalThis.GF.Game) {
-    globalThis.GF.Game.start();
-}

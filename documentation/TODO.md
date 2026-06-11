@@ -236,11 +236,11 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Move `KeysModel`, `NameEditor`, `ScoreKeeper`, and `RoundIntro` behind imported module bridges.
     - [x] Move `Camera`, `SoundEffects`, and `TouchControls` behind imported module bridges.
     - [x] Move `Scene`, `Obstacles`, `Collision`, and `ScenarioRenderer` behind imported module bridges.
-    - Convert extracted UI and state modules before gameplay simulation.
-    - Keep canvas gameplay readable and testable during conversion.
-    - Remove script-order coupling as modules are converted.
+    - [x] Move `Bullet`, `Bullets`, `Controllable`, `Players`, and game startup behind imported module bridges.
+    - [x] Retire the `client/js` static-script compatibility path.
+    - [ ] Remove the remaining `GF` compatibility surface from `main.js` and `game.ts`.
 
-- [ ] Convert browser files to TypeScript in low-risk groups.
+- [x] Convert browser files to TypeScript in low-risk groups.
     - [x] Convert `ClientScreens` to TypeScript as the first pure decision module.
     - [x] Convert `ClientLobbyViewModel` to TypeScript as the first view-model helper.
     - [x] Convert `GameHudViewModel` to TypeScript as the first HUD view-model helper.
@@ -262,6 +262,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Convert keyboard/name/score/round-intro state helpers to TypeScript.
     - [x] Convert camera, sound, and touch-control browser wrappers to TypeScript.
     - [x] Convert collision/environment helper modules to TypeScript.
+    - [x] Convert projectile/player constructors and browser game startup to TypeScript.
     - Start with pure decision modules and view-model helpers.
     - Then convert networking, screens, input, and HUD modules.
     - Convert gameplay simulation files after shared contracts and client imports are stable.
