@@ -1,26 +1,26 @@
-GF.Players = function(scene, bullets){
+GF.Players = function (scene, bullets) {
     var players = {};
 
-    function getSlot(index, slotSet){
+    function getSlot(index, slotSet) {
         var slots = slotSet || GF.Config.player.slots;
 
         return slots[index % slots.length];
     }
 
-    function ensure(client, index, options){
+    function ensure(client, index, options) {
         options = options || {};
         var slot = getSlot(index, options.slots);
         var id = client.id;
         var slotChanged;
 
-        if(players[id]){
+        if (players[id]) {
             slotChanged = players[id].slot !== index;
             players[id].playerId = id;
             players[id].slot = index;
             players[id].facing = slot.facing;
             players[id].idleFrame = slot.frame;
 
-            if(slotChanged && options.resetChangedSlots){
+            if (slotChanged && options.resetChangedSlots) {
                 players[id].resetTo(slot);
             }
 
@@ -36,16 +36,16 @@ GF.Players = function(scene, bullets){
         scene.addFigure(players[id]);
     }
 
-    function sync(model, options){
+    function sync(model, options) {
         var activePlayers = {};
 
-        model.clients.forEach(function(client, index){
+        model.clients.forEach(function (client, index) {
             activePlayers[client.id] = true;
             ensure(client, index, options);
         });
 
-        Object.keys(players).forEach(function(id){
-            if(!activePlayers[id]){
+        Object.keys(players).forEach(function (id) {
+            if (!activePlayers[id]) {
                 players[id].deleteMe = true;
                 bullets.remove(id);
                 delete players[id];
@@ -53,10 +53,10 @@ GF.Players = function(scene, bullets){
         });
     }
 
-    function resetAll(options){
+    function resetAll(options) {
         options = options || {};
 
-        Object.keys(players).forEach(function(id){
+        Object.keys(players).forEach(function (id) {
             var player = players[id];
             var slot = getSlot(player.slot, options.slots);
 
@@ -64,14 +64,14 @@ GF.Players = function(scene, bullets){
         });
     }
 
-    function clearKeys(){
-        Object.keys(players).forEach(function(id){
+    function clearKeys() {
+        Object.keys(players).forEach(function (id) {
             players[id].clearKeys();
         });
     }
 
-    function label(id){
-        if(!players[id]){
+    function label(id) {
+        if (!players[id]) {
             return id;
         }
 

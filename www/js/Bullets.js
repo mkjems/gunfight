@@ -1,11 +1,11 @@
-GF.Bullets = function(scene){
+GF.Bullets = function (scene) {
     var bullets = {};
 
-    function fire(player, options){
+    function fire(player, options) {
         var activeBullet = bullets[player.playerId];
         var bullet;
 
-        if(activeBullet && !activeBullet.deleteMe){
+        if (activeBullet && !activeBullet.deleteMe) {
             return false;
         }
 
@@ -15,8 +15,8 @@ GF.Bullets = function(scene){
         return bullet;
     }
 
-    function remove(id){
-        if(!bullets[id]){
+    function remove(id) {
+        if (!bullets[id]) {
             return;
         }
 
@@ -24,18 +24,18 @@ GF.Bullets = function(scene){
         delete bullets[id];
     }
 
-    function clear(){
-        Object.keys(bullets).forEach(function(id){
+    function clear() {
+        Object.keys(bullets).forEach(function (id) {
             remove(id);
         });
     }
 
-    function reset(){
+    function reset() {
         bullets = {};
     }
 
     return {
-        all: function(){
+        all: function () {
             return bullets;
         },
         clear: clear,

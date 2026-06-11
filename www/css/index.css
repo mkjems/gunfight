@@ -7,7 +7,8 @@
 @font-face {
     font-family: 'Arcade';
     font-display: swap;
-    src: url('../fonts/Arcade.woff2') format('woff2'),
+    src:
+        url('../fonts/Arcade.woff2') format('woff2'),
         url('../fonts/ARCADE.TTF') format('truetype');
 }
 
@@ -38,9 +39,9 @@
 :root {
     /* Color Palette */
 
-    --yellow: rgb(255,244,0);
-    --light-black: rgb(30,30,30);
-    --black: rgb(0,0,0);
+    --yellow: rgb(255, 244, 0);
+    --light-black: rgb(30, 30, 30);
+    --black: rgb(0, 0, 0);
 
     /* Typography Palette */
 
@@ -63,13 +64,12 @@
     --font-family-game-over: 'Game Over', monospace;
     --font-size-game-over: clamp(8px, 1.1cqw, 26px);
     --line-height-game-over: 2.1;
-    
+
     --font-family-proggy-square: 'Proggy Square', monospace;
     --font-size-proggy-square: clamp(20px, 2.5cqw, 38px);
     --line-height-proggy-square: 1.1;
 
     --large-text-size: clamp(10px, 3.8cqw, 30px);
-
 
     /* Semantic Mapping*/
 
@@ -84,24 +84,23 @@
 
     --text-transform: uppercase;
     --color: var(--yellow);
-    
-    --primary-color: var(--yellow); 
+
+    --primary-color: var(--yellow);
     --bg-color: var(--light-black);
     --shadow-color: var(--black);
     --shadow-offset-x: 1px;
     --shadow-offset-y: 1px;
-}   
+}
 
-
-html{
-    background-color: rgb(30,30,30);
+html {
+    background-color: rgb(30, 30, 30);
     height: 100%;
     overflow: hidden;
     overscroll-behavior: none;
 }
 
-body{
-    background-color: rgb(30,30,30);
+body {
+    background-color: rgb(30, 30, 30);
     text-transform: var(--text-transform);
     color: var(--color);
     font-family: var(--font-family);
@@ -114,19 +113,19 @@ body{
     position: relative;
 }
 
-#rotatePrompt{
+#rotatePrompt {
     display: none;
 }
 
-#rotatePrompt img{
+#rotatePrompt img {
     display: block;
     image-rendering: pixelated;
     max-height: 86vh;
     max-width: 86vw;
 }
 
-@media (pointer: coarse) and (orientation: portrait){
-    #rotatePrompt{
+@media (pointer: coarse) and (orientation: portrait) {
+    #rotatePrompt {
         align-items: center;
         background: var(--black);
         display: flex;
@@ -137,7 +136,7 @@ body{
     }
 }
 
-#gameStage{
+#gameStage {
     background-color: var(--black);
     aspect-ratio: 950 / 640;
     container-type: size;
@@ -149,15 +148,15 @@ body{
     z-index: 0;
 }
 
-@supports (height: 100lvh){
-    #gameStage{
+@supports (height: 100lvh) {
+    #gameStage {
         height: min(100lvh, 67.3684vw);
         width: min(100vw, 148.4375lvh);
     }
 }
 
-@media (pointer: coarse){
-    #gameStage{
+@media (pointer: coarse) {
+    #gameStage {
         height: max(100vh, 67.3684vw);
         inset: 0;
         margin: auto;
@@ -165,9 +164,9 @@ body{
     }
 }
 
-@supports (height: 100dvh){
-    @media (pointer: coarse){
-        #gameStage{
+@supports (height: 100dvh) {
+    @media (pointer: coarse) {
+        #gameStage {
             height: max(100dvh, 67.3684vw);
             width: max(100vw, 148.4375dvh);
         }
@@ -175,7 +174,7 @@ body{
 }
 
 #canvas,
-#hudCanvas{
+#hudCanvas {
     display: block;
     height: 100%;
     image-rendering: pixelated;
@@ -187,20 +186,20 @@ body{
 }
 
 #canvas[hidden],
-#hudCanvas[hidden]{
+#hudCanvas[hidden] {
     display: none;
 }
 
-#canvas{
+#canvas {
     z-index: 0;
 }
 
-#hudCanvas{
+#hudCanvas {
     pointer-events: none;
     z-index: 1;
 }
 
-#hudOverlay{
+#hudOverlay {
     color: var(--yellow);
     font-family: var(--font-family);
     font-size: var(--font-size);
@@ -209,26 +208,26 @@ body{
     line-height: var(--line-height);
     position: absolute;
     text-align: center;
-    text-shadow: 1px 1px 0 rgb(0,0,0);
+    text-shadow: 1px 1px 0 rgb(0, 0, 0);
     z-index: 2;
 }
 
-body.install-prompt-visible #hudOverlay{
+body.install-prompt-visible #hudOverlay {
     display: none;
 }
 
-body.install-prompt-visible #touchControls{
+body.install-prompt-visible #touchControls {
     display: none;
 }
 
 #gameHud,
-#lobbyHud{
+#lobbyHud {
     font-size: var(--font-size);
     inset: 0;
     position: absolute;
 }
 
-#gameHud{
+#gameHud {
     display: grid;
     grid-template-rows: 1fr auto 1fr;
 }
@@ -237,11 +236,11 @@ body.install-prompt-visible #touchControls{
 #lobbyHud[hidden],
 #lobby-main[hidden],
 #highScoresScreen[hidden],
-#nameEditor[hidden]{
+#nameEditor[hidden] {
     display: none;
 }
 
-#scoreRow{
+#scoreRow {
     align-items: start;
     box-sizing: border-box;
     display: grid;
@@ -253,19 +252,19 @@ body.install-prompt-visible #touchControls{
     top: 0;
 }
 
-#scoreLeft{
+#scoreLeft {
     justify-self: start;
 }
 
-#roundTimer{
+#roundTimer {
     justify-self: center;
 }
 
-#scoreRight{
+#scoreRight {
     justify-self: end;
 }
 
-#roundMessage{
+#roundMessage {
     align-self: center;
     grid-row: 2;
     justify-self: center;
@@ -273,13 +272,13 @@ body.install-prompt-visible #touchControls{
     white-space: nowrap;
 }
 
-#hitMessage{
+#hitMessage {
     position: absolute;
     transform: translate(-50%, -100%);
     white-space: nowrap;
 }
 
-#lobbyHud{
+#lobbyHud {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -293,7 +292,7 @@ h1 {
     margin: var(--lobby-margin);
 }
 
-h2{
+h2 {
     font: inherit;
     font-size: var(--font-size);
     margin: 0;
@@ -303,56 +302,56 @@ h2{
 #lobbyControlsText,
 #lobbySlots,
 #nameEditorHelp,
-#highScoresScreen{
+#highScoresScreen {
     align-items: center;
     display: flex;
     flex-direction: column;
 }
 
-#lobbyEditPrompt:empty{
+#lobbyEditPrompt:empty {
     display: none;
 }
 
-.lobby-slot{
+.lobby-slot {
     box-sizing: border-box;
     min-width: 100%;
 }
 
-#lobbyPlayPrompt{
+#lobbyPlayPrompt {
     min-height: 1lh;
 }
 
-.lobby-section{
+.lobby-section {
     margin: var(--lobby-margin);
 }
 
-#highScoresScreen{
+#highScoresScreen {
     justify-content: center;
     width: min(78cqw, 760px);
 }
 
-#highScoresTable{
+#highScoresTable {
     display: grid;
     gap: clamp(4px, 1.1cqh, 8px);
     margin: var(--lobby-margin);
     width: 100%;
 }
 
-.high-score-row{
+.high-score-row {
     display: grid;
     grid-template-columns: 1.5fr repeat(3, 1fr);
     gap: clamp(6px, 1.4cqw, 14px);
 }
 
-.high-score-row span:first-child{
+.high-score-row span:first-child {
     text-align: left;
 }
 
-.high-score-empty{
+.high-score-empty {
     min-height: 1lh;
 }
 
-#nameEditor{
+#nameEditor {
     align-items: center;
     justify-content: center;
     display: flex;
@@ -361,11 +360,11 @@ h2{
     width: min(82cqw, 760px);
 }
 
-#nameEditorValue{
+#nameEditorValue {
     min-height: 1.55em;
 }
 
-#nameEditorGrid{
+#nameEditorGrid {
     display: flex;
     flex-direction: column;
     gap: clamp(5px, 1.25cqh, 9px);
@@ -373,7 +372,7 @@ h2{
     width: 100%;
 }
 
-.name-editor-row{
+.name-editor-row {
     display: grid;
     gap: clamp(4px, 1cqw, 10px);
     grid-auto-columns: minmax(0, 1fr);
@@ -381,12 +380,12 @@ h2{
     justify-content: center;
 }
 
-.name-editor-row.is-short{
+.name-editor-row.is-short {
     align-self: center;
     width: min(100%, 340px);
 }
 
-.name-editor-key{
+.name-editor-key {
     background: transparent;
     border: 2px solid transparent;
     box-sizing: border-box;
@@ -396,42 +395,42 @@ h2{
     min-width: 0;
     padding: 0;
     text-align: center;
-    text-shadow: 1px 1px 0 rgb(0,0,0);
+    text-shadow: 1px 1px 0 rgb(0, 0, 0);
     touch-action: manipulation;
 }
 
-.name-editor-key.is-selected{
+.name-editor-key.is-selected {
     border-color: var(--yellow);
     outline: 2px solid var(--yellow);
     outline-offset: 2px;
 }
 
-#touchControls{
+#touchControls {
     inset: 0;
     pointer-events: none;
     position: absolute;
     z-index: 3;
 }
 
-@media (pointer: coarse){
-    #gameHud{
+@media (pointer: coarse) {
+    #gameHud {
         inset: 0;
         position: fixed;
     }
 
-    #touchControls{
+    #touchControls {
         position: fixed;
     }
 }
 
-#touchControls[hidden]{
+#touchControls[hidden] {
     display: none;
 }
 
 #touchControls button,
-#touchLobbyControls button{
+#touchLobbyControls button {
     align-items: center;
-    background: rgba(30,30,30,0.86);
+    background: rgba(30, 30, 30, 0.86);
     border: 2px solid var(--yellow);
     box-sizing: border-box;
     color: var(--yellow);
@@ -448,27 +447,27 @@ h2{
     -webkit-user-select: none;
 }
 
-#touchLobbyControls{
+#touchLobbyControls {
     align-items: center;
     display: flex;
     gap: clamp(8px, 1.4cqw, 14px);
     justify-content: center;
 }
 
-#touchLobbyControls[hidden]{
+#touchLobbyControls[hidden] {
     display: none;
 }
 
 #touchEditButton,
-#touchPlayButton{
+#touchPlayButton {
     min-height: 1.65em;
     min-width: 0;
     padding: 0 0.65em;
     white-space: nowrap;
 }
 
-#touchJoystick{
-    background: rgba(30,30,30,0.42);
+#touchJoystick {
+    background: rgba(30, 30, 30, 0.42);
     border: 2px solid var(--yellow);
     border-radius: 50%;
     bottom: max(22px, env(safe-area-inset-bottom, 0));
@@ -480,32 +479,32 @@ h2{
     width: 126px;
 }
 
-#touchJoystick[hidden]{
+#touchJoystick[hidden] {
     display: none;
 }
 
 #touchJoystick::before,
-#touchJoystick::after{
-    background: rgba(255,244,0,0.45);
-    content: "";
+#touchJoystick::after {
+    background: rgba(255, 244, 0, 0.45);
+    content: '';
     left: 50%;
     position: absolute;
     top: 50%;
     transform: translate(-50%, -50%);
 }
 
-#touchJoystick::before{
+#touchJoystick::before {
     height: 2px;
     width: 72px;
 }
 
-#touchJoystick::after{
+#touchJoystick::after {
     height: 72px;
     width: 2px;
 }
 
-#touchJoystickKnob{
-    background: rgb(255,244,0);
+#touchJoystickKnob {
+    background: rgb(255, 244, 0);
     border-radius: 50%;
     height: 34px;
     left: calc(50% - 17px);
@@ -514,7 +513,7 @@ h2{
     width: 34px;
 }
 
-#touchActionControls{
+#touchActionControls {
     align-items: center;
     bottom: max(20px, env(safe-area-inset-bottom, 0));
     display: flex;
@@ -524,13 +523,13 @@ h2{
     right: max(20px, env(safe-area-inset-right, 0));
 }
 
-#touchActionControls[hidden]{
+#touchActionControls[hidden] {
     display: none;
 }
 
-#touchAimSlider{
-    background: rgba(30,30,30,0.42);
-    border: 2px solid rgba(255,244,0,0.9);
+#touchAimSlider {
+    background: rgba(30, 30, 30, 0.42);
+    border: 2px solid rgba(255, 244, 0, 0.9);
     height: 138px;
     pointer-events: auto;
     position: relative;
@@ -538,8 +537,8 @@ h2{
     width: 44px;
 }
 
-#touchAimTrack{
-    background: rgba(255,244,0,0.45);
+#touchAimTrack {
+    background: rgba(255, 244, 0, 0.45);
     bottom: 12px;
     left: 50%;
     position: absolute;
@@ -548,8 +547,8 @@ h2{
     width: 2px;
 }
 
-#touchAimHandle{
-    background: rgb(255,244,0);
+#touchAimHandle {
+    background: rgb(255, 244, 0);
     height: 14px;
     left: 8px;
     position: absolute;
@@ -558,52 +557,52 @@ h2{
     width: 28px;
 }
 
-#touchShootButton{
+#touchShootButton {
     border-radius: 50%;
     height: 82px;
     width: 82px;
 }
 
-#touchControls.is-editing #touchAimSlider{
+#touchControls.is-editing #touchAimSlider {
     display: none;
 }
 
-#touchControls.is-editing #touchShootButton{
+#touchControls.is-editing #touchShootButton {
     height: 74px;
     width: 74px;
 }
 
-@media (pointer: coarse){
-    #touchJoystick{
+@media (pointer: coarse) {
+    #touchJoystick {
         bottom: 8px;
         height: 120px;
         left: 5px;
         width: 120px;
     }
 
-    #touchActionControls{
+    #touchActionControls {
         bottom: 8px;
         gap: 8px;
         right: 5px;
     }
 
-    #touchAimSlider{
+    #touchAimSlider {
         height: 132px;
     }
 }
 
-@media (pointer: fine){
-    #touchControls:not(.debug-touch){
+@media (pointer: fine) {
+    #touchControls:not(.debug-touch) {
         display: none;
     }
 }
 
-#installPrompt{
-    background-color: rgb(30,30,30);
-    border: 1px solid rgb(255,244,0);
-    box-shadow: 3px 3px 0 rgb(0,0,0);
+#installPrompt {
+    background-color: rgb(30, 30, 30);
+    border: 1px solid rgb(255, 244, 0);
+    box-shadow: 3px 3px 0 rgb(0, 0, 0);
     box-sizing: border-box;
-    color: rgb(255,244,0);
+    color: rgb(255, 244, 0);
     display: none;
     font-family: var(--font-family);
     font-size: var(--font-size);
@@ -618,24 +617,24 @@ h2{
     z-index: 5;
 }
 
-#installPrompt.is-visible{
+#installPrompt.is-visible {
     display: block;
 }
 
-#installPrompt[hidden]{
+#installPrompt[hidden] {
     display: none;
 }
 
-#installPrompt button{
-    background: rgb(30,30,30);
-    border: 1px solid rgb(255,244,0);
-    color: rgb(255,244,0);
+#installPrompt button {
+    background: rgb(30, 30, 30);
+    border: 1px solid rgb(255, 244, 0);
+    color: rgb(255, 244, 0);
     cursor: pointer;
     font-family: var(--font-family);
     font-size: var(--font-size);
 }
 
-#installPromptClose{
+#installPromptClose {
     height: 24px;
     position: absolute;
     right: 6px;
@@ -643,28 +642,30 @@ h2{
     width: 24px;
 }
 
-#installPromptButton{
+#installPromptButton {
     margin-top: 8px;
     padding: 6px 10px;
 }
 
-@media (pointer: fine){
-    #installPrompt{
+@media (pointer: fine) {
+    #installPrompt {
         display: none;
     }
 }
 
 @keyframes blink-animation {
-  0%, 50% {
-    opacity: 1;
-  }
-  50.1%, 100% {
-    opacity: 0;
-  }
+    0%,
+    50% {
+        opacity: 1;
+    }
+    50.1%,
+    100% {
+        opacity: 0;
+    }
 }
 
 .blink-text {
-  animation: blink-animation 2s steps(1, end) infinite;
+    animation: blink-animation 2s steps(1, end) infinite;
 }
 
 .large-text {

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createHighScores } from '../gameModules/highScores.js';
 
-test('records wins kills and deaths by player name', function(){
+test('records wins kills and deaths by player name', function () {
     const highScores = createHighScores();
 
     highScores.recordGame({
@@ -20,7 +20,7 @@ test('records wins kills and deaths by player name', function(){
     ]);
 });
 
-test('ignores duplicate result submissions', function(){
+test('ignores duplicate result submissions', function () {
     const highScores = createHighScores();
     const result = {
         resultId: 'G0001:1',
@@ -40,7 +40,7 @@ test('ignores duplicate result submissions', function(){
     ]);
 });
 
-test('does not award wins for a tie', function(){
+test('does not award wins for a tie', function () {
     const highScores = createHighScores();
 
     highScores.recordGame({

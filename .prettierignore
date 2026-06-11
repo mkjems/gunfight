@@ -1,0 +1,6 @@
+gameserver/node_modules
+gameserver/package-lock.json
+www/fonts
+www/images
+www/sounds
+documentation/.DS_Store

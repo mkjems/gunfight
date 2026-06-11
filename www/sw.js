@@ -1,6 +1,7 @@
 const CACHE_NAME = 'gunfight-v13';
 const LOCAL_DEVELOPMENT_HOSTS = ['localhost', '127.0.0.1'];
-const IS_LOCAL_DEVELOPMENT = LOCAL_DEVELOPMENT_HOSTS.indexOf(self.location.hostname) >= 0;
+const IS_LOCAL_DEVELOPMENT =
+    LOCAL_DEVELOPMENT_HOSTS.indexOf(self.location.hostname) >= 0;
 const STATIC_ASSETS = [
     '/',
     '/index.html',
@@ -47,47 +48,55 @@ const STATIC_ASSETS = [
     '/manifest.webmanifest'
 ];
 
-self.addEventListener('install', function(event){
-    if(IS_LOCAL_DEVELOPMENT){
+self.addEventListener('install', function (event) {
+    if (IS_LOCAL_DEVELOPMENT) {
         self.skipWaiting();
         return;
     }
 
     event.waitUntil(
-        caches.open(CACHE_NAME).then(function(cache){
+        caches.open(CACHE_NAME).then(function (cache) {
             return cache.addAll(STATIC_ASSETS);
         })
     );
     self.skipWaiting();
 });
 
-self.addEventListener('activate', function(event){
+self.addEventListener('activate', function (event) {
     event.waitUntil(
-        caches.keys().then(function(keys){
-            return Promise.all(keys.map(function(key){
-                if(IS_LOCAL_DEVELOPMENT || key !== CACHE_NAME){
-                    return caches.delete(key);
-                }
-            }));
-        }).then(function(){
-            return self.clients.claim();
-        })
+        caches
+            .keys()
+            .then(function (keys) {
+                return Promise.all(
+                    keys.map(function (key) {
+                        if (IS_LOCAL_DEVELOPMENT || key !== CACHE_NAME) {
+                            return caches.delete(key);
+                        }
+                    })
+                );
+            })
+            .then(function () {
+                return self.clients.claim();
+            })
     );
 });
 
-self.addEventListener('fetch', function(event){
-    if(IS_LOCAL_DEVELOPMENT){
+self.addEventListener('fetch', function (event) {
+    if (IS_LOCAL_DEVELOPMENT) {
         return;
     }
 
     const url = new URL(event.request.url);
 
-    if(url.pathname.indexOf('/socket.io/') === 0 || event.request.method !== 'GET'){
+    if (
+        url.pathname.indexOf('/socket.io/') === 0 ||
+        event.request.method !== 'GET'
+    ) {
         return;
     }
 
     event.respondWith(
-        caches.match(event.request).then(function(cachedResponse){
+        caches.match(event.request).then(function (cachedResponse) {
             return cachedResponse || fetch(event.request);
         })
     );

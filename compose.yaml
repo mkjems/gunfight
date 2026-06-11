@@ -1,11 +1,11 @@
 services:
-  gunfight:
-    build:
-      context: .
-    image: gunfight:local
-    environment:
-      PORT: 8080
-      NODE_ENV: production
-    ports:
-      - "8080:8080"
-    restart: unless-stopped
+    gunfight:
+        build:
+            context: .
+        image: gunfight:local
+        environment:
+            PORT: 8080
+            NODE_ENV: production
+        ports:
+            - '8080:8080'
+        restart: unless-stopped

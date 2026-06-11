@@ -1,9 +1,9 @@
-GF.NameEditor = function(options){
+GF.NameEditor = function (options) {
     options = options || {};
 
     var maxLength = options.maxLength || 8;
-    var onSubmit = options.onSubmit || function(){};
-    var onChange = options.onChange || function(){};
+    var onSubmit = options.onSubmit || function () {};
+    var onChange = options.onChange || function () {};
     var active = false;
     var name = '';
     var cursorRow = 0;
@@ -30,19 +30,19 @@ GF.NameEditor = function(options){
         'SAM'
     ];
 
-    function sanitize(nextName){
+    function sanitize(nextName) {
         return String(nextName || '')
             .toUpperCase()
             .replace(/[^A-Z0-9]/g, '')
             .slice(0, maxLength);
     }
 
-    function setName(nextName){
+    function setName(nextName) {
         name = sanitize(nextName);
         onChange();
     }
 
-    function open(nextName){
+    function open(nextName) {
         setName(nextName);
         active = true;
         cursorRow = 0;
@@ -50,54 +50,59 @@ GF.NameEditor = function(options){
         onChange();
     }
 
-    function close(options){
+    function close(options) {
         options = options || {};
         active = false;
 
-        if(options.submit){
+        if (options.submit) {
             onSubmit(name);
         }
 
         onChange();
     }
 
-    function move(dx, dy){
+    function move(dx, dy) {
         cursorRow = Math.max(0, Math.min(grid.length - 1, cursorRow + dy));
-        cursorCol = Math.max(0, Math.min(grid[cursorRow].length - 1, cursorCol + dx));
+        cursorCol = Math.max(
+            0,
+            Math.min(grid[cursorRow].length - 1, cursorCol + dx)
+        );
         onChange();
     }
 
-    function selectValue(value){
-
-        if(value === 'DEL'){
+    function selectValue(value) {
+        if (value === 'DEL') {
             name = name.slice(0, -1);
             onChange();
             return;
         }
 
-        if(value === 'RND'){
+        if (value === 'RND') {
             name = randomNames[Math.floor(Math.random() * randomNames.length)];
             onChange();
             return;
         }
 
-        if(value === 'OK'){
+        if (value === 'OK') {
             close({ submit: true });
             return;
         }
 
-        if(name.length < maxLength){
+        if (name.length < maxLength) {
             name += value;
             onChange();
         }
     }
 
-    function selectCurrent(){
+    function selectCurrent() {
         selectValue(grid[cursorRow][cursorCol]);
     }
 
-    function select(rowIndex, colIndex){
-        if(!grid[rowIndex] || typeof grid[rowIndex][colIndex] === 'undefined'){
+    function select(rowIndex, colIndex) {
+        if (
+            !grid[rowIndex] ||
+            typeof grid[rowIndex][colIndex] === 'undefined'
+        ) {
             return;
         }
 
@@ -106,46 +111,46 @@ GF.NameEditor = function(options){
         selectCurrent();
     }
 
-    function handleKeyEvent(keyEvent){
-        if(keyEvent.action !== 'down'){
+    function handleKeyEvent(keyEvent) {
+        if (keyEvent.action !== 'down') {
             return active ? false : undefined;
         }
 
-        if(!active && keyEvent.key === 'e'){
+        if (!active && keyEvent.key === 'e') {
             open('');
             return false;
         }
 
-        if(!active){
+        if (!active) {
             return undefined;
         }
 
-        if(keyEvent.key === 'e'){
+        if (keyEvent.key === 'e') {
             close({ submit: true });
             return false;
         }
 
-        if(keyEvent.key === 'h'){
+        if (keyEvent.key === 'h') {
             move(-1, 0);
             return false;
         }
 
-        if(keyEvent.key === 'l'){
+        if (keyEvent.key === 'l') {
             move(1, 0);
             return false;
         }
 
-        if(keyEvent.key === 'k'){
+        if (keyEvent.key === 'k') {
             move(0, -1);
             return false;
         }
 
-        if(keyEvent.key === 'j'){
+        if (keyEvent.key === 'j') {
             move(0, 1);
             return false;
         }
 
-        if(keyEvent.key === ' '){
+        if (keyEvent.key === ' ') {
             selectCurrent();
             return false;
         }
@@ -153,7 +158,7 @@ GF.NameEditor = function(options){
         return false;
     }
 
-    function getState(){
+    function getState() {
         return {
             active: active,
             cursorCol: cursorCol,
@@ -167,7 +172,7 @@ GF.NameEditor = function(options){
         close: close,
         getState: getState,
         handleKeyEvent: handleKeyEvent,
-        isActive: function(){
+        isActive: function () {
             return active;
         },
         open: open,

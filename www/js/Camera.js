@@ -1,4 +1,4 @@
-GF.Camera = function(options){
+GF.Camera = function (options) {
     options = options || {};
 
     this.worldWidth = options.worldWidth;
@@ -10,45 +10,46 @@ GF.Camera = function(options){
     this.visibleWidth = options.screenWidth;
     this.visibleHeight = options.screenHeight;
     this.scale = options.scale || 1;
-    this.smoothing = typeof options.smoothing === 'number' ? options.smoothing : 0.18;
+    this.smoothing =
+        typeof options.smoothing === 'number' ? options.smoothing : 0.18;
     this.x = 0;
     this.y = 0;
     this.initialized = false;
 };
 
 GF.Camera.prototype = {
-    setScreenSize: function(width, height){
+    setScreenSize: function (width, height) {
         this.screenWidth = width;
         this.screenHeight = height;
         this.setVisibleScreen(0, 0, width, height);
     },
 
-    setVisibleScreen: function(x, y, width, height){
+    setVisibleScreen: function (x, y, width, height) {
         this.visibleX = x || 0;
         this.visibleY = y || 0;
         this.visibleWidth = width || this.screenWidth;
         this.visibleHeight = height || this.screenHeight;
     },
 
-    setScale: function(scale){
+    setScale: function (scale) {
         this.scale = Math.max(1, scale || 1);
     },
 
-    reset: function(){
+    reset: function () {
         this.x = 0;
         this.y = 0;
         this.initialized = false;
     },
 
-    follow: function(target){
+    follow: function (target) {
         var desired = this.getDesiredPosition(target);
 
-        if(!target){
+        if (!target) {
             this.reset();
             return;
         }
 
-        if(!this.initialized){
+        if (!this.initialized) {
             this.x = desired.x;
             this.y = desired.y;
             this.initialized = true;
@@ -59,7 +60,7 @@ GF.Camera.prototype = {
         this.y += (desired.y - this.y) * this.smoothing;
     },
 
-    getDesiredPosition: function(target){
+    getDesiredPosition: function (target) {
         var viewportWidth = this.visibleWidth / this.scale;
         var viewportHeight = this.visibleHeight / this.scale;
         var visibleWorldX = this.visibleX / this.scale;
@@ -71,15 +72,15 @@ GF.Camera.prototype = {
         var x;
         var y;
 
-        if(!target){
+        if (!target) {
             return {
                 x: 0,
                 y: 0
             };
         }
 
-        x = target.x - visibleWorldX - (viewportWidth / 2);
-        y = target.y - visibleWorldY - (viewportHeight / 2);
+        x = target.x - visibleWorldX - viewportWidth / 2;
+        y = target.y - visibleWorldY - viewportHeight / 2;
 
         return {
             x: this.clamp(x, Math.min(0, minX), Math.max(0, maxX)),
@@ -87,12 +88,12 @@ GF.Camera.prototype = {
         };
     },
 
-    apply: function(context){
+    apply: function (context) {
         context.scale(this.scale, this.scale);
         context.translate(-this.x, -this.y);
     },
 
-    clamp: function(value, min, max){
+    clamp: function (value, min, max) {
         return Math.max(min, Math.min(max, value));
     }
 };

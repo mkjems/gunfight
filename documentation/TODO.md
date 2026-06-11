@@ -1,201 +1,194 @@
 # Gunfight TODO
 
-
 ## P1 - Code Architecture
 
 Goal: move the client toward TypeScript and componentized UI without stopping normal feature work. Each step should leave the game playable and easier to change than before.
 
 ### P1.1 - Stabilize The Current Code
 
-- [ ] Add code formatting and linting.
-  - Pick one formatter.
-  - Add lint rules that catch accidental globals and unsafe equality.
-  - Run checks in CI before deploy.
+- [x] Add code formatting and linting.
+    - Pick one formatter.
+    - Add lint rules that catch accidental globals and unsafe equality.
+    - Run checks in CI before deploy.
 
-- [ ] Add lightweight type checking before converting files.
-  - Enable `checkJs` for JavaScript where practical.
-  - Add JSDoc typedefs for the most important shared shapes.
-  - Start with Socket.IO payloads, public game model, high score rows, scenarios, obstacles, players, bullets, and round state.
+- [x] Add lightweight type checking before converting files.
+    - Enable `checkJs` for JavaScript where practical.
+    - Add JSDoc typedefs for the most important shared shapes.
+    - Start with Socket.IO payloads, public game model, high score rows, scenarios, obstacles, players, bullets, and round state.
 
-- [ ] Document current client state ownership.
-  - List which state is owned by the server, which is owned by the browser, and which is relayed between players.
-  - Keep this near the implementation or in `documentation/` so later refactors have a map.
+- [x] Document current client state ownership.
+    - List which state is owned by the server, which is owned by the browser, and which is relayed between players.
+    - Keep this near the implementation or in `documentation/` so later refactors have a map.
 
 ### P1.2 - Make Screens And State Explicit
 
 - [ ] Create an explicit client state model.
-  - Define states such as lobby, name editing, high scores, round intro, playing, hit pause, game over, and abandoned.
-  - Make legal state transitions visible in one place.
-  - Avoid scattered checks against string state values.
+    - Define states such as lobby, name editing, high scores, round intro, playing, hit pause, game over, and abandoned.
+    - Make legal state transitions visible in one place.
+    - Avoid scattered checks against string state values.
 
 - [ ] Add a small screen controller.
-  - Decide the active screen from client state instead of hiding/showing screens in many places.
-  - Keep the four main specification screens visible in code: Lobby-main, Lobby-Edit-name, Game, and High scores.
-  - Keep screen selection separate from screen rendering.
+    - Decide the active screen from client state instead of hiding/showing screens in many places.
+    - Keep the four main specification screens visible in code: Lobby-main, Lobby-Edit-name, Game, and High scores.
+    - Keep screen selection separate from screen rendering.
 
 - [ ] Extract the high scores screen first.
-  - Move high score table rendering out of `index.js`.
-  - Give it a small input contract: rows, visible state, and prompt state.
-  - Use this as the first example for future UI components.
+    - Move high score table rendering out of `index.js`.
+    - Give it a small input contract: rows, visible state, and prompt state.
+    - Use this as the first example for future UI components.
 
 ### P1.3 - Split The Client Into Focused Modules
 
 - [ ] Keep `index.js` as orchestration only.
-  - It should initialize systems, wire them together, and start the loop.
-  - It should not contain detailed rendering for lobby, high scores, name editor, game HUD, sound, networking, or input.
+    - It should initialize systems, wire them together, and start the loop.
+    - It should not contain detailed rendering for lobby, high scores, name editor, game HUD, sound, networking, or input.
 
 - [ ] Move UI into small component-like modules.
-  - Create focused renderers for lobby, high scores, name editor, game HUD, install prompt, and touch controls.
-  - Each UI module should own its DOM lookups and rendering for one screen or panel.
-  - Prefer plain lightweight components first; do not move canvas gameplay into a component framework.
+    - Create focused renderers for lobby, high scores, name editor, game HUD, install prompt, and touch controls.
+    - Each UI module should own its DOM lookups and rendering for one screen or panel.
+    - Prefer plain lightweight components first; do not move canvas gameplay into a component framework.
 
 - [ ] Move non-UI systems into focused modules.
-  - Extract networking, input, sound, round flow, score handling, and client synchronization.
-  - Keep rendering, simulation, round flow, and network synchronization easy to reason about separately.
+    - Extract networking, input, sound, round flow, score handling, and client synchronization.
+    - Keep rendering, simulation, round flow, and network synchronization easy to reason about separately.
 
 - [ ] Reduce global namespace coupling.
-  - Keep module boundaries explicit.
-  - Make dependencies injectable for tests where practical.
-  - Replace broad `GF.*` mutation with imports once a build step exists.
+    - Keep module boundaries explicit.
+    - Make dependencies injectable for tests where practical.
+    - Replace broad `GF.*` mutation with imports once a build step exists.
 
 ### P1.4 - Introduce TypeScript Deliberately
 
 - [ ] Decide on the TypeScript migration path.
-  - Prefer an incremental migration over a full rewrite.
-  - Move shared model and networking files first.
-  - Then move extracted UI components and state modules.
-  - Convert gameplay simulation files after the public contracts are stable.
+    - Prefer an incremental migration over a full rewrite.
+    - Move shared model and networking files first.
+    - Then move extracted UI components and state modules.
+    - Convert gameplay simulation files after the public contracts are stable.
 
 - [ ] Introduce typed data contracts.
-  - Type Socket.IO payloads.
-  - Type client, game model, scenario, obstacle, player, bullet, score, and screen-state shapes.
-  - Validate incoming server and client payloads at runtime where needed.
+    - Type Socket.IO payloads.
+    - Type client, game model, scenario, obstacle, player, bullet, score, and screen-state shapes.
+    - Validate incoming server and client payloads at runtime where needed.
 
 - [ ] Decide on a build tool before `.ts` files become normal.
-  - Consider Vite for module bundling, dev server, cache-busted builds, and TypeScript support.
-  - Keep the current static-file setup until bundling solves real pain.
-  - Make sure service worker caching and deployment stay simple.
+    - Consider Vite for module bundling, dev server, cache-busted builds, and TypeScript support.
+    - Keep the current static-file setup until bundling solves real pain.
+    - Make sure service worker caching and deployment stay simple.
 
 ### P1.5 - Keep The Architecture Healthy
 
 - [ ] Improve shared configuration.
-  - Keep gameplay constants in one place.
-  - Separate visual tuning, rules, controls, and network timing.
-  - Document constants that affect fairness or UX.
+    - Keep gameplay constants in one place.
+    - Separate visual tuning, rules, controls, and network timing.
+    - Document constants that affect fairness or UX.
 
 - [ ] Add technical debt notes near risky code.
-  - Keep comments short and specific.
-  - Prefer TODO entries for larger refactors.
-  - Remove stale plans once work is complete.
+    - Keep comments short and specific.
+    - Prefer TODO entries for larger refactors.
+    - Remove stale plans once work is complete.
 
-
-## P2 
+## P2
 
 - Show main lobby screen for 30 secs and high score screen for 7 secs -> update documentation/Specification-main.md
 - Do not show game ID in the main-lobby. Remove line -> update documentation/Specification-main.md
 - Do not show characters in the background on the high-scores-page. -> update documentation/Specification-main.md
 -
 
-
-
-
 ## P3.5 - Content Authoring Tools
 
 - [ ] Add a rock editor page.
-  - Provide a WYSIWYG preview for rock dimensions and polygon shape.
-  - Accept rock JSON as input.
-  - Output rock JSON for copying into project data.
-  - Validate JSON and geometry with readable errors.
+    - Provide a WYSIWYG preview for rock dimensions and polygon shape.
+    - Accept rock JSON as input.
+    - Output rock JSON for copying into project data.
+    - Validate JSON and geometry with readable errors.
 
 - [ ] Add a scenario editor page.
-  - Provide a WYSIWYG preview of the full arena scenario.
-  - Let the user place and adjust rocks, cacti, wagons, saloons, decorations, and player start positions.
-  - Accept scenario JSON as input.
-  - Output scenario JSON for copying into project data.
-  - Validate JSON and scenario geometry with readable errors.
+    - Provide a WYSIWYG preview of the full arena scenario.
+    - Let the user place and adjust rocks, cacti, wagons, saloons, decorations, and player start positions.
+    - Accept scenario JSON as input.
+    - Output scenario JSON for copying into project data.
+    - Validate JSON and scenario geometry with readable errors.
 
 ## P4 - Testing And Quality
 
 - [ ] Add lobby/session unit tests.
-  - Pairing two players.
-  - Third player starts or joins another game.
-  - Name sanitizing and duplicate suffixes.
-  - Leave before ready.
-  - Leave during play.
-  - Empty game cleanup.
+    - Pairing two players.
+    - Third player starts or joins another game.
+    - Name sanitizing and duplicate suffixes.
+    - Leave before ready.
+    - Leave during play.
+    - Empty game cleanup.
 
 - [ ] Add gameplay regression tests where practical.
-  - Timer behavior.
-  - Ammo decrement and reload.
-  - Score after hit.
-  - Game over winner and tie handling.
-  - Stale round events ignored.
+    - Timer behavior.
+    - Ammo decrement and reload.
+    - Score after hit.
+    - Game over winner and tie handling.
+    - Stale round events ignored.
 
 - [ ] Add browser smoke tests.
-  - Lobby loads.
-  - Name editor opens and submits.
-  - Two browser clients can ready up.
-  - Round reaches `GET READY`, `DRAW !`, and playing state.
-  - Mobile/touch mode shows the correct controls.
+    - Lobby loads.
+    - Name editor opens and submits.
+    - Two browser clients can ready up.
+    - Round reaches `GET READY`, `DRAW !`, and playing state.
+    - Mobile/touch mode shows the correct controls.
 
 - [ ] Add Playwright end-to-end tests.
-  - Start the local server before tests.
-  - Open two browser pages and verify they join the same game.
-  - Verify a third browser page is placed in a different game.
-  - Press Play on both clients and assert the round reaches `GET READY`, `DRAW !`, and active gameplay.
-  - Test name editing with keyboard input.
-  - Test name editing with touch/click input.
-  - Test opponent disconnect behavior.
-  - Capture screenshots for lobby, name editor, game start, mobile lobby, and mobile gameplay.
+    - Start the local server before tests.
+    - Open two browser pages and verify they join the same game.
+    - Verify a third browser page is placed in a different game.
+    - Press Play on both clients and assert the round reaches `GET READY`, `DRAW !`, and active gameplay.
+    - Test name editing with keyboard input.
+    - Test name editing with touch/click input.
+    - Test opponent disconnect behavior.
+    - Capture screenshots for lobby, name editor, game start, mobile lobby, and mobile gameplay.
 
 - [ ] Add Playwright mobile checks.
-  - Run with iPhone and Android viewport/device presets.
-  - Verify keyboard instructions are hidden on touch.
-  - Verify touch lobby buttons are visible.
-  - Verify joystick, aim, and fire controls are visible only during gameplay.
-  - Verify centered messages remain centered in mobile layout.
+    - Run with iPhone and Android viewport/device presets.
+    - Verify keyboard instructions are hidden on touch.
+    - Verify touch lobby buttons are visible.
+    - Verify joystick, aim, and fire controls are visible only during gameplay.
+    - Verify centered messages remain centered in mobile layout.
 
 - [ ] Add Playwright visual regression snapshots where stable.
-  - Keep snapshots focused on HUD and overlay layout.
-  - Avoid fragile full-canvas snapshots for animated gameplay unless the scene is frozen.
-  - Use screenshots to catch text overlap and mobile layout regressions.
+    - Keep snapshots focused on HUD and overlay layout.
+    - Avoid fragile full-canvas snapshots for animated gameplay unless the scene is frozen.
+    - Use screenshots to catch text overlap and mobile layout regressions.
 
 - [ ] Add manual QA checklist.
-  - Desktop Chrome/Safari/Firefox.
-  - iPhone Safari installed PWA.
-  - Android Chrome installed PWA.
-  - Slow network.
-  - Opponent disconnects before and during a match.
-
-
+    - Desktop Chrome/Safari/Firefox.
+    - iPhone Safari installed PWA.
+    - Android Chrome installed PWA.
+    - Slow network.
+    - Opponent disconnects before and during a match.
 
 ## P6 - Launch Readiness
 
 - [ ] Make the README match the finished product.
-  - Explain local run.
-  - Explain public deployment.
-  - Link to specification and TODO.
+    - Explain local run.
+    - Explain public deployment.
+    - Link to specification and TODO.
 
 - [ ] Review service worker behavior.
-  - Cache the correct files.
-  - Avoid serving stale JavaScript after deploy.
-  - Make offline behavior intentional.
+    - Cache the correct files.
+    - Avoid serving stale JavaScript after deploy.
+    - Make offline behavior intentional.
 
 - [ ] Add production health checks.
-  - Simple server health endpoint.
-  - Basic logging for connections, games, disconnects, and errors.
-  - Avoid logging personal or noisy browser data.
+    - Simple server health endpoint.
+    - Basic logging for connections, games, disconnects, and errors.
+    - Avoid logging personal or noisy browser data.
 
 - [ ] Check accessibility basics.
-  - Buttons have useful labels.
-  - Text contrast is readable.
-  - Focus does not get trapped.
-  - Touch controls are not keyboard-only.
+    - Buttons have useful labels.
+    - Text contrast is readable.
+    - Focus does not get trapped.
+    - Touch controls are not keyboard-only.
 
 - [ ] Check performance.
-  - Stable frame rate during active play.
-  - No obvious memory leaks after repeated matches.
-  - No excessive Socket.IO traffic.
+    - Stable frame rate during active play.
+    - No obvious memory leaks after repeated matches.
+    - No excessive Socket.IO traffic.
 
 ## Later Ideas
 

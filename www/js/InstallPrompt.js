@@ -1,4 +1,4 @@
-GF.InstallPrompt = (function(){
+GF.InstallPrompt = (function () {
     var deferredInstallPrompt = null;
     var promptElement;
     var promptTextElement;
@@ -6,7 +6,7 @@ GF.InstallPrompt = (function(){
     var closeButton;
     var dismissedStorageKey = 'gunfight-install-prompt-dismissed';
 
-    function init(){
+    function init() {
         registerServiceWorker();
 
         promptElement = document.getElementById('installPrompt');
@@ -14,7 +14,7 @@ GF.InstallPrompt = (function(){
         promptButton = document.getElementById('installPromptButton');
         closeButton = document.getElementById('installPromptClose');
 
-        if(!promptElement || isStandalone() || wasDismissed()){
+        if (!promptElement || isStandalone() || wasDismissed()) {
             return;
         }
 
@@ -23,41 +23,50 @@ GF.InstallPrompt = (function(){
         showIfTouchDevice();
     }
 
-    function registerServiceWorker(){
-        if(!('serviceWorker' in navigator)){
+    function registerServiceWorker() {
+        if (!('serviceWorker' in navigator)) {
             return;
         }
 
-        if(isLocalDevelopment()){
-            navigator.serviceWorker.getRegistrations().then(function(registrations){
-                registrations.forEach(function(registration){
-                    registration.unregister();
-                });
-            }).catch(function(){});
+        if (isLocalDevelopment()) {
+            navigator.serviceWorker
+                .getRegistrations()
+                .then(function (registrations) {
+                    registrations.forEach(function (registration) {
+                        registration.unregister();
+                    });
+                })
+                .catch(function () {});
             return;
         }
 
-        if(!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'){
+        if (
+            !window.isSecureContext &&
+            window.location.hostname !== 'localhost' &&
+            window.location.hostname !== '127.0.0.1'
+        ) {
             return;
         }
 
-        window.addEventListener('load', function(){
-            navigator.serviceWorker.register('/sw.js').catch(function(){});
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('/sw.js').catch(function () {});
         });
     }
 
-    function isLocalDevelopment(){
-        return window.location.hostname === 'localhost' ||
+    function isLocalDevelopment() {
+        return (
+            window.location.hostname === 'localhost' ||
             window.location.hostname === '127.0.0.1' ||
-            window.location.hostname === '';
+            window.location.hostname === ''
+        );
     }
 
-    function bindEvents(){
-        window.addEventListener('beforeinstallprompt', function(evt){
+    function bindEvents() {
+        window.addEventListener('beforeinstallprompt', function (evt) {
             evt.preventDefault();
             deferredInstallPrompt = evt;
 
-            if(promptButton){
+            if (promptButton) {
                 promptButton.hidden = false;
             }
 
@@ -66,21 +75,21 @@ GF.InstallPrompt = (function(){
 
         window.addEventListener('appinstalled', hide);
 
-        if(closeButton){
-            closeButton.addEventListener('click', function(){
+        if (closeButton) {
+            closeButton.addEventListener('click', function () {
                 localStorage.setItem(dismissedStorageKey, '1');
                 hide();
             });
         }
 
-        if(promptButton){
-            promptButton.addEventListener('click', function(){
-                if(!deferredInstallPrompt){
+        if (promptButton) {
+            promptButton.addEventListener('click', function () {
+                if (!deferredInstallPrompt) {
                     return;
                 }
 
                 deferredInstallPrompt.prompt();
-                deferredInstallPrompt.userChoice.finally(function(){
+                deferredInstallPrompt.userChoice.finally(function () {
                     deferredInstallPrompt = null;
                     promptButton.hidden = true;
                 });
@@ -88,12 +97,12 @@ GF.InstallPrompt = (function(){
         }
     }
 
-    function updateInstructionText(){
-        if(!promptTextElement){
+    function updateInstructionText() {
+        if (!promptTextElement) {
             return;
         }
 
-        if(isIOS()){
+        if (isIOS()) {
             promptTextElement.textContent = 'SHARE - ADD TO HOME SCREEN';
             return;
         }
@@ -101,8 +110,13 @@ GF.InstallPrompt = (function(){
         promptTextElement.textContent = 'MENU - INSTALL APP';
     }
 
-    function showIfTouchDevice(){
-        if(!promptElement || !isTouchDevice() || isStandalone() || wasDismissed()){
+    function showIfTouchDevice() {
+        if (
+            !promptElement ||
+            !isTouchDevice() ||
+            isStandalone() ||
+            wasDismissed()
+        ) {
             return;
         }
 
@@ -111,8 +125,8 @@ GF.InstallPrompt = (function(){
         document.body.classList.add('install-prompt-visible');
     }
 
-    function hide(){
-        if(!promptElement){
+    function hide() {
+        if (!promptElement) {
             return;
         }
 
@@ -121,22 +135,28 @@ GF.InstallPrompt = (function(){
         document.body.classList.remove('install-prompt-visible');
     }
 
-    function isTouchDevice(){
-        return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+    function isTouchDevice() {
+        return (
+            window.matchMedia && window.matchMedia('(pointer: coarse)').matches
+        );
     }
 
-    function isStandalone(){
-        return window.matchMedia && window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    function isStandalone() {
+        return (
+            (window.matchMedia &&
+                window.matchMedia('(display-mode: standalone)').matches) ||
+            window.navigator.standalone
+        );
     }
 
-    function isIOS(){
+    function isIOS() {
         return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
     }
 
-    function wasDismissed(){
-        try{
+    function wasDismissed() {
+        try {
             return localStorage.getItem(dismissedStorageKey) === '1';
-        } catch(err){
+        } catch (err) {
             return false;
         }
     }
@@ -146,4 +166,4 @@ GF.InstallPrompt = (function(){
     return {
         hide: hide
     };
-}());
+})();

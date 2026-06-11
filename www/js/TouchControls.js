@@ -1,10 +1,12 @@
-GF.TouchControls = function(options){
+GF.TouchControls = function (options) {
     options = options || {};
 
     var input = options.input;
-    var getAimLevel = options.getAimLevel || function(){
-        return GF.Config.player.defaultAim;
-    };
+    var getAimLevel =
+        options.getAimLevel ||
+        function () {
+            return GF.Config.player.defaultAim;
+        };
     var maxAimLevel = GF.Config.player.aimLevels.length - 1;
     var root = document.getElementById('touchControls');
     var lobbyControls = document.getElementById('touchLobbyControls');
@@ -20,60 +22,69 @@ GF.TouchControls = function(options){
     var visible = false;
     var editing = false;
 
-    function init(){
-        if(!root || !input){
+    function init() {
+        if (!root || !input) {
             return;
         }
 
         visible = shouldEnableTouchControls();
 
-        if(!visible){
+        if (!visible) {
             root.hidden = true;
-            if(lobbyControls){
+            if (lobbyControls) {
                 lobbyControls.hidden = true;
             }
             return;
         }
 
-        root.classList.toggle('debug-touch', window.location.search.indexOf('touch=1') >= 0);
+        root.classList.toggle(
+            'debug-touch',
+            window.location.search.indexOf('touch=1') >= 0
+        );
         root.hidden = false;
         bindJoystick();
         bindAimSlider();
-        bindButton(shootButton, function(){
-            input.press(' ');
-        }, function(){
-            input.release(' ');
-        });
-        bindTap(playButton, function(){
+        bindButton(
+            shootButton,
+            function () {
+                input.press(' ');
+            },
+            function () {
+                input.release(' ');
+            }
+        );
+        bindTap(playButton, function () {
             input.ready();
         });
-        bindTap(editButton, function(){
+        bindTap(editButton, function () {
             input.press('e');
             input.release('e');
         });
     }
 
-    function shouldEnableTouchControls(){
-        if(window.location.search.indexOf('touch=1') >= 0){
+    function shouldEnableTouchControls() {
+        if (window.location.search.indexOf('touch=1') >= 0) {
             return true;
         }
 
-        return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        return (
+            window.matchMedia && window.matchMedia('(pointer: coarse)').matches
+        );
     }
 
-    function bindJoystick(){
-        if(!joystick){
+    function bindJoystick() {
+        if (!joystick) {
             return;
         }
 
-        joystick.addEventListener('pointerdown', function(evt){
+        joystick.addEventListener('pointerdown', function (evt) {
             evt.preventDefault();
             joystick.setPointerCapture(evt.pointerId);
             updateJoystick(evt);
         });
 
-        joystick.addEventListener('pointermove', function(evt){
-            if(evt.buttons === 0){
+        joystick.addEventListener('pointermove', function (evt) {
+            if (evt.buttons === 0) {
                 return;
             }
 
@@ -86,55 +97,56 @@ GF.TouchControls = function(options){
         joystick.addEventListener('lostpointercapture', resetJoystick);
     }
 
-    function updateJoystick(evt){
+    function updateJoystick(evt) {
         var rect = joystick.getBoundingClientRect();
-        var centerX = rect.left + (rect.width / 2);
-        var centerY = rect.top + (rect.height / 2);
+        var centerX = rect.left + rect.width / 2;
+        var centerY = rect.top + rect.height / 2;
         var radius = rect.width / 2;
         var dx = evt.clientX - centerX;
         var dy = evt.clientY - centerY;
-        var distance = Math.sqrt((dx * dx) + (dy * dy));
+        var distance = Math.sqrt(dx * dx + dy * dy);
         var maxKnobDistance = radius * 0.52;
         var normalizedX = dx / radius;
         var normalizedY = dy / radius;
         var threshold = 0.22;
         var nextKeys = {};
 
-        if(distance > maxKnobDistance){
-            dx = dx / distance * maxKnobDistance;
-            dy = dy / distance * maxKnobDistance;
+        if (distance > maxKnobDistance) {
+            dx = (dx / distance) * maxKnobDistance;
+            dy = (dy / distance) * maxKnobDistance;
         }
 
-        if(joystickKnob){
-            joystickKnob.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+        if (joystickKnob) {
+            joystickKnob.style.transform =
+                'translate(' + dx + 'px, ' + dy + 'px)';
         }
 
-        if(normalizedX < -threshold){
+        if (normalizedX < -threshold) {
             nextKeys.h = true;
         }
 
-        if(normalizedX > threshold){
+        if (normalizedX > threshold) {
             nextKeys.l = true;
         }
 
-        if(normalizedY < -threshold){
+        if (normalizedY < -threshold) {
             nextKeys.k = true;
         }
 
-        if(normalizedY > threshold){
+        if (normalizedY > threshold) {
             nextKeys.j = true;
         }
 
         applyMoveKeys(nextKeys);
     }
 
-    function applyMoveKeys(nextKeys){
-        ['h', 'j', 'k', 'l'].forEach(function(key){
-            if(nextKeys[key] && !activeMoveKeys[key]){
+    function applyMoveKeys(nextKeys) {
+        ['h', 'j', 'k', 'l'].forEach(function (key) {
+            if (nextKeys[key] && !activeMoveKeys[key]) {
                 input.press(key);
             }
 
-            if(!nextKeys[key] && activeMoveKeys[key]){
+            if (!nextKeys[key] && activeMoveKeys[key]) {
                 input.release(key);
             }
         });
@@ -142,27 +154,27 @@ GF.TouchControls = function(options){
         activeMoveKeys = nextKeys;
     }
 
-    function resetJoystick(){
+    function resetJoystick() {
         applyMoveKeys({});
 
-        if(joystickKnob){
+        if (joystickKnob) {
             joystickKnob.style.transform = 'translate(0, 0)';
         }
     }
 
-    function bindAimSlider(){
-        if(!aimSlider){
+    function bindAimSlider() {
+        if (!aimSlider) {
             return;
         }
 
-        aimSlider.addEventListener('pointerdown', function(evt){
+        aimSlider.addEventListener('pointerdown', function (evt) {
             evt.preventDefault();
             aimSlider.setPointerCapture(evt.pointerId);
             updateAim(evt);
         });
 
-        aimSlider.addEventListener('pointermove', function(evt){
-            if(evt.buttons === 0){
+        aimSlider.addEventListener('pointermove', function (evt) {
+            if (evt.buttons === 0) {
                 return;
             }
 
@@ -171,7 +183,7 @@ GF.TouchControls = function(options){
         });
     }
 
-    function updateAim(evt){
+    function updateAim(evt) {
         var rect = aimSlider.getBoundingClientRect();
         var progress = (evt.clientY - rect.top) / rect.height;
         var level = Math.round((1 - clamp(progress, 0, 1)) * maxAimLevel);
@@ -179,13 +191,13 @@ GF.TouchControls = function(options){
         setAimLevel(level);
     }
 
-    function setAimLevel(level){
+    function setAimLevel(level) {
         var currentLevel = getAimLevel();
         var key;
 
         level = Math.max(0, Math.min(maxAimLevel, level));
 
-        while(currentLevel !== level){
+        while (currentLevel !== level) {
             key = level > currentLevel ? 'a' : 'z';
             input.press(key);
             input.release(key);
@@ -195,29 +207,29 @@ GF.TouchControls = function(options){
         updateAimHandle(level);
     }
 
-    function updateAimHandle(level){
+    function updateAimHandle(level) {
         var progress;
 
-        if(!aimHandle){
+        if (!aimHandle) {
             return;
         }
 
-        progress = maxAimLevel ? 1 - (level / maxAimLevel) : 0;
-        aimHandle.style.top = (progress * 100) + '%';
+        progress = maxAimLevel ? 1 - level / maxAimLevel : 0;
+        aimHandle.style.top = progress * 100 + '%';
     }
 
-    function bindButton(button, onDown, onUp){
-        if(!button){
+    function bindButton(button, onDown, onUp) {
+        if (!button) {
             return;
         }
 
-        button.addEventListener('pointerdown', function(evt){
+        button.addEventListener('pointerdown', function (evt) {
             evt.preventDefault();
             button.setPointerCapture(evt.pointerId);
             onDown();
         });
 
-        button.addEventListener('pointerup', function(evt){
+        button.addEventListener('pointerup', function (evt) {
             evt.preventDefault();
             onUp();
         });
@@ -226,23 +238,23 @@ GF.TouchControls = function(options){
         button.addEventListener('lostpointercapture', onUp);
     }
 
-    function bindTap(button, onTap){
-        if(!button){
+    function bindTap(button, onTap) {
+        if (!button) {
             return;
         }
 
-        button.addEventListener('pointerdown', function(evt){
+        button.addEventListener('pointerdown', function (evt) {
             evt.preventDefault();
             onTap();
         });
     }
 
-    function update(state){
+    function update(state) {
         var showGameplayControls;
 
         state = state || {};
 
-        if(!root || !visible){
+        if (!root || !visible) {
             return;
         }
 
@@ -252,37 +264,41 @@ GF.TouchControls = function(options){
         root.classList.toggle('is-playing', state.playing);
         root.classList.toggle('is-editing', editing);
 
-        if(lobbyControls){
+        if (lobbyControls) {
             lobbyControls.hidden = !state.waiting || editing;
         }
 
-        if(editButton){
+        if (editButton) {
             editButton.hidden = !!state.highScoresVisible || !!state.ready;
         }
 
-        if(playButton){
+        if (playButton) {
             playButton.hidden = !!state.highScoresVisible || !!state.ready;
         }
 
-        if(actionControls){
+        if (actionControls) {
             actionControls.hidden = !showGameplayControls;
         }
 
-        if(joystick){
+        if (joystick) {
             joystick.hidden = !showGameplayControls;
         }
 
-        if(!showGameplayControls){
+        if (!showGameplayControls) {
             resetJoystick();
             input.release(' ');
         }
 
-        if(!editing){
-            updateAimHandle(typeof state.aimLevel === 'number' ? state.aimLevel : getAimLevel());
+        if (!editing) {
+            updateAimHandle(
+                typeof state.aimLevel === 'number'
+                    ? state.aimLevel
+                    : getAimLevel()
+            );
         }
     }
 
-    function clamp(value, min, max){
+    function clamp(value, min, max) {
         return Math.max(min, Math.min(max, value));
     }
 

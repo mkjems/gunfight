@@ -1,117 +1,143 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
+    <head>
+        <title>Gunfight</title>
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+        <meta name="theme-color" content="#1e1e1e" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content="Gunfight" />
+        <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="black-translucent"
+        />
+        <link
+            rel="stylesheet"
+            href="css/index.css"
+            type="text/css"
+            media="screen"
+        />
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="apple-touch-icon" href="/favicon.ico?v=gunfight-v1" />
+        <link
+            rel="shortcut icon"
+            type="image/x-icon"
+            href="/favicon.ico?v=gunfight-v1"
+        />
+    </head>
 
-<head>
-	<title>Gunfight</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-	<meta name="theme-color" content="#1e1e1e">
-	<meta name="mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-capable" content="yes">
-	<meta name="apple-mobile-web-app-title" content="Gunfight">
-	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-	<link rel="stylesheet" href="css/index.css" type="text/css" media="screen">
-	<link rel="manifest" href="/manifest.webmanifest">
-	<link rel="apple-touch-icon" href="/favicon.ico?v=gunfight-v1">
-	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=gunfight-v1" />
-</head>
+    <body>
+        <div id="rotatePrompt">
+            <img
+                src="images/RotatePlease.png"
+                alt="Rotate your device to landscape"
+            />
+        </div>
+        <div id="installPrompt" hidden>
+            <button
+                type="button"
+                id="installPromptClose"
+                aria-label="Dismiss install instructions"
+            >
+                X
+            </button>
+            <div>FULL SCREEN MODE</div>
+            <div id="installPromptText">SHARE - ADD TO HOME SCREEN</div>
+            <button type="button" id="installPromptButton" hidden>
+                INSTALL
+            </button>
+        </div>
+        <div id="gameStage">
+            <canvas id="canvas"></canvas>
+            <canvas id="hudCanvas"></canvas>
+            <div id="hudOverlay" aria-live="polite">
+                <div id="gameHud" hidden>
+                    <div id="scoreRow">
+                        <div id="scoreLeft"></div>
+                        <div id="roundTimer"></div>
+                        <div id="scoreRight"></div>
+                    </div>
+                    <div id="roundMessage" class="large-text"></div>
+                    <div id="hitMessage"></div>
+                </div>
+                <div id="lobbyHud" hidden>
+                    <div id="lobby-main">
+                        <h1>GUNFIGHT 1975</h1>
+                        <div class="lobby-section">
+                            <div id="lobbyIdentity"></div>
+                        </div>
+                        <div class="lobby-section">
+                            <div id="lobbyControlsText"></div>
+                        </div>
+                        <div class="lobby-section">
+                            <div id="lobbySlots"></div>
+                        </div>
+                        <div class="lobby-section">
+                            <div id="lobbyEditPrompt"></div>
+                            <div id="lobbyPlayPrompt" class="blink-text"></div>
+                        </div>
+                    </div>
+                    <div id="highScoresScreen" hidden>
+                        <h1>HIGH SCORES</h1>
+                        <div id="highScoresTable"></div>
+                        <div id="highScoresPlayPrompt" class="blink-text"></div>
+                    </div>
+                    <div id="nameEditor" hidden>
+                        <h1>GUNFIGHT 1975</h1>
+                        <div id="nameEditorValue"></div>
+                        <div id="nameEditorGrid"></div>
+                        <div id="nameEditorHelp"></div>
+                    </div>
+                    <div id="touchLobbyControls" hidden>
+                        <button type="button" id="touchEditButton">
+                            EDIT NAME
+                        </button>
+                        <button type="button" id="touchPlayButton">
+                            TAP PLAY
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="touchControls" hidden>
+                <div id="touchJoystick" aria-label="Move">
+                    <div id="touchJoystickKnob"></div>
+                </div>
+                <div id="touchActionControls">
+                    <div id="touchAimSlider" aria-label="Aim">
+                        <div id="touchAimTrack"></div>
+                        <div id="touchAimHandle"></div>
+                    </div>
+                    <button type="button" id="touchShootButton">FIRE</button>
+                </div>
+            </div>
+        </div>
+        <script src="/socket.io/socket.io.js"></script>
+        <script>
+            var GF = {};
+        </script>
 
-<body>
-	<div id="rotatePrompt">
-		<img src="images/RotatePlease.png" alt="Rotate your device to landscape">
-	</div>
-	<div id="installPrompt" hidden>
-		<button type="button" id="installPromptClose" aria-label="Dismiss install instructions">X</button>
-		<div>FULL SCREEN MODE</div>
-		<div id="installPromptText">SHARE - ADD TO HOME SCREEN</div>
-		<button type="button" id="installPromptButton" hidden>INSTALL</button>
-	</div>
-	<div id="gameStage">
-		<canvas id="canvas"></canvas>
-		<canvas id="hudCanvas"></canvas>
-		<div id="hudOverlay" aria-live="polite">
-			<div id="gameHud" hidden>
-				<div id="scoreRow">
-					<div id="scoreLeft"></div>
-					<div id="roundTimer"></div>
-					<div id="scoreRight"></div>
-				</div>
-				<div id="roundMessage" class="large-text"></div>
-				<div id="hitMessage"></div>
-			</div>
-			<div id="lobbyHud" hidden>
+        <script src="js/Config.js"></script>
+        <script src="js/requestAnimationFrame.js"></script>
 
-				<div id="lobby-main">
-					<h1>GUNFIGHT 1975</h1>
-					<div class="lobby-section">
-						<div id="lobbyIdentity"></div>
-					</div>
-					<div class="lobby-section">
-						<div id="lobbyControlsText"></div>
-					</div>
-					<div class="lobby-section">
-						<div id="lobbySlots"></div>
-					</div>
-					<div class="lobby-section">
-						<div id="lobbyEditPrompt"></div>
-						<div id="lobbyPlayPrompt" class="blink-text"></div>
-					</div>
-				</div>
-				<div id="highScoresScreen" hidden>
-					<h1>HIGH SCORES</h1>
-					<div id="highScoresTable"></div>
-					<div id="highScoresPlayPrompt" class="blink-text"></div>
-				</div>
-				<div id="nameEditor" hidden>
-					<h1>GUNFIGHT 1975</h1>
-					<div id="nameEditorValue"></div>
-					<div id="nameEditorGrid"></div>
-					<div id="nameEditorHelp"></div>
-				</div>
-				<div id="touchLobbyControls" hidden>
-					<button type="button" id="touchEditButton">EDIT NAME</button>
-					<button type="button" id="touchPlayButton">TAP PLAY</button>
-				</div>
-			</div>
-		</div>
-		<div id="touchControls" hidden>
+        <script src="js/InstallPrompt.js"></script>
+        <script src="js/KeysModel.js"></script>
+        <script src="js/NameEditor.js"></script>
+        <script src="js/Camera.js"></script>
+        <script src="js/TouchControls.js"></script>
 
-			<div id="touchJoystick" aria-label="Move">
-				<div id="touchJoystickKnob"></div>
-			</div>
-			<div id="touchActionControls">
-				<div id="touchAimSlider" aria-label="Aim">
-					<div id="touchAimTrack"></div>
-					<div id="touchAimHandle"></div>
-				</div>
-				<button type="button" id="touchShootButton">FIRE</button>
-			</div>
-		</div>
-	</div>
-	<script src="/socket.io/socket.io.js"></script>
-	<script>
-		var GF = {};
-	</script>
+        <script src="js/Color.js"></script>
+        <script src="js/Pen.js"></script>
 
-	<script src="js/Config.js"></script>
-	<script src="js/requestAnimationFrame.js"></script>
-
-	<script src="js/InstallPrompt.js"></script>
-	<script src="js/KeysModel.js"></script>
-	<script src="js/NameEditor.js"></script>
-	<script src="js/Camera.js"></script>
-	<script src="js/TouchControls.js"></script>
-
-	<script src="js/Color.js"></script>
-	<script src="js/Pen.js"></script>
-
-	<script src="js/Scene.js"></script>
-	<script src="js/Obstacles.js"></script>
-	<script src="js/Controllable.js"></script>
-	<script src="js/Bullet.js"></script>
-	<script src="js/Bullets.js"></script>
-	<script src="js/Players.js"></script>
-	<script src="js/Collision.js"></script>
-	<script src="js/index.js"></script>
-</body>
-
+        <script src="js/Scene.js"></script>
+        <script src="js/Obstacles.js"></script>
+        <script src="js/Controllable.js"></script>
+        <script src="js/Bullet.js"></script>
+        <script src="js/Bullets.js"></script>
+        <script src="js/Players.js"></script>
+        <script src="js/Collision.js"></script>
+        <script src="js/index.js"></script>
+    </body>
 </html>

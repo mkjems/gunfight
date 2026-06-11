@@ -1,4 +1,4 @@
-GF.Game = (function(){
+GF.Game = (function () {
     var canvas,
         context,
         hudCanvas,
@@ -65,7 +65,7 @@ GF.Game = (function(){
         playerId;
     var playerNameStorageKey = 'gunfight-player-name';
 
-    function initCanvas(){
+    function initCanvas() {
         canvas = document.getElementById('canvas');
         context = canvas.getContext('2d');
         hudCanvas = document.getElementById('hudCanvas');
@@ -84,7 +84,7 @@ GF.Game = (function(){
         saloonSprite = new Image();
         saloonSprite.src = 'images/saloon-64x128.png';
         rockPatternSprite = new Image();
-        rockPatternSprite.onload = function(){
+        rockPatternSprite.onload = function () {
             rockPattern = createScaledPattern(rockPatternSprite);
         };
         rockPatternSprite.src = 'images/rock-pattern.png';
@@ -95,14 +95,14 @@ GF.Game = (function(){
         disableImageSmoothing();
     }
 
-    function initNameEditor(){
+    function initNameEditor() {
         nameEditor = new GF.NameEditor({
             onChange: renderHud,
             onSubmit: submitNameChange
         });
     }
 
-    function initHudOverlay(){
+    function initHudOverlay() {
         hudOverlay = document.getElementById('hudOverlay');
         gameHud = document.getElementById('gameHud');
         lobbyHud = document.getElementById('lobbyHud');
@@ -121,14 +121,16 @@ GF.Game = (function(){
         lobbyPlayPromptElement = document.getElementById('lobbyPlayPrompt');
         highScoresScreenElement = document.getElementById('highScoresScreen');
         highScoresTableElement = document.getElementById('highScoresTable');
-        highScoresPlayPromptElement = document.getElementById('highScoresPlayPrompt');
+        highScoresPlayPromptElement = document.getElementById(
+            'highScoresPlayPrompt'
+        );
         nameEditorElement = document.getElementById('nameEditor');
         nameEditorValueElement = document.getElementById('nameEditorValue');
         nameEditorGridElement = document.getElementById('nameEditorGrid');
         nameEditorHelpElement = document.getElementById('nameEditorHelp');
     }
 
-    function initCamera(){
+    function initCamera() {
         camera = new GF.Camera({
             worldWidth: GF.Config.canvas.width,
             worldHeight: GF.Config.canvas.height,
@@ -138,7 +140,7 @@ GF.Game = (function(){
         });
     }
 
-    function initSoundEffects(){
+    function initSoundEffects() {
         soundEffects = {
             gunshot: createSoundEffect('sounds/gunshot.m4a', 0.8, 5),
             emptyGun: createSoundEffect('sounds/empty-gun-shot.mp3', 0.8, 3),
@@ -151,7 +153,7 @@ GF.Game = (function(){
         bindSoundWarmup();
     }
 
-    function createSoundEffect(src, volume, poolSize){
+    function createSoundEffect(src, volume, poolSize) {
         var sound = {
             src: src,
             buffer: null,
@@ -166,18 +168,18 @@ GF.Game = (function(){
         return sound;
     }
 
-    function createFallbackAudioPool(src, volume, poolSize){
+    function createFallbackAudioPool(src, volume, poolSize) {
         var pool = [];
         var i;
 
-        for(i = 0; i < poolSize; i++){
+        for (i = 0; i < poolSize; i++) {
             pool.push(createAudioElement(src, volume));
         }
 
         return pool;
     }
 
-    function createAudioElement(src, volume){
+    function createAudioElement(src, volume) {
         var audio = new Audio(src);
 
         audio.preload = 'auto';
@@ -187,71 +189,82 @@ GF.Game = (function(){
         return audio;
     }
 
-    function getAudioContext(){
-        var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    function getAudioContext() {
+        var AudioContextClass =
+            window.AudioContext || window.webkitAudioContext;
 
-        if(!AudioContextClass){
+        if (!AudioContextClass) {
             return null;
         }
 
-        if(!audioContext){
+        if (!audioContext) {
             audioContext = new AudioContextClass();
         }
 
         return audioContext;
     }
 
-    function loadSoundBuffer(sound){
+    function loadSoundBuffer(sound) {
         var context = getAudioContext();
 
-        if(!context || !window.fetch || sound.loading){
+        if (!context || !window.fetch || sound.loading) {
             return;
         }
 
         sound.loading = fetch(sound.src)
-            .then(function(response){
-                if(!response.ok){
+            .then(function (response) {
+                if (!response.ok) {
                     throw new Error('Could not load sound: ' + sound.src);
                 }
 
                 return response.arrayBuffer();
             })
-            .then(function(arrayBuffer){
+            .then(function (arrayBuffer) {
                 return decodeAudioBuffer(context, arrayBuffer);
             })
-            .then(function(buffer){
+            .then(function (buffer) {
                 sound.buffer = buffer;
             })
-            .catch(function(){});
+            .catch(function () {});
     }
 
-    function decodeAudioBuffer(context, arrayBuffer){
-        return new Promise(function(resolve, reject){
-            var decodeResult = context.decodeAudioData(arrayBuffer, resolve, reject);
+    function decodeAudioBuffer(context, arrayBuffer) {
+        return new Promise(function (resolve, reject) {
+            var decodeResult = context.decodeAudioData(
+                arrayBuffer,
+                resolve,
+                reject
+            );
 
-            if(decodeResult && decodeResult.then){
+            if (decodeResult && decodeResult.then) {
                 decodeResult.then(resolve).catch(reject);
             }
         });
     }
 
-    function bindSoundWarmup(){
-        document.addEventListener('keydown', warmSoundEffects, { once: true, capture: true });
-        document.addEventListener('pointerdown', warmSoundEffects, { once: true, capture: true });
+    function bindSoundWarmup() {
+        document.addEventListener('keydown', warmSoundEffects, {
+            once: true,
+            capture: true
+        });
+        document.addEventListener('pointerdown', warmSoundEffects, {
+            once: true,
+            capture: true
+        });
     }
 
-    function warmSoundEffects(){
+    function warmSoundEffects() {
         var context = getAudioContext();
 
         resumeAudioContext(context);
 
-        Object.keys(soundEffects || {}).forEach(function(name){
+        Object.keys(soundEffects || {}).forEach(function (name) {
             loadSoundBuffer(soundEffects[name]);
             soundEffects[name].fallbackPool.forEach(warmAudioElement);
         });
     }
 
-    function warmAudioElement(audio){
+    function warmAudioElement(audio) {
         var warmupAudio = audio.cloneNode();
         var playRequest;
 
@@ -259,32 +272,34 @@ GF.Game = (function(){
         warmupAudio.currentTime = 0;
         playRequest = warmupAudio.play();
 
-        if(playRequest && playRequest.then){
-            playRequest.then(function(){
-                warmupAudio.pause();
-                warmupAudio.currentTime = 0;
-            }).catch(function(){});
+        if (playRequest && playRequest.then) {
+            playRequest
+                .then(function () {
+                    warmupAudio.pause();
+                    warmupAudio.currentTime = 0;
+                })
+                .catch(function () {});
         } else {
             warmupAudio.pause();
             warmupAudio.currentTime = 0;
         }
     }
 
-    function resumeAudioContext(context){
+    function resumeAudioContext(context) {
         var resumeRequest;
 
-        if(!context || context.state !== 'suspended' || !context.resume){
+        if (!context || context.state !== 'suspended' || !context.resume) {
             return;
         }
 
         resumeRequest = context.resume();
 
-        if(resumeRequest && resumeRequest.catch){
-            resumeRequest.catch(function(){});
+        if (resumeRequest && resumeRequest.catch) {
+            resumeRequest.catch(function () {});
         }
     }
 
-    function disableImageSmoothing(){
+    function disableImageSmoothing() {
         context.imageSmoothingEnabled = false;
         context.webkitImageSmoothingEnabled = false;
         context.mozImageSmoothingEnabled = false;
@@ -295,7 +310,7 @@ GF.Game = (function(){
         hudContext.msImageSmoothingEnabled = false;
     }
 
-    function initGameState(){
+    function initGameState() {
         scene = new GF.Scene();
         bullets = new GF.Bullets(scene);
         players = new GF.Players(scene, bullets);
@@ -321,50 +336,50 @@ GF.Game = (function(){
         GF.Bullet.onRicochet = playRicochetSound;
     }
 
-    function playGunSound(){
+    function playGunSound() {
         playSoundEffect('gunshot');
     }
 
-    function playEmptyGunSound(){
+    function playEmptyGunSound() {
         playSoundEffect('emptyGun');
     }
 
-    function playRicochetSound(){
+    function playRicochetSound() {
         playSoundEffect('ricochet');
     }
 
-    function playPainSound(){
+    function playPainSound() {
         playSoundEffect('pain');
     }
 
-    function playReadySound(){
+    function playReadySound() {
         playSoundEffect('ready');
     }
 
-    function playObstacleHitSound(id){
-        if(id === 'wagon'){
+    function playObstacleHitSound(id) {
+        if (id === 'wagon') {
             playSoundEffect('wagonHit');
             return;
         }
 
-        if(id && id.indexOf('cactus:') === 0){
+        if (id && id.indexOf('cactus:') === 0) {
             playSoundEffect('cactusHit');
         }
     }
 
-    function playSoundEffect(name){
+    function playSoundEffect(name) {
         var sound = soundEffects && soundEffects[name];
         var context;
         var source;
         var gain;
 
-        if(!sound){
+        if (!sound) {
             return;
         }
 
         context = getAudioContext();
 
-        if(context && sound.buffer){
+        if (context && sound.buffer) {
             resumeAudioContext(context);
 
             source = context.createBufferSource();
@@ -380,11 +395,11 @@ GF.Game = (function(){
         playFallbackSoundEffect(sound);
     }
 
-    function playFallbackSoundEffect(sound){
+    function playFallbackSoundEffect(sound) {
         var audio;
         var playRequest;
 
-        if(!sound.fallbackPool.length){
+        if (!sound.fallbackPool.length) {
             return;
         }
 
@@ -396,12 +411,12 @@ GF.Game = (function(){
         audio.volume = sound.volume;
         playRequest = audio.play();
 
-        if(playRequest && playRequest.catch){
-            playRequest.catch(function(){});
+        if (playRequest && playRequest.catch) {
+            playRequest.catch(function () {});
         }
     }
 
-    function createScaledPattern(image){
+    function createScaledPattern(image) {
         var scale = GF.Config.graphics.scale;
         var tile = document.createElement('canvas');
         var tileContext = tile.getContext('2d');
@@ -417,51 +432,54 @@ GF.Game = (function(){
         return context.createPattern(tile, 'repeat');
     }
 
-    function setRoundMessage(message){
+    function setRoundMessage(message) {
         roundMessageText = message;
         renderHud();
     }
 
-    function getPlayerSlot(id){
-        if(!latestModel){
+    function getPlayerSlot(id) {
+        if (!latestModel) {
             return -1;
         }
 
-        return latestModel.clients.findIndex(function(client){
+        return latestModel.clients.findIndex(function (client) {
             return client.id === id;
         });
     }
 
-    function resetAmmo(){
+    function resetAmmo() {
         ammo = {};
 
-        if(!latestModel){
+        if (!latestModel) {
             return;
         }
 
-        latestModel.clients.forEach(function(client){
+        latestModel.clients.forEach(function (client) {
             ammo[client.id] = GF.Config.round.ammo;
         });
     }
 
-    function renderHud(){
+    function renderHud() {
         var secondsLeft = GF.Config.game.seconds;
         var firstClient;
         var secondClient;
         var firstAmmo;
         var secondAmmo;
 
-        if(roundEndsAt){
-            secondsLeft = Math.max(0, Math.ceil((roundEndsAt - new Date().getTime()) / 1000));
+        if (roundEndsAt) {
+            secondsLeft = Math.max(
+                0,
+                Math.ceil((roundEndsAt - new Date().getTime()) / 1000)
+            );
         }
 
-        if(roundState === 'gameOver'){
+        if (roundState === 'gameOver') {
             secondsLeft = 'GAME OVER';
         }
 
         hudContext.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
 
-        if(roundState === 'waiting'){
+        if (roundState === 'waiting') {
             renderLobbyHud();
             updateTouchControls();
             return;
@@ -475,7 +493,7 @@ GF.Game = (function(){
         firstClient = latestModel && latestModel.clients[0];
         secondClient = latestModel && latestModel.clients[1];
 
-        if(!firstClient || !secondClient){
+        if (!firstClient || !secondClient) {
             renderGameHud(secondsLeft);
             return;
         }
@@ -489,7 +507,7 @@ GF.Game = (function(){
         updateTouchControls();
     }
 
-    function renderGameHud(secondsLeft){
+    function renderGameHud(secondsLeft) {
         setText(scoreLeftElement, scores[0] || 0);
         setText(scoreRightElement, scores[1] || 0);
         setText(roundTimerElement, secondsLeft);
@@ -497,31 +515,33 @@ GF.Game = (function(){
         renderHitMessage();
     }
 
-    function renderHitMessage(){
+    function renderHitMessage() {
         var target;
         var point;
 
-        if(!hitMessage || !hitMessageElement){
+        if (!hitMessage || !hitMessageElement) {
             showElement(hitMessageElement, false);
             return;
         }
 
         target = players.all[hitMessage.targetId];
 
-        if(!target){
+        if (!target) {
             showElement(hitMessageElement, false);
             return;
         }
 
         point = worldToHudPoint(target.x, Math.max(80, target.y - 150));
         setText(hitMessageElement, hitMessage.text);
-        hitMessageElement.style.left = (point.x / GF.Config.canvas.width * 100) + '%';
-        hitMessageElement.style.top = (point.y / GF.Config.canvas.height * 100) + '%';
+        hitMessageElement.style.left =
+            (point.x / GF.Config.canvas.width) * 100 + '%';
+        hitMessageElement.style.top =
+            (point.y / GF.Config.canvas.height) * 100 + '%';
         showElement(hitMessageElement, true);
     }
 
-    function worldToHudPoint(x, y){
-        if(shouldUseCamera()){
+    function worldToHudPoint(x, y) {
+        if (shouldUseCamera()) {
             return {
                 x: (x - camera.x) * camera.scale,
                 y: (y - camera.y) * camera.scale
@@ -534,7 +554,7 @@ GF.Game = (function(){
         };
     }
 
-    function drawAmmo(count, x, y, direction){
+    function drawAmmo(count, x, y, direction) {
         var i;
         var roundX;
         var scale = GF.Config.graphics.scale;
@@ -548,11 +568,17 @@ GF.Game = (function(){
         hudContext.shadowOffsetX = 3;
         hudContext.shadowOffsetY = 3;
 
-        for(i = 0; i < count; i++){
-            roundX = x + (i * spacing * direction);
+        for (i = 0; i < count; i++) {
+            roundX = x + i * spacing * direction;
 
-            if(ammoSprite && ammoSprite.complete){
-                hudContext.drawImage(ammoSprite, roundX, y, spriteWidth, spriteHeight);
+            if (ammoSprite && ammoSprite.complete) {
+                hudContext.drawImage(
+                    ammoSprite,
+                    roundX,
+                    y,
+                    spriteWidth,
+                    spriteHeight
+                );
             } else {
                 hudContext.fillRect(roundX, y, spriteWidth, spriteHeight);
             }
@@ -561,60 +587,64 @@ GF.Game = (function(){
         hudContext.restore();
     }
 
-    function getCurrentScenario(){
+    function getCurrentScenario() {
         return latestModel && latestModel.currentScenario;
     }
 
-    function drawScenario(){
+    function drawScenario() {
         var scenario = getCurrentScenario();
 
-        if(!scenario){
+        if (!scenario) {
             return;
         }
 
         drawDecorations(scenario);
 
-        (scenario.cacti || []).forEach(function(cactus, index){
-            drawCactus(cactus.x, cactus.y, getObstacleDamage(getCactusId(index)));
+        (scenario.cacti || []).forEach(function (cactus, index) {
+            drawCactus(
+                cactus.x,
+                cactus.y,
+                getObstacleDamage(getCactusId(index))
+            );
         });
 
         drawRocks(scenario);
 
-        if(scenario.wagon){
+        if (scenario.wagon) {
             drawWagon(scenario.wagon);
         }
     }
 
-    function drawDecorations(scenario){
-        (scenario.decorations || []).forEach(function(decoration){
-            if(decoration.type === 'saloon'){
+    function drawDecorations(scenario) {
+        (scenario.decorations || []).forEach(function (decoration) {
+            if (decoration.type === 'saloon') {
                 drawSaloon(decoration.x, decoration.y);
             }
         });
     }
 
-    function drawSaloon(x, y){
+    function drawSaloon(x, y) {
         var scale = GF.Config.graphics.scale;
         var width = 64 * scale;
         var height = 128 * scale;
 
-        if(!saloonSprite || !saloonSprite.complete){
+        if (!saloonSprite || !saloonSprite.complete) {
             return;
         }
 
         context.drawImage(saloonSprite, x, y, width, height);
     }
 
-    function drawRocks(scenario){
-        if(!scenario){
+    function drawRocks(scenario) {
+        if (!scenario) {
             return;
         }
 
-        (scenario.rocks || []).forEach(function(rock){
+        (scenario.rocks || []).forEach(function (rock) {
             var lines = rock.lines || [];
             var firstLine = lines[0];
 
-            if(!firstLine){
+            if (!firstLine) {
                 return;
             }
 
@@ -624,9 +654,12 @@ GF.Game = (function(){
             context.shadowOffsetX = 2;
             context.shadowOffsetY = 2;
             context.beginPath();
-            context.moveTo(rock.x + firstLine.from[0], rock.y + firstLine.from[1]);
+            context.moveTo(
+                rock.x + firstLine.from[0],
+                rock.y + firstLine.from[1]
+            );
 
-            lines.forEach(function(line){
+            lines.forEach(function (line) {
                 context.lineTo(rock.x + line.to[0], rock.y + line.to[1]);
             });
 
@@ -636,15 +669,15 @@ GF.Game = (function(){
         });
     }
 
-    function getRockLines(scenario){
+    function getRockLines(scenario) {
         var lines = [];
 
-        if(!scenario){
+        if (!scenario) {
             return lines;
         }
 
-        (scenario.rocks || []).forEach(function(rock){
-            (rock.lines || []).forEach(function(line){
+        (scenario.rocks || []).forEach(function (rock) {
+            (rock.lines || []).forEach(function (line) {
                 lines.push({
                     x1: rock.x + line.from[0],
                     y1: rock.y + line.from[1],
@@ -657,38 +690,38 @@ GF.Game = (function(){
         return lines;
     }
 
-    function updateBulletCollisionEnvironment(){
+    function updateBulletCollisionEnvironment() {
         GF.Bullet.setCollisionLines(getRockLines(getCurrentScenario()));
     }
 
-    function updateMovementObstacleEnvironment(){
+    function updateMovementObstacleEnvironment() {
         var scenario = roundState === 'waiting' ? null : getCurrentScenario();
 
         GF.Obstacles.setBodies(getObstacleBodies(scenario));
     }
 
-    function getObstacleBodies(scenario){
+    function getObstacleBodies(scenario) {
         var bodies = [];
         var scale = GF.Config.graphics.scale;
 
-        if(!scenario){
+        if (!scenario) {
             return bodies;
         }
 
-        (scenario.cacti || []).forEach(function(cactus, index){
+        (scenario.cacti || []).forEach(function (cactus, index) {
             var body = getCactusBody(cactus, index);
 
-            if(body){
+            if (body) {
                 bodies.push(body);
             }
         });
 
-        (scenario.rocks || []).forEach(function(rock){
+        (scenario.rocks || []).forEach(function (rock) {
             bodies.push(getRockPolygonBody(rock));
         });
 
-        if(scenario.wagon){
-            getWagonObstacleCircles(scenario.wagon).forEach(function(circle){
+        if (scenario.wagon) {
+            getWagonObstacleCircles(scenario.wagon).forEach(function (circle) {
                 bodies.push(circle);
             });
         }
@@ -696,15 +729,15 @@ GF.Game = (function(){
         return bodies;
     }
 
-    function getRockPolygonBody(rock){
+    function getRockPolygonBody(rock) {
         return {
             type: 'polygon',
             points: getRockPolygonPoints(rock)
         };
     }
 
-    function getRockPolygonPoints(rock){
-        return (rock.lines || []).map(function(line){
+    function getRockPolygonPoints(rock) {
+        return (rock.lines || []).map(function (line) {
             return {
                 x: rock.x + line.from[0],
                 y: rock.y + line.from[1]
@@ -712,7 +745,7 @@ GF.Game = (function(){
         });
     }
 
-    function getWagonObstacleCircles(wagon){
+    function getWagonObstacleCircles(wagon) {
         var position = getWagonPosition(wagon);
         var scale = GF.Config.graphics.scale;
         var colliders = [
@@ -721,26 +754,26 @@ GF.Game = (function(){
             { x: 0, y: -10, radius: 10 }
         ];
 
-        return colliders.map(function(collider){
+        return colliders.map(function (collider) {
             return {
                 type: 'circle',
                 id: 'wagon',
                 damage: getObstacleDamage('wagon'),
-                x: position.x + (collider.x * scale),
-                y: position.y + (collider.y * scale),
+                x: position.x + collider.x * scale,
+                y: position.y + collider.y * scale,
                 radius: collider.radius * scale
             };
         });
     }
 
-    function getCactusBody(cactus, index){
+    function getCactusBody(cactus, index) {
         var scale = GF.Config.graphics.scale;
         var damage = getCactusDamageStage(index);
         var width = 5 * scale;
         var heights = [29, 22, 15, 0];
         var height = heights[damage] * scale;
 
-        if(!height){
+        if (!height) {
             return null;
         }
 
@@ -748,30 +781,30 @@ GF.Game = (function(){
             type: 'rect',
             id: getCactusId(index),
             damage: damage,
-            x: cactus.x - (width / 2),
+            x: cactus.x - width / 2,
             y: cactus.y - height,
             width: width,
             height: height
         };
     }
 
-    function getCactusId(index){
+    function getCactusId(index) {
         return 'cactus:' + index;
     }
 
-    function getCactusDamageStage(index){
+    function getCactusDamageStage(index) {
         return Math.min(3, getObstacleDamage(getCactusId(index)));
     }
 
-    function getObstacleDamage(id){
+    function getObstacleDamage(id) {
         return obstacleDamage[id] || 0;
     }
 
-    function damageObstacle(id){
+    function damageObstacle(id) {
         obstacleDamage[id] = getObstacleDamage(id) + 1;
     }
 
-    function drawCactus(x, y, damage){
+    function drawCactus(x, y, damage) {
         var scale = GF.Config.graphics.scale;
         var sourceWidth = 17;
         var sourceHeight = 32;
@@ -781,27 +814,27 @@ GF.Game = (function(){
 
         context.save();
 
-        if(cactusSprite && cactusSprite.complete){
+        if (cactusSprite && cactusSprite.complete) {
             context.drawImage(
                 cactusSprite,
                 frame * sourceWidth,
                 0,
                 sourceWidth,
                 sourceHeight,
-                x - (width / 2),
+                x - width / 2,
                 y - height,
                 width,
                 height
             );
         } else {
             context.fillStyle = GF.Config.colors.yellow;
-            context.fillRect(x - (width / 2), y - height, width, height);
+            context.fillRect(x - width / 2, y - height, width, height);
         }
 
         context.restore();
     }
 
-    function drawWagon(wagon){
+    function drawWagon(wagon) {
         var position = getWagonPosition(wagon);
         var scale = GF.Config.graphics.scale;
         var sourceWidth = 37;
@@ -812,38 +845,45 @@ GF.Game = (function(){
 
         context.save();
 
-        if(wagonSprite && wagonSprite.complete){
+        if (wagonSprite && wagonSprite.complete) {
             context.drawImage(
                 wagonSprite,
                 damage * sourceWidth,
                 0,
                 sourceWidth,
                 sourceHeight,
-                position.x - (width / 2),
-                position.y - (height / 2),
+                position.x - width / 2,
+                position.y - height / 2,
                 width,
                 height
             );
         } else {
             context.fillStyle = GF.Config.colors.yellow;
-            context.fillRect(position.x - (width / 2), position.y - (height / 2), width, height);
+            context.fillRect(
+                position.x - width / 2,
+                position.y - height / 2,
+                width,
+                height
+            );
         }
 
         context.restore();
     }
 
-    function getWagonPosition(wagon){
-        var elapsed = scenarioStartedAt ? new Date().getTime() - scenarioStartedAt : 0;
+    function getWagonPosition(wagon) {
+        var elapsed = scenarioStartedAt
+            ? new Date().getTime() - scenarioStartedAt
+            : 0;
         var duration = wagon.duration || 10000;
         var progress = Math.min(1, Math.max(0, elapsed / duration));
 
         return {
             x: wagon.x,
-            y: wagon.fromY + ((wagon.toY - wagon.fromY) * progress)
+            y: wagon.fromY + (wagon.toY - wagon.fromY) * progress
         };
     }
 
-    function renderLobbyHud(){
+    function renderLobbyHud() {
         var isTouch = isTouchInterface();
         var controls = [
             'h j k l - left down up right',
@@ -853,7 +893,7 @@ GF.Game = (function(){
         showElement(gameHud, false);
         showElement(lobbyHud, true);
 
-        if(nameEditor && nameEditor.isActive()){
+        if (nameEditor && nameEditor.isActive()) {
             renderNameEditor();
             return;
         }
@@ -862,58 +902,69 @@ GF.Game = (function(){
         showElement(hudCanvas, true);
         showElement(nameEditorElement, false);
 
-        if(shouldShowHighScoresScreen()){
+        if (shouldShowHighScoresScreen()) {
             renderHighScoresScreen(isTouch);
             return;
         }
 
         showElement(lobbyMainElement, true);
         showElement(highScoresScreenElement, false);
-        setLines(lobbyIdentityElement, [
-            getLobbyPlayerLabel(),
-            getGameLabel()
-        ]);
+        setLines(lobbyIdentityElement, [getLobbyPlayerLabel(), getGameLabel()]);
         showElement(lobbyControlsSectionElement, !isTouch);
         setLines(lobbyControlsElement, isTouch ? [] : controls);
         renderLobbySlots();
-        showElement(lobbyEditPromptSectionElement, !isTouch && isLocalClientWaiting());
-        setText(lobbyEditPromptElement, !isTouch && isLocalClientWaiting() ? 'PRESS E TO EDIT NAME' : '');
+        showElement(
+            lobbyEditPromptSectionElement,
+            !isTouch && isLocalClientWaiting()
+        );
+        setText(
+            lobbyEditPromptElement,
+            !isTouch && isLocalClientWaiting() ? 'PRESS E TO EDIT NAME' : ''
+        );
 
         showElement(lobbyPlayPromptElement, true);
-        setText(lobbyPlayPromptElement, shouldShowLobbyPrompt() && !isTouch ? 'PRESS P TO PLAY' : '');
+        setText(
+            lobbyPlayPromptElement,
+            shouldShowLobbyPrompt() && !isTouch ? 'PRESS P TO PLAY' : ''
+        );
     }
 
-    function shouldShowHighScoresScreen(){
-        var clients = latestModel && latestModel.clients || [];
-        var hasReadyClient = clients.some(function(client){
+    function shouldShowHighScoresScreen() {
+        var clients = (latestModel && latestModel.clients) || [];
+        var hasReadyClient = clients.some(function (client) {
             return client.ready;
         });
 
-        if(hasReadyClient || localReadyRequested){
+        if (hasReadyClient || localReadyRequested) {
             return false;
         }
 
         return Math.floor(new Date().getTime() / 7000) % 2 === 1;
     }
 
-    function renderHighScoresScreen(isTouch){
+    function renderHighScoresScreen(isTouch) {
         showElement(lobbyMainElement, false);
         showElement(highScoresScreenElement, true);
         renderHighScoresTable();
-        setText(highScoresPlayPromptElement, shouldShowLobbyPrompt() && !isTouch ? 'PRESS P TO PLAY' : '');
+        setText(
+            highScoresPlayPromptElement,
+            shouldShowLobbyPrompt() && !isTouch ? 'PRESS P TO PLAY' : ''
+        );
     }
 
-    function renderHighScoresTable(){
+    function renderHighScoresTable() {
         var rows = highScores && highScores.length ? highScores : [];
-        var key = rows.map(function(row){
-            return [row.name, row.wins, row.kills, row.deaths].join(':');
-        }).join('|');
+        var key = rows
+            .map(function (row) {
+                return [row.name, row.wins, row.kills, row.deaths].join(':');
+            })
+            .join('|');
 
-        if(!highScoresTableElement){
+        if (!highScoresTableElement) {
             return;
         }
 
-        if(highScoresTableElement.dataset.highScoresKey === key){
+        if (highScoresTableElement.dataset.highScoresKey === key) {
             return;
         }
 
@@ -921,7 +972,7 @@ GF.Game = (function(){
         highScoresTableElement.innerHTML = '';
         appendHighScoreRow(['NAME', 'WINS', 'KILLS', 'DEATHS'], true);
 
-        if(!rows.length){
+        if (!rows.length) {
             var emptyRow = document.createElement('div');
 
             emptyRow.className = 'high-score-empty';
@@ -930,21 +981,25 @@ GF.Game = (function(){
             return;
         }
 
-        rows.forEach(function(row){
-            appendHighScoreRow([row.name, row.wins, row.kills, row.deaths], false);
+        rows.forEach(function (row) {
+            appendHighScoreRow(
+                [row.name, row.wins, row.kills, row.deaths],
+                false
+            );
         });
     }
 
-    function appendHighScoreRow(values, isHeader){
+    function appendHighScoreRow(values, isHeader) {
         var rowElement;
 
-        if(!highScoresTableElement){
+        if (!highScoresTableElement) {
             return;
         }
 
         rowElement = document.createElement('div');
-        rowElement.className = 'high-score-row' + (isHeader ? ' is-header' : '');
-        values.forEach(function(value){
+        rowElement.className =
+            'high-score-row' + (isHeader ? ' is-header' : '');
+        values.forEach(function (value) {
             var cell = document.createElement('span');
 
             cell.textContent = value;
@@ -953,13 +1008,11 @@ GF.Game = (function(){
         highScoresTableElement.appendChild(rowElement);
     }
 
-    function renderNameEditor(){
+    function renderNameEditor() {
         var state = nameEditor.getState();
-        var helpLines = isTouchInterface() ? [] : [
-            'H J K L MOVE',
-            'SPACE SELECT',
-            'E DONE'
-        ];
+        var helpLines = isTouchInterface()
+            ? []
+            : ['H J K L MOVE', 'SPACE SELECT', 'E DONE'];
 
         showElement(canvas, false);
         showElement(hudCanvas, false);
@@ -977,34 +1030,40 @@ GF.Game = (function(){
         renderNameEditorGrid(state);
     }
 
-    function renderNameEditorGrid(state){
+    function renderNameEditorGrid(state) {
         var gridKey;
 
-        if(!nameEditorGridElement){
+        if (!nameEditorGridElement) {
             return;
         }
 
         gridKey = state.cursorRow + ':' + state.cursorCol;
 
-        if(nameEditorGridElement.dataset.gridKey === gridKey){
+        if (nameEditorGridElement.dataset.gridKey === gridKey) {
             return;
         }
 
         nameEditorGridElement.dataset.gridKey = gridKey;
         nameEditorGridElement.innerHTML = '';
 
-        state.grid.forEach(function(row, rowIndex){
+        state.grid.forEach(function (row, rowIndex) {
             var rowElement = document.createElement('div');
 
-            rowElement.className = 'name-editor-row' + (row.length < 9 ? ' is-short' : '');
+            rowElement.className =
+                'name-editor-row' + (row.length < 9 ? ' is-short' : '');
 
-            row.forEach(function(value, colIndex){
+            row.forEach(function (value, colIndex) {
                 var button = document.createElement('button');
 
                 button.type = 'button';
-                button.className = 'name-editor-key' + (state.cursorRow === rowIndex && state.cursorCol === colIndex ? ' is-selected negative-text' : '');
+                button.className =
+                    'name-editor-key' +
+                    (state.cursorRow === rowIndex &&
+                    state.cursorCol === colIndex
+                        ? ' is-selected negative-text'
+                        : '');
                 button.textContent = value;
-                button.addEventListener('pointerdown', function(evt){
+                button.addEventListener('pointerdown', function (evt) {
                     evt.preventDefault();
                     nameEditor.select(rowIndex, colIndex);
                     renderHud();
@@ -1016,109 +1075,123 @@ GF.Game = (function(){
         });
     }
 
-    function setText(element, text){
-        if(!element){
+    function setText(element, text) {
+        if (!element) {
             return;
         }
 
-        element.textContent = typeof text === 'undefined' || text === null ? '' : String(text);
+        element.textContent =
+            typeof text === 'undefined' || text === null ? '' : String(text);
     }
 
-    function setLines(element, lines){
+    function setLines(element, lines) {
         var key;
 
-        if(!element){
+        if (!element) {
             return;
         }
 
-        key = lines.filter(function(line){
-            return line;
-        }).join('\n');
+        key = lines
+            .filter(function (line) {
+                return line;
+            })
+            .join('\n');
 
-        if(element.dataset.linesKey === key){
+        if (element.dataset.linesKey === key) {
             return;
         }
 
         element.dataset.linesKey = key;
         element.innerHTML = '';
-        key.split('\n').filter(function(line){
-            return line;
-        }).forEach(function(line){
-            var lineElement = document.createElement('div');
+        key.split('\n')
+            .filter(function (line) {
+                return line;
+            })
+            .forEach(function (line) {
+                var lineElement = document.createElement('div');
 
-            lineElement.textContent = line;
-            element.appendChild(lineElement);
-        });
+                lineElement.textContent = line;
+                element.appendChild(lineElement);
+            });
     }
 
-    function getLobbySection(element){
-        if(!element){
+    function getLobbySection(element) {
+        if (!element) {
             return null;
         }
 
-        if(element.closest){
+        if (element.closest) {
             return element.closest('.lobby-section');
         }
 
         return element.parentNode;
     }
 
-    function showElement(element, visible){
-        if(element){
+    function showElement(element, visible) {
+        if (element) {
             element.hidden = !visible;
         }
     }
 
-    function isTouchInterface(){
-        if(window.location.search.indexOf('touch=1') >= 0){
+    function isTouchInterface() {
+        if (window.location.search.indexOf('touch=1') >= 0) {
             return true;
         }
 
-        return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        return (
+            window.matchMedia && window.matchMedia('(pointer: coarse)').matches
+        );
     }
 
-    function shouldUseCamera(){
-        if(!camera || roundState === 'waiting'){
+    function shouldUseCamera() {
+        if (!camera || roundState === 'waiting') {
             return false;
         }
 
-        if(window.location.search.indexOf('camera=1') >= 0){
+        if (window.location.search.indexOf('camera=1') >= 0) {
             return true;
         }
 
-        return window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        return (
+            window.matchMedia && window.matchMedia('(pointer: coarse)').matches
+        );
     }
 
-    function getCameraScale(){
+    function getCameraScale() {
         var queryScale = getQueryNumber('cameraScale');
 
-        if(queryScale){
+        if (queryScale) {
             return queryScale;
         }
 
-        if(window.location.search.indexOf('camera=1') >= 0){
+        if (window.location.search.indexOf('camera=1') >= 0) {
             return 1.85;
         }
 
-        if(window.matchMedia && window.matchMedia('(pointer: coarse)').matches){
+        if (
+            window.matchMedia &&
+            window.matchMedia('(pointer: coarse)').matches
+        ) {
             return 1.15;
         }
 
         return 1;
     }
 
-    function getQueryNumber(name){
-        var match = new RegExp('[?&]' + name + '=([^&]+)').exec(window.location.search);
+    function getQueryNumber(name) {
+        var match = new RegExp('[?&]' + name + '=([^&]+)').exec(
+            window.location.search
+        );
         var value = match ? parseFloat(decodeURIComponent(match[1])) : 0;
 
         return isNaN(value) ? 0 : value;
     }
 
-    function updateCamera(){
+    function updateCamera() {
         var visibleScreen;
         var player;
 
-        if(!camera){
+        if (!camera) {
             return;
         }
 
@@ -1132,7 +1205,7 @@ GF.Game = (function(){
         );
         camera.setScale(getCameraScale());
 
-        if(!shouldUseCamera()){
+        if (!shouldUseCamera()) {
             camera.reset();
             return;
         }
@@ -1141,12 +1214,18 @@ GF.Game = (function(){
         camera.follow(player);
     }
 
-    function getVisibleCanvasScreen(){
+    function getVisibleCanvasScreen() {
         var rect = canvas.getBoundingClientRect();
         var visibleLeft = Math.max(0, rect.left);
         var visibleTop = Math.max(0, rect.top);
-        var visibleRight = Math.min(window.innerWidth || rect.right, rect.right);
-        var visibleBottom = Math.min(window.innerHeight || rect.bottom, rect.bottom);
+        var visibleRight = Math.min(
+            window.innerWidth || rect.right,
+            rect.right
+        );
+        var visibleBottom = Math.min(
+            window.innerHeight || rect.bottom,
+            rect.bottom
+        );
         var scaleX = rect.width ? canvas.width / rect.width : 1;
         var scaleY = rect.height ? canvas.height / rect.height : 1;
 
@@ -1158,81 +1237,91 @@ GF.Game = (function(){
         };
     }
 
-    function shouldShowLobbyPrompt(){
-        return (!latestModel || latestModel.status !== 'abandoned') && !isLocalClientReady();
+    function shouldShowLobbyPrompt() {
+        return (
+            (!latestModel || latestModel.status !== 'abandoned') &&
+            !isLocalClientReady()
+        );
     }
 
-    function isLocalClientReady(){
+    function isLocalClientReady() {
         var client = getLocalClient();
 
         return localReadyRequested || !!(client && client.ready);
     }
 
-    function isLocalClientWaiting(){
+    function isLocalClientWaiting() {
         var client = getLocalClient();
 
-        return !!(client && !isLocalClientReady() && latestModel && latestModel.status !== 'abandoned');
+        return !!(
+            client &&
+            !isLocalClientReady() &&
+            latestModel &&
+            latestModel.status !== 'abandoned'
+        );
     }
 
-    function getLobbyPlayerLabel(){
+    function getLobbyPlayerLabel() {
         var client = getLocalClient();
         var playerIndex;
 
-        if(!latestModel || !client){
+        if (!latestModel || !client) {
             return '';
         }
 
-        playerIndex = (latestModel.clients || []).findIndex(function(item){
+        playerIndex = (latestModel.clients || []).findIndex(function (item) {
             return item.id === playerId;
         });
 
         return 'PLAYER ' + (playerIndex + 1) + ' - ' + getClientName(client);
     }
 
-    function getLocalClient(){
+    function getLocalClient() {
         var model = latestModel;
 
-        if(!model){
+        if (!model) {
             return null;
         }
 
-        return (model.clients || []).find(function(client){
-            return client.id === playerId;
-        }) || null;
+        return (
+            (model.clients || []).find(function (client) {
+                return client.id === playerId;
+            }) || null
+        );
     }
 
-    function getGameLabel(){
-        if(!latestModel || !latestModel.gameId){
+    function getGameLabel() {
+        if (!latestModel || !latestModel.gameId) {
             return '';
         }
 
         return 'GAME ' + latestModel.gameId;
     }
 
-    function getClientName(client){
-        return client.name || ('PLAYER ' + ((client.slot || 0) + 1));
+    function getClientName(client) {
+        return client.name || 'PLAYER ' + ((client.slot || 0) + 1);
     }
 
-    function getStoredPlayerName(){
+    function getStoredPlayerName() {
         try {
             return window.localStorage.getItem(playerNameStorageKey) || '';
-        } catch(error){
+        } catch (error) {
             return '';
         }
     }
 
-    function storePlayerName(name){
-        if(!name){
+    function storePlayerName(name) {
+        if (!name) {
             return;
         }
 
         try {
             window.localStorage.setItem(playerNameStorageKey, name);
-        } catch(error){}
+        } catch (error) {}
     }
 
-    function submitNameChange(name){
-        if(!socket){
+    function submitNameChange(name) {
+        if (!socket) {
             return;
         }
 
@@ -1241,119 +1330,135 @@ GF.Game = (function(){
         });
     }
 
-    function syncNameEditor(){
+    function syncNameEditor() {
         var client;
 
-        if(!nameEditor || nameEditor.isActive()){
+        if (!nameEditor || nameEditor.isActive()) {
             return;
         }
 
         client = getLocalClient();
 
-        if(client){
+        if (client) {
             storePlayerName(getClientName(client));
             nameEditor.setName(getClientName(client));
         }
     }
 
-    function closeNameEditor(){
-        if(nameEditor && nameEditor.isActive()){
+    function closeNameEditor() {
+        if (nameEditor && nameEditor.isActive()) {
             nameEditor.close();
         }
     }
 
-    function getLobbySlots(){
+    function getLobbySlots() {
         var slots = [];
         var model = latestModel || {};
         var clients = model.clients || [];
         var playerLimit = model.playerLimit || Math.max(2, clients.length);
         var i;
 
-        for(i = 0; i < playerLimit; i++){
+        for (i = 0; i < playerLimit; i++) {
             slots.push(clients[i] || null);
         }
 
         return slots;
     }
 
-    function renderLobbySlots(){
+    function renderLobbySlots() {
         var slots = getLobbySlots();
         var key;
 
-        if(!lobbySlotsElement){
+        if (!lobbySlotsElement) {
             return;
         }
 
-        key = slots.map(function(client, index){
-            return getLobbySlotLabel(client, index) + ':' + !!(client && client.ready);
-        }).join('\n');
+        key = slots
+            .map(function (client, index) {
+                return (
+                    getLobbySlotLabel(client, index) +
+                    ':' +
+                    !!(client && client.ready)
+                );
+            })
+            .join('\n');
 
-        if(lobbySlotsElement.dataset.linesKey === key){
+        if (lobbySlotsElement.dataset.linesKey === key) {
             return;
         }
 
         lobbySlotsElement.dataset.linesKey = key;
         lobbySlotsElement.innerHTML = '';
-        slots.forEach(function(client, index){
+        slots.forEach(function (client, index) {
             var slotElement = document.createElement('div');
 
-            slotElement.className = 'lobby-slot' + (client && client.ready ? ' negative-text' : '');
+            slotElement.className =
+                'lobby-slot' + (client && client.ready ? ' negative-text' : '');
             slotElement.textContent = getLobbySlotLabel(client, index);
             lobbySlotsElement.appendChild(slotElement);
         });
     }
 
-    function getLobbySlotLabel(client, index){
+    function getLobbySlotLabel(client, index) {
         var opponentMessage;
 
-        if(!client){
+        if (!client) {
             opponentMessage = getOpponentSlotMessage();
 
-            if(opponentMessage){
+            if (opponentMessage) {
                 return 'PLAYER ' + (index + 1) + ' : ' + opponentMessage;
             }
 
             return 'PLAYER ' + (index + 1) + ' : WAITING';
         }
 
-        return 'PLAYER ' + (index + 1) + ' - ' + getClientName(client) + ' : ' + (client.ready ? 'READY' : 'WAITING');
+        return (
+            'PLAYER ' +
+            (index + 1) +
+            ' - ' +
+            getClientName(client) +
+            ' : ' +
+            (client.ready ? 'READY' : 'WAITING')
+        );
     }
 
-    function getOpponentSlotMessage(){
+    function getOpponentSlotMessage() {
         var message = getLobbyMessage();
 
         return isOpponentSlotMessage(message) ? message : '';
     }
 
-    function isOpponentSlotMessage(message){
-        return message === 'LOOKING FOR CHALLENGER' || message === 'OPPONENT LEFT';
+    function isOpponentSlotMessage(message) {
+        return (
+            message === 'LOOKING FOR CHALLENGER' || message === 'OPPONENT LEFT'
+        );
     }
 
-    function getLobbyMessage(){
-        if(latestModel && latestModel.message){
+    function getLobbyMessage() {
+        if (latestModel && latestModel.message) {
             return latestModel.message;
         }
 
         return '';
     }
 
-    function enterLobbyState(){
-        if(ritualTimer){
+    function enterLobbyState() {
+        if (ritualTimer) {
             clearTimeout(ritualTimer);
             ritualTimer = null;
         }
 
-        if(hitTimer){
+        if (hitTimer) {
             clearTimeout(hitTimer);
             hitTimer = null;
         }
 
-        if(resetTimer){
+        if (resetTimer) {
             clearTimeout(resetTimer);
             resetTimer = null;
         }
 
-        if(abandonedRequeueTimer){
+        if (abandonedRequeueTimer) {
             clearTimeout(abandonedRequeueTimer);
             abandonedRequeueTimer = null;
         }
@@ -1370,21 +1475,21 @@ GF.Game = (function(){
         syncNameEditor();
     }
 
-    function syncPlayers(model){
+    function syncPlayers(model) {
         var previousModel = latestModel;
 
         latestModel = model;
         syncLocalReadyRequest();
         syncStoredPlayerName();
 
-        if(model.status === 'abandoned'){
+        if (model.status === 'abandoned') {
             enterLobbyState();
             scheduleAbandonedRequeue();
         } else {
             clearAbandonedRequeue();
         }
 
-        if(didAnyClientBecomeReady(previousModel, model)){
+        if (didAnyClientBecomeReady(previousModel, model)) {
             playReadySound();
         }
 
@@ -1394,7 +1499,7 @@ GF.Game = (function(){
         });
         syncNameEditor();
 
-        if(roundState === 'waiting' && isReadyToStart(model)){
+        if (roundState === 'waiting' && isReadyToStart(model)) {
             startRoundRitual({ resetScores: true });
             return;
         }
@@ -1402,19 +1507,19 @@ GF.Game = (function(){
         renderHud();
     }
 
-    function scheduleAbandonedRequeue(){
-        if(abandonedRequeueTimer || !socket){
+    function scheduleAbandonedRequeue() {
+        if (abandonedRequeueTimer || !socket) {
             return;
         }
 
-        abandonedRequeueTimer = setTimeout(function(){
+        abandonedRequeueTimer = setTimeout(function () {
             abandonedRequeueTimer = null;
             socket.emit('requeue');
         }, GF.Config.round.abandonedRequeueDelay);
     }
 
-    function clearAbandonedRequeue(){
-        if(!abandonedRequeueTimer){
+    function clearAbandonedRequeue() {
+        if (!abandonedRequeueTimer) {
             return;
         }
 
@@ -1422,53 +1527,61 @@ GF.Game = (function(){
         abandonedRequeueTimer = null;
     }
 
-    function syncStoredPlayerName(){
+    function syncStoredPlayerName() {
         var client = getLocalClient();
 
-        if(client){
+        if (client) {
             storePlayerName(getClientName(client));
         }
     }
 
-    function syncLocalReadyRequest(){
+    function syncLocalReadyRequest() {
         var client = getLocalClient();
 
-        if(client && !client.ready){
+        if (client && !client.ready) {
             localReadyRequested = false;
         }
     }
 
-    function getCurrentPlayerSlots(){
-        return roundState === 'waiting' ? GF.Config.player.lobbySlots : GF.Config.player.slots;
+    function getCurrentPlayerSlots() {
+        return roundState === 'waiting'
+            ? GF.Config.player.lobbySlots
+            : GF.Config.player.slots;
     }
 
-    function didAnyClientBecomeReady(previousModel, model){
+    function didAnyClientBecomeReady(previousModel, model) {
         var previousReady = {};
 
-        if(!previousModel || !model){
+        if (!previousModel || !model) {
             return false;
         }
 
-        (previousModel.clients || []).forEach(function(client){
+        (previousModel.clients || []).forEach(function (client) {
             previousReady[client.id] = client.ready;
         });
 
-        return (model.clients || []).some(function(client){
+        return (model.clients || []).some(function (client) {
             return client.ready && !previousReady[client.id];
         });
     }
 
-    function isReadyToStart(model){
-        return model.clients.length >= 2 && model.clients.every(function(client){
-            return client.ready;
-        });
+    function isReadyToStart(model) {
+        return (
+            model.clients.length >= 2 &&
+            model.clients.every(function (client) {
+                return client.ready;
+            })
+        );
     }
 
-    function startRoundRitual(options){
+    function startRoundRitual(options) {
         options = options || {};
-        var getReadyDelay = Math.max(GF.Config.round.getReadyDelay, GF.Config.round.introWalkDelay);
+        var getReadyDelay = Math.max(
+            GF.Config.round.getReadyDelay,
+            GF.Config.round.introWalkDelay
+        );
 
-        if(options.resetScores){
+        if (options.resetScores) {
             scores = [0, 0];
             roundEndsAt = null;
         }
@@ -1483,12 +1596,12 @@ GF.Game = (function(){
         setRoundMessage('GET READY');
         renderHud();
 
-        if(ritualTimer){
+        if (ritualTimer) {
             clearTimeout(ritualTimer);
         }
 
-        ritualTimer = setTimeout(function(){
-            if(hasMatchTimeExpired()){
+        ritualTimer = setTimeout(function () {
+            if (hasMatchTimeExpired()) {
                 ritualTimer = null;
                 endGame();
                 return;
@@ -1497,16 +1610,17 @@ GF.Game = (function(){
             completeRoundIntro();
             setRoundMessage('DRAW!');
 
-            ritualTimer = setTimeout(function(){
+            ritualTimer = setTimeout(function () {
                 ritualTimer = null;
-                if(hasMatchTimeExpired()){
+                if (hasMatchTimeExpired()) {
                     endGame();
                     return;
                 }
 
                 setRoundMessage('');
-                if(!roundEndsAt){
-                    roundEndsAt = new Date().getTime() + (GF.Config.game.seconds * 1000);
+                if (!roundEndsAt) {
+                    roundEndsAt =
+                        new Date().getTime() + GF.Config.game.seconds * 1000;
                     scheduleMatchEnd();
                 }
                 resetAmmo();
@@ -1516,39 +1630,42 @@ GF.Game = (function(){
         }, getReadyDelay);
     }
 
-    function hasMatchTimeExpired(){
+    function hasMatchTimeExpired() {
         return !!(roundEndsAt && new Date().getTime() >= roundEndsAt);
     }
 
-    function scheduleMatchEnd(){
+    function scheduleMatchEnd() {
         var delay;
 
-        if(matchEndTimer){
+        if (matchEndTimer) {
             clearTimeout(matchEndTimer);
             matchEndTimer = null;
         }
 
-        if(!roundEndsAt){
+        if (!roundEndsAt) {
             return;
         }
 
         delay = Math.max(0, roundEndsAt - new Date().getTime());
-        matchEndTimer = setTimeout(function(){
+        matchEndTimer = setTimeout(function () {
             matchEndTimer = null;
             endGame();
         }, delay);
     }
 
-    function startRoundIntro(){
+    function startRoundIntro() {
         var startedAt = new Date().getTime();
         var duration = GF.Config.round.introWalkDelay;
         var targets = [];
 
         players.clearKeys();
 
-        Object.keys(players.all).forEach(function(id){
+        Object.keys(players.all).forEach(function (id) {
             var player = players.all[id];
-            var slot = GF.Config.player.slots[player.slot % GF.Config.player.slots.length];
+            var slot =
+                GF.Config.player.slots[
+                    player.slot % GF.Config.player.slots.length
+                ];
             var bounds;
 
             player.resetTo(slot);
@@ -1573,12 +1690,12 @@ GF.Game = (function(){
         updateRoundIntro();
     }
 
-    function updateRoundIntro(){
+    function updateRoundIntro() {
         var elapsed;
         var progress;
         var eased;
 
-        if(!roundIntro){
+        if (!roundIntro) {
             return;
         }
 
@@ -1586,27 +1703,29 @@ GF.Game = (function(){
         progress = Math.min(1, Math.max(0, elapsed / roundIntro.duration));
         eased = 1 - Math.pow(1 - progress, 3);
 
-        roundIntro.targets.forEach(function(target){
+        roundIntro.targets.forEach(function (target) {
             var player = target.player;
 
-            player.x = target.fromX + ((target.toX - target.fromX) * eased);
-            player.y = target.fromY + ((target.toY - target.fromY) * eased);
-            player.frame = player.animationFrames[
-                Math.floor(elapsed / (player.animationFrameTime * 1000)) % player.animationFrames.length
-            ];
+            player.x = target.fromX + (target.toX - target.fromX) * eased;
+            player.y = target.fromY + (target.toY - target.fromY) * eased;
+            player.frame =
+                player.animationFrames[
+                    Math.floor(elapsed / (player.animationFrameTime * 1000)) %
+                        player.animationFrames.length
+                ];
         });
 
-        if(progress >= 1){
+        if (progress >= 1) {
             completeRoundIntro();
         }
     }
 
-    function completeRoundIntro(){
-        if(!roundIntro){
+    function completeRoundIntro() {
+        if (!roundIntro) {
             return;
         }
 
-        roundIntro.targets.forEach(function(target){
+        roundIntro.targets.forEach(function (target) {
             target.player.x = target.toX;
             target.player.y = target.toY;
             target.player.frame = target.idleFrame;
@@ -1615,15 +1734,24 @@ GF.Game = (function(){
         roundIntro = null;
     }
 
-    function handleKeyEvent(keyEvent){
+    function handleKeyEvent(keyEvent) {
         var player;
 
-        if(roundState === 'waiting' && keyEvent.player === playerId && keyEvent.key === 'e' && !isLocalClientWaiting()){
+        if (
+            roundState === 'waiting' &&
+            keyEvent.player === playerId &&
+            keyEvent.key === 'e' &&
+            !isLocalClientWaiting()
+        ) {
             return false;
         }
 
-        if(roundState === 'waiting' && nameEditor && keyEvent.player === playerId){
-            if(nameEditor.handleKeyEvent(keyEvent) === false){
+        if (
+            roundState === 'waiting' &&
+            nameEditor &&
+            keyEvent.player === playerId
+        ) {
+            if (nameEditor.handleKeyEvent(keyEvent) === false) {
                 renderHud();
                 return false;
             }
@@ -1631,32 +1759,37 @@ GF.Game = (function(){
 
         player = players.all[keyEvent.player];
 
-        if(!player){
+        if (!player) {
             return;
         }
 
-        if(roundState === 'ritual' || roundState === 'roundOver' || roundState === 'hitPause' || roundState === 'gameOver'){
-            if(keyEvent.action === 'up'){
+        if (
+            roundState === 'ritual' ||
+            roundState === 'roundOver' ||
+            roundState === 'hitPause' ||
+            roundState === 'gameOver'
+        ) {
+            if (keyEvent.action === 'up') {
                 player.respondToKeyEvent(keyEvent);
             }
             return;
         }
 
-        if(keyEvent.key === ' ' && keyEvent.action === 'down'){
+        if (keyEvent.key === ' ' && keyEvent.action === 'down') {
             var bullet;
 
-            if(roundState === 'playing' && ammo[player.playerId] > 0){
+            if (roundState === 'playing' && ammo[player.playerId] > 0) {
                 bullet = bullets.fire(player, keyEvent.shot);
-            }else if(roundState === 'playing'){
+            } else if (roundState === 'playing') {
                 playEmptyGunSound();
             }
 
-            if(bullet){
+            if (bullet) {
                 ammo[player.playerId]--;
                 reloadIfBothPlayersAreOutOfAmmo();
                 playGunSound();
 
-                if(!keyEvent.shot){
+                if (!keyEvent.shot) {
                     keyEvent.shot = bullet.toSnapshot();
                 }
 
@@ -1668,32 +1801,34 @@ GF.Game = (function(){
         player.respondToKeyEvent(keyEvent);
     }
 
-    function reloadIfBothPlayersAreOutOfAmmo(){
+    function reloadIfBothPlayersAreOutOfAmmo() {
         var clients;
 
-        if(roundState !== 'playing' || !latestModel){
+        if (roundState !== 'playing' || !latestModel) {
             return;
         }
 
         clients = latestModel.clients || [];
 
-        if(clients.length < 2){
+        if (clients.length < 2) {
             return;
         }
 
-        if(clients.every(function(client){
-            return (ammo[client.id] || 0) <= 0;
-        })){
+        if (
+            clients.every(function (client) {
+                return (ammo[client.id] || 0) <= 0;
+            })
+        ) {
             resetAmmo();
         }
     }
 
-    function checkForHits(){
+    function checkForHits() {
         var hit;
         var obstacleHit;
 
-        if(roundState !== 'playing'){
-            if(roundState === 'hitPause' && hasMatchTimeExpired()){
+        if (roundState !== 'playing') {
+            if (roundState === 'hitPause' && hasMatchTimeExpired()) {
                 endGame();
             }
             return;
@@ -1701,7 +1836,7 @@ GF.Game = (function(){
 
         obstacleHit = findBulletObstacleHit();
 
-        if(obstacleHit){
+        if (obstacleHit) {
             obstacleHit.bullet.deleteMe = true;
             handleObstacleHit(obstacleHit);
             return;
@@ -1709,36 +1844,36 @@ GF.Game = (function(){
 
         hit = GF.Collision.findBulletHit(bullets.all(), players.all);
 
-        if(hit){
+        if (hit) {
             hit.bullet.deleteMe = true;
             handlePlayerHit(hit);
         }
 
-        if(hasMatchTimeExpired()){
+        if (hasMatchTimeExpired()) {
             endGame();
         }
     }
 
-    function findBulletObstacleHit(){
+    function findBulletObstacleHit() {
         var hit = null;
         var bodies = getDamageableObstacleBodies(getCurrentScenario());
 
-        Object.keys(bullets.all()).forEach(function(bulletId){
+        Object.keys(bullets.all()).forEach(function (bulletId) {
             var bullet = bullets.all()[bulletId];
             var bulletBox;
 
-            if(hit || !bullet || bullet.deleteMe){
+            if (hit || !bullet || bullet.deleteMe) {
                 return;
             }
 
             bulletBox = bullet.getHitBox();
 
-            bodies.forEach(function(body){
-                if(hit){
+            bodies.forEach(function (body) {
+                if (hit) {
                     return;
                 }
 
-                if(bulletBoxOverlapsBody(bulletBox, body)){
+                if (bulletBoxOverlapsBody(bulletBox, body)) {
                     hit = {
                         bullet: bullet,
                         obstacleId: body.id
@@ -1750,23 +1885,23 @@ GF.Game = (function(){
         return hit;
     }
 
-    function getDamageableObstacleBodies(scenario){
+    function getDamageableObstacleBodies(scenario) {
         var bodies = [];
 
-        if(!scenario){
+        if (!scenario) {
             return bodies;
         }
 
-        (scenario.cacti || []).forEach(function(cactus, index){
+        (scenario.cacti || []).forEach(function (cactus, index) {
             var body = getCactusBody(cactus, index);
 
-            if(body){
+            if (body) {
                 bodies.push(body);
             }
         });
 
-        if(scenario.wagon){
-            getWagonObstacleCircles(scenario.wagon).forEach(function(circle){
+        if (scenario.wagon) {
+            getWagonObstacleCircles(scenario.wagon).forEach(function (circle) {
                 bodies.push(circle);
             });
         }
@@ -1774,25 +1909,25 @@ GF.Game = (function(){
         return bodies;
     }
 
-    function bulletBoxOverlapsBody(box, body){
-        if(body.type === 'rect'){
+    function bulletBoxOverlapsBody(box, body) {
+        if (body.type === 'rect') {
             return GF.Collision.boxesOverlap(box, body);
         }
 
         return boxOverlapsCircle(box, body);
     }
 
-    function boxOverlapsCircle(box, circle){
+    function boxOverlapsCircle(box, circle) {
         var closestX = Math.max(box.x, Math.min(circle.x, box.x + box.width));
         var closestY = Math.max(box.y, Math.min(circle.y, box.y + box.height));
         var dx = circle.x - closestX;
         var dy = circle.y - closestY;
 
-        return (dx * dx) + (dy * dy) < circle.radius * circle.radius;
+        return dx * dx + dy * dy < circle.radius * circle.radius;
     }
 
-    function handleObstacleHit(hit){
-        if(hit.bullet.ownerId !== playerId){
+    function handleObstacleHit(hit) {
+        if (hit.bullet.ownerId !== playerId) {
             return;
         }
 
@@ -1808,8 +1943,8 @@ GF.Game = (function(){
         });
     }
 
-    function applyObstacleDamage(data){
-        if(latestModel && data.roundNumber !== latestModel.roundNumber){
+    function applyObstacleDamage(data) {
+        if (latestModel && data.roundNumber !== latestModel.roundNumber) {
             return;
         }
 
@@ -1818,7 +1953,7 @@ GF.Game = (function(){
         bullets.remove(data.ownerId);
     }
 
-    function handlePlayerHit(hit){
+    function handlePlayerHit(hit) {
         var winnerSlot = getPlayerSlot(hit.winnerId);
         var target = players.all[hit.targetId];
 
@@ -1829,11 +1964,11 @@ GF.Game = (function(){
         };
         playPainSound();
 
-        if(target){
+        if (target) {
             target.playDeathAnimation();
         }
 
-        if(winnerSlot >= 0 && winnerSlot < scores.length){
+        if (winnerSlot >= 0 && winnerSlot < scores.length) {
             scores[winnerSlot]++;
         }
 
@@ -1843,24 +1978,24 @@ GF.Game = (function(){
         players.clearKeys();
         bullets.clear();
 
-        if(hitTimer){
+        if (hitTimer) {
             clearTimeout(hitTimer);
         }
 
         hitTimer = setTimeout(resetAfterHit, GF.Config.round.resetDelay);
     }
 
-    function resetAfterHit(){
+    function resetAfterHit() {
         hitMessage = null;
         hitTimer = null;
         clearPlayerDeathAnimations();
 
-        if(hasMatchTimeExpired()){
+        if (hasMatchTimeExpired()) {
             endGame();
             return;
         }
 
-        if(advanceRoundAfterHit){
+        if (advanceRoundAfterHit) {
             socket.emit('advanceRound');
             advanceRoundAfterHit = false;
         }
@@ -1870,13 +2005,13 @@ GF.Game = (function(){
         startRoundRitual({ resetScores: false });
     }
 
-    function clearPlayerDeathAnimations(){
-        Object.keys(players.all).forEach(function(id){
+    function clearPlayerDeathAnimations() {
+        Object.keys(players.all).forEach(function (id) {
             players.all[id].clearDeathAnimation();
         });
     }
 
-    function endRound(winnerId){
+    function endRound(winnerId) {
         var winnerSlot = getPlayerSlot(winnerId);
 
         roundState = 'roundOver';
@@ -1885,7 +2020,7 @@ GF.Game = (function(){
         hitMessage = null;
         advanceRoundAfterHit = false;
 
-        if(winnerSlot >= 0 && winnerSlot < scores.length){
+        if (winnerSlot >= 0 && winnerSlot < scores.length) {
             scores[winnerSlot]++;
             setRoundMessage('PLAYER ' + players.label(winnerId) + ' WINS');
         } else {
@@ -1896,23 +2031,23 @@ GF.Game = (function(){
         players.clearKeys();
         bullets.clear();
 
-        if(resetTimer){
+        if (resetTimer) {
             clearTimeout(resetTimer);
         }
 
-        if(matchEndTimer){
+        if (matchEndTimer) {
             clearTimeout(matchEndTimer);
             matchEndTimer = null;
         }
 
-        if(ritualTimer){
+        if (ritualTimer) {
             clearTimeout(ritualTimer);
             ritualTimer = null;
         }
 
         roundIntro = null;
 
-        if(hitTimer){
+        if (hitTimer) {
             clearTimeout(hitTimer);
             hitTimer = null;
         }
@@ -1920,7 +2055,7 @@ GF.Game = (function(){
         resetTimer = setTimeout(resetRound, GF.Config.round.resetDelay);
     }
 
-    function endGame(){
+    function endGame() {
         roundState = 'gameOver';
         closeNameEditor();
         recordGameResult();
@@ -1933,59 +2068,76 @@ GF.Game = (function(){
         players.clearKeys();
         bullets.clear();
 
-        if(resetTimer){
+        if (resetTimer) {
             clearTimeout(resetTimer);
         }
 
-        if(matchEndTimer){
+        if (matchEndTimer) {
             clearTimeout(matchEndTimer);
             matchEndTimer = null;
         }
 
-        if(ritualTimer){
+        if (ritualTimer) {
             clearTimeout(ritualTimer);
             ritualTimer = null;
         }
 
         roundIntro = null;
 
-        if(hitTimer){
+        if (hitTimer) {
             clearTimeout(hitTimer);
             hitTimer = null;
         }
 
-        resetTimer = setTimeout(resetToStartScreen, GF.Config.round.gameOverDelay);
+        resetTimer = setTimeout(
+            resetToStartScreen,
+            GF.Config.round.gameOverDelay
+        );
     }
 
-    function getGameOverMessage(){
+    function getGameOverMessage() {
         var winnerSlot;
         var winnerClient;
         var scoreLabel = getFinalScoreLabel();
 
-        if((scores[0] || 0) === (scores[1] || 0)){
+        if ((scores[0] || 0) === (scores[1] || 0)) {
             return 'TIE ' + scoreLabel;
         }
 
         winnerSlot = (scores[0] || 0) > (scores[1] || 0) ? 0 : 1;
-        winnerClient = latestModel && latestModel.clients && latestModel.clients[winnerSlot];
+        winnerClient =
+            latestModel &&
+            latestModel.clients &&
+            latestModel.clients[winnerSlot];
 
-        return (winnerClient ? getClientName(winnerClient) : 'PLAYER ' + (winnerSlot + 1)) + ' WINS ' + scoreLabel;
+        return (
+            (winnerClient
+                ? getClientName(winnerClient)
+                : 'PLAYER ' + (winnerSlot + 1)) +
+            ' WINS ' +
+            scoreLabel
+        );
     }
 
-    function getFinalScoreLabel(){
+    function getFinalScoreLabel() {
         return (scores[0] || 0) + '-' + (scores[1] || 0);
     }
 
-    function recordGameResult(){
+    function recordGameResult() {
         var resultId;
 
-        if(!socket || !latestModel || !latestModel.gameId || !latestModel.clients){
+        if (
+            !socket ||
+            !latestModel ||
+            !latestModel.gameId ||
+            !latestModel.clients
+        ) {
             return;
         }
 
         resultId = latestModel.gameId + ':' + latestModel.roundNumber;
 
-        if(lastRecordedResultId === resultId){
+        if (lastRecordedResultId === resultId) {
             return;
         }
 
@@ -1994,7 +2146,7 @@ GF.Game = (function(){
             resultId: resultId,
             gameId: latestModel.gameId,
             roundNumber: latestModel.roundNumber,
-            clients: latestModel.clients.map(function(client){
+            clients: latestModel.clients.map(function (client) {
                 return {
                     name: getClientName(client),
                     slot: client.slot
@@ -2004,11 +2156,13 @@ GF.Game = (function(){
         });
     }
 
-    function resetRound(){
+    function resetRound() {
         var readyToStart = latestModel && isReadyToStart(latestModel);
 
         players.resetAll({
-            slots: readyToStart ? GF.Config.player.slots : GF.Config.player.lobbySlots
+            slots: readyToStart
+                ? GF.Config.player.slots
+                : GF.Config.player.lobbySlots
         });
         bullets.reset();
         setRoundMessage('');
@@ -2018,12 +2172,12 @@ GF.Game = (function(){
         obstacleDamage = {};
         resetTimer = null;
 
-        if(matchEndTimer){
+        if (matchEndTimer) {
             clearTimeout(matchEndTimer);
             matchEndTimer = null;
         }
 
-        if(readyToStart){
+        if (readyToStart) {
             startRoundRitual({ resetScores: false });
             return;
         }
@@ -2033,7 +2187,7 @@ GF.Game = (function(){
         renderHud();
     }
 
-    function resetToStartScreen(){
+    function resetToStartScreen() {
         players.resetAll({
             slots: GF.Config.player.lobbySlots
         });
@@ -2045,7 +2199,7 @@ GF.Game = (function(){
         advanceRoundAfterHit = false;
         obstacleDamage = {};
         resetTimer = null;
-        if(matchEndTimer){
+        if (matchEndTimer) {
             clearTimeout(matchEndTimer);
             matchEndTimer = null;
         }
@@ -2055,7 +2209,7 @@ GF.Game = (function(){
         socket.emit('resetReady');
     }
 
-    function animate(){
+    function animate() {
         updateBulletCollisionEnvironment();
         updateMovementObstacleEnvironment();
         scene.moveAll();
@@ -2066,28 +2220,32 @@ GF.Game = (function(){
 
         context.clearRect(0, 0, canvas.width, canvas.height);
         context.save();
-        if(shouldUseCamera()){
+        if (shouldUseCamera()) {
             camera.apply(context);
         }
-            if(roundState !== 'waiting'){
-                drawScenario();
-            }
-            scene.drawAll(context);
-            drawCollisionBodies();
+        if (roundState !== 'waiting') {
+            drawScenario();
+        }
+        scene.drawAll(context);
+        drawCollisionBodies();
         context.restore();
         renderHud();
         updateTouchControls();
 
-        setTimeout(function(){
+        setTimeout(function () {
             requestAnimFrame(animate);
         }, 0);
     }
 
-    function syncLocalPlayerPosition(){
+    function syncLocalPlayerPosition() {
         var now = new Date().getTime();
         var player = players.all[playerId];
 
-        if(roundState !== 'playing' || !player || now - lastPositionSyncAt < 80){
+        if (
+            roundState !== 'playing' ||
+            !player ||
+            now - lastPositionSyncAt < 80
+        ) {
             return;
         }
 
@@ -2101,16 +2259,16 @@ GF.Game = (function(){
         });
     }
 
-    function applyRemotePlayerPosition(data){
+    function applyRemotePlayerPosition(data) {
         var player;
 
-        if(data.player === playerId || roundState !== 'playing'){
+        if (data.player === playerId || roundState !== 'playing') {
             return;
         }
 
         player = players.all[data.player];
 
-        if(!player){
+        if (!player) {
             return;
         }
 
@@ -2121,7 +2279,7 @@ GF.Game = (function(){
         player.facing = data.facing;
     }
 
-    function initTouchControls(){
+    function initTouchControls() {
         touchControls = new GF.TouchControls({
             input: inputController,
             getAimLevel: getLocalAimLevel
@@ -2129,18 +2287,18 @@ GF.Game = (function(){
         updateTouchControls();
     }
 
-    function getLocalAimLevel(){
+    function getLocalAimLevel() {
         var player = players.all[playerId];
 
-        if(player && typeof player.getAim === 'function'){
+        if (player && typeof player.getAim === 'function') {
             return player.getAim();
         }
 
         return GF.Config.player.defaultAim;
     }
 
-    function updateTouchControls(){
-        if(!touchControls){
+    function updateTouchControls() {
+        if (!touchControls) {
             return;
         }
 
@@ -2149,43 +2307,49 @@ GF.Game = (function(){
             waiting: roundState === 'waiting',
             playing: roundState === 'playing',
             editing: nameEditor && nameEditor.isActive(),
-            highScoresVisible: roundState === 'waiting' && shouldShowHighScoresScreen(),
+            highScoresVisible:
+                roundState === 'waiting' && shouldShowHighScoresScreen(),
             ready: isLocalClientReady(),
             aimLevel: getLocalAimLevel()
         });
     }
 
-    function shouldShowGameplayTouchControls(){
-        return roundState === 'ritual' ||
+    function shouldShowGameplayTouchControls() {
+        return (
+            roundState === 'ritual' ||
             roundState === 'playing' ||
             roundState === 'hitPause' ||
-            roundState === 'roundOver';
+            roundState === 'roundOver'
+        );
     }
 
-    function drawCollisionBodies(){
-        if(!GF.Config.debug.showCollisionBodies){
+    function drawCollisionBodies() {
+        if (!GF.Config.debug.showCollisionBodies) {
             return;
         }
 
         drawCollisionBodyShapes(GF.Obstacles.all(), 'rgba(255, 80, 80, 0.75)');
 
-        Object.keys(players.all).forEach(function(id){
-            drawCircles(players.all[id].getCollisionCircles(), 'rgba(80, 180, 255, 0.8)');
+        Object.keys(players.all).forEach(function (id) {
+            drawCircles(
+                players.all[id].getCollisionCircles(),
+                'rgba(80, 180, 255, 0.8)'
+            );
         });
     }
 
-    function drawCollisionBodyShapes(bodies, color){
+    function drawCollisionBodyShapes(bodies, color) {
         context.save();
         context.strokeStyle = color;
         context.lineWidth = 2;
 
-        bodies.forEach(function(body){
-            if(body.type === 'rect'){
+        bodies.forEach(function (body) {
+            if (body.type === 'rect') {
                 context.strokeRect(body.x, body.y, body.width, body.height);
                 return;
             }
 
-            if(body.type === 'polygon'){
+            if (body.type === 'polygon') {
                 drawPolygonPath(body.points);
                 return;
             }
@@ -2196,61 +2360,63 @@ GF.Game = (function(){
         context.restore();
     }
 
-    function drawCircles(circles, color){
+    function drawCircles(circles, color) {
         context.save();
         context.strokeStyle = color;
         context.lineWidth = 2;
 
-        circles.forEach(function(circle){
+        circles.forEach(function (circle) {
             drawCirclePath(circle);
         });
 
         context.restore();
     }
 
-    function drawCirclePath(circle){
+    function drawCirclePath(circle) {
         context.beginPath();
         context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
         context.stroke();
     }
 
-    function drawPolygonPath(points){
-        if(!points.length){
+    function drawPolygonPath(points) {
+        if (!points.length) {
             return;
         }
 
         context.beginPath();
         context.moveTo(points[0].x, points[0].y);
-        points.slice(1).forEach(function(point){
+        points.slice(1).forEach(function (point) {
             context.lineTo(point.x, point.y);
         });
         context.closePath();
         context.stroke();
     }
 
-    function setupSocket(callback){
+    function setupSocket(callback) {
         var storedPlayerName = getStoredPlayerName();
 
         socket = io({
-            auth: storedPlayerName ? {
-                name: storedPlayerName
-            } : {}
+            auth: storedPlayerName
+                ? {
+                      name: storedPlayerName
+                  }
+                : {}
         });
 
-        socket.on('highScores', function(nextHighScores){
+        socket.on('highScores', function (nextHighScores) {
             highScores = Array.isArray(nextHighScores) ? nextHighScores : [];
             renderHud();
         });
 
-        socket.on('joinedGame', function(data){
+        socket.on('joinedGame', function (data) {
             playerId = data.playerId;
             syncPlayers(data.model);
             callback();
         });
     }
 
-    function bindSocketEvents(){
-        socket.on('keyEvent', function(keyEvent){
+    function bindSocketEvents() {
+        socket.on('keyEvent', function (keyEvent) {
             handleKeyEvent(keyEvent);
         });
 
@@ -2260,20 +2426,25 @@ GF.Game = (function(){
         socket.on('modelUpdate', syncPlayers);
     }
 
-    function start(){
+    function start() {
         initCanvas();
         initGameState();
 
-        setupSocket(function(){
-            inputController = new GF.KeysModel(socket, playerId, handleKeyEvent, {
-                canReady: function(){
-                    return !nameEditor || !nameEditor.isActive();
-                },
-                onReady: function(){
-                    localReadyRequested = true;
-                    renderHud();
+        setupSocket(function () {
+            inputController = new GF.KeysModel(
+                socket,
+                playerId,
+                handleKeyEvent,
+                {
+                    canReady: function () {
+                        return !nameEditor || !nameEditor.isActive();
+                    },
+                    onReady: function () {
+                        localReadyRequested = true;
+                        renderHud();
+                    }
                 }
-            });
+            );
             initTouchControls();
             bindSocketEvents();
             animate();
@@ -2285,4 +2456,4 @@ GF.Game = (function(){
     return {
         start: start
     };
-}());
+})();

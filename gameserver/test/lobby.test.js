@@ -2,18 +2,18 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createLobby } from '../gameModules/lobby.js';
 
-function createTestLobby(){
+function createTestLobby() {
     let timestamp = 1000;
 
     return createLobby({
-        now: function(){
+        now: function () {
             timestamp++;
             return timestamp;
         }
     });
 }
 
-test('pairs the first two clients into the same game', function(){
+test('pairs the first two clients into the same game', function () {
     const lobby = createTestLobby();
     const first = lobby.join('socket-1', { name: 'red' });
     const second = lobby.join('socket-2', { name: 'blue' });
@@ -24,15 +24,21 @@ test('pairs the first two clients into the same game', function(){
     assert.equal(model.gameId, 'G0001');
     assert.equal(model.status, 'readying');
     assert.equal(model.playerLimit, 2);
-    assert.deepEqual(model.clients.map(function(client){
-        return client.name;
-    }), ['RED', 'BLUE']);
-    assert.deepEqual(model.clients.map(function(client){
-        return client.slot;
-    }), [0, 1]);
+    assert.deepEqual(
+        model.clients.map(function (client) {
+            return client.name;
+        }),
+        ['RED', 'BLUE']
+    );
+    assert.deepEqual(
+        model.clients.map(function (client) {
+            return client.slot;
+        }),
+        [0, 1]
+    );
 });
 
-test('puts a third client into a different waiting game', function(){
+test('puts a third client into a different waiting game', function () {
     const lobby = createTestLobby();
     const first = lobby.join('socket-1', { name: 'one' });
     const second = lobby.join('socket-2', { name: 'two' });
@@ -47,22 +53,23 @@ test('puts a third client into a different waiting game', function(){
     assert.equal(lobby.getModel(third.game).status, 'waiting');
 });
 
-test('reports lobby states and ready flags for each player slot', function(){
+test('reports lobby states and ready flags for each player slot', function () {
     const lobby = createTestLobby();
     const first = lobby.join('socket-1', { name: 'one' });
     let model = lobby.getModel(first.game);
 
     assert.equal(model.status, 'waiting');
     assert.equal(model.message, 'LOOKING FOR CHALLENGER');
-    assert.deepEqual(model.clients.map(function(client){
-        return {
-            name: client.name,
-            ready: client.ready,
-            slot: client.slot
-        };
-    }), [
-        { name: 'ONE', ready: false, slot: 0 }
-    ]);
+    assert.deepEqual(
+        model.clients.map(function (client) {
+            return {
+                name: client.name,
+                ready: client.ready,
+                slot: client.slot
+            };
+        }),
+        [{ name: 'ONE', ready: false, slot: 0 }]
+    );
 
     const second = lobby.join('socket-2', { name: 'two' });
     model = lobby.getModel(first.game);
@@ -70,32 +77,38 @@ test('reports lobby states and ready flags for each player slot', function(){
     assert.equal(second.game.id, first.game.id);
     assert.equal(model.status, 'readying');
     assert.equal(model.message, 'PRESS P TO PLAY');
-    assert.deepEqual(model.clients.map(function(client){
-        return {
-            name: client.name,
-            ready: client.ready,
-            slot: client.slot
-        };
-    }), [
-        { name: 'ONE', ready: false, slot: 0 },
-        { name: 'TWO', ready: false, slot: 1 }
-    ]);
+    assert.deepEqual(
+        model.clients.map(function (client) {
+            return {
+                name: client.name,
+                ready: client.ready,
+                slot: client.slot
+            };
+        }),
+        [
+            { name: 'ONE', ready: false, slot: 0 },
+            { name: 'TWO', ready: false, slot: 1 }
+        ]
+    );
 
     first.game.model.readyClient(first.client);
     model = lobby.getModel(first.game);
 
     assert.equal(model.status, 'readying');
     assert.equal(model.message, 'PRESS P TO PLAY');
-    assert.deepEqual(model.clients.map(function(client){
-        return {
-            name: client.name,
-            ready: client.ready,
-            slot: client.slot
-        };
-    }), [
-        { name: 'ONE', ready: true, slot: 0 },
-        { name: 'TWO', ready: false, slot: 1 }
-    ]);
+    assert.deepEqual(
+        model.clients.map(function (client) {
+            return {
+                name: client.name,
+                ready: client.ready,
+                slot: client.slot
+            };
+        }),
+        [
+            { name: 'ONE', ready: true, slot: 0 },
+            { name: 'TWO', ready: false, slot: 1 }
+        ]
+    );
 
     first.game.model.readyClient(second.client);
     lobby.markPlaying(first.game);
@@ -103,12 +116,15 @@ test('reports lobby states and ready flags for each player slot', function(){
 
     assert.equal(model.status, 'playing');
     assert.equal(model.message, '');
-    assert.deepEqual(model.clients.map(function(client){
-        return client.ready;
-    }), [true, true]);
+    assert.deepEqual(
+        model.clients.map(function (client) {
+            return client.ready;
+        }),
+        [true, true]
+    );
 });
 
-test('keeps game rooms and models isolated', function(){
+test('keeps game rooms and models isolated', function () {
     const lobby = createTestLobby();
     const firstA = lobby.join('a-1', { name: 'ace' });
     const secondA = lobby.join('a-2', { name: 'doc' });
@@ -128,15 +144,21 @@ test('keeps game rooms and models isolated', function(){
     assert.equal(lobby.getModel(firstB.game).status, 'readying');
     assert.equal(lobby.getModel(firstA.game).roundNumber, 2);
     assert.equal(lobby.getModel(firstB.game).roundNumber, 0);
-    assert.deepEqual(lobby.getModel(firstA.game).clients.map(function(client){
-        return client.name;
-    }), ['JET', 'DOC']);
-    assert.deepEqual(lobby.getModel(firstB.game).clients.map(function(client){
-        return client.name;
-    }), ['KID', 'REX']);
+    assert.deepEqual(
+        lobby.getModel(firstA.game).clients.map(function (client) {
+            return client.name;
+        }),
+        ['JET', 'DOC']
+    );
+    assert.deepEqual(
+        lobby.getModel(firstB.game).clients.map(function (client) {
+            return client.name;
+        }),
+        ['KID', 'REX']
+    );
 });
 
-test('disconnect before ready frees the waiting slot for another client', function(){
+test('disconnect before ready frees the waiting slot for another client', function () {
     const lobby = createTestLobby();
     const first = lobby.join('socket-1', { name: 'one' });
     const second = lobby.join('socket-2', { name: 'two' });
@@ -149,15 +171,21 @@ test('disconnect before ready frees the waiting slot for another client', functi
     assert.equal(lobby.getClientForSocket('socket-1'), null);
     assert.equal(replacement.game.id, second.game.id);
     assert.equal(model.status, 'readying');
-    assert.deepEqual(model.clients.map(function(client){
-        return client.name;
-    }), ['TWO', 'THREE']);
-    assert.deepEqual(model.clients.map(function(client){
-        return client.slot;
-    }), [0, 1]);
+    assert.deepEqual(
+        model.clients.map(function (client) {
+            return client.name;
+        }),
+        ['TWO', 'THREE']
+    );
+    assert.deepEqual(
+        model.clients.map(function (client) {
+            return client.slot;
+        }),
+        [0, 1]
+    );
 });
 
-test('disconnect during play abandons the game and avoids pairing new clients into it', function(){
+test('disconnect during play abandons the game and avoids pairing new clients into it', function () {
     const lobby = createTestLobby();
     const first = lobby.join('socket-1', { name: 'one' });
     const second = lobby.join('socket-2', { name: 'two' });
@@ -176,7 +204,7 @@ test('disconnect during play abandons the game and avoids pairing new clients in
     assert.equal(lobby.getModel(third.game).status, 'waiting');
 });
 
-test('requeue moves the remaining abandoned player into a fresh waiting game', function(){
+test('requeue moves the remaining abandoned player into a fresh waiting game', function () {
     const lobby = createTestLobby();
     const first = lobby.join('socket-1', { name: 'one' });
     const second = lobby.join('socket-2', { name: 'two' });
@@ -193,19 +221,20 @@ test('requeue moves the remaining abandoned player into a fresh waiting game', f
     assert.notEqual(requeued.game.id, second.game.id);
     assert.equal(requeuedModel.status, 'waiting');
     assert.equal(requeuedModel.message, 'LOOKING FOR CHALLENGER');
-    assert.deepEqual(requeuedModel.clients.map(function(client){
-        return {
-            name: client.name,
-            ready: client.ready,
-            slot: client.slot
-        };
-    }), [
-        { name: 'TWO', ready: false, slot: 0 }
-    ]);
+    assert.deepEqual(
+        requeuedModel.clients.map(function (client) {
+            return {
+                name: client.name,
+                ready: client.ready,
+                slot: client.slot
+            };
+        }),
+        [{ name: 'TWO', ready: false, slot: 0 }]
+    );
     assert.equal(lobby.getGame(second.game.id), null);
 });
 
-test('removes empty games', function(){
+test('removes empty games', function () {
     const lobby = createTestLobby();
     const first = lobby.join('socket-1', { name: 'one' });
     const second = lobby.join('socket-2', { name: 'two' });
@@ -224,12 +253,15 @@ test('removes empty games', function(){
     assert.equal(first.game.id, second.game.id);
 });
 
-test('sanitizes and deduplicates names inside a game', function(){
+test('sanitizes and deduplicates names inside a game', function () {
     const lobby = createTestLobby();
     const first = lobby.join('socket-1', { name: 'ace!' });
     lobby.join('socket-2', { name: 'ace' });
 
-    assert.deepEqual(lobby.getModel(first.game).clients.map(function(client){
-        return client.name;
-    }), ['ACE', 'ACE2']);
+    assert.deepEqual(
+        lobby.getModel(first.game).clients.map(function (client) {
+            return client.name;
+        }),
+        ['ACE', 'ACE2']
+    );
 });
