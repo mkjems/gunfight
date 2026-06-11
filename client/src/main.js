@@ -2,10 +2,6 @@ import requestAnimationFrameSource from '../js/requestAnimationFrame.js?raw';
 import ammoHudRendererSource from '../js/AmmoHudRenderer.js?raw';
 import installPromptSource from '../js/InstallPrompt.js?raw';
 import scenarioRendererSource from '../js/ScenarioRenderer.js?raw';
-import gameHudSource from '../js/GameHud.js?raw';
-import highScoresScreenSource from '../js/HighScoresScreen.js?raw';
-import lobbyScreenSource from '../js/LobbyScreen.js?raw';
-import nameEditorScreenSource from '../js/NameEditorScreen.js?raw';
 import soundEffectsSource from '../js/SoundEffects.js?raw';
 import scoreKeeperSource from '../js/ScoreKeeper.js?raw';
 import roundIntroSource from '../js/RoundIntro.js?raw';
@@ -64,7 +60,11 @@ import { ClientTouchState } from './modules/clientTouchState';
 import { ClientTouchControlsFlow } from './modules/clientTouchControlsFlow';
 import { ClientTimers } from './modules/clientTimers';
 import { CollisionDebugRenderer } from './modules/collisionDebugRenderer';
+import { GameHud } from './modules/gameHud';
 import { GameHudViewModel } from './modules/gameHudViewModel';
+import { HighScoresScreen } from './modules/highScoresScreen';
+import { LobbyScreen } from './modules/lobbyScreen';
+import { NameEditorScreen } from './modules/nameEditorScreen';
 import { PlayerPositionSync } from './modules/playerPositionSync';
 
 function loadScript(src) {
@@ -91,10 +91,6 @@ const scripts = [
     ['js/AmmoHudRenderer.js', ammoHudRendererSource],
     ['js/InstallPrompt.js', installPromptSource],
     ['js/ScenarioRenderer.js', scenarioRendererSource],
-    ['js/GameHud.js', gameHudSource],
-    ['js/HighScoresScreen.js', highScoresScreenSource],
-    ['js/LobbyScreen.js', lobbyScreenSource],
-    ['js/NameEditorScreen.js', nameEditorScreenSource],
     ['js/SoundEffects.js', soundEffectsSource],
     ['js/ScoreKeeper.js', scoreKeeperSource],
     ['js/RoundIntro.js', roundIntroSource],
@@ -158,7 +154,11 @@ globalThis.GF.ClientTouchState = ClientTouchState;
 globalThis.GF.ClientTouchControlsFlow = ClientTouchControlsFlow;
 globalThis.GF.ClientTimers = ClientTimers;
 globalThis.GF.CollisionDebugRenderer = CollisionDebugRenderer;
+globalThis.GF.GameHud = GameHud;
 globalThis.GF.GameHudViewModel = GameHudViewModel;
+globalThis.GF.HighScoresScreen = HighScoresScreen;
+globalThis.GF.LobbyScreen = LobbyScreen;
+globalThis.GF.NameEditorScreen = NameEditorScreen;
 globalThis.GF.PlayerPositionSync = PlayerPositionSync;
 (0, eval)('var GF = globalThis.GF;');
 
