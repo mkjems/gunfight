@@ -1,24 +1,28 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientRoundState() {
-    const context = {
-        GF: {}
-    };
+async function loadClientRoundState() {
     const source = readFileSync(
-        new URL('../../client/js/ClientRoundState.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientRoundState.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientRoundState;
+    return module.ClientRoundState;
 }
 
-test('tracks round clock and messages', function () {
-    const ClientRoundState = loadClientRoundState();
+test('tracks round clock and messages', async function () {
+    const ClientRoundState = await loadClientRoundState();
     let now = 1000;
     const state = new ClientRoundState({
         getTime() {
@@ -41,8 +45,8 @@ test('tracks round clock and messages', function () {
     assert.equal(state.getRoundMessage(), '');
 });
 
-test('tracks hit state and consumes advance-round requests', function () {
-    const ClientRoundState = loadClientRoundState();
+test('tracks hit state and consumes advance-round requests', async function () {
+    const ClientRoundState = await loadClientRoundState();
     const state = new ClientRoundState();
     const hitMessage = {
         targetId: 'player-2',
@@ -61,8 +65,8 @@ test('tracks hit state and consumes advance-round requests', function () {
     assert.equal(state.getHitMessage(), null);
 });
 
-test('resets obstacle damage only for full round resets', function () {
-    const ClientRoundState = loadClientRoundState();
+test('resets obstacle damage only for full round resets', async function () {
+    const ClientRoundState = await loadClientRoundState();
     const state = new ClientRoundState();
 
     state.damageObstacle('wagon');
@@ -83,8 +87,8 @@ test('resets obstacle damage only for full round resets', function () {
     assert.equal(state.getObstacleDamage('wagon'), 0);
 });
 
-test('records scenario start time', function () {
-    const ClientRoundState = loadClientRoundState();
+test('records scenario start time', async function () {
+    const ClientRoundState = await loadClientRoundState();
     const state = new ClientRoundState({
         getTime() {
             return 1234;

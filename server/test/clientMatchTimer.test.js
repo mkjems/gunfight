@@ -1,20 +1,24 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientMatchTimer() {
-    const context = {
-        GF: {}
-    };
+async function loadClientMatchTimer() {
     const source = readFileSync(
-        new URL('../../client/js/ClientMatchTimer.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientMatchTimer.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientMatchTimer;
+    return module.ClientMatchTimer;
 }
 
 function createOptions(roundEndsAt, nowValue) {
@@ -46,8 +50,8 @@ function createOptions(roundEndsAt, nowValue) {
     };
 }
 
-test('schedules match end from the active round end time', function () {
-    const matchTimer = loadClientMatchTimer();
+test('schedules match end from the active round end time', async function () {
+    const matchTimer = await loadClientMatchTimer();
     const { calls, options } = createOptions(1250, 1000);
 
     assert.equal(matchTimer.scheduleEnd(options), true);
@@ -58,8 +62,8 @@ test('schedules match end from the active round end time', function () {
     ]);
 });
 
-test('uses zero delay when round end time is already in the past', function () {
-    const matchTimer = loadClientMatchTimer();
+test('uses zero delay when round end time is already in the past', async function () {
+    const matchTimer = await loadClientMatchTimer();
     const { calls, options } = createOptions(900, 1000);
 
     assert.equal(matchTimer.scheduleEnd(options), true);
@@ -70,8 +74,8 @@ test('uses zero delay when round end time is already in the past', function () {
     ]);
 });
 
-test('does not schedule match end without a round end time', function () {
-    const matchTimer = loadClientMatchTimer();
+test('does not schedule match end without a round end time', async function () {
+    const matchTimer = await loadClientMatchTimer();
     const { calls, options } = createOptions(null, 1000);
 
     assert.equal(matchTimer.scheduleEnd(options), false);
