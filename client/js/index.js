@@ -18,6 +18,7 @@ GF.Game = (function () {
         rockPatternSprite,
         rockPattern,
         scenarioRenderer,
+        collisionDebugRenderer,
         nameEditor,
         cameraController,
         camera,
@@ -69,6 +70,7 @@ GF.Game = (function () {
         initHudOverlay();
         initSoundEffects();
         initScenarioRenderer();
+        initCollisionDebugRenderer();
         initNameEditor();
         initCameraController();
         initCamera();
@@ -161,6 +163,10 @@ GF.Game = (function () {
                 wagon: wagonSprite
             }
         });
+    }
+
+    function initCollisionDebugRenderer() {
+        collisionDebugRenderer = new GF.CollisionDebugRenderer(context);
     }
 
     function disableImageSmoothing() {
@@ -1148,72 +1154,10 @@ GF.Game = (function () {
     }
 
     function drawCollisionBodies() {
-        if (!GF.Config.debug.showCollisionBodies) {
-            return;
-        }
-
-        drawCollisionBodyShapes(GF.Obstacles.all(), 'rgba(255, 80, 80, 0.75)');
-
-        Object.keys(players.all).forEach(function (id) {
-            drawCircles(
-                players.all[id].getCollisionCircles(),
-                'rgba(80, 180, 255, 0.8)'
-            );
+        collisionDebugRenderer.render({
+            obstacleBodies: GF.Obstacles.all(),
+            players: players.all
         });
-    }
-
-    function drawCollisionBodyShapes(bodies, color) {
-        context.save();
-        context.strokeStyle = color;
-        context.lineWidth = 2;
-
-        bodies.forEach(function (body) {
-            if (body.type === 'rect') {
-                context.strokeRect(body.x, body.y, body.width, body.height);
-                return;
-            }
-
-            if (body.type === 'polygon') {
-                drawPolygonPath(body.points);
-                return;
-            }
-
-            drawCirclePath(body);
-        });
-
-        context.restore();
-    }
-
-    function drawCircles(circles, color) {
-        context.save();
-        context.strokeStyle = color;
-        context.lineWidth = 2;
-
-        circles.forEach(function (circle) {
-            drawCirclePath(circle);
-        });
-
-        context.restore();
-    }
-
-    function drawCirclePath(circle) {
-        context.beginPath();
-        context.arc(circle.x, circle.y, circle.radius, 0, Math.PI * 2);
-        context.stroke();
-    }
-
-    function drawPolygonPath(points) {
-        if (!points.length) {
-            return;
-        }
-
-        context.beginPath();
-        context.moveTo(points[0].x, points[0].y);
-        points.slice(1).forEach(function (point) {
-            context.lineTo(point.x, point.y);
-        });
-        context.closePath();
-        context.stroke();
     }
 
     function start() {

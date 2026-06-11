@@ -83,6 +83,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract client synchronization.
     - [x] Extract player position synchronization.
     - [x] Extract scenario rendering and obstacle geometry.
+    - [x] Extract collision debug rendering.
     - Keep rendering, simulation, round flow, and network synchronization easy to reason about separately.
 
 - [ ] Reduce global namespace coupling.
