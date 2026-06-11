@@ -85,11 +85,13 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract game HUD view-model decisions.
     - [x] Extract lobby HUD screen routing.
     - [x] Extract canvas utilities.
+    - [x] Extract canvas surface setup.
     - [x] Extract client asset loading.
     - [x] Extract lobby view-model decisions.
     - [x] Extract camera and viewport decisions.
     - [x] Extract touch-control state decisions.
     - [x] Extract touch-control update flow.
+    - [x] Extract touch-interface detection.
     - [x] Extract client identity and name-editor sync.
     - [x] Extract name-editor submit and close flow.
     - [x] Extract lobby entry and abandoned-game recovery flow.
@@ -97,11 +99,13 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract model update side-effect flow.
     - [x] Extract model-update planning.
     - [x] Extract game loop runner.
+    - [x] Extract game system construction.
     - [x] Extract frame update and render flow.
     - [x] Extract round intro flow.
     - [x] Extract round ritual orchestration.
     - [x] Extract round timer bookkeeping.
     - [x] Extract round state data and flags.
+    - [x] Extract round transition guard.
     - [x] Extract round ending flow.
     - [x] Extract round reset flow.
     - [x] Extract round state orchestration.
@@ -114,10 +118,10 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract collision debug rendering.
     - Keep rendering, simulation, round flow, and network synchronization easy to reason about separately.
 
-- [ ] Reduce global namespace coupling.
+- [x] Reduce global namespace coupling for the current static-script setup.
     - Keep module boundaries explicit.
     - Make dependencies injectable for tests where practical.
-    - Replace broad `GF.*` mutation with imports once a build step exists.
+    - Leave broad `GF.*` to imports replacement for P1.4 once a build step exists.
 
 ### P1.4 - Introduce TypeScript Deliberately
 
@@ -126,6 +130,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - Move shared model and networking files first.
     - Then move extracted UI components and state modules.
     - Convert gameplay simulation files after the public contracts are stable.
+    - Replace broad `GF.*` namespace mutation with imports after the build step exists.
 
 - [ ] Introduce typed data contracts.
     - Type Socket.IO payloads.

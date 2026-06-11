@@ -39,14 +39,16 @@ GF.Game = (function () {
     var RoundState = GF.ClientScreens.RoundState;
 
     function initCanvas() {
-        canvas = document.getElementById('canvas');
-        context = canvas.getContext('2d');
-        hudCanvas = document.getElementById('hudCanvas');
-        hudContext = hudCanvas.getContext('2d');
-        canvas.width = GF.Config.canvas.width;
-        canvas.height = GF.Config.canvas.height;
-        hudCanvas.width = GF.Config.canvas.width;
-        hudCanvas.height = GF.Config.canvas.height;
+        var surfaces = GF.ClientCanvasSetup.create({
+            CanvasTools: GF.CanvasTools,
+            canvasConfig: GF.Config.canvas,
+            document: document
+        });
+
+        canvas = surfaces.canvas;
+        context = surfaces.context;
+        hudCanvas = surfaces.hudCanvas;
+        hudContext = surfaces.hudContext;
         initAssets();
         initHudOverlay();
         initAmmoHudRenderer();
@@ -57,7 +59,6 @@ GF.Game = (function () {
         initNameEditor();
         initCameraController();
         initCamera();
-        disableImageSmoothing();
     }
 
     function initNameEditor() {
@@ -153,27 +154,34 @@ GF.Game = (function () {
         });
     }
 
-    function disableImageSmoothing() {
-        GF.CanvasTools.disableImageSmoothing(context);
-        GF.CanvasTools.disableImageSmoothing(hudContext);
-    }
-
     function initGameState() {
-        scene = new GF.Scene();
-        bullets = new GF.Bullets(scene);
-        players = new GF.Players(scene, bullets);
-        roundIntro = new GF.RoundIntro({
-            players: players
+        var systems = GF.ClientGameSystems.create({
+            Bullet: GF.Bullet,
+            Bullets: GF.Bullets,
+            ClientAmmo: GF.ClientAmmo,
+            ClientRoundState: GF.ClientRoundState,
+            ClientTimers: GF.ClientTimers,
+            PlayerPositionSync: GF.PlayerPositionSync,
+            Players: GF.Players,
+            RoundIntro: GF.RoundIntro,
+            Scene: GF.Scene,
+            ScoreKeeper: GF.ScoreKeeper,
+            initialRoundState: RoundState.WAITING,
+            playRicochet: gameSounds.playRicochet
         });
-        roundState = RoundState.WAITING;
-        highScores = [];
-        scoreKeeper = new GF.ScoreKeeper();
-        roundData = new GF.ClientRoundState();
-        timers = new GF.ClientTimers();
-        positionSync = new GF.PlayerPositionSync();
-        ammo = new GF.ClientAmmo();
-        localReadyRequested = false;
-        GF.Bullet.onRicochet = gameSounds.playRicochet;
+
+        scene = systems.scene;
+        bullets = systems.bullets;
+        players = systems.players;
+        roundIntro = systems.roundIntro;
+        roundState = systems.roundState;
+        highScores = systems.highScores;
+        scoreKeeper = systems.scoreKeeper;
+        roundData = systems.roundData;
+        timers = systems.timers;
+        positionSync = systems.positionSync;
+        ammo = systems.ammo;
+        localReadyRequested = systems.localReadyRequested;
     }
 
     function initGameLoop() {
@@ -184,16 +192,11 @@ GF.Game = (function () {
     }
 
     function setRoundState(nextState) {
-        if (!GF.ClientScreens.canTransition(roundState, nextState)) {
-            throw new Error(
-                'Illegal round state transition: ' +
-                    roundState +
-                    ' -> ' +
-                    nextState
-            );
-        }
-
-        roundState = nextState;
+        roundState = GF.ClientRoundTransition.resolve({
+            canTransition: GF.ClientScreens.canTransition,
+            currentState: roundState,
+            nextState: nextState
+        });
     }
 
     function setRoundMessage(message) {
@@ -302,13 +305,7 @@ GF.Game = (function () {
     }
 
     function isTouchInterface() {
-        if (window.location.search.indexOf('touch=1') >= 0) {
-            return true;
-        }
-
-        return (
-            window.matchMedia && window.matchMedia('(pointer: coarse)').matches
-        );
+        return GF.ClientTouchEnvironment.isTouchInterface(window);
     }
 
     function shouldUseCamera() {
