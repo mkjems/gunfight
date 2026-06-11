@@ -78,6 +78,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract hit detection.
     - [x] Extract player-hit flow.
     - [x] Extract ammo HUD rendering.
+    - [x] Extract HUD render orchestration.
     - [x] Extract game HUD view-model decisions.
     - [x] Extract lobby HUD screen routing.
     - [x] Extract canvas utilities.
@@ -105,6 +106,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract player position synchronization.
     - [x] Extract obstacle damage synchronization.
     - [x] Extract scenario rendering and obstacle geometry.
+    - [x] Extract collision environment updates.
     - [x] Extract collision debug rendering.
     - Keep rendering, simulation, round flow, and network synchronization easy to reason about separately.
 

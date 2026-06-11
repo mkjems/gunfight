@@ -249,53 +249,26 @@ GF.Game = (function () {
     }
 
     function renderHud() {
-        var firstClient;
-        var secondClient;
-        var firstAmmo;
-        var secondAmmo;
-
-        hudContext.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
-
-        if (roundState === RoundState.WAITING) {
-            renderLobbyHud();
-            updateTouchControls();
-            return;
-        }
-
-        showElement(canvas, true);
-        showElement(hudCanvas, true);
-        showElement(gameHud, true);
-        showElement(lobbyHud, false);
-
-        firstClient = latestModel && latestModel.clients[0];
-        secondClient = latestModel && latestModel.clients[1];
-
-        if (!firstClient || !secondClient) {
-            renderGameHud();
-            return;
-        }
-
-        firstAmmo = ammo.get(firstClient.id);
-        secondAmmo = ammo.get(secondClient.id);
-
-        renderGameHud();
-        ammoHudRenderer.render(firstAmmo, 122, 606, 1);
-        ammoHudRenderer.render(secondAmmo, 828, 606, -1);
-        updateTouchControls();
-    }
-
-    function renderGameHud() {
-        gameHudScreen.render(
-            GF.GameHudViewModel.getState({
-                camera: camera,
-                cameraController: cameraController,
-                defaultSeconds: GF.Config.game.seconds,
-                players: players,
-                roundData: roundData,
-                roundState: roundState,
-                scoreKeeper: scoreKeeper
-            })
-        );
+        GF.ClientHudFlow.render({
+            ammo: ammo,
+            ammoHudRenderer: ammoHudRenderer,
+            camera: camera,
+            cameraController: cameraController,
+            canvas: canvas,
+            defaultSeconds: GF.Config.game.seconds,
+            gameHud: gameHud,
+            gameHudScreen: gameHudScreen,
+            hudCanvas: hudCanvas,
+            hudContext: hudContext,
+            lobbyHud: lobbyHud,
+            model: latestModel,
+            players: players,
+            renderLobbyHud: renderLobbyHud,
+            roundData: roundData,
+            roundState: roundState,
+            scoreKeeper: scoreKeeper,
+            updateTouchControls: updateTouchControls
+        });
     }
 
     function getCurrentScenario() {
@@ -307,16 +280,20 @@ GF.Game = (function () {
     }
 
     function updateBulletCollisionEnvironment() {
-        GF.Bullet.setCollisionLines(
-            scenarioRenderer.getRockLines(getCurrentScenario())
-        );
+        GF.ClientCollisionEnvironment.updateBulletLines({
+            Bullet: GF.Bullet,
+            scenario: getCurrentScenario(),
+            scenarioRenderer: scenarioRenderer
+        });
     }
 
     function updateMovementObstacleEnvironment() {
-        var scenario =
-            roundState === RoundState.WAITING ? null : getCurrentScenario();
-
-        GF.Obstacles.setBodies(scenarioRenderer.getObstacleBodies(scenario));
+        GF.ClientCollisionEnvironment.updateObstacleBodies({
+            Obstacles: GF.Obstacles,
+            roundState: roundState,
+            scenario: getCurrentScenario(),
+            scenarioRenderer: scenarioRenderer
+        });
     }
 
     function getObstacleDamage(id) {
