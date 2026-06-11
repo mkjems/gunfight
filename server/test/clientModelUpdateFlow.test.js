@@ -1,0 +1,176 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import test from 'node:test';
+import vm from 'node:vm';
+
+function loadClientModelUpdateFlow(plan) {
+    const context = {
+        GF: {
+            ClientModelUpdatePlan: {
+                create(options) {
+                    plan.createOptions = options;
+
+                    return plan.value;
+                }
+            }
+        }
+    };
+    const source = readFileSync(
+        new URL('../../client/js/ClientModelUpdateFlow.js', import.meta.url),
+        'utf8'
+    );
+
+    vm.runInNewContext(source, context);
+
+    return context.GF.ClientModelUpdateFlow;
+}
+
+function createFlowOptions(overrides = {}) {
+    const calls = [];
+    const options = {
+        clearAbandonedRequeue() {
+            calls.push('clearAbandonedRequeue');
+        },
+        clearLocalReadyRequest() {
+            calls.push('clearLocalReadyRequest');
+        },
+        enterLobbyState() {
+            calls.push('enterLobbyState');
+        },
+        model: {
+            gameId: 'next'
+        },
+        playerId: 'p1',
+        players: {
+            sync(model, syncOptions) {
+                calls.push(['players.sync', model.gameId, syncOptions.slots]);
+            }
+        },
+        playReadySound() {
+            calls.push('playReadySound');
+        },
+        previousModel: {
+            gameId: 'previous'
+        },
+        renderHud() {
+            calls.push('renderHud');
+        },
+        roundState: 'waiting',
+        scheduleAbandonedRequeue() {
+            calls.push('scheduleAbandonedRequeue');
+        },
+        startRoundRitual(options) {
+            calls.push(['startRoundRitual', options.resetScores]);
+        },
+        syncNameEditor() {
+            calls.push('syncNameEditor');
+        },
+        syncStoredPlayerName() {
+            calls.push('syncStoredPlayerName');
+        }
+    };
+
+    return {
+        calls,
+        options: {
+            ...options,
+            ...overrides
+        }
+    };
+}
+
+function createPlan(overrides = {}) {
+    return {
+        value: {
+            clearAbandonedRequeue: true,
+            clearLocalReadyRequest: true,
+            enterLobbyState: false,
+            playReadySound: true,
+            renderHud: true,
+            scheduleAbandonedRequeue: false,
+            startRoundRitual: false,
+            syncNameEditor: true,
+            syncPlayers: {
+                slots: ['left', 'right']
+            },
+            syncStoredPlayerName: true,
+            ...overrides
+        }
+    };
+}
+
+function plain(value) {
+    return JSON.parse(JSON.stringify(value));
+}
+
+test('applies model update side effects in plan order', function () {
+    const plan = createPlan();
+    const flow = loadClientModelUpdateFlow(plan);
+    const { calls, options } = createFlowOptions();
+
+    assert.equal(flow.sync(options), plan.value);
+
+    assert.deepEqual(plain(plan.createOptions), {
+        model: {
+            gameId: 'next'
+        },
+        playerId: 'p1',
+        previousModel: {
+            gameId: 'previous'
+        },
+        roundState: 'waiting'
+    });
+    assert.deepEqual(plain(calls), [
+        'clearLocalReadyRequest',
+        'syncStoredPlayerName',
+        'clearAbandonedRequeue',
+        'playReadySound',
+        ['players.sync', 'next', ['left', 'right']],
+        'syncNameEditor',
+        'renderHud'
+    ]);
+});
+
+test('starts the round ritual instead of rendering the hud', function () {
+    const plan = createPlan({
+        renderHud: false,
+        startRoundRitual: true
+    });
+    const flow = loadClientModelUpdateFlow(plan);
+    const { calls, options } = createFlowOptions();
+
+    flow.sync(options);
+
+    assert.deepEqual(plain(calls), [
+        'clearLocalReadyRequest',
+        'syncStoredPlayerName',
+        'clearAbandonedRequeue',
+        'playReadySound',
+        ['players.sync', 'next', ['left', 'right']],
+        'syncNameEditor',
+        ['startRoundRitual', true]
+    ]);
+});
+
+test('applies abandoned lobby recovery effects', function () {
+    const plan = createPlan({
+        clearAbandonedRequeue: false,
+        enterLobbyState: true,
+        playReadySound: false,
+        scheduleAbandonedRequeue: true
+    });
+    const flow = loadClientModelUpdateFlow(plan);
+    const { calls, options } = createFlowOptions();
+
+    flow.sync(options);
+
+    assert.deepEqual(plain(calls), [
+        'clearLocalReadyRequest',
+        'syncStoredPlayerName',
+        'enterLobbyState',
+        'scheduleAbandonedRequeue',
+        ['players.sync', 'next', ['left', 'right']],
+        'syncNameEditor',
+        'renderHud'
+    ]);
+});

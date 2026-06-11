@@ -517,54 +517,27 @@ GF.Game = (function () {
 
     function syncPlayers(model) {
         var previousModel = latestModel;
-        var plan;
 
         latestModel = model;
-        plan = GF.ClientModelUpdatePlan.create({
+
+        GF.ClientModelUpdateFlow.sync({
+            clearAbandonedRequeue: clearAbandonedRequeue,
+            clearLocalReadyRequest: function () {
+                localReadyRequested = false;
+            },
+            enterLobbyState: enterLobbyState,
             model: model,
             playerId: playerId,
+            players: players,
+            playReadySound: gameSounds.playReady,
             previousModel: previousModel,
-            roundState: roundState
+            renderHud: renderHud,
+            roundState: roundState,
+            scheduleAbandonedRequeue: scheduleAbandonedRequeue,
+            startRoundRitual: startRoundRitual,
+            syncNameEditor: syncNameEditor,
+            syncStoredPlayerName: syncStoredPlayerName
         });
-
-        if (plan.clearLocalReadyRequest) {
-            localReadyRequested = false;
-        }
-
-        if (plan.syncStoredPlayerName) {
-            syncStoredPlayerName();
-        }
-
-        if (plan.enterLobbyState) {
-            enterLobbyState();
-        }
-
-        if (plan.scheduleAbandonedRequeue) {
-            scheduleAbandonedRequeue();
-        }
-
-        if (plan.clearAbandonedRequeue) {
-            clearAbandonedRequeue();
-        }
-
-        if (plan.playReadySound) {
-            gameSounds.playReady();
-        }
-
-        players.sync(model, plan.syncPlayers);
-
-        if (plan.syncNameEditor) {
-            syncNameEditor();
-        }
-
-        if (plan.startRoundRitual) {
-            startRoundRitual({ resetScores: true });
-            return;
-        }
-
-        if (plan.renderHud) {
-            renderHud();
-        }
     }
 
     function scheduleAbandonedRequeue() {
@@ -606,20 +579,11 @@ GF.Game = (function () {
     }
 
     function scheduleMatchEnd() {
-        var delay;
-
-        if (!roundData.getRoundEndsAt()) {
-            return;
-        }
-
-        delay = Math.max(0, roundData.getRoundEndsAt() - new Date().getTime());
-        timers.set(
-            'matchEnd',
-            function () {
-                endGame();
-            },
-            delay
-        );
+        GF.ClientMatchTimer.scheduleEnd({
+            endGame: endGame,
+            roundData: roundData,
+            timers: timers
+        });
     }
 
     function handleKeyEvent(keyEvent) {
