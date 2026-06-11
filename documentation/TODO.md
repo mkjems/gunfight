@@ -58,7 +58,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 
 ### P1.3 - Split The Client Into Focused Modules
 
-- [ ] Keep `index.js` as orchestration only.
+- [x] Keep `index.js` as orchestration only.
     - It should initialize systems, wire them together, and start the loop.
     - It should not contain detailed rendering for lobby, high scores, name editor, game HUD, sound, networking, or input.
 
@@ -67,7 +67,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - Each UI module should own its DOM lookups and rendering for one screen or panel.
     - Prefer plain lightweight components first; do not move canvas gameplay into a component framework.
 
-- [ ] Move non-UI systems into focused modules.
+- [x] Move non-UI systems into focused modules.
     - [x] Extract networking.
     - [x] Keep keyboard and touch input in focused modules.
     - [x] Extract sound.
@@ -75,11 +75,13 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract ammo handling.
     - [x] Extract ammo reload flow.
     - [x] Extract gameplay key handling.
+    - [x] Extract key-event routing flow.
     - [x] Extract input startup flow.
     - [x] Extract hit detection.
     - [x] Extract player-hit flow.
     - [x] Extract ammo HUD rendering.
     - [x] Extract HUD render orchestration.
+    - [x] Extract HUD overlay component setup.
     - [x] Extract game HUD view-model decisions.
     - [x] Extract lobby HUD screen routing.
     - [x] Extract canvas utilities.
@@ -102,7 +104,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract round state data and flags.
     - [x] Extract round ending flow.
     - [x] Extract round reset flow.
-    - [ ] Extract round state orchestration.
+    - [x] Extract round state orchestration.
     - [x] Extract score handling.
     - [x] Extract client synchronization.
     - [x] Extract player position synchronization.

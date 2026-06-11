@@ -7,8 +7,6 @@ GF.Game = (function () {
         lobbyHud,
         gameHudScreen,
         lobbyScreen,
-        lobbyMainElement,
-        highScoresScreenElement,
         highScoresScreen,
         nameEditorScreen,
         ammoHudRenderer,
@@ -39,7 +37,6 @@ GF.Game = (function () {
         localReadyRequested,
         playerId;
     var RoundState = GF.ClientScreens.RoundState;
-    var Screen = GF.ClientScreens.Screen;
 
     function initCanvas() {
         canvas = document.getElementById('canvas');
@@ -86,46 +83,16 @@ GF.Game = (function () {
     }
 
     function initHudOverlay() {
-        gameHud = document.getElementById('gameHud');
-        lobbyHud = document.getElementById('lobbyHud');
-        gameHudScreen = new GF.GameHud({
-            scoreLeft: document.getElementById('scoreLeft'),
-            scoreRight: document.getElementById('scoreRight'),
-            timer: document.getElementById('roundTimer'),
-            roundMessage: document.getElementById('roundMessage'),
-            hitMessage: document.getElementById('hitMessage')
+        var overlay = GF.ClientHudOverlay.create({
+            document: document
         });
-        lobbyMainElement = document.getElementById('lobby-main');
-        highScoresScreenElement = document.getElementById('highScoresScreen');
-        lobbyScreen = new GF.LobbyScreen({
-            main: lobbyMainElement,
-            highScores: highScoresScreenElement,
-            identity: document.getElementById('lobbyIdentity'),
-            controls: document.getElementById('lobbyControlsText'),
-            controlsSection: getLobbySection(
-                document.getElementById('lobbyControlsText')
-            ),
-            slots: document.getElementById('lobbySlots'),
-            editPrompt: document.getElementById('lobbyEditPrompt'),
-            editPromptSection: getLobbySection(
-                document.getElementById('lobbyEditPrompt')
-            ),
-            playPrompt: document.getElementById('lobbyPlayPrompt')
-        });
-        highScoresScreen = new GF.HighScoresScreen({
-            lobbyMain: lobbyMainElement,
-            screen: highScoresScreenElement,
-            table: document.getElementById('highScoresTable'),
-            playPrompt: document.getElementById('highScoresPlayPrompt')
-        });
-        nameEditorScreen = new GF.NameEditorScreen({
-            lobbyMain: lobbyMainElement,
-            highScores: highScoresScreenElement,
-            editor: document.getElementById('nameEditor'),
-            value: document.getElementById('nameEditorValue'),
-            grid: document.getElementById('nameEditorGrid'),
-            help: document.getElementById('nameEditorHelp')
-        });
+
+        gameHud = overlay.gameHud;
+        lobbyHud = overlay.lobbyHud;
+        gameHudScreen = overlay.gameHudScreen;
+        lobbyScreen = overlay.lobbyScreen;
+        highScoresScreen = overlay.highScoresScreen;
+        nameEditorScreen = overlay.nameEditorScreen;
     }
 
     function initAmmoHudRenderer() {
@@ -334,24 +301,6 @@ GF.Game = (function () {
         });
     }
 
-    function getLobbySection(element) {
-        if (!element) {
-            return null;
-        }
-
-        if (element.closest) {
-            return element.closest('.lobby-section');
-        }
-
-        return element.parentNode;
-    }
-
-    function showElement(element, visible) {
-        if (element) {
-            element.hidden = !visible;
-        }
-    }
-
     function isTouchInterface() {
         if (window.location.search.indexOf('touch=1') >= 0) {
             return true;
@@ -518,38 +467,22 @@ GF.Game = (function () {
     }
 
     function handleKeyEvent(keyEvent) {
-        if (
-            roundState === RoundState.WAITING &&
-            keyEvent.player === playerId &&
-            keyEvent.key === 'e' &&
-            !isLocalClientWaiting()
-        ) {
-            return false;
-        }
-
-        if (
-            roundState === RoundState.WAITING &&
-            nameEditor &&
-            keyEvent.player === playerId
-        ) {
-            if (nameEditor.handleKeyEvent(keyEvent) === false) {
-                renderHud();
-                return false;
-            }
-        }
-
-        GF.ClientGameplayInput.handle({
+        return GF.ClientKeyEventFlow.handle({
             ammo: ammo,
             bullets: bullets,
+            isLocalClientWaiting: isLocalClientWaiting,
             keyEvent: keyEvent,
-            player: players.all[keyEvent.player],
-            roundState: roundState,
+            nameEditor: nameEditor,
             onBulletFired: function () {
                 reloadIfBothPlayersAreOutOfAmmo();
                 gameSounds.playGun();
                 renderHud();
             },
-            onEmptyGun: gameSounds.playEmptyGun
+            onEmptyGun: gameSounds.playEmptyGun,
+            player: players.all[keyEvent.player],
+            playerId: playerId,
+            renderHud: renderHud,
+            roundState: roundState
         });
     }
 
