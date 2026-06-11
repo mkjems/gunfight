@@ -20,8 +20,7 @@ GF.Game = (function () {
         lobbyEditPromptSectionElement,
         lobbyPlayPromptElement,
         highScoresScreenElement,
-        highScoresTableElement,
-        highScoresPlayPromptElement,
+        highScoresScreen,
         nameEditorElement,
         nameEditorValueElement,
         nameEditorGridElement,
@@ -64,6 +63,8 @@ GF.Game = (function () {
         localReadyRequested,
         playerId;
     var playerNameStorageKey = 'gunfight-player-name';
+    var RoundState = GF.ClientScreens.RoundState;
+    var Screen = GF.ClientScreens.Screen;
 
     function initCanvas() {
         canvas = document.getElementById('canvas');
@@ -120,10 +121,12 @@ GF.Game = (function () {
         lobbyEditPromptSectionElement = getLobbySection(lobbyEditPromptElement);
         lobbyPlayPromptElement = document.getElementById('lobbyPlayPrompt');
         highScoresScreenElement = document.getElementById('highScoresScreen');
-        highScoresTableElement = document.getElementById('highScoresTable');
-        highScoresPlayPromptElement = document.getElementById(
-            'highScoresPlayPrompt'
-        );
+        highScoresScreen = new GF.HighScoresScreen({
+            lobbyMain: lobbyMainElement,
+            screen: highScoresScreenElement,
+            table: document.getElementById('highScoresTable'),
+            playPrompt: document.getElementById('highScoresPlayPrompt')
+        });
         nameEditorElement = document.getElementById('nameEditor');
         nameEditorValueElement = document.getElementById('nameEditorValue');
         nameEditorGridElement = document.getElementById('nameEditorGrid');
@@ -314,7 +317,7 @@ GF.Game = (function () {
         scene = new GF.Scene();
         bullets = new GF.Bullets(scene);
         players = new GF.Players(scene, bullets);
-        roundState = 'waiting';
+        roundState = RoundState.WAITING;
         highScores = [];
         scores = [0, 0];
         ammo = {};
@@ -334,6 +337,19 @@ GF.Game = (function () {
         lastRecordedResultId = null;
         localReadyRequested = false;
         GF.Bullet.onRicochet = playRicochetSound;
+    }
+
+    function setRoundState(nextState) {
+        if (!GF.ClientScreens.canTransition(roundState, nextState)) {
+            throw new Error(
+                'Illegal round state transition: ' +
+                    roundState +
+                    ' -> ' +
+                    nextState
+            );
+        }
+
+        roundState = nextState;
     }
 
     function playGunSound() {
@@ -473,13 +489,13 @@ GF.Game = (function () {
             );
         }
 
-        if (roundState === 'gameOver') {
+        if (roundState === RoundState.GAME_OVER) {
             secondsLeft = 'GAME OVER';
         }
 
         hudContext.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
 
-        if (roundState === 'waiting') {
+        if (roundState === RoundState.WAITING) {
             renderLobbyHud();
             updateTouchControls();
             return;
@@ -695,7 +711,8 @@ GF.Game = (function () {
     }
 
     function updateMovementObstacleEnvironment() {
-        var scenario = roundState === 'waiting' ? null : getCurrentScenario();
+        var scenario =
+            roundState === RoundState.WAITING ? null : getCurrentScenario();
 
         GF.Obstacles.setBodies(getObstacleBodies(scenario));
     }
@@ -885,6 +902,7 @@ GF.Game = (function () {
 
     function renderLobbyHud() {
         var isTouch = isTouchInterface();
+        var activeScreen = getActiveScreen();
         var controls = [
             'h j k l - left down up right',
             'a z - aim up down',
@@ -893,7 +911,7 @@ GF.Game = (function () {
         showElement(gameHud, false);
         showElement(lobbyHud, true);
 
-        if (nameEditor && nameEditor.isActive()) {
+        if (activeScreen === Screen.LOBBY_EDIT_NAME) {
             renderNameEditor();
             return;
         }
@@ -902,7 +920,7 @@ GF.Game = (function () {
         showElement(hudCanvas, true);
         showElement(nameEditorElement, false);
 
-        if (shouldShowHighScoresScreen()) {
+        if (activeScreen === Screen.HIGH_SCORES) {
             renderHighScoresScreen(isTouch);
             return;
         }
@@ -929,6 +947,14 @@ GF.Game = (function () {
         );
     }
 
+    function getActiveScreen() {
+        return GF.ClientScreens.getActiveScreen({
+            roundState: roundState,
+            nameEditorActive: nameEditor && nameEditor.isActive(),
+            highScoresVisible: shouldShowHighScoresScreen()
+        });
+    }
+
     function shouldShowHighScoresScreen() {
         var clients = (latestModel && latestModel.clients) || [];
         var hasReadyClient = clients.some(function (client) {
@@ -943,69 +969,11 @@ GF.Game = (function () {
     }
 
     function renderHighScoresScreen(isTouch) {
-        showElement(lobbyMainElement, false);
-        showElement(highScoresScreenElement, true);
-        renderHighScoresTable();
-        setText(
-            highScoresPlayPromptElement,
-            shouldShowLobbyPrompt() && !isTouch ? 'PRESS P TO PLAY' : ''
-        );
-    }
-
-    function renderHighScoresTable() {
-        var rows = highScores && highScores.length ? highScores : [];
-        var key = rows
-            .map(function (row) {
-                return [row.name, row.wins, row.kills, row.deaths].join(':');
-            })
-            .join('|');
-
-        if (!highScoresTableElement) {
-            return;
-        }
-
-        if (highScoresTableElement.dataset.highScoresKey === key) {
-            return;
-        }
-
-        highScoresTableElement.dataset.highScoresKey = key;
-        highScoresTableElement.innerHTML = '';
-        appendHighScoreRow(['NAME', 'WINS', 'KILLS', 'DEATHS'], true);
-
-        if (!rows.length) {
-            var emptyRow = document.createElement('div');
-
-            emptyRow.className = 'high-score-empty';
-            emptyRow.textContent = 'NO SCORES YET';
-            highScoresTableElement.appendChild(emptyRow);
-            return;
-        }
-
-        rows.forEach(function (row) {
-            appendHighScoreRow(
-                [row.name, row.wins, row.kills, row.deaths],
-                false
-            );
+        highScoresScreen.render({
+            rows: highScores && highScores.length ? highScores : [],
+            playPrompt:
+                shouldShowLobbyPrompt() && !isTouch ? 'PRESS P TO PLAY' : ''
         });
-    }
-
-    function appendHighScoreRow(values, isHeader) {
-        var rowElement;
-
-        if (!highScoresTableElement) {
-            return;
-        }
-
-        rowElement = document.createElement('div');
-        rowElement.className =
-            'high-score-row' + (isHeader ? ' is-header' : '');
-        values.forEach(function (value) {
-            var cell = document.createElement('span');
-
-            cell.textContent = value;
-            rowElement.appendChild(cell);
-        });
-        highScoresTableElement.appendChild(rowElement);
     }
 
     function renderNameEditor() {
@@ -1144,7 +1112,7 @@ GF.Game = (function () {
     }
 
     function shouldUseCamera() {
-        if (!camera || roundState === 'waiting') {
+        if (!camera || roundState === RoundState.WAITING) {
             return false;
         }
 
@@ -1468,7 +1436,7 @@ GF.Game = (function () {
         hitMessage = null;
         advanceRoundAfterHit = false;
         obstacleDamage = {};
-        roundState = 'waiting';
+        setRoundState(RoundState.WAITING);
         lastRecordedResultId = null;
         players.clearKeys();
         bullets.clear();
@@ -1494,12 +1462,12 @@ GF.Game = (function () {
         }
 
         players.sync(model, {
-            resetChangedSlots: roundState === 'waiting',
+            resetChangedSlots: roundState === RoundState.WAITING,
             slots: getCurrentPlayerSlots()
         });
         syncNameEditor();
 
-        if (roundState === 'waiting' && isReadyToStart(model)) {
+        if (roundState === RoundState.WAITING && isReadyToStart(model)) {
             startRoundRitual({ resetScores: true });
             return;
         }
@@ -1544,7 +1512,7 @@ GF.Game = (function () {
     }
 
     function getCurrentPlayerSlots() {
-        return roundState === 'waiting'
+        return roundState === RoundState.WAITING
             ? GF.Config.player.lobbySlots
             : GF.Config.player.slots;
     }
@@ -1586,7 +1554,7 @@ GF.Game = (function () {
             roundEndsAt = null;
         }
 
-        roundState = 'ritual';
+        setRoundState(RoundState.RITUAL);
         closeNameEditor();
         scenarioStartedAt = new Date().getTime();
         obstacleDamage = {};
@@ -1624,7 +1592,7 @@ GF.Game = (function () {
                     scheduleMatchEnd();
                 }
                 resetAmmo();
-                roundState = 'playing';
+                setRoundState(RoundState.PLAYING);
                 renderHud();
             }, GF.Config.round.drawDelay);
         }, getReadyDelay);
@@ -1738,7 +1706,7 @@ GF.Game = (function () {
         var player;
 
         if (
-            roundState === 'waiting' &&
+            roundState === RoundState.WAITING &&
             keyEvent.player === playerId &&
             keyEvent.key === 'e' &&
             !isLocalClientWaiting()
@@ -1747,7 +1715,7 @@ GF.Game = (function () {
         }
 
         if (
-            roundState === 'waiting' &&
+            roundState === RoundState.WAITING &&
             nameEditor &&
             keyEvent.player === playerId
         ) {
@@ -1764,10 +1732,10 @@ GF.Game = (function () {
         }
 
         if (
-            roundState === 'ritual' ||
-            roundState === 'roundOver' ||
-            roundState === 'hitPause' ||
-            roundState === 'gameOver'
+            roundState === RoundState.RITUAL ||
+            roundState === RoundState.ROUND_OVER ||
+            roundState === RoundState.HIT_PAUSE ||
+            roundState === RoundState.GAME_OVER
         ) {
             if (keyEvent.action === 'up') {
                 player.respondToKeyEvent(keyEvent);
@@ -1778,9 +1746,12 @@ GF.Game = (function () {
         if (keyEvent.key === ' ' && keyEvent.action === 'down') {
             var bullet;
 
-            if (roundState === 'playing' && ammo[player.playerId] > 0) {
+            if (
+                roundState === RoundState.PLAYING &&
+                ammo[player.playerId] > 0
+            ) {
                 bullet = bullets.fire(player, keyEvent.shot);
-            } else if (roundState === 'playing') {
+            } else if (roundState === RoundState.PLAYING) {
                 playEmptyGunSound();
             }
 
@@ -1804,7 +1775,7 @@ GF.Game = (function () {
     function reloadIfBothPlayersAreOutOfAmmo() {
         var clients;
 
-        if (roundState !== 'playing' || !latestModel) {
+        if (roundState !== RoundState.PLAYING || !latestModel) {
             return;
         }
 
@@ -1827,8 +1798,8 @@ GF.Game = (function () {
         var hit;
         var obstacleHit;
 
-        if (roundState !== 'playing') {
-            if (roundState === 'hitPause' && hasMatchTimeExpired()) {
+        if (roundState !== RoundState.PLAYING) {
+            if (roundState === RoundState.HIT_PAUSE && hasMatchTimeExpired()) {
                 endGame();
             }
             return;
@@ -1957,7 +1928,7 @@ GF.Game = (function () {
         var winnerSlot = getPlayerSlot(hit.winnerId);
         var target = players.all[hit.targetId];
 
-        roundState = 'hitPause';
+        setRoundState(RoundState.HIT_PAUSE);
         hitMessage = {
             targetId: hit.targetId,
             text: 'Got me!'
@@ -2014,7 +1985,7 @@ GF.Game = (function () {
     function endRound(winnerId) {
         var winnerSlot = getPlayerSlot(winnerId);
 
-        roundState = 'roundOver';
+        setRoundState(RoundState.ROUND_OVER);
         closeNameEditor();
         roundEndsAt = null;
         hitMessage = null;
@@ -2056,7 +2027,7 @@ GF.Game = (function () {
     }
 
     function endGame() {
-        roundState = 'gameOver';
+        setRoundState(RoundState.GAME_OVER);
         closeNameEditor();
         recordGameResult();
         roundEndsAt = null;
@@ -2182,7 +2153,7 @@ GF.Game = (function () {
             return;
         }
 
-        roundState = 'waiting';
+        setRoundState(RoundState.WAITING);
         syncNameEditor();
         renderHud();
     }
@@ -2203,7 +2174,7 @@ GF.Game = (function () {
             clearTimeout(matchEndTimer);
             matchEndTimer = null;
         }
-        roundState = 'waiting';
+        setRoundState(RoundState.WAITING);
         syncNameEditor();
         renderHud();
         socket.emit('resetReady');
@@ -2223,7 +2194,7 @@ GF.Game = (function () {
         if (shouldUseCamera()) {
             camera.apply(context);
         }
-        if (roundState !== 'waiting') {
+        if (roundState !== RoundState.WAITING) {
             drawScenario();
         }
         scene.drawAll(context);
@@ -2242,7 +2213,7 @@ GF.Game = (function () {
         var player = players.all[playerId];
 
         if (
-            roundState !== 'playing' ||
+            roundState !== RoundState.PLAYING ||
             !player ||
             now - lastPositionSyncAt < 80
         ) {
@@ -2262,7 +2233,7 @@ GF.Game = (function () {
     function applyRemotePlayerPosition(data) {
         var player;
 
-        if (data.player === playerId || roundState !== 'playing') {
+        if (data.player === playerId || roundState !== RoundState.PLAYING) {
             return;
         }
 
@@ -2304,11 +2275,12 @@ GF.Game = (function () {
 
         touchControls.update({
             gameplay: shouldShowGameplayTouchControls(),
-            waiting: roundState === 'waiting',
-            playing: roundState === 'playing',
+            waiting: roundState === RoundState.WAITING,
+            playing: roundState === RoundState.PLAYING,
             editing: nameEditor && nameEditor.isActive(),
             highScoresVisible:
-                roundState === 'waiting' && shouldShowHighScoresScreen(),
+                roundState === RoundState.WAITING &&
+                shouldShowHighScoresScreen(),
             ready: isLocalClientReady(),
             aimLevel: getLocalAimLevel()
         });
@@ -2316,10 +2288,10 @@ GF.Game = (function () {
 
     function shouldShowGameplayTouchControls() {
         return (
-            roundState === 'ritual' ||
-            roundState === 'playing' ||
-            roundState === 'hitPause' ||
-            roundState === 'roundOver'
+            roundState === RoundState.RITUAL ||
+            roundState === RoundState.PLAYING ||
+            roundState === RoundState.HIT_PAUSE ||
+            roundState === RoundState.ROUND_OVER
         );
     }
 

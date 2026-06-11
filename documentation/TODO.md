@@ -41,17 +41,17 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 
 ### P1.2 - Make Screens And State Explicit
 
-- [ ] Create an explicit client state model.
+- [x] Create an explicit client state model.
     - Define states such as lobby, name editing, high scores, round intro, playing, hit pause, game over, and abandoned.
     - Make legal state transitions visible in one place.
     - Avoid scattered checks against string state values.
 
-- [ ] Add a small screen controller.
+- [x] Add a small screen controller.
     - Decide the active screen from client state instead of hiding/showing screens in many places.
     - Keep the four main specification screens visible in code: Lobby-main, Lobby-Edit-name, Game, and High scores.
     - Keep screen selection separate from screen rendering.
 
-- [ ] Extract the high scores screen first.
+- [x] Extract the high scores screen first.
     - Move high score table rendering out of `index.js`.
     - Give it a small input contract: rows, visible state, and prompt state.
     - Use this as the first example for future UI components.

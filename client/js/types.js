@@ -13,6 +13,13 @@
  */
 
 /**
+ * @typedef {object} ClientScreenState
+ * @property {RoundState} roundState
+ * @property {boolean} nameEditorActive
+ * @property {boolean} highScoresVisible
+ */
+
+/**
  * @typedef {object} PublicClient
  * @property {number} id
  * @property {string} name
