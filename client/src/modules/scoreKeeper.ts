@@ -1,6 +1,27 @@
-GF.ScoreKeeper = function () {
-    var scores = [0, 0];
-    var lastRecordedResultId = null;
+type ClientLike = {
+    slot: number;
+};
+
+type GameModelLike = {
+    clients?: ClientLike[];
+    gameId?: string;
+    roundNumber?: number;
+};
+
+type GameResult = {
+    clients: Array<{
+        name: string;
+        slot: number;
+    }>;
+    gameId: string;
+    resultId: string;
+    roundNumber: number | undefined;
+    scores: number[];
+};
+
+export function ScoreKeeper() {
+    let scores = [0, 0];
+    let lastRecordedResultId: string | null = null;
 
     function resetScores() {
         scores = [0, 0];
@@ -10,7 +31,7 @@ GF.ScoreKeeper = function () {
         lastRecordedResultId = null;
     }
 
-    function addPoint(slot) {
+    function addPoint(slot: number) {
         if (slot >= 0 && slot < scores.length) {
             scores[slot]++;
         }
@@ -20,7 +41,7 @@ GF.ScoreKeeper = function () {
         return scores.slice();
     }
 
-    function getScore(slot) {
+    function getScore(slot: number) {
         return scores[slot] || 0;
     }
 
@@ -36,16 +57,18 @@ GF.ScoreKeeper = function () {
         return getScore(0) > getScore(1) ? 0 : 1;
     }
 
-    function getGameOverMessage(clients, getClientName) {
-        var winnerSlot = getWinnerSlot();
-        var winnerClient;
-        var scoreLabel = getFinalScoreLabel();
+    function getGameOverMessage(
+        clients: ClientLike[] | null | undefined,
+        getClientName: (client: ClientLike) => string
+    ) {
+        const winnerSlot = getWinnerSlot();
+        const scoreLabel = getFinalScoreLabel();
 
         if (winnerSlot < 0) {
             return 'TIE ' + scoreLabel;
         }
 
-        winnerClient = clients && clients[winnerSlot];
+        const winnerClient = clients && clients[winnerSlot];
 
         return (
             (winnerClient
@@ -56,14 +79,15 @@ GF.ScoreKeeper = function () {
         );
     }
 
-    function createGameResult(model, getClientName) {
-        var resultId;
-
+    function createGameResult(
+        model: GameModelLike | null | undefined,
+        getClientName: (client: ClientLike) => string
+    ): GameResult | null {
         if (!model || !model.gameId || !model.clients) {
             return null;
         }
 
-        resultId = model.gameId + ':' + model.roundNumber;
+        const resultId = model.gameId + ':' + model.roundNumber;
 
         if (lastRecordedResultId === resultId) {
             return null;
@@ -72,7 +96,7 @@ GF.ScoreKeeper = function () {
         lastRecordedResultId = resultId;
 
         return {
-            resultId: resultId,
+            resultId,
             gameId: model.gameId,
             roundNumber: model.roundNumber,
             clients: model.clients.map(function (client) {
@@ -86,12 +110,12 @@ GF.ScoreKeeper = function () {
     }
 
     return {
-        addPoint: addPoint,
-        createGameResult: createGameResult,
-        getGameOverMessage: getGameOverMessage,
-        getScore: getScore,
-        getScores: getScores,
-        resetRecordedResult: resetRecordedResult,
-        resetScores: resetScores
+        addPoint,
+        createGameResult,
+        getGameOverMessage,
+        getScore,
+        getScores,
+        resetRecordedResult,
+        resetScores
     };
-};
+}

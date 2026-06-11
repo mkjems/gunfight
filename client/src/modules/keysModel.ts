@@ -1,18 +1,54 @@
-GF.KeysModel = function (socket, playerId, onLocalKeyEvent, options) {
-    options = options || {};
+type KeyAction = 'down' | 'up';
 
-    var internalKeyStatus = {};
-    var inputKeys = ['h', 'j', 'k', 'l', 'a', 'z', ' ', 'e'];
+type KeyEventPayload = {
+    action: KeyAction;
+    key: string;
+    player: string;
+};
 
-    function emitKeyEvent(key, action) {
-        var keyEvent = {
-            key: key,
+type KeyboardEventLike = {
+    key: string;
+    preventDefault: () => void;
+    target?: {
+        isContentEditable?: boolean;
+        tagName?: string;
+    } | null;
+};
+
+type DocumentLike = {
+    addEventListener: (
+        eventName: 'keydown' | 'keyup',
+        callback: (evt: KeyboardEventLike) => void
+    ) => void;
+};
+
+type SocketLike = {
+    emit: (eventName: string, payload?: unknown) => void;
+};
+
+type KeysModelOptions = {
+    canReady?: () => boolean;
+    document?: DocumentLike;
+    onReady?: () => void;
+};
+
+export function KeysModel(
+    socket: SocketLike,
+    playerId: string,
+    onLocalKeyEvent: (keyEvent: KeyEventPayload) => boolean | void,
+    options: KeysModelOptions = {}
+) {
+    const ownerDocument = (options.document || document) as DocumentLike;
+    const internalKeyStatus: Record<string, boolean> = {};
+    const inputKeys = ['h', 'j', 'k', 'l', 'a', 'z', ' ', 'e'];
+
+    function emitKeyEvent(key: string, action: KeyAction) {
+        const keyEvent = {
+            key,
             player: playerId,
-            action: action
+            action
         };
-        var result;
-
-        result = onLocalKeyEvent(keyEvent);
+        const result = onLocalKeyEvent(keyEvent);
 
         if (result === false) {
             return;
@@ -21,7 +57,7 @@ GF.KeysModel = function (socket, playerId, onLocalKeyEvent, options) {
         socket.emit('clientKeyEvent', keyEvent);
     }
 
-    function press(key) {
+    function press(key: string) {
         key = normalizeKey(key);
 
         if (internalKeyStatus[key]) {
@@ -32,7 +68,7 @@ GF.KeysModel = function (socket, playerId, onLocalKeyEvent, options) {
         internalKeyStatus[key] = true;
     }
 
-    function release(key) {
+    function release(key: string) {
         key = normalizeKey(key);
 
         if (!internalKeyStatus[key]) {
@@ -64,24 +100,24 @@ GF.KeysModel = function (socket, playerId, onLocalKeyEvent, options) {
         internalKeyStatus.p = false;
     }
 
-    function normalizeKey(key) {
+    function normalizeKey(key: string) {
         return key.length === 1 ? key.toLowerCase() : key;
     }
 
-    function shouldIgnoreKeyboardEvent(evt) {
-        var target = evt.target;
-        var tagName = target && target.tagName;
+    function shouldIgnoreKeyboardEvent(evt: KeyboardEventLike) {
+        const target = evt.target;
+        const tagName = target && target.tagName;
 
         return (
             tagName === 'INPUT' ||
             tagName === 'TEXTAREA' ||
             tagName === 'SELECT' ||
-            (target && target.isContentEditable)
+            !!(target && target.isContentEditable)
         );
     }
 
-    function addKey(strKeyToAdd) {
-        document.addEventListener('keydown', function (evt) {
+    function addKey(strKeyToAdd: string) {
+        ownerDocument.addEventListener('keydown', function (evt) {
             if (shouldIgnoreKeyboardEvent(evt)) {
                 return;
             }
@@ -93,7 +129,7 @@ GF.KeysModel = function (socket, playerId, onLocalKeyEvent, options) {
             press(strKeyToAdd);
         });
 
-        document.addEventListener('keyup', function (evt) {
+        ownerDocument.addEventListener('keyup', function (evt) {
             if (shouldIgnoreKeyboardEvent(evt)) {
                 return;
             }
@@ -107,7 +143,7 @@ GF.KeysModel = function (socket, playerId, onLocalKeyEvent, options) {
     }
 
     function bindReadyKey() {
-        document.addEventListener('keydown', function (evt) {
+        ownerDocument.addEventListener('keydown', function (evt) {
             if (shouldIgnoreKeyboardEvent(evt)) {
                 return;
             }
@@ -120,7 +156,7 @@ GF.KeysModel = function (socket, playerId, onLocalKeyEvent, options) {
             ready();
         });
 
-        document.addEventListener('keyup', function (evt) {
+        ownerDocument.addEventListener('keyup', function (evt) {
             if (shouldIgnoreKeyboardEvent(evt)) {
                 return;
             }
@@ -140,17 +176,15 @@ GF.KeysModel = function (socket, playerId, onLocalKeyEvent, options) {
 
     bindReadyKey();
 
-    function isKeyDown(key) {
+    function isKeyDown(key: string) {
         return internalKeyStatus[key] ? true : false;
     }
 
-    var shared = {
+    return {
         isDown: isKeyDown,
-        press: press,
-        ready: ready,
-        release: release,
-        releaseReady: releaseReady
+        press,
+        ready,
+        release,
+        releaseReady
     };
-
-    return shared;
-};
+}

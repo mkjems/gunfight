@@ -1,9 +1,5 @@
 import scenarioRendererSource from '../js/ScenarioRenderer.js?raw';
 import soundEffectsSource from '../js/SoundEffects.js?raw';
-import scoreKeeperSource from '../js/ScoreKeeper.js?raw';
-import roundIntroSource from '../js/RoundIntro.js?raw';
-import keysModelSource from '../js/KeysModel.js?raw';
-import nameEditorSource from '../js/NameEditor.js?raw';
 import cameraSource from '../js/Camera.js?raw';
 import touchControlsSource from '../js/TouchControls.js?raw';
 import sceneSource from '../js/Scene.js?raw';
@@ -61,11 +57,15 @@ import { GameHud } from './modules/gameHud';
 import { GameHudViewModel } from './modules/gameHudViewModel';
 import { HighScoresScreen } from './modules/highScoresScreen';
 import { InstallPrompt } from './modules/installPrompt';
+import { KeysModel } from './modules/keysModel';
 import { LobbyScreen } from './modules/lobbyScreen';
 import { NameEditorScreen } from './modules/nameEditorScreen';
+import { NameEditor } from './modules/nameEditor';
 import { Pen } from './modules/pen';
 import { PlayerPositionSync } from './modules/playerPositionSync';
 import { requestAnimFrame } from './modules/requestAnimationFrame';
+import { RoundIntro } from './modules/roundIntro';
+import { ScoreKeeper } from './modules/scoreKeeper';
 
 function loadScript(src) {
     if (src === '/socket.io/socket.io.js' && globalThis.io) {
@@ -89,10 +89,6 @@ function loadScript(src) {
 const scripts = [
     ['js/ScenarioRenderer.js', scenarioRendererSource],
     ['js/SoundEffects.js', soundEffectsSource],
-    ['js/ScoreKeeper.js', scoreKeeperSource],
-    ['js/RoundIntro.js', roundIntroSource],
-    ['js/KeysModel.js', keysModelSource],
-    ['js/NameEditor.js', nameEditorSource],
     ['js/Camera.js', cameraSource],
     ['js/TouchControls.js', touchControlsSource],
     ['js/Scene.js', sceneSource],
@@ -156,10 +152,14 @@ globalThis.GF.GameHud = GameHud;
 globalThis.GF.GameHudViewModel = GameHudViewModel;
 globalThis.GF.HighScoresScreen = HighScoresScreen;
 globalThis.GF.InstallPrompt = InstallPrompt;
+globalThis.GF.KeysModel = KeysModel;
 globalThis.GF.LobbyScreen = LobbyScreen;
 globalThis.GF.NameEditorScreen = NameEditorScreen;
+globalThis.GF.NameEditor = NameEditor;
 globalThis.GF.Pen = Pen;
 globalThis.GF.PlayerPositionSync = PlayerPositionSync;
+globalThis.GF.RoundIntro = RoundIntro;
+globalThis.GF.ScoreKeeper = ScoreKeeper;
 (0, eval)('var GF = globalThis.GF;');
 
 scripts.forEach(function ([name, source]) {
