@@ -1,30 +1,45 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadCanvasTools() {
-    const context = {
-        GF: {
-            Config: {
-                graphics: {
-                    scale: 2
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/CanvasTools.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.CanvasTools;
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
 }
 
-test('disables image smoothing on canvas contexts', function () {
-    const tools = loadCanvasTools();
+async function loadCanvasTools() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('config.ts', 'config.js', tempDirectory);
+    compileClientModule('canvasTools.ts', 'canvasTools.js', tempDirectory);
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'canvasTools.js')).href
+    );
+
+    return module.CanvasTools;
+}
+
+test('disables image smoothing on canvas contexts', async function () {
+    const tools = await loadCanvasTools();
     const context = {};
 
     tools.disableImageSmoothing(context);
@@ -37,8 +52,8 @@ test('disables image smoothing on canvas contexts', function () {
     });
 });
 
-test('creates scaled patterns with smoothing disabled', function () {
-    const tools = loadCanvasTools();
+test('creates scaled patterns with smoothing disabled', async function () {
+    const tools = await loadCanvasTools();
     const calls = [];
     const tileContext = {
         drawImage(image, x, y, width, height) {

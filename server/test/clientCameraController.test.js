@@ -1,27 +1,46 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientCameraController() {
-    const context = {
-        GF: {
-            ClientScreens: {
-                RoundState: {
-                    WAITING: 'waiting',
-                    PLAYING: 'playing'
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientCameraController.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.ClientCameraController;
+async function loadClientCameraController() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientCameraController.ts',
+        'clientCameraController.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientCameraController.js'))
+            .href
+    );
+
+    return module.ClientCameraController;
 }
 
 function createWindow(options = {}) {
@@ -43,8 +62,8 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('chooses camera scale from query string and touch media', function () {
-    const ClientCameraController = loadClientCameraController();
+test('chooses camera scale from query string and touch media', async function () {
+    const ClientCameraController = await loadClientCameraController();
 
     assert.equal(
         new ClientCameraController({
@@ -66,8 +85,8 @@ test('chooses camera scale from query string and touch media', function () {
     );
 });
 
-test('calculates visible canvas screen from browser viewport', function () {
-    const ClientCameraController = loadClientCameraController();
+test('calculates visible canvas screen from browser viewport', async function () {
+    const ClientCameraController = await loadClientCameraController();
     const controller = new ClientCameraController({
         window: createWindow({
             innerHeight: 500,
@@ -97,8 +116,8 @@ test('calculates visible canvas screen from browser viewport', function () {
     });
 });
 
-test('projects world points through the active camera', function () {
-    const ClientCameraController = loadClientCameraController();
+test('projects world points through the active camera', async function () {
+    const ClientCameraController = await loadClientCameraController();
     const controller = new ClientCameraController({
         window: createWindow({ search: '?camera=1' })
     });

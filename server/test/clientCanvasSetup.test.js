@@ -1,20 +1,24 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientCanvasSetup() {
-    const context = {
-        GF: {}
-    };
+async function loadClientCanvasSetup() {
     const source = readFileSync(
-        new URL('../../client/js/ClientCanvasSetup.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientCanvasSetup.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientCanvasSetup;
+    return module.ClientCanvasSetup;
 }
 
 function createDocument() {
@@ -50,8 +54,8 @@ function createDocument() {
     };
 }
 
-test('creates sized canvas surfaces with image smoothing disabled', function () {
-    const setup = loadClientCanvasSetup();
+test('creates sized canvas surfaces with image smoothing disabled', async function () {
+    const setup = await loadClientCanvasSetup();
     const { contexts, document, elements } = createDocument();
     const disabled = [];
 

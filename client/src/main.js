@@ -1,11 +1,8 @@
 import requestAnimationFrameSource from '../js/requestAnimationFrame.js?raw';
 import ammoHudRendererSource from '../js/AmmoHudRenderer.js?raw';
-import canvasToolsSource from '../js/CanvasTools.js?raw';
 import installPromptSource from '../js/InstallPrompt.js?raw';
 import clientAmmoSource from '../js/ClientAmmo.js?raw';
 import clientAmmoFlowSource from '../js/ClientAmmoFlow.js?raw';
-import clientCanvasSetupSource from '../js/ClientCanvasSetup.js?raw';
-import clientCameraControllerSource from '../js/ClientCameraController.js?raw';
 import clientCollisionEnvironmentSource from '../js/ClientCollisionEnvironment.js?raw';
 import clientGameplayInputSource from '../js/ClientGameplayInput.js?raw';
 import clientFrameFlowSource from '../js/ClientFrameFlow.js?raw';
@@ -50,7 +47,10 @@ import bulletsSource from '../js/Bullets.js?raw';
 import playersSource from '../js/Players.js?raw';
 import collisionSource from '../js/Collision.js?raw';
 import indexSource from '../js/index.js?raw';
+import { CanvasTools } from './modules/canvasTools';
 import { ClientAssets } from './modules/clientAssets';
+import { ClientCameraController } from './modules/clientCameraController';
+import { ClientCanvasSetup } from './modules/clientCanvasSetup';
 import { ClientGameSounds } from './modules/clientGameSounds';
 import { ClientIdentity } from './modules/clientIdentity';
 import { Config } from './modules/config';
@@ -89,12 +89,9 @@ function loadScript(src) {
 const scripts = [
     ['js/requestAnimationFrame.js', requestAnimationFrameSource],
     ['js/AmmoHudRenderer.js', ammoHudRendererSource],
-    ['js/CanvasTools.js', canvasToolsSource],
     ['js/InstallPrompt.js', installPromptSource],
     ['js/ClientAmmo.js', clientAmmoSource],
     ['js/ClientAmmoFlow.js', clientAmmoFlowSource],
-    ['js/ClientCanvasSetup.js', clientCanvasSetupSource],
-    ['js/ClientCameraController.js', clientCameraControllerSource],
     ['js/ClientCollisionEnvironment.js', clientCollisionEnvironmentSource],
     ['js/ClientGameplayInput.js', clientGameplayInputSource],
     ['js/ClientFrameFlow.js', clientFrameFlowSource],
@@ -144,7 +141,10 @@ const scripts = [
 await loadScript('/socket.io/socket.io.js');
 
 globalThis.GF = globalThis.GF || {};
+globalThis.GF.CanvasTools = CanvasTools;
 globalThis.GF.ClientAssets = ClientAssets;
+globalThis.GF.ClientCameraController = ClientCameraController;
+globalThis.GF.ClientCanvasSetup = ClientCanvasSetup;
 globalThis.GF.ClientGameSounds = ClientGameSounds;
 globalThis.GF.ClientIdentity = ClientIdentity;
 globalThis.GF.Config = Config;
