@@ -72,9 +72,11 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Keep keyboard and touch input in focused modules.
     - [x] Extract sound.
     - [x] Extract round intro flow.
-    - [ ] Extract round timers and round state orchestration.
+    - [x] Extract round timer bookkeeping.
+    - [ ] Extract round state orchestration.
     - [x] Extract score handling.
     - [x] Extract client synchronization.
+    - [x] Extract player position synchronization.
     - Keep rendering, simulation, round flow, and network synchronization easy to reason about separately.
 
 - [ ] Reduce global namespace coupling.

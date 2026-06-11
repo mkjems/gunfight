@@ -30,19 +30,15 @@ GF.Game = (function () {
         latestModel,
         highScores,
         scoreKeeper,
+        timers,
+        positionSync,
         ammo,
         roundEndsAt,
         roundMessageText,
         hitMessage,
-        ritualTimer,
-        hitTimer,
-        resetTimer,
-        matchEndTimer,
-        abandonedRequeueTimer,
         scenarioStartedAt,
         roundIntro,
         advanceRoundAfterHit,
-        lastPositionSyncAt,
         obstacleDamage,
         localReadyRequested,
         playerId;
@@ -165,18 +161,14 @@ GF.Game = (function () {
         roundState = RoundState.WAITING;
         highScores = [];
         scoreKeeper = new GF.ScoreKeeper();
+        timers = new GF.ClientTimers();
+        positionSync = new GF.PlayerPositionSync();
         ammo = {};
         roundEndsAt = null;
         roundMessageText = '';
         hitMessage = null;
-        ritualTimer = null;
-        hitTimer = null;
-        resetTimer = null;
-        matchEndTimer = null;
-        abandonedRequeueTimer = null;
         scenarioStartedAt = null;
         advanceRoundAfterHit = false;
-        lastPositionSyncAt = 0;
         obstacleDamage = {};
         localReadyRequested = false;
         GF.Bullet.onRicochet = playRicochetSound;
@@ -1081,25 +1073,7 @@ GF.Game = (function () {
     }
 
     function enterLobbyState() {
-        if (ritualTimer) {
-            clearTimeout(ritualTimer);
-            ritualTimer = null;
-        }
-
-        if (hitTimer) {
-            clearTimeout(hitTimer);
-            hitTimer = null;
-        }
-
-        if (resetTimer) {
-            clearTimeout(resetTimer);
-            resetTimer = null;
-        }
-
-        if (abandonedRequeueTimer) {
-            clearTimeout(abandonedRequeueTimer);
-            abandonedRequeueTimer = null;
-        }
+        timers.clearMany(['ritual', 'hit', 'reset', 'abandonedRequeue']);
 
         roundIntro.clear();
         roundEndsAt = null;
@@ -1152,23 +1126,21 @@ GF.Game = (function () {
     }
 
     function scheduleAbandonedRequeue() {
-        if (abandonedRequeueTimer || !socket) {
+        if (timers.has('abandonedRequeue') || !socket) {
             return;
         }
 
-        abandonedRequeueTimer = setTimeout(function () {
-            abandonedRequeueTimer = null;
-            socket.emit('requeue');
-        }, GF.Config.round.abandonedRequeueDelay);
+        timers.set(
+            'abandonedRequeue',
+            function () {
+                socket.emit('requeue');
+            },
+            GF.Config.round.abandonedRequeueDelay
+        );
     }
 
     function clearAbandonedRequeue() {
-        if (!abandonedRequeueTimer) {
-            return;
-        }
-
-        clearTimeout(abandonedRequeueTimer);
-        abandonedRequeueTimer = null;
+        timers.clear('abandonedRequeue');
     }
 
     function syncStoredPlayerName() {
@@ -1211,38 +1183,41 @@ GF.Game = (function () {
         setRoundMessage('GET READY');
         renderHud();
 
-        if (ritualTimer) {
-            clearTimeout(ritualTimer);
-        }
-
-        ritualTimer = setTimeout(function () {
-            if (hasMatchTimeExpired()) {
-                ritualTimer = null;
-                endGame();
-                return;
-            }
-
-            roundIntro.complete();
-            setRoundMessage('DRAW!');
-
-            ritualTimer = setTimeout(function () {
-                ritualTimer = null;
+        timers.set(
+            'ritual',
+            function () {
                 if (hasMatchTimeExpired()) {
                     endGame();
                     return;
                 }
 
-                setRoundMessage('');
-                if (!roundEndsAt) {
-                    roundEndsAt =
-                        new Date().getTime() + GF.Config.game.seconds * 1000;
-                    scheduleMatchEnd();
-                }
-                resetAmmo();
-                setRoundState(RoundState.PLAYING);
-                renderHud();
-            }, GF.Config.round.drawDelay);
-        }, getReadyDelay);
+                roundIntro.complete();
+                setRoundMessage('DRAW!');
+
+                timers.set(
+                    'ritual',
+                    function () {
+                        if (hasMatchTimeExpired()) {
+                            endGame();
+                            return;
+                        }
+
+                        setRoundMessage('');
+                        if (!roundEndsAt) {
+                            roundEndsAt =
+                                new Date().getTime() +
+                                GF.Config.game.seconds * 1000;
+                            scheduleMatchEnd();
+                        }
+                        resetAmmo();
+                        setRoundState(RoundState.PLAYING);
+                        renderHud();
+                    },
+                    GF.Config.round.drawDelay
+                );
+            },
+            getReadyDelay
+        );
     }
 
     function hasMatchTimeExpired() {
@@ -1252,20 +1227,18 @@ GF.Game = (function () {
     function scheduleMatchEnd() {
         var delay;
 
-        if (matchEndTimer) {
-            clearTimeout(matchEndTimer);
-            matchEndTimer = null;
-        }
-
         if (!roundEndsAt) {
             return;
         }
 
         delay = Math.max(0, roundEndsAt - new Date().getTime());
-        matchEndTimer = setTimeout(function () {
-            matchEndTimer = null;
-            endGame();
-        }, delay);
+        timers.set(
+            'matchEnd',
+            function () {
+                endGame();
+            },
+            delay
+        );
     }
 
     function handleKeyEvent(keyEvent) {
@@ -1513,16 +1486,11 @@ GF.Game = (function () {
         players.clearKeys();
         bullets.clear();
 
-        if (hitTimer) {
-            clearTimeout(hitTimer);
-        }
-
-        hitTimer = setTimeout(resetAfterHit, GF.Config.round.resetDelay);
+        timers.set('hit', resetAfterHit, GF.Config.round.resetDelay);
     }
 
     function resetAfterHit() {
         hitMessage = null;
-        hitTimer = null;
         clearPlayerDeathAnimations();
 
         if (hasMatchTimeExpired()) {
@@ -1566,28 +1534,11 @@ GF.Game = (function () {
         players.clearKeys();
         bullets.clear();
 
-        if (resetTimer) {
-            clearTimeout(resetTimer);
-        }
-
-        if (matchEndTimer) {
-            clearTimeout(matchEndTimer);
-            matchEndTimer = null;
-        }
-
-        if (ritualTimer) {
-            clearTimeout(ritualTimer);
-            ritualTimer = null;
-        }
+        timers.clearMany(['reset', 'matchEnd', 'ritual', 'hit']);
 
         roundIntro.clear();
 
-        if (hitTimer) {
-            clearTimeout(hitTimer);
-            hitTimer = null;
-        }
-
-        resetTimer = setTimeout(resetRound, GF.Config.round.resetDelay);
+        timers.set('reset', resetRound, GF.Config.round.resetDelay);
     }
 
     function endGame() {
@@ -1608,31 +1559,11 @@ GF.Game = (function () {
         players.clearKeys();
         bullets.clear();
 
-        if (resetTimer) {
-            clearTimeout(resetTimer);
-        }
-
-        if (matchEndTimer) {
-            clearTimeout(matchEndTimer);
-            matchEndTimer = null;
-        }
-
-        if (ritualTimer) {
-            clearTimeout(ritualTimer);
-            ritualTimer = null;
-        }
+        timers.clearMany(['reset', 'matchEnd', 'ritual', 'hit']);
 
         roundIntro.clear();
 
-        if (hitTimer) {
-            clearTimeout(hitTimer);
-            hitTimer = null;
-        }
-
-        resetTimer = setTimeout(
-            resetToStartScreen,
-            GF.Config.round.gameOverDelay
-        );
+        timers.set('reset', resetToStartScreen, GF.Config.round.gameOverDelay);
     }
 
     function recordGameResult() {
@@ -1665,12 +1596,7 @@ GF.Game = (function () {
         hitMessage = null;
         advanceRoundAfterHit = false;
         obstacleDamage = {};
-        resetTimer = null;
-
-        if (matchEndTimer) {
-            clearTimeout(matchEndTimer);
-            matchEndTimer = null;
-        }
+        timers.clearMany(['reset', 'matchEnd']);
 
         if (readyToStart) {
             startRoundRitual({ resetScores: false });
@@ -1693,11 +1619,7 @@ GF.Game = (function () {
         hitMessage = null;
         advanceRoundAfterHit = false;
         obstacleDamage = {};
-        resetTimer = null;
-        if (matchEndTimer) {
-            clearTimeout(matchEndTimer);
-            matchEndTimer = null;
-        }
+        timers.clearMany(['reset', 'matchEnd']);
         setRoundState(RoundState.WAITING);
         syncNameEditor();
         renderHud();
@@ -1733,45 +1655,20 @@ GF.Game = (function () {
     }
 
     function syncLocalPlayerPosition() {
-        var now = new Date().getTime();
-        var player = players.all[playerId];
-
-        if (
-            roundState !== RoundState.PLAYING ||
-            !player ||
-            now - lastPositionSyncAt < 80
-        ) {
-            return;
-        }
-
-        lastPositionSyncAt = now;
-        socket.emit('playerPosition', {
-            x: player.x,
-            y: player.y,
-            frame: player.frame,
-            aim: player.aim,
-            facing: player.facing
+        positionSync.syncLocal({
+            playing: roundState === RoundState.PLAYING,
+            player: players.all[playerId],
+            socket: socket
         });
     }
 
     function applyRemotePlayerPosition(data) {
-        var player;
-
-        if (data.player === playerId || roundState !== RoundState.PLAYING) {
-            return;
-        }
-
-        player = players.all[data.player];
-
-        if (!player) {
-            return;
-        }
-
-        player.x = data.x;
-        player.y = data.y;
-        player.frame = data.frame;
-        player.aim = data.aim;
-        player.facing = data.facing;
+        positionSync.applyRemote({
+            data: data,
+            localPlayerId: playerId,
+            players: players,
+            playing: roundState === RoundState.PLAYING
+        });
     }
 
     function initTouchControls() {
