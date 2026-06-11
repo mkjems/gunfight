@@ -22,7 +22,6 @@ import clientKeyEventFlowSource from '../js/ClientKeyEventFlow.js?raw';
 import clientLobbyHudFlowSource from '../js/ClientLobbyHudFlow.js?raw';
 import clientLobbyFlowSource from '../js/ClientLobbyFlow.js?raw';
 import clientNetworkSource from '../js/ClientNetwork.js?raw';
-import clientModelUpdateFlowSource from '../js/ClientModelUpdateFlow.js?raw';
 import clientNameEditorFlowSource from '../js/ClientNameEditorFlow.js?raw';
 import clientObstacleSyncSource from '../js/ClientObstacleSync.js?raw';
 import clientPlayerHitFlowSource from '../js/ClientPlayerHitFlow.js?raw';
@@ -58,6 +57,7 @@ import { Config } from './modules/config';
 import { ClientLobbyViewModel } from './modules/clientLobbyViewModel';
 import { ClientMatchTimer } from './modules/clientMatchTimer';
 import { ClientModelSync } from './modules/clientModelSync';
+import { ClientModelUpdateFlow } from './modules/clientModelUpdateFlow';
 import { ClientModelUpdatePlan } from './modules/clientModelUpdatePlan';
 import { ClientRoundState } from './modules/clientRoundState';
 import { ClientRoundTransition } from './modules/clientRoundTransition';
@@ -111,7 +111,6 @@ const scripts = [
     ['js/ClientLobbyHudFlow.js', clientLobbyHudFlowSource],
     ['js/ClientLobbyFlow.js', clientLobbyFlowSource],
     ['js/ClientNetwork.js', clientNetworkSource],
-    ['js/ClientModelUpdateFlow.js', clientModelUpdateFlowSource],
     ['js/ClientNameEditorFlow.js', clientNameEditorFlowSource],
     ['js/ClientObstacleSync.js', clientObstacleSyncSource],
     ['js/ClientPlayerHitFlow.js', clientPlayerHitFlowSource],
@@ -152,6 +151,7 @@ globalThis.GF.Config = Config;
 globalThis.GF.ClientLobbyViewModel = ClientLobbyViewModel;
 globalThis.GF.ClientMatchTimer = ClientMatchTimer;
 globalThis.GF.ClientModelSync = ClientModelSync;
+globalThis.GF.ClientModelUpdateFlow = ClientModelUpdateFlow;
 globalThis.GF.ClientModelUpdatePlan = ClientModelUpdatePlan;
 globalThis.GF.ClientRoundState = ClientRoundState;
 globalThis.GF.ClientRoundTransition = ClientRoundTransition;

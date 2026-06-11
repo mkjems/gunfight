@@ -1,28 +1,56 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientModelUpdateFlow(plan) {
-    const context = {
-        GF: {
-            ClientModelUpdatePlan: {
-                create(options) {
-                    plan.createOptions = options;
-
-                    return plan.value;
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientModelUpdateFlow.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.ClientModelUpdateFlow;
+async function loadClientModelUpdateFlow() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('config.ts', 'config.js', tempDirectory);
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientModelSync.ts',
+        'clientModelSync.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'clientModelUpdatePlan.ts',
+        'clientModelUpdatePlan.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'clientModelUpdateFlow.ts',
+        'clientModelUpdateFlow.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientModelUpdateFlow.js')).href
+    );
+
+    return module.ClientModelUpdateFlow;
 }
 
 function createFlowOptions(overrides = {}) {
@@ -80,7 +108,7 @@ function createFlowOptions(overrides = {}) {
 }
 
 function createPlan(overrides = {}) {
-    return {
+    const plan = {
         value: {
             clearAbandonedRequeue: true,
             clearLocalReadyRequest: true,
@@ -97,18 +125,26 @@ function createPlan(overrides = {}) {
             ...overrides
         }
     };
+
+    plan.create = function (options) {
+        plan.createOptions = options;
+
+        return plan.value;
+    };
+
+    return plan;
 }
 
 function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('applies model update side effects in plan order', function () {
+test('applies model update side effects in plan order', async function () {
     const plan = createPlan();
-    const flow = loadClientModelUpdateFlow(plan);
+    const flow = await loadClientModelUpdateFlow();
     const { calls, options } = createFlowOptions();
 
-    assert.equal(flow.sync(options), plan.value);
+    assert.equal(flow.sync(options, plan.create), plan.value);
 
     assert.deepEqual(plain(plan.createOptions), {
         model: {
@@ -131,15 +167,15 @@ test('applies model update side effects in plan order', function () {
     ]);
 });
 
-test('starts the round ritual instead of rendering the hud', function () {
+test('starts the round ritual instead of rendering the hud', async function () {
     const plan = createPlan({
         renderHud: false,
         startRoundRitual: true
     });
-    const flow = loadClientModelUpdateFlow(plan);
+    const flow = await loadClientModelUpdateFlow();
     const { calls, options } = createFlowOptions();
 
-    flow.sync(options);
+    flow.sync(options, plan.create);
 
     assert.deepEqual(plain(calls), [
         'clearLocalReadyRequest',
@@ -152,17 +188,17 @@ test('starts the round ritual instead of rendering the hud', function () {
     ]);
 });
 
-test('applies abandoned lobby recovery effects', function () {
+test('applies abandoned lobby recovery effects', async function () {
     const plan = createPlan({
         clearAbandonedRequeue: false,
         enterLobbyState: true,
         playReadySound: false,
         scheduleAbandonedRequeue: true
     });
-    const flow = loadClientModelUpdateFlow(plan);
+    const flow = await loadClientModelUpdateFlow();
     const { calls, options } = createFlowOptions();
 
-    flow.sync(options);
+    flow.sync(options, plan.create);
 
     assert.deepEqual(plain(calls), [
         'clearLocalReadyRequest',
