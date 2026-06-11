@@ -17,7 +17,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static(wwwRoot));
+app.use(express.static(wwwRoot, {
+  setHeaders: function(res, filePath) {
+    if(path.basename(filePath) === 'sw.js'){
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  }
+}));
 
 app.get('/api', function(req, res) {
   res.send('Hello World, Api here');
