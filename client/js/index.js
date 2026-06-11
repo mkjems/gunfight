@@ -19,6 +19,7 @@ GF.Game = (function () {
         rockPattern,
         scenarioRenderer,
         collisionDebugRenderer,
+        identity,
         nameEditor,
         cameraController,
         camera,
@@ -40,7 +41,6 @@ GF.Game = (function () {
         roundIntro,
         localReadyRequested,
         playerId;
-    var playerNameStorageKey = 'gunfight-player-name';
     var RoundState = GF.ClientScreens.RoundState;
     var Screen = GF.ClientScreens.Screen;
 
@@ -71,6 +71,7 @@ GF.Game = (function () {
         initSoundEffects();
         initScenarioRenderer();
         initCollisionDebugRenderer();
+        initIdentity();
         initNameEditor();
         initCameraController();
         initCamera();
@@ -167,6 +168,13 @@ GF.Game = (function () {
 
     function initCollisionDebugRenderer() {
         collisionDebugRenderer = new GF.CollisionDebugRenderer(context);
+    }
+
+    function initIdentity() {
+        identity = new GF.ClientIdentity({
+            getClientName: getClientName,
+            storage: window.localStorage
+        });
     }
 
     function disableImageSmoothing() {
@@ -580,21 +588,7 @@ GF.Game = (function () {
     }
 
     function getStoredPlayerName() {
-        try {
-            return window.localStorage.getItem(playerNameStorageKey) || '';
-        } catch (error) {
-            return '';
-        }
-    }
-
-    function storePlayerName(name) {
-        if (!name) {
-            return;
-        }
-
-        try {
-            window.localStorage.setItem(playerNameStorageKey, name);
-        } catch (error) {}
+        return identity.getStoredPlayerName();
     }
 
     function submitNameChange(name) {
@@ -608,18 +602,10 @@ GF.Game = (function () {
     }
 
     function syncNameEditor() {
-        var client;
-
-        if (!nameEditor || nameEditor.isActive()) {
-            return;
-        }
-
-        client = getLocalClient();
-
-        if (client) {
-            storePlayerName(getClientName(client));
-            nameEditor.setName(getClientName(client));
-        }
+        identity.syncNameEditor({
+            client: getLocalClient(),
+            editor: nameEditor
+        });
     }
 
     function closeNameEditor() {
@@ -697,11 +683,7 @@ GF.Game = (function () {
     }
 
     function syncStoredPlayerName() {
-        var client = getLocalClient();
-
-        if (client) {
-            storePlayerName(getClientName(client));
-        }
+        identity.syncStoredPlayerName(getLocalClient());
     }
 
     function getCurrentPlayerSlots() {
@@ -1131,25 +1113,14 @@ GF.Game = (function () {
             return;
         }
 
-        touchControls.update({
-            gameplay: shouldShowGameplayTouchControls(),
-            waiting: roundState === RoundState.WAITING,
-            playing: roundState === RoundState.PLAYING,
-            editing: nameEditor && nameEditor.isActive(),
-            highScoresVisible:
-                roundState === RoundState.WAITING &&
-                shouldShowHighScoresScreen(),
-            ready: isLocalClientReady(),
-            aimLevel: getLocalAimLevel()
-        });
-    }
-
-    function shouldShowGameplayTouchControls() {
-        return (
-            roundState === RoundState.RITUAL ||
-            roundState === RoundState.PLAYING ||
-            roundState === RoundState.HIT_PAUSE ||
-            roundState === RoundState.ROUND_OVER
+        touchControls.update(
+            GF.ClientTouchState.getTouchState({
+                aimLevel: getLocalAimLevel(),
+                editing: nameEditor && nameEditor.isActive(),
+                highScoresVisible: shouldShowHighScoresScreen(),
+                ready: isLocalClientReady(),
+                roundState: roundState
+            })
         );
     }
 

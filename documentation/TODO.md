@@ -75,6 +75,8 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract gameplay key handling.
     - [x] Extract lobby view-model decisions.
     - [x] Extract camera and viewport decisions.
+    - [x] Extract touch-control state decisions.
+    - [x] Extract client identity and name-editor sync.
     - [x] Extract round intro flow.
     - [x] Extract round timer bookkeeping.
     - [x] Extract round state data and flags.
