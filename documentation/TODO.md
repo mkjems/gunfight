@@ -4,10 +4,10 @@
 
 ## P2 
 
-- Show main lobby screen for 14 secs and high score screen for 7 secs
-- Do not show game ID in the lobby. Remove line
-- Do 
-
+- Show main lobby screen for 30 secs and high score screen for 7 secs -> update documentation/Specification-main.md
+- Do not show game ID in the main-lobby. Remove line -> update documentation/Specification-main.md
+- Do not show characters in the background on the high-scores-page. -> update documentation/Specification-main.md
+-
 
 
 ## P3 - Code Architecture

@@ -16,8 +16,8 @@ The game runs in desktop browsers and mobile browsers. On mobile it should work 
 
 The app has four main screens:
 
-- Lobby
-- Edit name
+- Lobby-main
+- Lobby-Edit-name
 - Game
 - High scores
 
@@ -37,7 +37,7 @@ It shows:
 
 The lobby background shows the player's avatar. If an opponent is connected, both avatars are visible. On desktop, the player can move in the lobby to learn the controls, but cannot shoot.
 
-### Lobby states
+### State of players in Lobby
 
 - `LOOKING FOR CHALLENGER`: waiting for a second player.
 - `WAITING`: player is present but not ready.
