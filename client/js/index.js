@@ -763,29 +763,21 @@ GF.Game = (function () {
     }
 
     function getLocalAimLevel() {
-        var player = players.all[playerId];
-
-        if (player && typeof player.getAim === 'function') {
-            return player.getAim();
-        }
-
-        return GF.Config.player.defaultAim;
+        return GF.ClientTouchControlsFlow.getLocalAimLevel({
+            defaultAim: GF.Config.player.defaultAim,
+            player: players.all[playerId]
+        });
     }
 
     function updateTouchControls() {
-        if (!touchControls) {
-            return;
-        }
-
-        touchControls.update(
-            GF.ClientTouchState.getTouchState({
-                aimLevel: getLocalAimLevel(),
-                editing: nameEditor && nameEditor.isActive(),
-                highScoresVisible: shouldShowHighScoresScreen(),
-                ready: isLocalClientReady(),
-                roundState: roundState
-            })
-        );
+        GF.ClientTouchControlsFlow.update({
+            aimLevel: getLocalAimLevel(),
+            editing: nameEditor && nameEditor.isActive(),
+            highScoresVisible: shouldShowHighScoresScreen(),
+            ready: isLocalClientReady(),
+            roundState: roundState,
+            touchControls: touchControls
+        });
     }
 
     function drawCollisionBodies() {
@@ -820,12 +812,9 @@ GF.Game = (function () {
     }
 
     function startInputAndAnimation() {
-        if (!inputController) {
-            inputController = new GF.KeysModel(
-                socket,
-                playerId,
-                handleKeyEvent,
-                {
+        inputController = GF.ClientInputStartup.start({
+            createInputController: function () {
+                return new GF.KeysModel(socket, playerId, handleKeyEvent, {
                     canReady: function () {
                         return !nameEditor || !nameEditor.isActive();
                     },
@@ -833,12 +822,15 @@ GF.Game = (function () {
                         localReadyRequested = true;
                         renderHud();
                     }
-                }
-            );
-            initTouchControls();
-            initGameLoop();
-            gameLoop.start();
-        }
+                });
+            },
+            initTouchControls: initTouchControls,
+            inputController: inputController,
+            startGameLoop: function () {
+                initGameLoop();
+                gameLoop.start();
+            }
+        });
     }
 
     document.addEventListener('DOMContentLoaded', start);

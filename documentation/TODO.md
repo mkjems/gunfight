@@ -75,6 +75,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract ammo handling.
     - [x] Extract ammo reload flow.
     - [x] Extract gameplay key handling.
+    - [x] Extract input startup flow.
     - [x] Extract hit detection.
     - [x] Extract player-hit flow.
     - [x] Extract ammo HUD rendering.
@@ -86,6 +87,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Extract lobby view-model decisions.
     - [x] Extract camera and viewport decisions.
     - [x] Extract touch-control state decisions.
+    - [x] Extract touch-control update flow.
     - [x] Extract client identity and name-editor sync.
     - [x] Extract name-editor submit and close flow.
     - [x] Extract lobby entry and abandoned-game recovery flow.
