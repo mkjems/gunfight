@@ -7,6 +7,9 @@ import {
     normalizeBulletSnapshot,
     normalizeGameResultPayload,
     normalizeObstacleDamagePayload,
+    parseRockDefinitions,
+    parseScenarioSources,
+    resolveScenarioSource,
     shouldRejoinAfterLeave
 } from '../../shared/contracts.js';
 
@@ -197,4 +200,134 @@ test('only explicit leave rejoin requests pass the guard', function () {
     assert.equal(shouldRejoinAfterLeave({ rejoin: true }), true);
     assert.equal(shouldRejoinAfterLeave({ rejoin: 'true' }), false);
     assert.equal(shouldRejoinAfterLeave(undefined), false);
+});
+
+test('validates and resolves scenario source content', function () {
+    const rockDefinitions = parseRockDefinitions(
+        {
+            small: {
+                lines: [
+                    {
+                        from: [0, 0],
+                        to: [10, 0]
+                    }
+                ]
+            }
+        },
+        'test rocks'
+    );
+    const scenarios = parseScenarioSources(
+        [
+            {
+                name: 'test-scenario',
+                decorations: [{ type: 'saloon', x: 0, y: 220 }],
+                cacti: [{ x: 475, y: 378 }],
+                rocks: [{ type: 'small', x: 475, y: 445 }],
+                wagon: {
+                    x: 475,
+                    fromY: 700,
+                    toY: -80,
+                    duration: 40000
+                }
+            }
+        ],
+        rockDefinitions,
+        'test scenarios'
+    );
+
+    assert.deepEqual(scenarios, [
+        {
+            name: 'test-scenario',
+            decorations: [{ type: 'saloon', x: 0, y: 220 }],
+            cacti: [{ x: 475, y: 378 }],
+            rocks: [{ type: 'small', x: 475, y: 445 }],
+            wagon: {
+                x: 475,
+                fromY: 700,
+                toY: -80,
+                duration: 40000
+            }
+        }
+    ]);
+    assert.deepEqual(resolveScenarioSource(scenarios[0], rockDefinitions), {
+        name: 'test-scenario',
+        decorations: [{ type: 'saloon', x: 0, y: 220 }],
+        cacti: [{ x: 475, y: 378 }],
+        rocks: [
+            {
+                type: 'small',
+                x: 475,
+                y: 445,
+                lines: [
+                    {
+                        from: [0, 0],
+                        to: [10, 0]
+                    }
+                ]
+            }
+        ],
+        wagon: {
+            x: 475,
+            fromY: 700,
+            toY: -80,
+            duration: 40000
+        }
+    });
+});
+
+test('rejects malformed rock definitions with clear messages', function () {
+    assert.throws(
+        function () {
+            parseRockDefinitions(
+                {
+                    small: {
+                        lines: [
+                            {
+                                from: [0],
+                                to: [10, 0]
+                            }
+                        ]
+                    }
+                },
+                'test rocks'
+            );
+        },
+        {
+            message: 'test rocks.small.lines[0].from: expected [number, number]'
+        }
+    );
+});
+
+test('rejects scenarios that reference unknown rock definitions', function () {
+    const rockDefinitions = parseRockDefinitions(
+        {
+            small: {
+                lines: [
+                    {
+                        from: [0, 0],
+                        to: [10, 0]
+                    }
+                ]
+            }
+        },
+        'test rocks'
+    );
+
+    assert.throws(
+        function () {
+            parseScenarioSources(
+                [
+                    {
+                        rocks: [{ type: 'missing', x: 10, y: 20 }]
+                    }
+                ],
+                rockDefinitions,
+                'test scenarios'
+            );
+        },
+        {
+            message:
+                'test scenarios[0].rocks[0].type: unknown rock definition "missing"'
+        }
+    );
 });

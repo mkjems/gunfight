@@ -1,62 +1,46 @@
 import { readFileSync } from 'node:fs';
+import {
+    parseRockDefinitions,
+    parseScenarioSources,
+    resolveScenarioSource
+} from '../../shared/contracts.js';
 
-const scenarios = JSON.parse(
-    readFileSync(new URL('../scenarios.json', import.meta.url), 'utf8')
+/**
+ * @typedef {import('../../shared/contracts.js').GameModelClient} GameModelClient
+ * @typedef {import('../../shared/contracts.js').GameModelSnapshot} GameModelSnapshot
+ * @typedef {import('../../shared/contracts.js').Scenario} Scenario
+ * @typedef {import('../../shared/contracts.js').ScenarioSource} ScenarioSource
+ */
+
+const rockDefinitions = parseRockDefinitions(
+    JSON.parse(readFileSync(new URL('../rocks.json', import.meta.url), 'utf8')),
+    'server/rocks.json'
 );
-const rockDefinitions = JSON.parse(
-    readFileSync(new URL('../rocks.json', import.meta.url), 'utf8')
+const scenarios = parseScenarioSources(
+    JSON.parse(
+        readFileSync(new URL('../scenarios.json', import.meta.url), 'utf8')
+    ),
+    rockDefinitions,
+    'server/scenarios.json'
 );
-
-function resolveRocks(scenario) {
-    return (scenario.rocks || []).map(function (rock) {
-        const definition = rockDefinitions[rock.type];
-
-        if (!definition) {
-            return {
-                type: rock.type,
-                x: rock.x,
-                y: rock.y,
-                lines: []
-            };
-        }
-
-        return {
-            type: rock.type,
-            x: rock.x,
-            y: rock.y,
-            lines: definition.lines.map(function (line) {
-                return {
-                    from: line.from,
-                    to: line.to
-                };
-            })
-        };
-    });
-}
-
-function resolveScenario(scenario) {
-    if (!scenario) {
-        return null;
-    }
-
-    return {
-        ...scenario,
-        rocks: resolveRocks(scenario)
-    };
-}
 
 export function createGameModel() {
     let counter = 0;
+    /** @type {GameModelClient[]} */
     const clients = [];
     let currentScenarioIndex = -1;
     let roundNumber = 0;
 
+    /** @returns {Scenario | null} */
     function getCurrentScenario() {
         if (currentScenarioIndex < 0 || scenarios.length === 0) {
             return null;
         }
 
-        return resolveScenario(scenarios[currentScenarioIndex]);
+        return resolveScenarioSource(
+            scenarios[currentScenarioIndex],
+            rockDefinitions
+        );
     }
 
     function areAllReady() {
@@ -79,9 +63,11 @@ export function createGameModel() {
     }
 
     return {
+        /** @returns {GameModelClient} */
         getNewClient: function () {
             counter++;
 
+            /** @type {GameModelClient} */
             const newClient = {
                 id: counter,
                 ready: false
@@ -91,6 +77,7 @@ export function createGameModel() {
             return newClient;
         },
 
+        /** @param {GameModelClient} client */
         disconnect: function (client) {
             let i;
 
@@ -101,6 +88,7 @@ export function createGameModel() {
             }
         },
 
+        /** @returns {GameModelSnapshot} */
         getModel: function () {
             return {
                 clients: clients.slice(),
@@ -109,6 +97,7 @@ export function createGameModel() {
             };
         },
 
+        /** @param {GameModelClient} client */
         readyClient: function (client) {
             const wasReadyToStart = areAllReady();
             const existingClient = clients.find(function (item) {

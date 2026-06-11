@@ -134,35 +134,50 @@ io.on('connection', function (socket) {
         console.log('client disconnected', client.id, reason);
     });
 
-    socket.on('joinLobby', function (data) {
-        joinSocketGame(socket, {
-            name: getNameFromPayload(data)
-        });
-    });
-
-    socket.on('updateName', function (data) {
-        const updated = lobby.updateName(socket.id, getNameFromPayload(data));
-
-        if (!updated) {
-            return;
-        }
-
-        emitGameModel(updated.game);
-    });
-
-    socket.on('leaveGame', function (data) {
-        const left = leaveSocketGame(socket);
-
-        socket.emit('leftGame', {
-            gameId: left && left.game.id
-        });
-
-        if (shouldRejoinAfterLeave(data)) {
+    socket.on(
+        'joinLobby',
+        /** @param {unknown} data */
+        function (data) {
             joinSocketGame(socket, {
-                name: left && left.client.name
+                name: getNameFromPayload(data)
             });
         }
-    });
+    );
+
+    socket.on(
+        'updateName',
+        /** @param {unknown} data */
+        function (data) {
+            const updated = lobby.updateName(
+                socket.id,
+                getNameFromPayload(data)
+            );
+
+            if (!updated) {
+                return;
+            }
+
+            emitGameModel(updated.game);
+        }
+    );
+
+    socket.on(
+        'leaveGame',
+        /** @param {unknown} data */
+        function (data) {
+            const left = leaveSocketGame(socket);
+
+            socket.emit('leftGame', {
+                gameId: left && left.game.id
+            });
+
+            if (shouldRejoinAfterLeave(data)) {
+                joinSocketGame(socket, {
+                    name: left && left.client.name
+                });
+            }
+        }
+    );
 
     socket.on('requeue', function () {
         const context = getSocketGameContext(socket);
@@ -174,50 +189,62 @@ io.on('connection', function (socket) {
         });
     });
 
-    socket.on('clientKeyEvent', function (data) {
-        const context = getSocketGameContext(socket);
-        let keyEvent;
+    socket.on(
+        'clientKeyEvent',
+        /** @param {unknown} data */
+        function (data) {
+            const context = getSocketGameContext(socket);
+            let keyEvent;
 
-        if (!context) {
-            return;
+            if (!context) {
+                return;
+            }
+
+            keyEvent = createKeyEventPayload(data, context.client.id);
+
+            if (!keyEvent) {
+                return;
+            }
+
+            socket.to(context.game.room).emit('keyEvent', keyEvent);
         }
+    );
 
-        keyEvent = createKeyEventPayload(data, context.client.id);
+    socket.on(
+        'playerPosition',
+        /** @param {unknown} data */
+        function (data) {
+            const context = getSocketGameContext(socket);
+            let position;
 
-        if (!keyEvent) {
-            return;
+            if (!context) {
+                return;
+            }
+
+            position = createPlayerPositionPayload(data, context.client.id);
+
+            if (!position) {
+                return;
+            }
+
+            socket.to(context.game.room).emit('playerPosition', position);
         }
+    );
 
-        socket.to(context.game.room).emit('keyEvent', keyEvent);
-    });
+    socket.on(
+        'obstacleDamage',
+        /** @param {unknown} data */
+        function (data) {
+            const context = getSocketGameContext(socket);
+            const payload = normalizeObstacleDamagePayload(data);
 
-    socket.on('playerPosition', function (data) {
-        const context = getSocketGameContext(socket);
-        let position;
+            if (!context || !payload || payload.ownerId !== context.client.id) {
+                return;
+            }
 
-        if (!context) {
-            return;
+            socket.to(context.game.room).emit('obstacleDamage', payload);
         }
-
-        position = createPlayerPositionPayload(data, context.client.id);
-
-        if (!position) {
-            return;
-        }
-
-        socket.to(context.game.room).emit('playerPosition', position);
-    });
-
-    socket.on('obstacleDamage', function (data) {
-        const context = getSocketGameContext(socket);
-        const payload = normalizeObstacleDamagePayload(data);
-
-        if (!context || !payload || payload.ownerId !== context.client.id) {
-            return;
-        }
-
-        socket.to(context.game.room).emit('obstacleDamage', payload);
-    });
+    );
 
     socket.on('clientReady', function () {
         const context = getSocketGameContext(socket);
@@ -260,15 +287,19 @@ io.on('connection', function (socket) {
         emitGameModel(context.game);
     });
 
-    socket.on('recordGameResult', function (data) {
-        const result = normalizeGameResultPayload(data);
+    socket.on(
+        'recordGameResult',
+        /** @param {unknown} data */
+        function (data) {
+            const result = normalizeGameResultPayload(data);
 
-        if (!result) {
-            return;
+            if (!result) {
+                return;
+            }
+
+            io.emit('highScores', highScores.recordGame(result));
         }
-
-        io.emit('highScores', highScores.recordGame(result));
-    });
+    );
 });
 
 server.listen(portNumber, function () {

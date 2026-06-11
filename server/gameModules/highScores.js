@@ -1,5 +1,15 @@
 const DEFAULT_LIMIT = 10;
 
+/**
+ * @typedef {import('../../shared/contracts.js').GameResultPayload} GameResultPayload
+ * @typedef {import('../../shared/contracts.js').HighScoreEntry} HighScoreEntry
+ * @typedef {{ limit?: number }} HighScoresOptions
+ */
+
+/**
+ * @param {unknown} name
+ * @returns {string}
+ */
 function sanitizeName(name) {
     return (
         String(name || '')
@@ -9,6 +19,10 @@ function sanitizeName(name) {
     );
 }
 
+/**
+ * @param {unknown} score
+ * @returns {number}
+ */
 function normalizeScore(score) {
     const value = Number(score);
 
@@ -19,6 +33,11 @@ function normalizeScore(score) {
     return Math.floor(value);
 }
 
+/**
+ * @param {HighScoreEntry} first
+ * @param {HighScoreEntry} second
+ * @returns {number}
+ */
 function sortEntries(first, second) {
     if (second.wins !== first.wins) {
         return second.wins - first.wins;
@@ -35,13 +54,22 @@ function sortEntries(first, second) {
     return first.name.localeCompare(second.name);
 }
 
+/**
+ * @param {HighScoresOptions=} options
+ */
 export function createHighScores(options) {
     options = options || {};
 
     const limit = options.limit || DEFAULT_LIMIT;
+    /** @type {Map<string, HighScoreEntry>} */
     const entriesByName = new Map();
+    /** @type {Set<string>} */
     const recordedResults = new Set();
 
+    /**
+     * @param {string} name
+     * @returns {HighScoreEntry}
+     */
     function getEntry(name) {
         const safeName = sanitizeName(name);
         let entry = entriesByName.get(safeName);
@@ -59,6 +87,7 @@ export function createHighScores(options) {
         return entry;
     }
 
+    /** @returns {HighScoreEntry[]} */
     function getTable() {
         return Array.from(entriesByName.values())
             .map(function (entry) {
@@ -73,16 +102,18 @@ export function createHighScores(options) {
             .slice(0, limit);
     }
 
+    /**
+     * @param {GameResultPayload} result
+     * @returns {HighScoreEntry[]}
+     */
     function recordGame(result) {
-        const clients =
-            result && Array.isArray(result.clients) ? result.clients : [];
-        const scores =
-            result && Array.isArray(result.scores) ? result.scores : [];
-        const resultId = String((result && result.resultId) || '');
+        const clients = result.clients;
+        const scores = result.scores;
+        const resultId = result.resultId;
         let highestScore = 0;
         let winnerCount = 0;
 
-        if (!resultId || recordedResults.has(resultId) || clients.length < 2) {
+        if (recordedResults.has(resultId) || clients.length < 2) {
             return getTable();
         }
 

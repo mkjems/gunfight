@@ -3,15 +3,16 @@
 
 /**
  * @typedef {import('../../shared/contracts.js').GameStatus} GameStatus
- * @typedef {import('../../shared/contracts.js').RoundState} RoundState
- * @typedef {import('../../shared/contracts.js').ScreenName} ScreenName
- * @typedef {import('../../shared/contracts.js').ClientScreenState} ClientScreenState
  * @typedef {import('../../shared/contracts.js').PublicClient} PublicClient
  * @typedef {import('../../shared/contracts.js').PublicGameModel} PublicGameModel
  * @typedef {import('../../shared/contracts.js').HighScoreEntry} HighScoreEntry
+ * @typedef {import('../../shared/contracts.js').ScenarioSource} ScenarioSource
  * @typedef {import('../../shared/contracts.js').Scenario} Scenario
+ * @typedef {import('../../shared/contracts.js').RockPlacement} RockPlacement
  * @typedef {import('../../shared/contracts.js').RockInstance} RockInstance
  * @typedef {import('../../shared/contracts.js').LineSegment} LineSegment
+ * @typedef {import('../../shared/contracts.js').RockDefinition} RockDefinition
+ * @typedef {import('../../shared/contracts.js').RockDefinitions} RockDefinitions
  * @typedef {import('../../shared/contracts.js').CactusInstance} CactusInstance
  * @typedef {import('../../shared/contracts.js').WagonInstance} WagonInstance
  * @typedef {import('../../shared/contracts.js').Decoration} Decoration
@@ -25,4 +26,19 @@
  * @typedef {import('../../shared/contracts.js').GameResultClient} GameResultClient
  * @typedef {import('../../shared/contracts.js').GameResultPayload} GameResultPayload
  * @typedef {import('../../shared/contracts.js').JoinedGamePayload} JoinedGamePayload
+ */
+
+/**
+ * @typedef {'waiting' | 'ritual' | 'playing' | 'hitPause' | 'roundOver' | 'gameOver'} RoundState
+ */
+
+/**
+ * @typedef {'lobby-main' | 'lobby-edit-name' | 'game' | 'high-scores'} ScreenName
+ */
+
+/**
+ * @typedef {object} ClientScreenState
+ * @property {RoundState} roundState
+ * @property {boolean} nameEditorActive
+ * @property {boolean} highScoresVisible
  */

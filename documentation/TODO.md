@@ -144,24 +144,24 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 
 ### P1.4.5 - Stabilize Shared And Server Types
 
-- [ ] Make shared contracts the single source of truth.
+- [x] Make shared contracts the single source of truth.
     - Keep public game, client, scenario, obstacle, bullet, score, and Socket.IO payload shapes in `shared/`.
     - Replace duplicate local typedefs with imports from shared contracts.
     - Keep browser-only state types separate from server-owned public contracts.
 
-- [ ] Strengthen server module annotations.
+- [x] Strengthen server module annotations.
     - Type lobby inputs, outputs, game sessions, and public models.
     - Type high score game results and table rows.
     - Type game model clients, round numbers, and resolved scenarios.
     - Treat incoming socket data as `unknown` until normalized.
 
-- [ ] Validate JSON-backed game content.
+- [x] Validate JSON-backed game content.
     - Add runtime validation for `server/scenarios.json`.
     - Add runtime validation for `server/rocks.json`.
     - Keep source JSON types separate from resolved runtime scenario types.
     - Fail clearly when authoring data is malformed.
 
-- [ ] Tighten type checking gradually.
+- [x] Tighten type checking gradually.
     - Extend `checkJs` coverage only where it is useful and stable.
     - Try stricter TypeScript flags on `shared/` first.
     - Convert `shared/` to `.ts` only after the contracts stop moving.
