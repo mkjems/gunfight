@@ -1,37 +1,46 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientRoundRitual() {
-    const context = {
-        GF: {
-            ClientScreens: {
-                RoundState: {
-                    PLAYING: 'playing',
-                    RITUAL: 'ritual'
-                }
-            },
-            Config: {
-                game: {
-                    seconds: 70
-                },
-                round: {
-                    drawDelay: 700,
-                    getReadyDelay: 1200,
-                    introWalkDelay: 1500
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientRoundRitual.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.ClientRoundRitual;
+async function loadClientRoundRitual() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('config.ts', 'config.js', tempDirectory);
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientRoundRitual.ts',
+        'clientRoundRitual.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientRoundRitual.js')).href
+    );
+
+    return module.ClientRoundRitual;
 }
 
 function createOptions() {
@@ -110,8 +119,8 @@ function createOptions() {
     return { calls, options, scheduled };
 }
 
-test('starts the get-ready ritual and schedules draw', function () {
-    const ritual = loadClientRoundRitual();
+test('starts the get-ready ritual and schedules draw', async function () {
+    const ritual = await loadClientRoundRitual();
     const { calls, options, scheduled } = createOptions();
 
     ritual.start(options);
@@ -133,8 +142,8 @@ test('starts the get-ready ritual and schedules draw', function () {
     assert.equal(scheduled.length, 1);
 });
 
-test('moves from draw to playing after ritual timers', function () {
-    const ritual = loadClientRoundRitual();
+test('moves from draw to playing after ritual timers', async function () {
+    const ritual = await loadClientRoundRitual();
     const { calls, options, scheduled } = createOptions();
 
     ritual.start(options);

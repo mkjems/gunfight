@@ -1,31 +1,46 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientLobbyFlow() {
-    const context = {
-        GF: {
-            ClientScreens: {
-                RoundState: {
-                    WAITING: 'waiting'
-                }
-            },
-            Config: {
-                round: {
-                    abandonedRequeueDelay: 3000
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/ClientLobbyFlow.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.ClientLobbyFlow;
+async function loadClientLobbyFlow() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('config.ts', 'config.js', tempDirectory);
+    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
+    compileClientModule(
+        'clientLobbyFlow.ts',
+        'clientLobbyFlow.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'clientLobbyFlow.js')).href
+    );
+
+    return module.ClientLobbyFlow;
 }
 
 function createLobbyOptions(overrides = {}) {
@@ -97,8 +112,8 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('enters lobby state by clearing round activity and sync state', function () {
-    const flow = loadClientLobbyFlow();
+test('enters lobby state by clearing round activity and sync state', async function () {
+    const flow = await loadClientLobbyFlow();
     const { calls, options } = createLobbyOptions();
 
     flow.enter(options);
@@ -115,19 +130,19 @@ test('enters lobby state by clearing round activity and sync state', function ()
     ]);
 });
 
-test('schedules abandoned game requeue once', function () {
-    const flow = loadClientLobbyFlow();
+test('schedules abandoned game requeue once', async function () {
+    const flow = await loadClientLobbyFlow();
     const { calls, options } = createLobbyOptions();
 
     assert.equal(flow.scheduleAbandonedRequeue(options), true);
     assert.deepEqual(plain(calls), [
-        ['timers.set', 'abandonedRequeue', 'function', 3000],
+        ['timers.set', 'abandonedRequeue', 'function', 2500],
         ['socket.emit', 'requeue']
     ]);
 });
 
-test('does not schedule abandoned game requeue without socket or when pending', function () {
-    const flow = loadClientLobbyFlow();
+test('does not schedule abandoned game requeue without socket or when pending', async function () {
+    const flow = await loadClientLobbyFlow();
     const withoutSocket = createLobbyOptions({
         socket: null
     });
@@ -148,8 +163,8 @@ test('does not schedule abandoned game requeue without socket or when pending', 
     assert.deepEqual(alreadyPending.calls, []);
 });
 
-test('clears abandoned game requeue timer', function () {
-    const flow = loadClientLobbyFlow();
+test('clears abandoned game requeue timer', async function () {
+    const flow = await loadClientLobbyFlow();
     const { calls, options } = createLobbyOptions();
 
     flow.clearAbandonedRequeue(options);

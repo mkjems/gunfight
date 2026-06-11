@@ -78,7 +78,7 @@ function createRenderOptions(overrides = {}) {
         model: {
             gameId: 'game-1'
         },
-        now: 0,
+        now: 1,
         nameEditor: {
             getState() {
                 return {

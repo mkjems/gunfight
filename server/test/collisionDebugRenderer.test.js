@@ -1,26 +1,46 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadCollisionDebugRenderer(showCollisionBodies = true) {
-    const context = {
-        GF: {
-            Config: {
-                debug: {
-                    showCollisionBodies
-                }
-            }
-        }
-    };
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        new URL('../../client/js/CollisionDebugRenderer.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
 
-    vm.runInNewContext(source, context);
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
+    );
+}
 
-    return context.GF.CollisionDebugRenderer;
+async function loadCollisionDebugRenderer() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule('config.ts', 'config.js', tempDirectory);
+    compileClientModule(
+        'collisionDebugRenderer.ts',
+        'collisionDebugRenderer.js',
+        tempDirectory
+    );
+
+    const module = await import(
+        pathToFileURL(path.join(tempDirectory, 'collisionDebugRenderer.js'))
+            .href
+    );
+
+    return module.CollisionDebugRenderer;
 }
 
 function createContext() {
@@ -58,10 +78,12 @@ function createContext() {
     };
 }
 
-test('draws obstacle and player collision bodies when debug is enabled', function () {
-    const CollisionDebugRenderer = loadCollisionDebugRenderer();
+test('draws obstacle and player collision bodies when debug is enabled', async function () {
+    const CollisionDebugRenderer = await loadCollisionDebugRenderer();
     const context = createContext();
-    const renderer = new CollisionDebugRenderer(context);
+    const renderer = new CollisionDebugRenderer(context, {
+        showCollisionBodies: true
+    });
 
     renderer.render({
         obstacleBodies: [
@@ -104,10 +126,12 @@ test('draws obstacle and player collision bodies when debug is enabled', functio
     ]);
 });
 
-test('skips drawing when collision debug is disabled', function () {
-    const CollisionDebugRenderer = loadCollisionDebugRenderer(false);
+test('skips drawing when collision debug is disabled', async function () {
+    const CollisionDebugRenderer = await loadCollisionDebugRenderer();
     const context = createContext();
-    const renderer = new CollisionDebugRenderer(context);
+    const renderer = new CollisionDebugRenderer(context, {
+        showCollisionBodies: false
+    });
 
     renderer.render({
         obstacleBodies: [{ type: 'rect', x: 1, y: 2, width: 3, height: 4 }],
