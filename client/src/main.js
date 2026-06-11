@@ -23,7 +23,6 @@ import clientKeyEventFlowSource from '../js/ClientKeyEventFlow.js?raw';
 import clientLobbyHudFlowSource from '../js/ClientLobbyHudFlow.js?raw';
 import clientLobbyFlowSource from '../js/ClientLobbyFlow.js?raw';
 import clientNetworkSource from '../js/ClientNetwork.js?raw';
-import clientModelSyncSource from '../js/ClientModelSync.js?raw';
 import clientModelUpdateFlowSource from '../js/ClientModelUpdateFlow.js?raw';
 import clientModelUpdatePlanSource from '../js/ClientModelUpdatePlan.js?raw';
 import clientNameEditorFlowSource from '../js/ClientNameEditorFlow.js?raw';
@@ -32,7 +31,6 @@ import clientPlayerHitFlowSource from '../js/ClientPlayerHitFlow.js?raw';
 import clientRoundEndFlowSource from '../js/ClientRoundEndFlow.js?raw';
 import clientRoundResetFlowSource from '../js/ClientRoundResetFlow.js?raw';
 import clientRoundRitualSource from '../js/ClientRoundRitual.js?raw';
-import clientTimersSource from '../js/ClientTimers.js?raw';
 import clientTouchControlsFlowSource from '../js/ClientTouchControlsFlow.js?raw';
 import collisionDebugRendererSource from '../js/CollisionDebugRenderer.js?raw';
 import playerPositionSyncSource from '../js/PlayerPositionSync.js?raw';
@@ -60,11 +58,13 @@ import collisionSource from '../js/Collision.js?raw';
 import indexSource from '../js/index.js?raw';
 import { ClientLobbyViewModel } from './modules/clientLobbyViewModel';
 import { ClientMatchTimer } from './modules/clientMatchTimer';
+import { ClientModelSync } from './modules/clientModelSync';
 import { ClientRoundState } from './modules/clientRoundState';
 import { ClientRoundTransition } from './modules/clientRoundTransition';
 import { ClientScreens } from './modules/clientScreens';
 import { ClientTouchEnvironment } from './modules/clientTouchEnvironment';
 import { ClientTouchState } from './modules/clientTouchState';
+import { ClientTimers } from './modules/clientTimers';
 import { GameHudViewModel } from './modules/gameHudViewModel';
 
 function loadScript(src) {
@@ -112,7 +112,6 @@ const scripts = [
     ['js/ClientLobbyHudFlow.js', clientLobbyHudFlowSource],
     ['js/ClientLobbyFlow.js', clientLobbyFlowSource],
     ['js/ClientNetwork.js', clientNetworkSource],
-    ['js/ClientModelSync.js', clientModelSyncSource],
     ['js/ClientModelUpdateFlow.js', clientModelUpdateFlowSource],
     ['js/ClientModelUpdatePlan.js', clientModelUpdatePlanSource],
     ['js/ClientNameEditorFlow.js', clientNameEditorFlowSource],
@@ -121,7 +120,6 @@ const scripts = [
     ['js/ClientRoundEndFlow.js', clientRoundEndFlowSource],
     ['js/ClientRoundResetFlow.js', clientRoundResetFlowSource],
     ['js/ClientRoundRitual.js', clientRoundRitualSource],
-    ['js/ClientTimers.js', clientTimersSource],
     ['js/ClientTouchControlsFlow.js', clientTouchControlsFlowSource],
     ['js/CollisionDebugRenderer.js', collisionDebugRendererSource],
     ['js/PlayerPositionSync.js', playerPositionSyncSource],
@@ -154,11 +152,13 @@ await loadScript('/socket.io/socket.io.js');
 globalThis.GF = globalThis.GF || {};
 globalThis.GF.ClientLobbyViewModel = ClientLobbyViewModel;
 globalThis.GF.ClientMatchTimer = ClientMatchTimer;
+globalThis.GF.ClientModelSync = ClientModelSync;
 globalThis.GF.ClientRoundState = ClientRoundState;
 globalThis.GF.ClientRoundTransition = ClientRoundTransition;
 globalThis.GF.ClientScreens = ClientScreens;
 globalThis.GF.ClientTouchEnvironment = ClientTouchEnvironment;
 globalThis.GF.ClientTouchState = ClientTouchState;
+globalThis.GF.ClientTimers = ClientTimers;
 globalThis.GF.GameHudViewModel = GameHudViewModel;
 (0, eval)('var GF = globalThis.GF;');
 

@@ -1,24 +1,28 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
-import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientModelSync() {
-    const context = {
-        GF: {}
-    };
+async function loadClientModelSync() {
     const source = readFileSync(
-        new URL('../../client/js/ClientModelSync.js', import.meta.url),
+        path.join(process.cwd(), 'client/src/modules/clientModelSync.ts'),
         'utf8'
     );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
 
-    vm.runInNewContext(source, context);
-
-    return context.GF.ClientModelSync;
+    return module.ClientModelSync;
 }
 
-test('finds the local client in the public game model', function () {
-    const sync = loadClientModelSync();
+test('finds the local client in the public game model', async function () {
+    const sync = await loadClientModelSync();
     const model = {
         clients: [
             { id: 1, name: 'ACE', ready: false, slot: 0 },
@@ -30,8 +34,8 @@ test('finds the local client in the public game model', function () {
     assert.equal(sync.getLocalClient(model, 3), null);
 });
 
-test('analyzes model changes for client synchronization', function () {
-    const sync = loadClientModelSync();
+test('analyzes model changes for client synchronization', async function () {
+    const sync = await loadClientModelSync();
     const previousModel = {
         status: 'readying',
         clients: [
@@ -55,8 +59,8 @@ test('analyzes model changes for client synchronization', function () {
     assert.equal(result.readyToStart, true);
 });
 
-test('detects abandoned games and cleared local ready state', function () {
-    const sync = loadClientModelSync();
+test('detects abandoned games and cleared local ready state', async function () {
+    const sync = await loadClientModelSync();
     const model = {
         status: 'abandoned',
         clients: [{ id: 1, ready: false }]

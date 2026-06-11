@@ -1,11 +1,31 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
+import ts from 'typescript';
 
-function loadClientModelUpdatePlan() {
+async function loadClientModelSync() {
+    const source = readFileSync(
+        path.join(process.cwd(), 'client/src/modules/clientModelSync.ts'),
+        'utf8'
+    );
+    const transpiled = ts.transpileModule(source, {
+        compilerOptions: {
+            module: ts.ModuleKind.ES2022,
+            target: ts.ScriptTarget.ES2022
+        }
+    });
+    const encoded = Buffer.from(transpiled.outputText).toString('base64');
+    const module = await import('data:text/javascript;base64,' + encoded);
+
+    return module.ClientModelSync;
+}
+
+async function loadClientModelUpdatePlan() {
     const context = {
         GF: {
+            ClientModelSync: await loadClientModelSync(),
             ClientScreens: {
                 RoundState: {
                     PLAYING: 'playing',
@@ -20,16 +40,11 @@ function loadClientModelUpdatePlan() {
             }
         }
     };
-    const modelSyncSource = readFileSync(
-        new URL('../../client/js/ClientModelSync.js', import.meta.url),
-        'utf8'
-    );
     const planSource = readFileSync(
         new URL('../../client/js/ClientModelUpdatePlan.js', import.meta.url),
         'utf8'
     );
 
-    vm.runInNewContext(modelSyncSource, context);
     vm.runInNewContext(planSource, context);
 
     return context.GF.ClientModelUpdatePlan;
@@ -39,8 +54,8 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('plans a round start when a waiting game becomes ready', function () {
-    const plan = loadClientModelUpdatePlan();
+test('plans a round start when a waiting game becomes ready', async function () {
+    const plan = await loadClientModelUpdatePlan();
     const previousModel = {
         clients: [
             { id: 'p1', ready: false },
@@ -82,8 +97,8 @@ test('plans a round start when a waiting game becomes ready', function () {
     );
 });
 
-test('plans abandoned-game recovery', function () {
-    const plan = loadClientModelUpdatePlan();
+test('plans abandoned-game recovery', async function () {
+    const plan = await loadClientModelUpdatePlan();
 
     assert.deepEqual(
         plain(
