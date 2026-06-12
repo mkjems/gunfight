@@ -280,10 +280,10 @@ body.install-prompt-visible #touchControls {
 
 #lobbyHud {
     box-sizing: border-box;
+    align-items: center;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
 }
 
 h1 {
@@ -296,6 +296,29 @@ h2 {
     font: inherit;
     font-size: var(--font-size);
     margin: 0;
+}
+
+#lobby-main {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto minmax(0, 1.55fr);
+    height: 100%;
+    justify-items: center;
+    width: 100%;
+}
+
+#lobby-main h1 {
+    align-self: end;
+    margin: 0 0 clamp(42px, 11cqh, 78px);
+}
+
+#lobbyInstructions {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 2.4cqh, 20px);
+    grid-row: 2;
+    justify-content: center;
 }
 
 #lobbyIdentity,
@@ -449,9 +472,13 @@ h2 {
 
 #touchLobbyControls {
     align-items: center;
+    bottom: clamp(22px, 6cqh, 44px);
     display: flex;
     gap: clamp(8px, 1.4cqw, 14px);
     justify-content: center;
+    left: 0;
+    position: absolute;
+    right: 0;
 }
 
 #touchLobbyControls[hidden] {

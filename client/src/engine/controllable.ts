@@ -18,15 +18,38 @@ type KeyEventPayload = {
 type PlayerSlot = {
     facing: number;
     frame: number;
+    movementBounds?: MovementBounds;
     x: number;
     y: number;
 };
 
+type MovementBounds = {
+    maxX: number;
+    maxY: number;
+    minX: number;
+    minY: number;
+};
+
+type LobbyLabel = {
+    local: boolean;
+    name: string;
+    state: string;
+};
+
 type DrawContext = {
     drawImage: (...args: unknown[]) => void;
+    fillRect?: (x: number, y: number, width: number, height: number) => void;
+    fillStyle?: string | CanvasGradient | CanvasPattern;
+    fillText?: (text: string, x: number, y: number) => void;
+    font?: string;
+    measureText?: (text: string) => {
+        width: number;
+    };
     restore: () => void;
     save: () => void;
     scale: (x: number, y: number) => void;
+    textAlign?: CanvasTextAlign;
+    textBaseline?: CanvasTextBaseline;
     translate: (x: number, y: number) => void;
 };
 
@@ -48,6 +71,8 @@ export class Controllable {
     frame: number;
     idleFrame: number;
     keys: Record<string, boolean>;
+    lobbyLabel: LobbyLabel | null;
+    movementBounds: MovementBounds | null;
     pen: Pen;
     playerId?: string | number;
     slot?: number;
@@ -68,6 +93,8 @@ export class Controllable {
         this.facing = options.facing || 1;
         this.idleFrame = options.frame || 0;
         this.frame = this.idleFrame;
+        this.lobbyLabel = null;
+        this.movementBounds = null;
         this.aim = config.defaultAim;
         this.animationTime = 0;
         this.animationFrameTime = config.animationFrameTime;
@@ -179,11 +206,22 @@ export class Controllable {
         const visualLeft = this.facing < 0 ? -right : left;
         const visualRight = this.facing < 0 ? -left : right;
 
-        return {
+        const bounds = {
             minX: -visualLeft,
             maxX: Config.canvas.width - visualRight,
             minY: -top,
             maxY: Config.canvas.height - bottom
+        };
+
+        if (!this.movementBounds) {
+            return bounds;
+        }
+
+        return {
+            minX: Math.max(bounds.minX, this.movementBounds.minX),
+            maxX: Math.min(bounds.maxX, this.movementBounds.maxX),
+            minY: Math.max(bounds.minY, this.movementBounds.minY),
+            maxY: Math.min(bounds.maxY, this.movementBounds.maxY)
         };
     }
 
@@ -207,7 +245,20 @@ export class Controllable {
         this.keys = {};
     }
 
+    setLobbyLabel(label?: LobbyLabel | null) {
+        this.lobbyLabel = label || null;
+    }
+
+    setMovementBounds(bounds?: MovementBounds | null) {
+        this.movementBounds = bounds || null;
+        this.applyPosition(this.x, this.y);
+    }
+
     resetTo(slot: PlayerSlot) {
+        this.movementBounds = slot.movementBounds || null;
+        if (!slot.movementBounds) {
+            this.lobbyLabel = null;
+        }
         this.x = slot.x;
         this.y = slot.y;
         this.facing = slot.facing;
@@ -294,40 +345,112 @@ export class Controllable {
         const sprite = Controllable.sprite;
 
         if (sprite && sprite.complete) {
-            const spriteConfig = Config.player.sprite;
-            const scale = Config.graphics.scale;
-            const sourceWidth = spriteConfig.sourceWidth;
-            const sourceHeight = spriteConfig.sourceHeight;
-            const targetWidth = sourceWidth * scale;
-            const targetHeight = sourceHeight * scale;
-            const sourceX = this.frame * spriteConfig.frameStride;
-            const sourceY = this.getSpriteRow() * sourceHeight;
-
-            context.save();
-            context.translate(this.x, this.y);
-
-            if (this.facing < 0) {
-                context.scale(-1, 1);
-            }
-
-            context.drawImage(
-                sprite,
-                sourceX,
-                sourceY,
-                sourceWidth,
-                sourceHeight,
-                -targetWidth / 2,
-                -targetHeight,
-                targetWidth,
-                targetHeight
-            );
-            context.restore();
+            this.drawSprite(context, sprite);
+            this.drawLobbyLabel(context);
             return;
         }
 
         this.pen.x = this.x;
         this.pen.y = this.y;
         this.pen.draw(context as never);
+        this.drawLobbyLabel(context);
+    }
+
+    drawSprite(context: DrawContext, sprite: ImageLike) {
+        const spriteConfig = Config.player.sprite;
+        const scale = Config.graphics.scale;
+        const sourceWidth = spriteConfig.sourceWidth;
+        const sourceHeight = spriteConfig.sourceHeight;
+        const targetWidth = sourceWidth * scale;
+        const targetHeight = sourceHeight * scale;
+        const sourceX = this.frame * spriteConfig.frameStride;
+        const sourceY = this.getSpriteRow() * sourceHeight;
+
+        context.save();
+        context.translate(this.x, this.y);
+
+        if (this.facing < 0) {
+            context.scale(-1, 1);
+        }
+
+        context.drawImage(
+            sprite,
+            sourceX,
+            sourceY,
+            sourceWidth,
+            sourceHeight,
+            -targetWidth / 2,
+            -targetHeight,
+            targetWidth,
+            targetHeight
+        );
+        context.restore();
+    }
+
+    drawLobbyLabel(context: DrawContext) {
+        const label = this.lobbyLabel;
+
+        if (!label || !context.fillText) {
+            return;
+        }
+
+        context.save();
+        context.font = '24px "Proggy Square", monospace';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+
+        if (label.local) {
+            this.drawTextLine(context, 'YOU', this.x, this.y - 122);
+        }
+
+        this.drawTextLine(context, label.name, this.x, this.y + 52);
+        this.drawTextLine(context, label.state, this.x, this.y + 84, {
+            negative: label.state === 'READY'
+        });
+        context.restore();
+    }
+
+    drawTextLine(
+        context: DrawContext,
+        text: string,
+        x: number,
+        y: number,
+        options: { negative?: boolean } = {}
+    ) {
+        if (!context.fillText) {
+            return;
+        }
+
+        if (options.negative) {
+            this.drawNegativeTextLine(context, text, x, y);
+            return;
+        }
+
+        context.fillStyle = 'rgb(0,0,0)';
+        context.fillText(text, x + 2, y + 2);
+        context.fillStyle = Config.colors.yellow;
+        context.fillText(text, x, y);
+    }
+
+    drawNegativeTextLine(
+        context: DrawContext,
+        text: string,
+        x: number,
+        y: number
+    ) {
+        const textWidth = context.measureText
+            ? context.measureText(text).width
+            : text.length * 14;
+        const width = textWidth + 12;
+        const height = 24;
+
+        if (context.fillRect) {
+            context.fillStyle = Config.colors.yellow;
+            context.fillRect(x - width / 2, y - height / 2, width, height);
+        }
+
+        context.fillStyle = 'rgb(0,0,0)';
+        context.fillText?.(text, x, y);
     }
 
     getSpriteRow() {

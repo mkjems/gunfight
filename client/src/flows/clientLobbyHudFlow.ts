@@ -58,9 +58,9 @@ export function getState(options: LobbyHudFlowOptions): LobbyHudState {
     if (activeScreen === Screen.HIGH_SCORES) {
         return {
             activeScreen,
-            canvasVisible: true,
+            canvasVisible: false,
             highScores: getHighScoresState(options, isTouch),
-            hudCanvasVisible: true
+            hudCanvasVisible: false
         };
     }
 

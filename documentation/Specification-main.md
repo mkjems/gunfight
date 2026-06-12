@@ -27,15 +27,18 @@ The lobby is the landing page and waiting room.
 
 It shows:
 
-- local player slot, name, and ready state
-- opponent slot, name, and ready state
-- game id
-- matchmaking state
+- title `GUNFIGHT 1975`
+- local player avatar, slot, name, and ready state
+- opponent avatar, slot, name, and ready state when an opponent is connected
 - desktop controls
 - prompt to edit name
 - prompt to play
 
-The lobby background shows the player's avatar. If an opponent is connected, both avatars are visible. On desktop, the player can move in the lobby to learn the controls, but cannot shoot.
+The lobby does not show the game id or a separate local identity line. The lobby background shows the player's avatar. If an opponent is connected, both avatars are visible. On desktop, the player can move in the lobby to learn the controls, but cannot shoot.
+
+Each avatar shows its player label and lobby state beneath the character. This text follows the avatar while it moves. The status text changes with the player's lobby state; `READY` is shown as negative text. The local player is marked clearly before movement starts, for example with a small `YOU` marker or an equivalent local-only highlight. Lobby movement is constrained to side areas so avatars and their following labels stay readable and do not overlap the central lobby instructions.
+
+While no player is ready, the app rotates between the main lobby and high scores: the main lobby is shown for 30 seconds, then high scores are shown for 7 seconds.
 
 ### State of players in Lobby
 
@@ -138,6 +141,8 @@ Mobile rendering may use a camera that follows the local player so the battlefie
 ## High scores screen
 
 The high scores screen lists recent performance across games.
+
+The high scores screen does not show lobby or gameplay characters in the background.
 
 Expected columns:
 

@@ -31,16 +31,13 @@ type HighScoresScreenOptions = {
     now?: number;
 };
 
-type LobbySlotViewModel = {
-    label: string;
-    ready: boolean;
-};
-
 const controls = [
     'h j k l - left down up right',
     'a z - aim up down',
     'Space - shoot'
 ];
+const mainLobbyDuration = 30000;
+const highScoresDuration = 7000;
 
 export function getClientName(client: LobbyClient): string {
     return client.name || 'PLAYER ' + ((client.slot || 0) + 1);
@@ -96,102 +93,7 @@ export function shouldShowHighScoresScreen(
         return false;
     }
 
-    return Math.floor(now / 7000) % 2 === 1;
-}
-
-function getLobbyPlayerLabel(
-    model?: LobbyModel | null,
-    playerId?: ClientId | null
-): string {
-    const client = getLocalClient(model, playerId);
-    let playerIndex: number;
-
-    if (!model || !client) {
-        return '';
-    }
-
-    playerIndex = (model.clients || []).findIndex(function (item) {
-        return item.id === playerId;
-    });
-
-    return 'PLAYER ' + (playerIndex + 1) + ' - ' + getClientName(client);
-}
-
-function getGameLabel(model?: LobbyModel | null): string {
-    if (!model || !model.gameId) {
-        return '';
-    }
-
-    return 'GAME ' + model.gameId;
-}
-
-function getLobbySlots(model?: LobbyModel | null): Array<LobbyClient | null> {
-    const slots: Array<LobbyClient | null> = [];
-    const resolvedModel = model || {};
-    const clients = resolvedModel.clients || [];
-    const playerLimit =
-        resolvedModel.playerLimit || Math.max(2, clients.length);
-    let i: number;
-
-    for (i = 0; i < playerLimit; i++) {
-        slots.push(clients[i] || null);
-    }
-
-    return slots;
-}
-
-function getLobbySlotViewModels(options: LobbyOptions): LobbySlotViewModel[] {
-    return getLobbySlots(options.model).map(function (client, index) {
-        return {
-            label: getLobbySlotLabel(
-                client,
-                index,
-                getOpponentSlotMessage(options.model)
-            ),
-            ready: !!(client && client.ready)
-        };
-    });
-}
-
-function getLobbySlotLabel(
-    client: LobbyClient | null,
-    index: number,
-    opponentMessage: string
-): string {
-    if (!client) {
-        if (opponentMessage) {
-            return 'PLAYER ' + (index + 1) + ' : ' + opponentMessage;
-        }
-
-        return 'PLAYER ' + (index + 1) + ' : WAITING';
-    }
-
-    return (
-        'PLAYER ' +
-        (index + 1) +
-        ' - ' +
-        getClientName(client) +
-        ' : ' +
-        (client.ready ? 'READY' : 'WAITING')
-    );
-}
-
-function getOpponentSlotMessage(model?: LobbyModel | null): string {
-    const message = getLobbyMessage(model);
-
-    return isOpponentSlotMessage(message) ? message : '';
-}
-
-function isOpponentSlotMessage(message: string): boolean {
-    return message === 'LOOKING FOR CHALLENGER' || message === 'OPPONENT LEFT';
-}
-
-function getLobbyMessage(model?: LobbyModel | null): string {
-    if (model && model.message) {
-        return model.message;
-    }
-
-    return '';
+    return now % (mainLobbyDuration + highScoresDuration) >= mainLobbyDuration;
 }
 
 export function getLobbyViewModel(options: LobbyViewModelOptions) {
@@ -200,13 +102,10 @@ export function getLobbyViewModel(options: LobbyViewModelOptions) {
     const showPlayPrompt = shouldShowLobbyPrompt(options) && !isTouch;
 
     return {
-        identityLines: [
-            getLobbyPlayerLabel(options.model, options.playerId),
-            getGameLabel(options.model)
-        ],
+        identityLines: [],
         controls: isTouch ? [] : controls,
         showControls: !isTouch,
-        slots: getLobbySlotViewModels(options),
+        slots: [],
         showEditPrompt: !isTouch && localClientWaiting,
         editPrompt:
             !isTouch && localClientWaiting ? 'PRESS E TO EDIT NAME' : '',

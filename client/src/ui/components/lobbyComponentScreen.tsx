@@ -17,10 +17,6 @@ type LinesProps = {
     lines: string[];
 };
 
-type LobbySlotsProps = {
-    slots: LobbySlot[];
-};
-
 type TextProps = {
     text: string;
 };
@@ -29,22 +25,10 @@ export function LobbyMain(options: LobbyComponentProps = {}) {
     return (
         <>
             <h1>GUNFIGHT 1975</h1>
-            <div className="lobby-section">
-                <div id="lobbyIdentity">
-                    <Lines lines={options.identityLines || []} />
-                </div>
-            </div>
-            <div className="lobby-section" hidden={!options.showControls}>
-                <div id="lobbyControlsText">
+            <div id="lobbyInstructions">
+                <div id="lobbyControlsText" hidden={!options.showControls}>
                     <Lines lines={options.controls || []} />
                 </div>
-            </div>
-            <div className="lobby-section">
-                <div id="lobbySlots">
-                    <LobbySlots slots={options.slots || []} />
-                </div>
-            </div>
-            <div className="lobby-section">
                 <div id="lobbyEditPrompt" hidden={!options.showEditPrompt}>
                     <Text text={options.editPrompt || ''} />
                 </div>
@@ -66,25 +50,6 @@ function Lines(props: LinesProps) {
                 .map(function (line, index) {
                     return <div key={index}>{line}</div>;
                 })}
-        </>
-    );
-}
-
-function LobbySlots(props: LobbySlotsProps) {
-    return (
-        <>
-            {props.slots.map(function (slot, index) {
-                return (
-                    <div
-                        className={
-                            'lobby-slot' + (slot.ready ? ' negative-text' : '')
-                        }
-                        key={index}
-                    >
-                        {slot.label}
-                    </div>
-                );
-            })}
         </>
     );
 }

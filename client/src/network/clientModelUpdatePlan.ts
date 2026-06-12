@@ -41,6 +41,8 @@ export function create(options: CreatePlanOptions) {
         syncNameEditor: true,
         syncStoredPlayerName: true,
         syncPlayers: {
+            lobbyLabels: options.roundState === RoundState.WAITING,
+            localPlayerId: options.playerId,
             resetChangedSlots: options.roundState === RoundState.WAITING,
             slots:
                 options.roundState === RoundState.WAITING

@@ -110,20 +110,11 @@ test('builds lobby main app state', async function () {
                 'Space - shoot'
             ],
             editPrompt: '',
-            identityLines: ['', 'GAME game-1'],
+            identityLines: [],
             playPrompt: 'PRESS P TO PLAY',
             showControls: true,
             showEditPrompt: false,
-            slots: [
-                {
-                    label: 'PLAYER 1 : WAITING',
-                    ready: false
-                },
-                {
-                    label: 'PLAYER 2 : WAITING',
-                    ready: false
-                }
-            ]
+            slots: []
         }
     });
 });
@@ -131,12 +122,12 @@ test('builds lobby main app state', async function () {
 test('builds high scores app state with keyboard play prompt', async function () {
     const flow = await loadClientLobbyHudFlow();
     const { options } = createRenderOptions({
-        now: 7000
+        now: 30000
     });
 
     assert.deepEqual(plain(flow.getState(options)), {
         activeScreen: 'high-scores',
-        canvasVisible: true,
+        canvasVisible: false,
         highScores: {
             playPrompt: 'PRESS P TO PLAY',
             rows: [
@@ -145,7 +136,7 @@ test('builds high scores app state with keyboard play prompt', async function ()
                 }
             ]
         },
-        hudCanvasVisible: true
+        hudCanvasVisible: false
     });
 });
 

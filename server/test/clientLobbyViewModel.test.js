@@ -50,17 +50,14 @@ test('builds lobby view models for keyboard clients', async function () {
             })
         ),
         {
-            identityLines: ['PLAYER 1 - ACE', 'GAME abc'],
+            identityLines: [],
             controls: [
                 'h j k l - left down up right',
                 'a z - aim up down',
                 'Space - shoot'
             ],
             showControls: true,
-            slots: [
-                { label: 'PLAYER 1 - ACE : WAITING', ready: false },
-                { label: 'PLAYER 2 - PLAYER 2 : READY', ready: true }
-            ],
+            slots: [],
             showEditPrompt: true,
             editPrompt: 'PRESS E TO EDIT NAME',
             playPrompt: 'PRESS P TO PLAY'
@@ -68,7 +65,7 @@ test('builds lobby view models for keyboard clients', async function () {
     );
 });
 
-test('uses opponent messages for empty lobby slots', async function () {
+test('omits static lobby slot rows for touch clients', async function () {
     const lobby = await loadClientLobbyViewModel();
     const model = {
         message: 'LOOKING FOR CHALLENGER',
@@ -77,14 +74,14 @@ test('uses opponent messages for empty lobby slots', async function () {
         clients: [{ id: 'p1', ready: true, slot: 0 }]
     };
 
-    assert.equal(
+    assert.deepEqual(
         lobby.getLobbyViewModel({
             isTouch: true,
             localReadyRequested: true,
             model,
             playerId: 'p1'
-        }).slots[1].label,
-        'PLAYER 2 : LOOKING FOR CHALLENGER'
+        }).slots,
+        []
     );
 });
 
@@ -107,7 +104,7 @@ test('decides lobby prompts and high score rotation', async function () {
         lobby.shouldShowHighScoresScreen({
             localReadyRequested: false,
             model,
-            now: 7000
+            now: 30000
         }),
         true
     );
@@ -115,7 +112,7 @@ test('decides lobby prompts and high score rotation', async function () {
         lobby.shouldShowHighScoresScreen({
             localReadyRequested: true,
             model,
-            now: 7000
+            now: 30000
         }),
         false
     );

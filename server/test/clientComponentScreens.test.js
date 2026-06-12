@@ -246,39 +246,22 @@ test('renders lobby screen sections through the app root', async function () {
         lobby: {
             controls: ['MOVE', 'FIRE'],
             editPrompt: 'EDIT NAME',
-            identityLines: ['YOU ARE ADA'],
             playPrompt: 'READY?',
             showControls: true,
-            showEditPrompt: true,
-            slots: [
-                {
-                    label: 'P1 READY',
-                    ready: true
-                },
-                {
-                    label: 'P2 WAITING',
-                    ready: false
-                }
-            ]
+            showEditPrompt: true
         }
     });
 
     const main = query(root, '#lobby-main');
     const controls = query(main, '#lobbyControlsText');
     const editPrompt = query(main, '#lobbyEditPrompt');
-    const identity = query(main, '#lobbyIdentity');
     const playPrompt = query(main, '#lobbyPlayPrompt');
-    const slots = query(main, '#lobbySlots');
 
     assert.equal(main.hidden, false);
     assert.equal(query(root, '#highScoresScreen').hidden, true);
-    assert.equal(controls.parentElement.hidden, false);
+    assert.equal(controls.hidden, false);
     assert.equal(editPrompt.hidden, false);
-    assert.deepEqual(childTexts(identity), ['YOU ARE ADA']);
     assert.deepEqual(childTexts(controls), ['MOVE', 'FIRE']);
-    assert.equal(slots.children[0].className, 'lobby-slot negative-text');
-    assert.equal(slots.children[0].textContent, 'P1 READY');
-    assert.equal(slots.children[1].className, 'lobby-slot');
     assert.equal(editPrompt.textContent, 'EDIT NAME');
     assert.equal(playPrompt.textContent, 'READY?');
 
@@ -287,10 +270,8 @@ test('renders lobby screen sections through the app root', async function () {
         lobby: {}
     });
 
-    assert.equal(query(main, '#lobbyIdentity').children.length, 0);
     assert.equal(query(main, '#lobbyControlsText').children.length, 0);
-    assert.equal(query(main, '#lobbySlots').children.length, 0);
-    assert.equal(query(main, '#lobbyControlsText').parentElement.hidden, true);
+    assert.equal(query(main, '#lobbyControlsText').hidden, true);
     assert.equal(query(main, '#lobbyEditPrompt').hidden, true);
     assert.equal(query(main, '#lobbyEditPrompt').textContent, '');
     assert.equal(query(main, '#lobbyPlayPrompt').textContent, '');

@@ -10,12 +10,27 @@ type BulletsLike = {
 };
 
 type ClientLike = {
-    id: string;
+    id: string | number;
+    name?: string;
+    ready?: boolean;
 };
 
-type PlayerSlot = (typeof Config.player.slots)[number];
+type PlayerSlot = {
+    facing: number;
+    frame: number;
+    movementBounds?: {
+        maxX: number;
+        maxY: number;
+        minX: number;
+        minY: number;
+    };
+    x: number;
+    y: number;
+};
 
 type PlayersOptions = {
+    lobbyLabels?: boolean;
+    localPlayerId?: string | number | null;
     resetChangedSlots?: boolean;
     slots?: PlayerSlot[];
 };
@@ -31,8 +46,8 @@ export class Players {
         this.all = {};
     }
 
-    getSlot(index: number, slotSet?: PlayerSlot[]) {
-        const slots = slotSet || Config.player.slots;
+    getSlot(index: number, slotSet?: PlayerSlot[]): PlayerSlot {
+        const slots: PlayerSlot[] = slotSet || Config.player.slots;
 
         return slots[index % slots.length];
     }
@@ -47,6 +62,8 @@ export class Players {
             this.all[id].slot = index;
             this.all[id].facing = slot.facing;
             this.all[id].idleFrame = slot.frame;
+            this.all[id].setMovementBounds(slot.movementBounds);
+            this.syncLobbyLabel(this.all[id], client, index, options);
 
             if (slotChanged && options.resetChangedSlots) {
                 this.all[id].resetTo(slot);
@@ -61,6 +78,8 @@ export class Players {
             frame: slot.frame
         });
         this.all[id].slot = index;
+        this.all[id].setMovementBounds(slot.movementBounds);
+        this.syncLobbyLabel(this.all[id], client, index, options);
         this.scene.addFigure(this.all[id]);
     }
 
@@ -102,5 +121,27 @@ export class Players {
         }
 
         return (this.all[id].slot || 0) + 1;
+    }
+
+    syncLobbyLabel(
+        player: Controllable,
+        client: ClientLike,
+        index: number,
+        options: PlayersOptions
+    ) {
+        if (!options.lobbyLabels) {
+            player.setLobbyLabel(null);
+            return;
+        }
+
+        player.setLobbyLabel({
+            local: client.id === options.localPlayerId,
+            name:
+                'PLAYER ' +
+                (index + 1) +
+                ' - ' +
+                (client.name || 'PLAYER ' + (index + 1)),
+            state: client.ready ? 'READY' : 'WAITING'
+        });
     }
 }

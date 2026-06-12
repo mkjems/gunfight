@@ -160,8 +160,30 @@ test('resets a round back to waiting when the model is not ready', async functio
         [
             'players.resetAll',
             [
-                { x: 120, y: 430, facing: 1, frame: 0 },
-                { x: 830, y: 430, facing: -1, frame: 2 }
+                {
+                    x: 120,
+                    y: 430,
+                    facing: 1,
+                    frame: 0,
+                    movementBounds: {
+                        minX: 76,
+                        maxX: 280,
+                        minY: 350,
+                        maxY: 470
+                    }
+                },
+                {
+                    x: 830,
+                    y: 430,
+                    facing: -1,
+                    frame: 2,
+                    movementBounds: {
+                        minX: 670,
+                        maxX: 874,
+                        minY: 350,
+                        maxY: 470
+                    }
+                }
             ]
         ],
         'bullets.reset',
@@ -184,8 +206,30 @@ test('resets the game over screen back to the lobby start screen', async functio
         [
             'players.resetAll',
             [
-                { x: 120, y: 430, facing: 1, frame: 0 },
-                { x: 830, y: 430, facing: -1, frame: 2 }
+                {
+                    x: 120,
+                    y: 430,
+                    facing: 1,
+                    frame: 0,
+                    movementBounds: {
+                        minX: 76,
+                        maxX: 280,
+                        minY: 350,
+                        maxY: 470
+                    }
+                },
+                {
+                    x: 830,
+                    y: 430,
+                    facing: -1,
+                    frame: 2,
+                    movementBounds: {
+                        minX: 670,
+                        maxX: 874,
+                        minY: 350,
+                        maxY: 470
+                    }
+                }
             ]
         ],
         'bullets.reset',
