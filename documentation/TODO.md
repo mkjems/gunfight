@@ -351,6 +351,37 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - [x] Convert the joystick, aim slider, and fire button, forwarding pointer events to the existing touch flow modules.
         - The component owns static markup and visibility props only; pointer listeners, knob transforms, and aim handle positions stay imperative in the touch input module.
 
+### P1.4.12.2 - Unify The Client UI Into One Preact Root
+
+Goal: stop filling islands of DOM. The client UI becomes one Preact app
+rendered into a single root element, so components express composition and
+rich interfaces instead of renting containers. The canvases stay outside the
+component tree.
+
+- [ ] Render the whole DOM UI from a single app root.
+    - Replace the per-screen containers in `index.html` with one app root element.
+    - Render one app component from one guarded render call.
+    - Keep the gameplay canvas and HUD canvas as static elements outside the app.
+- [ ] Build a single overlay view model.
+    - Flows assemble one props tree: active screen plus per-screen props.
+    - Keep `ClientScreens` as the only owner of the active-screen decision.
+    - Keep the per-frame rendering rule: one value-equality check per frame, Preact idles when nothing changed.
+- [ ] Replace screen wrapper classes with plain components composed in JSX.
+    - Screen selection becomes declarative composition in the app component, not hidden-flag side effects.
+    - Collapse `ClientUi`/`ClientHudOverlay` element wiring into the app mount.
+    - Update screen unit tests to render components through the app root with view-model props.
+- [ ] Convert the rotate prompt to a component.
+    - It is CSS/orientation driven, so the component is markup only.
+- [ ] Convert the install prompt to a component.
+    - Keep `beforeinstallprompt` handling, service worker registration, and dismiss persistence in the existing module.
+    - The component renders markup and emits install/dismiss actions.
+- [ ] Keep touch gameplay controls mounted and imperative inside the app.
+    - The joystick/aim/fire subtree stays always mounted with visibility props so imperatively bound pointer listeners and styles survive re-renders.
+    - Re-acquire element references after the first app render.
+- [ ] Verify layout, PWA behavior, and update the architecture docs.
+    - Verify mobile layout, touch positioning over the canvas, and service worker behavior.
+    - Update `documentation/UI-ownership.md` and `documentation/Architecture-flow.md` to the single-root model.
+
 ### P1.4.12.5 - Tighten The Canvas Gameplay Core
 
 - [ ] Treat canvas gameplay as a small imperative game engine behind the component UI.
