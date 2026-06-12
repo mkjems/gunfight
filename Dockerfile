@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-COPY tsconfig*.json ./
+COPY tsconfig*.json vite.config.js ./
 COPY scripts ./scripts
 COPY shared ./shared
 COPY server ./server
