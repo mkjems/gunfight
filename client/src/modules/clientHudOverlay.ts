@@ -1,5 +1,3 @@
-type HudElement = HTMLElement | null;
-type LobbySection = Element | ParentNode | null;
 type OverlayFactory = new (elements: any) => unknown;
 
 type OverlayConstructors = {
@@ -40,12 +38,7 @@ export function create(options: ClientHudOverlayOptions) {
         gameHud,
         lobbyHud: document.getElementById('lobbyHud'),
         gameHudScreen: new GameHud({
-            root: gameHud,
-            scoreLeft: document.getElementById('scoreLeft'),
-            scoreRight: document.getElementById('scoreRight'),
-            timer: document.getElementById('roundTimer'),
-            roundMessage: document.getElementById('roundMessage'),
-            hitMessage: document.getElementById('hitMessage')
+            root: gameHud
         }),
         highScoresScreen: new HighScoresScreen({
             lobbyMain,
@@ -55,43 +48,16 @@ export function create(options: ClientHudOverlayOptions) {
         }),
         lobbyScreen: new LobbyScreen({
             main: lobbyMain,
-            highScores,
-            identity: document.getElementById('lobbyIdentity'),
-            controls: document.getElementById('lobbyControlsText'),
-            controlsSection: getLobbySection(
-                document.getElementById('lobbyControlsText')
-            ),
-            slots: document.getElementById('lobbySlots'),
-            editPrompt: document.getElementById('lobbyEditPrompt'),
-            editPromptSection: getLobbySection(
-                document.getElementById('lobbyEditPrompt')
-            ),
-            playPrompt: document.getElementById('lobbyPlayPrompt')
+            highScores
         }),
         nameEditorScreen: new NameEditorScreen({
             lobbyMain,
             highScores,
-            editor: document.getElementById('nameEditor'),
-            value: document.getElementById('nameEditorValue'),
-            grid: document.getElementById('nameEditorGrid'),
-            help: document.getElementById('nameEditorHelp')
+            editor: document.getElementById('nameEditor')
         })
     };
 }
 
-export function getLobbySection(element: Element | null): LobbySection {
-    if (!element) {
-        return null;
-    }
-
-    if (element.closest) {
-        return element.closest('.lobby-section');
-    }
-
-    return element.parentNode;
-}
-
 export const ClientHudOverlay = {
-    create,
-    getLobbySection
+    create
 };

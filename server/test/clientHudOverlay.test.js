@@ -48,15 +48,7 @@ function createDocument() {
     function getElement(id) {
         if (!elements[id]) {
             elements[id] = {
-                id: id,
-                parentNode: {
-                    id: id + '-parent'
-                },
-                closest(selector) {
-                    return {
-                        id: id + ':' + selector
-                    };
-                }
+                id: id
             };
         }
 
@@ -108,12 +100,7 @@ test('creates HUD screens from DOM elements', async function () {
             [
                 'GameHud',
                 {
-                    hitMessage: 'hitMessage',
-                    roundMessage: 'roundMessage',
-                    root: 'gameHud',
-                    scoreLeft: 'scoreLeft',
-                    scoreRight: 'scoreRight',
-                    timer: 'roundTimer'
+                    root: 'gameHud'
                 }
             ],
             [
@@ -128,52 +115,18 @@ test('creates HUD screens from DOM elements', async function () {
             [
                 'LobbyScreen',
                 {
-                    controls: 'lobbyControlsText',
-                    controlsSection: 'lobbyControlsText:.lobby-section',
-                    editPrompt: 'lobbyEditPrompt',
-                    editPromptSection: 'lobbyEditPrompt:.lobby-section',
                     highScores: 'highScoresScreen',
-                    identity: 'lobbyIdentity',
-                    main: 'lobby-main',
-                    playPrompt: 'lobbyPlayPrompt',
-                    slots: 'lobbySlots'
+                    main: 'lobby-main'
                 }
             ],
             [
                 'NameEditorScreen',
                 {
                     editor: 'nameEditor',
-                    grid: 'nameEditorGrid',
-                    help: 'nameEditorHelp',
                     highScores: 'highScoresScreen',
-                    lobbyMain: 'lobby-main',
-                    value: 'nameEditorValue'
+                    lobbyMain: 'lobby-main'
                 }
             ]
         ]
     );
-});
-
-test('finds lobby section through closest or parent fallback', async function () {
-    const overlayModule = await loadClientHudOverlay();
-    const parent = {
-        id: 'parent'
-    };
-
-    assert.equal(
-        overlayModule.getLobbySection({
-            closest(selector) {
-                return selector;
-            },
-            parentNode: parent
-        }),
-        '.lobby-section'
-    );
-    assert.equal(
-        overlayModule.getLobbySection({
-            parentNode: parent
-        }),
-        parent
-    );
-    assert.equal(overlayModule.getLobbySection(null), null);
 });
