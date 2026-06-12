@@ -7,13 +7,23 @@ type SubmitNameChangeOptions = {
     socket?: UpdateNameSocket | null;
 };
 
+type SyncClient = {
+    name?: string;
+    slot?: number;
+};
+
+type SyncEditor = {
+    isActive: () => boolean;
+    setName: (name: string) => void;
+};
+
 type SyncOptions = {
-    client: unknown;
-    editor: unknown;
+    client?: SyncClient | null;
+    editor?: SyncEditor | null;
     identity: {
         syncNameEditor: (options: {
-            client: unknown;
-            editor: unknown;
+            client?: SyncClient | null;
+            editor?: SyncEditor | null;
         }) => boolean;
     };
 };

@@ -17,7 +17,7 @@ type CollisionContext = {
     save: () => void;
     stroke: () => void;
     strokeRect: (x: number, y: number, width: number, height: number) => void;
-    strokeStyle: string;
+    strokeStyle: string | CanvasGradient | CanvasPattern;
 };
 
 type CircleBody = {

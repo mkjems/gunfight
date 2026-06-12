@@ -30,7 +30,10 @@ type ServiceWorkerContainerLike = {
 };
 
 type WindowLike = {
-    addEventListener: (event: string, callback: (evt?: any) => void) => void;
+    addEventListener: (
+        event: string,
+        callback: (evt?: Event | BeforeInstallPromptEventLike) => void
+    ) => void;
     isSecureContext?: boolean;
     location: {
         hostname: string;

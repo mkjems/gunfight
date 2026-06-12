@@ -9,7 +9,7 @@ type AmmoHudContext = {
         height: number
     ) => void;
     fillRect: (x: number, y: number, width: number, height: number) => void;
-    fillStyle: string;
+    fillStyle: string | CanvasGradient | CanvasPattern;
     restore: () => void;
     save: () => void;
     shadowColor: string;
@@ -17,7 +17,7 @@ type AmmoHudContext = {
     shadowOffsetY: number;
 };
 
-type AmmoHudSprite = {
+type AmmoHudSprite = CanvasImageSource & {
     complete?: boolean;
 };
 

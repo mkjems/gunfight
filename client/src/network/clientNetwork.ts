@@ -1,4 +1,5 @@
 type Socket = {
+    emit: (event: string, payload?: unknown) => void;
     on: (event: string, callback: (data: unknown) => void) => void;
 };
 

@@ -3,7 +3,7 @@ type KeyAction = 'down' | 'up';
 type KeyEventPayload = {
     action: KeyAction;
     key: string;
-    player: string;
+    player: string | number;
 };
 
 type KeyboardEventLike = {
@@ -34,7 +34,7 @@ type KeysModelOptions = {
 
 export function KeysModel(
     socket: SocketLike,
-    playerId: string,
+    playerId: string | number,
     onLocalKeyEvent: (keyEvent: KeyEventPayload) => boolean | void,
     options: KeysModelOptions = {}
 ) {

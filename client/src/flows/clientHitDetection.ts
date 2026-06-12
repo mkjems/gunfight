@@ -2,23 +2,44 @@ import { RoundState } from '../state/clientScreens.js';
 
 type Bullet = {
     deleteMe?: boolean;
+    getHitBox: () => {
+        height: number;
+        width: number;
+        x: number;
+        y: number;
+    };
+    hasRicocheted?: boolean;
+    ownerId: number | string;
 };
 
 type Hit = {
     bullet: Bullet;
 };
 
+type Player = {
+    getHitBox: () => {
+        height: number;
+        width: number;
+        x: number;
+        y: number;
+    };
+    playerId: number | string;
+};
+
 type ClientHitDetectionOptions = {
     bullets?: {
-        all: () => unknown;
+        all: () => Record<string, Bullet | null | undefined>;
     };
     collision?: {
-        findBulletHit: (bullets: unknown, players: unknown) => Hit | null;
+        findBulletHit: (
+            bullets: Record<string, Bullet | null | undefined>,
+            players: Record<string, Player>
+        ) => Hit | null;
     };
     findBulletObstacleHit?: () => Hit | null;
     matchTimeExpired?: boolean;
     players?: {
-        all: unknown;
+        all: Record<string, Player>;
     };
     roundState: RoundState;
 };

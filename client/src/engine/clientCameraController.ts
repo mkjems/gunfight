@@ -9,7 +9,7 @@ type Camera = {
     scale: number;
     x: number;
     y: number;
-    follow: (player: unknown) => void;
+    follow: (player?: { x: number; y: number } | null) => void;
     reset: () => void;
     setScale: (scale: number) => void;
     setScreenSize: (width: number, height: number) => void;
@@ -38,7 +38,7 @@ type CameraRoundOptions = {
 type UpdateOptions = {
     camera?: Camera | null;
     canvas: CanvasLike;
-    player: unknown;
+    player?: { x: number; y: number } | null;
     roundState: RoundState;
 };
 

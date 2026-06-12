@@ -3,22 +3,31 @@ import { RoundState } from '../state/clientScreens.js';
 
 type ClientId = number | string;
 
+type RoundEndClient = {
+    name?: string;
+    slot: number;
+};
+
+type RoundEndModel = {
+    clients?: RoundEndClient[];
+    gameId?: string;
+    roundNumber?: number;
+};
+
 type RoundEndOptions = {
     bullets: {
         clear: () => void;
     };
     closeNameEditor: () => void;
-    getClientName?: (client: unknown) => string;
-    getPlayerSlot: (id?: ClientId | null) => number;
-    model?: {
-        clients?: unknown[];
-    } | null;
+    getClientName?: (client: RoundEndClient) => string;
+    getPlayerSlot?: (id?: ClientId | null) => number;
+    model?: RoundEndModel | null;
     players: {
         clearKeys: () => void;
         label: (id?: ClientId | null) => string;
     };
     renderHud: () => void;
-    resetRound: () => void;
+    resetRound?: () => void;
     resetToStartScreen?: () => void;
     roundData: {
         clearRoundPauseFlags: () => void;
@@ -34,7 +43,7 @@ type RoundEndOptions = {
             getClientName?: RoundEndOptions['getClientName']
         ) => unknown;
         getGameOverMessage: (
-            clients: unknown[] | undefined,
+            clients: RoundEndClient[] | undefined,
             getClientName?: RoundEndOptions['getClientName']
         ) => string;
     };
@@ -53,7 +62,9 @@ type RoundEndOptions = {
 const ROUND_END_TIMERS = ['reset', 'matchEnd', 'ritual', 'hit'];
 
 export function endRound(options: RoundEndOptions) {
-    const winnerSlot = options.getPlayerSlot(options.winnerId);
+    const winnerSlot = options.getPlayerSlot
+        ? options.getPlayerSlot(options.winnerId)
+        : -1;
 
     options.setRoundState(RoundState.ROUND_OVER);
     options.closeNameEditor();
@@ -69,6 +80,10 @@ export function endRound(options: RoundEndOptions) {
     }
 
     clearRoundActivity(options);
+
+    if (!options.resetRound) {
+        return;
+    }
 
     options.timers.set('reset', options.resetRound, Config.round.resetDelay);
 }
@@ -89,7 +104,7 @@ export function endGame(options: RoundEndOptions) {
 
     options.timers.set(
         'reset',
-        options.resetToStartScreen || options.resetRound,
+        options.resetToStartScreen || options.resetRound || function () {},
         Config.round.gameOverDelay
     );
 }

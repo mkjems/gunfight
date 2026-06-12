@@ -2,7 +2,7 @@ type MatchTimerOptions = {
     endGame: () => void;
     now?: () => number;
     roundData: {
-        getRoundEndsAt(): number | null;
+        getRoundEndsAt(): number | null | undefined;
     };
     timers: {
         set(name: string, callback: () => void, delay: number): void;

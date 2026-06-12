@@ -97,7 +97,9 @@ async function loadClientApp() {
 function createBrowser() {
     const window = new Window();
 
-    globalThis.document = /** @type {any} */ (window.document);
+    globalThis.document = /** @type {Document} */ (
+        /** @type {unknown} */ (window.document)
+    );
 
     return {
         createElement(tagName = 'div') {
@@ -113,9 +115,17 @@ function childTexts(element) {
     });
 }
 
-/** @returns {any} */
+/**
+ * @typedef {HTMLElement & {
+ *     dispatchEvent: (event: unknown) => boolean
+ * }} TestElement
+ */
+
+/** @returns {TestElement} */
 function query(element, selector) {
-    return element.querySelector(selector);
+    return /** @type {TestElement} */ (
+        /** @type {unknown} */ (element.querySelector(selector))
+    );
 }
 
 test('renders game HUD scores, timer, round text, and hit messages through the app root', async function () {
@@ -514,7 +524,9 @@ test('renders name editor grid and dispatches pointer selections through the app
     assert.equal(grid.children.length, 2);
     assert.equal(grid.children[0].className, 'name-editor-row is-short');
 
-    const selectedKey = grid.children[0].children[1];
+    const selectedKey = /** @type {TestElement} */ (
+        /** @type {unknown} */ (grid.children[0].children[1])
+    );
     assert.equal(
         selectedKey.className,
         'name-editor-key is-selected negative-text'

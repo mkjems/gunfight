@@ -1,17 +1,110 @@
 import type { HighScoreEntry, Scenario } from '../../../shared/contracts.js';
+import type { AmmoHudRenderer } from '../ui/ammoHudRenderer.js';
+import type { Camera } from '../engine/camera.js';
+import type { CanvasTools } from '../platform/canvasTools.js';
+import type { ClientAmmoFlow } from '../flows/clientAmmoFlow.js';
+import type { ClientAssets } from '../platform/clientAssets.js';
+import type { ClientCameraController } from '../engine/clientCameraController.js';
+import type { ClientCanvasSetup } from '../platform/clientCanvasSetup.js';
+import type { ClientFrameFlow } from '../flows/clientFrameFlow.js';
+import type { ClientGameLoop } from './clientGameLoop.js';
+import type { ClientGameSounds } from '../platform/clientGameSounds.js';
+import type { ClientHitDetection } from '../flows/clientHitDetection.js';
+import type { ClientHudFlow } from '../flows/clientHudFlow.js';
+import type { ClientIdentity } from '../platform/clientIdentity.js';
+import type { ClientInputStartup } from './clientInputStartup.js';
+import type { ClientKeyEventFlow } from '../flows/clientKeyEventFlow.js';
+import type { ClientLobbyFlow } from '../flows/clientLobbyFlow.js';
+import type { ClientLobbyHudFlow } from '../flows/clientLobbyHudFlow.js';
+import type { ClientLobbyViewModel } from '../ui/viewModels/clientLobbyViewModel.js';
+import type { ClientMatchTimer } from '../flows/clientMatchTimer.js';
+import type { ClientModelSync } from '../network/clientModelSync.js';
+import type { ClientModelUpdateFlow } from '../network/clientModelUpdateFlow.js';
+import type { ClientNameEditorFlow } from '../flows/clientNameEditorFlow.js';
+import type { ClientNetwork } from '../network/clientNetwork.js';
+import type { ClientObstacleSync } from '../network/clientObstacleSync.js';
+import type { ClientPlayerHitFlow } from '../flows/clientPlayerHitFlow.js';
+import type { ClientRoundEndFlow } from '../flows/clientRoundEndFlow.js';
+import type { ClientRoundResetFlow } from '../flows/clientRoundResetFlow.js';
+import type { ClientRoundRitual } from '../flows/clientRoundRitual.js';
+import type { ClientRoundTransition } from '../flows/clientRoundTransition.js';
+import type { ClientRuntimeCollisionEnvironment } from '../engine/clientRuntimeCollisionEnvironment.js';
+import type { ClientRuntimeGameSystems } from './clientRuntimeGameSystems.js';
+import type { ClientScreens } from '../state/clientScreens.js';
+import type { ClientTouchControlsFlow } from '../flows/clientTouchControlsFlow.js';
+import type { ClientTouchEnvironment } from '../input/clientTouchEnvironment.js';
+import type { ClientUi } from '../ui/clientUi.js';
+import type { Collision } from '../engine/collision.js';
+import type { CollisionDebugRenderer } from '../engine/collisionDebugRenderer.js';
+import type { Config } from '../platform/config.js';
+import type { KeysModel } from '../input/keysModel.js';
+import type { NameEditor } from '../input/nameEditor.js';
+import type { Obstacles } from '../engine/obstacles.js';
+import type { requestAnimFrame } from '../platform/requestAnimationFrame.js';
+import type { ScenarioRenderer } from '../engine/scenarioRenderer.js';
+import type { SoundEffects } from '../platform/soundEffects.js';
+import type { TouchControls } from '../input/touchControls.js';
 import type { RoundState as RoundStateValue } from '../state/clientScreens.js';
 
-type AnyFunction = (...args: any[]) => any;
-type AnyModule = Record<string, any>;
-type AnyDependency = any;
 type ClientId = number | string;
 
-type RuntimeSprite = {
+type RuntimeSprite = CanvasImageSource & {
     complete?: boolean;
-    height?: number;
-    onload?: (() => void) | null;
+    height: number;
+    onload?: ((this: GlobalEventHandlers, ev: Event) => unknown) | null;
     src?: string;
-    width?: number;
+    width: number;
+};
+
+type RuntimeBox = {
+    height: number;
+    width: number;
+    x: number;
+    y: number;
+};
+
+type RuntimeCircle = {
+    radius: number;
+    x: number;
+    y: number;
+};
+
+type RuntimeCollisionLine = {
+    x1: number;
+    x2: number;
+    y1: number;
+    y2: number;
+};
+
+type RuntimeObstacleBody =
+    | {
+          damage?: number;
+          id?: string;
+          radius: number;
+          type?: 'circle';
+          x: number;
+          y: number;
+      }
+    | {
+          damage?: number;
+          height: number;
+          id?: string;
+          type: 'rect';
+          width: number;
+          x: number;
+          y: number;
+      }
+    | {
+          points: Array<{ x: number; y: number }>;
+          type: 'polygon';
+      };
+
+type RuntimeRenderContext = {
+    clearRect: (x: number, y: number, width: number, height: number) => void;
+    restore: () => void;
+    save: () => void;
+    scale: (x: number, y: number) => void;
+    translate: (x: number, y: number) => void;
 };
 
 type RuntimeCanvasSurfaces = {
@@ -46,8 +139,18 @@ type RuntimeUi = {
 };
 
 type RuntimeCamera = {
-    apply: (context: CanvasRenderingContext2D) => void;
+    apply: (context: RuntimeRenderContext) => void;
+    follow: (player?: { x: number; y: number } | null) => void;
+    reset: () => void;
     scale: number;
+    setScale: (scale: number) => void;
+    setScreenSize: (width: number, height: number) => void;
+    setVisibleScreen: (
+        x: number,
+        y: number,
+        width: number,
+        height: number
+    ) => void;
     x: number;
     y: number;
 };
@@ -89,22 +192,18 @@ type RuntimeGameLoop = {
 };
 
 type RuntimeScene = {
-    drawAll: (context: CanvasRenderingContext2D) => void;
+    drawAll: (context: RuntimeRenderContext) => void;
     moveAll: () => void;
 };
 
 type RuntimePlayer = {
-    aim: unknown;
+    aim: number;
     clearDeathAnimation: () => void;
-    facing: unknown;
+    facing: number;
     frame: number;
     getAim?: () => number;
-    getHitBox?: () => {
-        height: number;
-        width: number;
-        x: number;
-        y: number;
-    };
+    getCollisionCircles: (x?: number, y?: number) => RuntimeCircle[];
+    getHitBox: () => RuntimeBox;
     playerId: ClientId;
     playDeathAnimation?: () => void;
     respondToKeyEvent?: (keyEvent: RuntimeKeyEvent) => void;
@@ -113,7 +212,7 @@ type RuntimePlayer = {
 };
 
 type RuntimePlayers = {
-    all: Record<string, RuntimePlayer | undefined>;
+    all: Record<string, RuntimePlayer>;
     clearKeys: () => void;
     label: (id?: ClientId | null) => string;
     resetAll: (options: { slots: unknown }) => void;
@@ -122,12 +221,8 @@ type RuntimePlayers = {
 
 type RuntimeBullet = {
     deleteMe?: boolean;
-    getHitBox: () => {
-        height: number;
-        width: number;
-        x: number;
-        y: number;
-    };
+    getHitBox: () => RuntimeBox;
+    hasRicocheted?: boolean;
     ownerId: ClientId;
     toSnapshot?: () => unknown;
 };
@@ -143,11 +238,15 @@ type RuntimeBullets = {
     reset: () => void;
 };
 
+type RuntimeAmmoClient = {
+    id: ClientId;
+};
+
 type RuntimeAmmo = {
     get: (clientId: ClientId) => number;
     hasAmmo: (clientId: ClientId) => boolean;
-    reloadIfAllEmpty: (clients?: RuntimeClient[]) => boolean;
-    reset: (clients?: RuntimeClient[]) => void;
+    reloadIfAllEmpty: (clients?: RuntimeAmmoClient[]) => boolean;
+    reset: (clients?: RuntimeAmmoClient[]) => void;
     spend: (clientId: ClientId) => boolean;
 };
 
@@ -180,15 +279,28 @@ type RuntimeRoundIntro = {
     update: () => void;
 };
 
+type RuntimeNamedClient = {
+    name?: string;
+    slot?: number;
+};
+
+type RuntimeScoreClient = RuntimeNamedClient & {
+    slot: number;
+};
+
 type RuntimeScoreKeeper = {
     addPoint: (slot: number) => void;
     createGameResult?: (
-        model: RuntimeGameModel | null,
-        getClientName: (client: RuntimeClient) => string
+        model?: {
+            clients?: RuntimeScoreClient[];
+            gameId?: string;
+            roundNumber?: number;
+        } | null,
+        getClientName?: (client: RuntimeScoreClient) => string
     ) => unknown;
     getGameOverMessage: (
-        clients: RuntimeClient[] | undefined,
-        getClientName: (client: RuntimeClient) => string
+        clients?: RuntimeScoreClient[],
+        getClientName?: (client: RuntimeScoreClient) => string
     ) => string;
     getScore: (slot: number) => number;
     resetRecordedResult: () => void;
@@ -236,26 +348,38 @@ type RuntimeScenarioRenderer = {
         allBullets: Record<string, RuntimeBullet | null | undefined>,
         scenario?: Scenario | null
     ) => RuntimeObstacleHit | null;
-    getObstacleBodies: (scenario?: Scenario | null) => unknown;
-    getRockLines: (scenario?: Scenario | null) => unknown;
+    getObstacleBodies: (scenario?: Scenario | null) => RuntimeObstacleBody[];
+    getRockLines: (scenario?: Scenario | null) => RuntimeCollisionLine[];
     render: (scenario?: Scenario | null) => void;
 };
 
 type RuntimeCollisionDebugRenderer = {
-    render: (options: unknown) => void;
+    render: (options: {
+        obstacleBodies?: RuntimeObstacleBody[];
+        players?: Record<string, RuntimePlayer>;
+    }) => void;
 };
 
 type RuntimeNameEditor = {
     close: (options?: { submit?: boolean }) => void;
+    getState: () => unknown;
     handleKeyEvent: (keyEvent: RuntimeKeyEvent) => false | unknown;
     isActive: () => boolean;
+    open: (name?: unknown) => void;
     select: (rowIndex: number, colIndex: number) => void;
     setName: (name: string) => void;
 };
 
 type RuntimeIdentity = {
     getStoredPlayerName: () => string;
-    syncStoredPlayerName: (client?: RuntimeClient | null) => boolean;
+    syncNameEditor: (options: {
+        client?: RuntimeNamedClient | null;
+        editor?: {
+            isActive: () => boolean;
+            setName: (name: string) => void;
+        } | null;
+    }) => boolean;
+    syncStoredPlayerName: (client?: RuntimeNamedClient | null) => boolean;
 };
 
 type RuntimeInputController = {
@@ -268,16 +392,25 @@ type RuntimeInputController = {
 
 type RuntimeTouchControls = {
     mount: () => boolean;
-    update: (state: unknown) => unknown;
+    update: (state?: RuntimeTouchControlsState) => unknown;
+};
+
+type RuntimeTouchControlsState = {
+    aimLevel?: number;
+    editing?: boolean;
+    gameplay?: boolean;
+    highScoresVisible?: boolean;
+    playing?: boolean;
+    ready?: boolean;
+    waiting?: boolean;
 };
 
 type RuntimeSocket = {
     emit: (event: string, payload?: unknown) => void;
 };
 
-type RuntimeClient = {
+type RuntimeClient = RuntimeNamedClient & {
     id: ClientId;
-    name?: string;
     ready?: boolean;
     slot: number;
 };
@@ -305,8 +438,8 @@ type RuntimeKeyEvent = {
 };
 
 type RuntimePlayerPositionPayload = {
-    aim: unknown;
-    facing: unknown;
+    aim: number;
+    facing: number;
     frame: number;
     player: ClientId;
     x: number;
@@ -344,132 +477,112 @@ type RuntimeHitDetectionResult =
       };
 
 type ClientGameRuntimeModules = {
-    AmmoHudRenderer: AnyDependency;
-    Camera: AnyDependency;
-    CanvasTools: AnyModule;
-    ClientAmmoFlow: AnyModule;
-    ClientAssets: AnyDependency;
-    ClientCameraController: AnyDependency;
-    ClientCanvasSetup: AnyModule;
-    ClientCollisionEnvironment: AnyModule;
-    ClientFrameFlow: AnyModule;
-    ClientGameLoop: AnyDependency;
-    ClientGameSounds: AnyDependency;
-    ClientGameSystems: AnyModule;
-    ClientHitDetection: AnyModule;
-    ClientHudFlow: AnyModule;
-    ClientIdentity: AnyDependency;
-    ClientInputStartup: AnyModule;
-    ClientKeyEventFlow: AnyModule;
-    ClientLobbyFlow: AnyModule;
-    ClientLobbyHudFlow: AnyModule;
-    ClientLobbyViewModel: AnyModule;
-    ClientMatchTimer: AnyModule;
-    ClientModelSync: AnyModule;
-    ClientModelUpdateFlow: AnyModule;
-    ClientNameEditorFlow: AnyModule;
-    ClientNetwork: AnyDependency;
-    ClientObstacleSync: AnyModule;
-    ClientPlayerHitFlow: AnyModule;
-    ClientRoundEndFlow: AnyModule;
-    ClientRoundResetFlow: AnyModule;
-    ClientRoundRitual: AnyModule;
-    ClientRoundTransition: AnyModule;
-    ClientScreens: AnyModule & {
-        RoundState: {
-            GAME_OVER: RoundStateValue;
-            HIT_PAUSE: RoundStateValue;
-            PLAYING: RoundStateValue;
-            RITUAL: RoundStateValue;
-            ROUND_OVER: RoundStateValue;
-            WAITING: RoundStateValue;
-        };
-    };
-    ClientTouchControlsFlow: AnyModule;
-    ClientTouchEnvironment: AnyModule;
-    Collision: AnyModule;
-    CollisionDebugRenderer: AnyDependency;
-    Config: AnyModule & {
-        canvas: {
-            height: number;
-            width: number;
-        };
-        game: {
-            seconds: number;
-        };
-        player: {
-            defaultAim: number;
-        };
-    };
-    KeysModel: AnyDependency;
-    NameEditor: AnyDependency;
-    Obstacles: AnyModule;
-    requestAnimFrame: AnyFunction;
-    ScenarioRenderer: AnyDependency;
-    SoundEffects: AnyDependency;
-    TouchControls: AnyDependency;
-    ClientUi: AnyModule;
+    AmmoHudRenderer: typeof AmmoHudRenderer;
+    Camera: typeof Camera;
+    CanvasTools: typeof CanvasTools;
+    ClientAmmoFlow: typeof ClientAmmoFlow;
+    ClientAssets: typeof ClientAssets;
+    ClientCameraController: typeof ClientCameraController;
+    ClientCanvasSetup: typeof ClientCanvasSetup;
+    ClientCollisionEnvironment: typeof ClientRuntimeCollisionEnvironment;
+    ClientFrameFlow: typeof ClientFrameFlow;
+    ClientGameLoop: typeof ClientGameLoop;
+    ClientGameSounds: typeof ClientGameSounds;
+    ClientGameSystems: typeof ClientRuntimeGameSystems;
+    ClientHitDetection: typeof ClientHitDetection;
+    ClientHudFlow: typeof ClientHudFlow;
+    ClientIdentity: typeof ClientIdentity;
+    ClientInputStartup: typeof ClientInputStartup;
+    ClientKeyEventFlow: typeof ClientKeyEventFlow;
+    ClientLobbyFlow: typeof ClientLobbyFlow;
+    ClientLobbyHudFlow: typeof ClientLobbyHudFlow;
+    ClientLobbyViewModel: typeof ClientLobbyViewModel;
+    ClientMatchTimer: typeof ClientMatchTimer;
+    ClientModelSync: typeof ClientModelSync;
+    ClientModelUpdateFlow: typeof ClientModelUpdateFlow;
+    ClientNameEditorFlow: typeof ClientNameEditorFlow;
+    ClientNetwork: typeof ClientNetwork;
+    ClientObstacleSync: typeof ClientObstacleSync;
+    ClientPlayerHitFlow: typeof ClientPlayerHitFlow;
+    ClientRoundEndFlow: typeof ClientRoundEndFlow;
+    ClientRoundResetFlow: typeof ClientRoundResetFlow;
+    ClientRoundRitual: typeof ClientRoundRitual;
+    ClientRoundTransition: typeof ClientRoundTransition;
+    ClientScreens: typeof ClientScreens;
+    ClientTouchControlsFlow: typeof ClientTouchControlsFlow;
+    ClientTouchEnvironment: typeof ClientTouchEnvironment;
+    Collision: typeof Collision;
+    CollisionDebugRenderer: typeof CollisionDebugRenderer;
+    Config: typeof Config;
+    KeysModel: typeof KeysModel;
+    NameEditor: typeof NameEditor;
+    Obstacles: typeof Obstacles;
+    requestAnimFrame: typeof requestAnimFrame;
+    ScenarioRenderer: typeof ScenarioRenderer;
+    SoundEffects: typeof SoundEffects;
+    TouchControls: typeof TouchControls;
+    ClientUi: typeof ClientUi;
 };
 
 export type ClientGameDependencies = {
     bootstrap: {
-        ClientAssets: AnyDependency;
-        ClientCanvasSetup: AnyModule;
-        ClientGameLoop: AnyDependency;
-        ClientGameSystems: AnyModule;
-        ClientInputStartup: AnyModule;
-        ClientNetwork: AnyDependency;
-        requestAnimFrame: AnyFunction;
+        ClientAssets: typeof ClientAssets;
+        ClientCanvasSetup: typeof ClientCanvasSetup;
+        ClientGameLoop: typeof ClientGameLoop;
+        ClientGameSystems: typeof ClientRuntimeGameSystems;
+        ClientInputStartup: typeof ClientInputStartup;
+        ClientNetwork: typeof ClientNetwork;
+        requestAnimFrame: typeof requestAnimFrame;
     };
     environment: {
-        CanvasTools: AnyModule;
-        ClientCollisionEnvironment: AnyModule;
-        Collision: AnyModule;
-        Obstacles: AnyModule;
+        CanvasTools: typeof CanvasTools;
+        ClientCollisionEnvironment: typeof ClientRuntimeCollisionEnvironment;
+        Collision: typeof Collision;
+        Obstacles: typeof Obstacles;
     };
     flow: {
-        ClientAmmoFlow: AnyModule;
-        ClientFrameFlow: AnyModule;
-        ClientHitDetection: AnyModule;
-        ClientKeyEventFlow: AnyModule;
-        ClientLobbyFlow: AnyModule;
-        ClientMatchTimer: AnyModule;
-        ClientModelUpdateFlow: AnyModule;
-        ClientNameEditorFlow: AnyModule;
-        ClientObstacleSync: AnyModule;
-        ClientPlayerHitFlow: AnyModule;
-        ClientRoundEndFlow: AnyModule;
-        ClientRoundResetFlow: AnyModule;
-        ClientRoundRitual: AnyModule;
-        ClientRoundTransition: AnyModule;
-        ClientTouchControlsFlow: AnyModule;
+        ClientAmmoFlow: typeof ClientAmmoFlow;
+        ClientFrameFlow: typeof ClientFrameFlow;
+        ClientHitDetection: typeof ClientHitDetection;
+        ClientKeyEventFlow: typeof ClientKeyEventFlow;
+        ClientLobbyFlow: typeof ClientLobbyFlow;
+        ClientMatchTimer: typeof ClientMatchTimer;
+        ClientModelUpdateFlow: typeof ClientModelUpdateFlow;
+        ClientNameEditorFlow: typeof ClientNameEditorFlow;
+        ClientObstacleSync: typeof ClientObstacleSync;
+        ClientPlayerHitFlow: typeof ClientPlayerHitFlow;
+        ClientRoundEndFlow: typeof ClientRoundEndFlow;
+        ClientRoundResetFlow: typeof ClientRoundResetFlow;
+        ClientRoundRitual: typeof ClientRoundRitual;
+        ClientRoundTransition: typeof ClientRoundTransition;
+        ClientTouchControlsFlow: typeof ClientTouchControlsFlow;
     };
     model: {
-        ClientLobbyViewModel: AnyModule;
-        ClientModelSync: AnyModule;
+        ClientLobbyViewModel: typeof ClientLobbyViewModel;
+        ClientModelSync: typeof ClientModelSync;
         ClientScreens: ClientGameRuntimeModules['ClientScreens'];
     };
     platform: {
         Config: ClientGameRuntimeModules['Config'];
     };
     ui: {
-        AmmoHudRenderer: AnyDependency;
-        ClientHudFlow: AnyModule;
-        ClientLobbyHudFlow: AnyModule;
-        ClientUi: AnyModule;
+        AmmoHudRenderer: typeof AmmoHudRenderer;
+        ClientHudFlow: typeof ClientHudFlow;
+        ClientLobbyHudFlow: typeof ClientLobbyHudFlow;
+        ClientUi: typeof ClientUi;
     };
     browserConstructors: {
-        Camera: AnyDependency;
-        ClientCameraController: AnyDependency;
-        ClientGameSounds: AnyDependency;
-        ClientIdentity: AnyDependency;
-        ClientTouchEnvironment: AnyModule;
-        CollisionDebugRenderer: AnyDependency;
-        KeysModel: AnyDependency;
-        NameEditor: AnyDependency;
-        ScenarioRenderer: AnyDependency;
-        SoundEffects: AnyDependency;
-        TouchControls: AnyDependency;
+        Camera: typeof Camera;
+        ClientCameraController: typeof ClientCameraController;
+        ClientGameSounds: typeof ClientGameSounds;
+        ClientIdentity: typeof ClientIdentity;
+        ClientTouchEnvironment: typeof ClientTouchEnvironment;
+        CollisionDebugRenderer: typeof CollisionDebugRenderer;
+        KeysModel: typeof KeysModel;
+        NameEditor: typeof NameEditor;
+        ScenarioRenderer: typeof ScenarioRenderer;
+        SoundEffects: typeof SoundEffects;
+        TouchControls: typeof TouchControls;
     };
 };
 
@@ -587,14 +700,14 @@ class ClientGameRuntime implements ClientGameController {
         this.initCanvas();
         this.initGameState();
 
-        this.socket = new this.dependencies.ClientNetwork({
+        this.socket = this.dependencies.ClientNetwork({
             getStoredPlayerName: this.getStoredPlayerName,
             onHighScores: this.onHighScores,
             onJoinedGame: this.onJoinedGame,
-            onKeyEvent: this.handleKeyEvent,
+            onKeyEvent: this.onKeyEvent,
             onPlayerPosition: this.applyRemotePlayerPosition,
             onObstacleDamage: this.applyObstacleDamage,
-            onModelUpdate: this.syncPlayers
+            onModelUpdate: this.onModelUpdate
         }).socket;
     };
 
@@ -622,7 +735,7 @@ class ClientGameRuntime implements ClientGameController {
     };
 
     private initAssets = () => {
-        this.assets = new this.dependencies.ClientAssets({
+        this.assets = this.dependencies.ClientAssets({
             Image: this.ImageCtor,
             createRockPattern: (image: RuntimeSprite) => {
                 return this.dependencies.CanvasTools.createScaledPattern({
@@ -660,13 +773,13 @@ class ClientGameRuntime implements ClientGameController {
     };
 
     private initSoundEffects = () => {
-        this.gameSounds = new this.dependencies.ClientGameSounds({
+        this.gameSounds = this.dependencies.ClientGameSounds({
             soundEffects: new this.dependencies.SoundEffects()
         });
     };
 
     private initScenarioRenderer = () => {
-        this.scenarioRenderer = new this.dependencies.ScenarioRenderer({
+        this.scenarioRenderer = this.dependencies.ScenarioRenderer({
             context: this.context,
             getObstacleDamage: this.getObstacleDamage,
             getRockPattern: () => {
@@ -684,26 +797,27 @@ class ClientGameRuntime implements ClientGameController {
     };
 
     private initCollisionDebugRenderer = () => {
-        this.collisionDebugRenderer =
-            new this.dependencies.CollisionDebugRenderer(this.context);
+        this.collisionDebugRenderer = this.dependencies.CollisionDebugRenderer(
+            this.context
+        );
     };
 
     private initIdentity = () => {
-        this.identity = new this.dependencies.ClientIdentity({
+        this.identity = this.dependencies.ClientIdentity({
             getClientName: this.getClientName,
             storage: this.window.localStorage
         });
     };
 
     private initNameEditor = () => {
-        this.nameEditor = new this.dependencies.NameEditor({
+        this.nameEditor = this.dependencies.NameEditor({
             onChange: this.renderHud,
             onSubmit: this.submitNameChange
         });
     };
 
     private initCameraController = () => {
-        this.cameraController = new this.dependencies.ClientCameraController({
+        this.cameraController = this.dependencies.ClientCameraController({
             window: this.window
         });
     };
@@ -739,7 +853,7 @@ class ClientGameRuntime implements ClientGameController {
     };
 
     private initGameLoop = () => {
-        this.gameLoop = new this.dependencies.ClientGameLoop({
+        this.gameLoop = this.dependencies.ClientGameLoop({
             render: this.renderFrame,
             scheduleFrame: this.dependencies.requestAnimFrame,
             update: this.updateFrame
@@ -747,7 +861,7 @@ class ClientGameRuntime implements ClientGameController {
     };
 
     private initTouchControls = () => {
-        this.touchControls = new this.dependencies.TouchControls({
+        this.touchControls = this.dependencies.TouchControls({
             input: this.inputController,
             getAimLevel: this.getLocalAimLevel
         });
@@ -757,9 +871,15 @@ class ClientGameRuntime implements ClientGameController {
     private startInputAndAnimation = () => {
         this.inputController = this.dependencies.ClientInputStartup.start({
             createInputController: () => {
-                return new this.dependencies.KeysModel(
+                const playerId = this.playerId;
+
+                if (playerId === null) {
+                    throw new Error('Cannot start input before joining a game');
+                }
+
+                return this.dependencies.KeysModel(
                     this.socket,
-                    this.playerId,
+                    playerId,
                     this.handleKeyEvent,
                     {
                         canReady: () => {
@@ -850,10 +970,24 @@ class ClientGameRuntime implements ClientGameController {
         this.renderHud();
     };
 
-    private onJoinedGame = (data: RuntimeJoinedGamePayload) => {
-        this.playerId = data.playerId;
-        this.syncPlayers(data.model);
+    private onJoinedGame = (data: unknown) => {
+        const joinedGame = parseJoinedGamePayload(data);
+
+        if (!joinedGame) {
+            return;
+        }
+
+        this.playerId = joinedGame.playerId;
+        this.syncPlayers(joinedGame.model);
         this.startInputAndAnimation();
+    };
+
+    private onModelUpdate = (data: unknown) => {
+        const model = parseGameModel(data);
+
+        if (model) {
+            this.syncPlayers(model);
+        }
     };
 
     private syncPlayers = (model: RuntimeGameModel) => {
@@ -895,28 +1029,48 @@ class ClientGameRuntime implements ClientGameController {
             },
             onEmptyGun: this.gameSounds.playEmptyGun,
             player: this.getPlayer(keyEvent.player),
-            playerId: this.playerId,
+            playerId: this.playerId ?? undefined,
             renderHud: this.renderHud,
             roundState: this.roundState
         });
     };
 
-    private applyRemotePlayerPosition = (
-        data: RuntimePlayerPositionPayload
-    ) => {
+    private onKeyEvent = (data: unknown) => {
+        const keyEvent = parseKeyEvent(data);
+
+        if (keyEvent) {
+            return this.handleKeyEvent(keyEvent);
+        }
+
+        return false;
+    };
+
+    private applyRemotePlayerPosition = (data: unknown) => {
+        const position = parsePlayerPositionPayload(data);
+
+        if (!position) {
+            return;
+        }
+
         this.positionSync.applyRemote({
-            data,
+            data: position,
             localPlayerId: this.playerId,
             players: this.players,
             playing: this.roundState === this.RoundState.PLAYING
         });
     };
 
-    private applyObstacleDamage = (data: RuntimeObstacleDamagePayload) => {
+    private applyObstacleDamage = (data: unknown) => {
+        const obstacleDamage = parseObstacleDamagePayload(data);
+
+        if (!obstacleDamage) {
+            return;
+        }
+
         this.dependencies.ClientObstacleSync.applyDamage({
             bullets: this.bullets,
             damageObstacle: this.damageObstacle,
-            data,
+            data: obstacleDamage,
             model: this.latestModel,
             playObstacleHit: this.gameSounds.playObstacleHit
         });
@@ -990,6 +1144,10 @@ class ClientGameRuntime implements ClientGameController {
     };
 
     private handleObstacleHit = (hit: RuntimeObstacleHit) => {
+        if (this.playerId === null) {
+            return;
+        }
+
         this.dependencies.ClientObstacleSync.handleLocalHit({
             applyDamage: this.applyObstacleDamage,
             hit,
@@ -1000,6 +1158,10 @@ class ClientGameRuntime implements ClientGameController {
     };
 
     private handlePlayerHit = (hit: RuntimePlayerHit) => {
+        if (this.playerId === null) {
+            return;
+        }
+
         this.dependencies.ClientPlayerHitFlow.handleHit({
             bullets: this.bullets,
             hit,
@@ -1133,6 +1295,7 @@ class ClientGameRuntime implements ClientGameController {
 
     private updateBulletCollisionEnvironment = () => {
         this.dependencies.ClientCollisionEnvironment.updateBulletLines({
+            roundState: this.roundState,
             scenario: this.getCurrentScenario(),
             scenarioRenderer: this.scenarioRenderer
         });
@@ -1247,8 +1410,11 @@ class ClientGameRuntime implements ClientGameController {
         );
     };
 
-    private getClientName = (client: RuntimeClient) => {
-        return this.dependencies.ClientLobbyViewModel.getClientName(client);
+    private getClientName = (client: RuntimeNamedClient) => {
+        return this.dependencies.ClientLobbyViewModel.getClientName({
+            id: '',
+            ...client
+        });
     };
 
     private getStoredPlayerName = () => {
@@ -1348,4 +1514,181 @@ function flattenDependencies(
         ...dependencies.ui,
         ...dependencies.browserConstructors
     };
+}
+
+type RuntimeDataRecord = Record<string, unknown>;
+
+function isRecord(value: unknown): value is RuntimeDataRecord {
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isClientId(value: unknown): value is ClientId {
+    return typeof value === 'number' || typeof value === 'string';
+}
+
+function isFiniteNumber(value: unknown): value is number {
+    return typeof value === 'number' && Number.isFinite(value);
+}
+
+function parseClient(data: unknown): RuntimeClient | null {
+    if (!isRecord(data) || !isClientId(data.id) || !isFiniteNumber(data.slot)) {
+        return null;
+    }
+
+    const client: RuntimeClient = {
+        id: data.id,
+        slot: data.slot
+    };
+
+    if (typeof data.name === 'string') {
+        client.name = data.name;
+    }
+
+    if (typeof data.ready === 'boolean') {
+        client.ready = data.ready;
+    }
+
+    return client;
+}
+
+function parseGameModel(data: unknown): RuntimeGameModel | null {
+    if (!isRecord(data) || !Array.isArray(data.clients)) {
+        return null;
+    }
+
+    const clients: RuntimeClient[] = [];
+
+    for (const clientData of data.clients) {
+        const client = parseClient(clientData);
+
+        if (!client) {
+            return null;
+        }
+
+        clients.push(client);
+    }
+
+    const model: RuntimeGameModel = {
+        clients
+    };
+
+    if (typeof data.gameId === 'string') {
+        model.gameId = data.gameId;
+    }
+
+    if (typeof data.message === 'string') {
+        model.message = data.message;
+    }
+
+    if (isFiniteNumber(data.playerLimit)) {
+        model.playerLimit = data.playerLimit;
+    }
+
+    if (isFiniteNumber(data.roundNumber)) {
+        model.roundNumber = data.roundNumber;
+    }
+
+    if (typeof data.status === 'string') {
+        model.status = data.status;
+    }
+
+    if (data.currentScenario === null) {
+        model.currentScenario = null;
+    } else if (isRecord(data.currentScenario)) {
+        model.currentScenario = data.currentScenario as Scenario;
+    }
+
+    return model;
+}
+
+function parseJoinedGamePayload(
+    data: unknown
+): RuntimeJoinedGamePayload | null {
+    if (!isRecord(data) || !isClientId(data.playerId)) {
+        return null;
+    }
+
+    const model = parseGameModel(data.model);
+
+    if (!model) {
+        return null;
+    }
+
+    return {
+        model,
+        playerId: data.playerId
+    };
+}
+
+function parseKeyEvent(data: unknown): RuntimeKeyEvent | null {
+    if (
+        !isRecord(data) ||
+        typeof data.action !== 'string' ||
+        typeof data.key !== 'string'
+    ) {
+        return null;
+    }
+
+    const keyEvent: RuntimeKeyEvent = {
+        action: data.action,
+        key: data.key
+    };
+
+    if (isClientId(data.player)) {
+        keyEvent.player = data.player;
+    }
+
+    if (data.shot !== undefined) {
+        keyEvent.shot = data.shot;
+    }
+
+    return keyEvent;
+}
+
+function parsePlayerPositionPayload(
+    data: unknown
+): RuntimePlayerPositionPayload | null {
+    if (
+        !isRecord(data) ||
+        !isClientId(data.player) ||
+        !isFiniteNumber(data.aim) ||
+        !isFiniteNumber(data.facing) ||
+        !isFiniteNumber(data.frame) ||
+        !isFiniteNumber(data.x) ||
+        !isFiniteNumber(data.y)
+    ) {
+        return null;
+    }
+
+    return {
+        aim: data.aim,
+        facing: data.facing,
+        frame: data.frame,
+        player: data.player,
+        x: data.x,
+        y: data.y
+    };
+}
+
+function parseObstacleDamagePayload(
+    data: unknown
+): RuntimeObstacleDamagePayload | null {
+    if (!isRecord(data) || typeof data.id !== 'string') {
+        return null;
+    }
+
+    if (!isClientId(data.ownerId)) {
+        return null;
+    }
+
+    const payload: RuntimeObstacleDamagePayload = {
+        id: data.id,
+        ownerId: data.ownerId
+    };
+
+    if (isFiniteNumber(data.roundNumber)) {
+        payload.roundNumber = data.roundNumber;
+    }
+
+    return payload;
 }

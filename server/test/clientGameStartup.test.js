@@ -82,16 +82,18 @@ function createStartupDependencies(onNetworkStart) {
     return {
         bootstrap: {
             ClientAssets: function () {
-                this.sprites = {
-                    ammo: {},
-                    cactus: {},
-                    saloon: {},
-                    wagon: {}
+                return {
+                    sprites: {
+                        ammo: {},
+                        cactus: {},
+                        saloon: {},
+                        wagon: {}
+                    },
+                    getRockPattern() {
+                        return null;
+                    },
+                    load() {}
                 };
-                this.getRockPattern = function () {
-                    return null;
-                };
-                this.load = function () {};
             },
             ClientCanvasSetup: {
                 create() {
@@ -103,7 +105,11 @@ function createStartupDependencies(onNetworkStart) {
                     };
                 }
             },
-            ClientGameLoop: function () {},
+            ClientGameLoop: function () {
+                return {
+                    start() {}
+                };
+            },
             ClientGameSystems: {
                 create(options) {
                     return {
@@ -125,7 +131,12 @@ function createStartupDependencies(onNetworkStart) {
             ClientInputStartup: {},
             ClientNetwork: function () {
                 onNetworkStart();
-                this.socket = {};
+                return {
+                    socket: {
+                        emit() {},
+                        on() {}
+                    }
+                };
             },
             requestAnimFrame: function () {}
         },
@@ -172,25 +183,47 @@ function createStartupDependencies(onNetworkStart) {
         browserConstructors: {
             Camera: function () {},
             ClientCameraController: function () {
-                this.getCameraScale = function () {
-                    return 1;
+                return {
+                    getCameraScale() {
+                        return 1;
+                    }
                 };
             },
             ClientGameSounds: function () {
-                this.playRicochet = function () {};
-            },
-            ClientIdentity: function () {},
-            ClientTouchEnvironment: {},
-            CollisionDebugRenderer: function () {},
-            KeysModel: function () {},
-            NameEditor: function () {
-                this.isActive = function () {
-                    return false;
+                return {
+                    playRicochet() {}
                 };
             },
-            ScenarioRenderer: function () {},
+            ClientIdentity: function () {
+                return {
+                    getStoredPlayerName() {
+                        return '';
+                    }
+                };
+            },
+            ClientTouchEnvironment: {},
+            CollisionDebugRenderer: function () {
+                return {
+                    render() {}
+                };
+            },
+            KeysModel: function () {},
+            NameEditor: function () {
+                return {
+                    isActive() {
+                        return false;
+                    }
+                };
+            },
+            ScenarioRenderer: function () {
+                return {};
+            },
             SoundEffects: function () {},
-            TouchControls: function () {}
+            TouchControls: function () {
+                return {
+                    update() {}
+                };
+            }
         }
     };
 }

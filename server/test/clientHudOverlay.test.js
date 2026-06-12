@@ -93,7 +93,9 @@ function createBrowser() {
 
     root.id = 'appRoot';
     window.document.body.appendChild(root);
-    globalThis.document = /** @type {any} */ (window.document);
+    globalThis.document = /** @type {Document} */ (
+        /** @type {unknown} */ (window.document)
+    );
 
     return {
         document: window.document,
@@ -123,11 +125,15 @@ test('creates the single app root and install prompt controller', async function
     });
 
     assert.equal(
-        /** @type {any} */ (browser.root.querySelector('#gameHud')).hidden,
+        /** @type {HTMLElement} */ (
+            /** @type {unknown} */ (browser.root.querySelector('#gameHud'))
+        ).hidden,
         false
     );
     assert.equal(
-        /** @type {any} */ (browser.root.querySelector('#lobbyHud')).hidden,
+        /** @type {HTMLElement} */ (
+            /** @type {unknown} */ (browser.root.querySelector('#lobbyHud'))
+        ).hidden,
         true
     );
     assert.equal(browser.root.querySelector('#scoreLeft').textContent, '3');

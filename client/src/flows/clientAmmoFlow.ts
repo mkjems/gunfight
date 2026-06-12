@@ -9,7 +9,7 @@ type AmmoModel = {
 };
 
 type ClientAmmoLike = {
-    reloadIfAllEmpty: (clients: AmmoClient[]) => boolean;
+    reloadIfAllEmpty: (clients?: AmmoClient[]) => boolean;
 };
 
 type ReloadIfBothPlayersAreOutOptions = {

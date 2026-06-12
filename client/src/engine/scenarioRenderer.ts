@@ -4,7 +4,7 @@ import { Config } from '../platform/config.js';
 type ContextLike = {
     beginPath: () => void;
     closePath: () => void;
-    drawImage: (...args: unknown[]) => void;
+    drawImage: CanvasRenderingContext2D['drawImage'];
     fill: () => void;
     fillRect: (x: number, y: number, width: number, height: number) => void;
     fillStyle: unknown;
@@ -17,14 +17,14 @@ type ContextLike = {
     shadowOffsetY: number;
 };
 
-type SpriteLike = {
+type SpriteLike = CanvasImageSource & {
     complete?: boolean;
 };
 
 type ScenarioRendererOptions = {
     context: ContextLike;
     getObstacleDamage?: (id: string) => number;
-    getRockPattern?: () => unknown;
+    getRockPattern?: () => CanvasPattern | null;
     getScenarioStartedAt?: () => number | null;
     getTime?: () => number;
     sprites?: {

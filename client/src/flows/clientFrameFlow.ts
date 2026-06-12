@@ -18,6 +18,8 @@ type RenderContext = {
     clearRect: (x: number, y: number, width: number, height: number) => void;
     restore: () => void;
     save: () => void;
+    scale: (x: number, y: number) => void;
+    translate: (x: number, y: number) => void;
 };
 
 type RenderOptions = {

@@ -2,6 +2,7 @@ import { handle as handleGameplayInput } from './clientGameplayInput.js';
 import { RoundState } from '../state/clientScreens.js';
 
 type KeyEvent = {
+    action: string;
     key: string;
     player?: number | string;
     [key: string]: unknown;

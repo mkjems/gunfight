@@ -34,6 +34,13 @@ type ClientLobbyFlowOptions = {
     };
 };
 
+type AbandonedRequeueOptions = Pick<
+    ClientLobbyFlowOptions,
+    'socket' | 'timers'
+>;
+
+type ClearAbandonedRequeueOptions = Pick<ClientLobbyFlowOptions, 'timers'>;
+
 const LOBBY_ENTRY_TIMERS = ['ritual', 'hit', 'reset', 'abandonedRequeue'];
 
 export function enter(options: ClientLobbyFlowOptions) {
@@ -47,7 +54,7 @@ export function enter(options: ClientLobbyFlowOptions) {
     options.syncNameEditor();
 }
 
-export function scheduleAbandonedRequeue(options: ClientLobbyFlowOptions) {
+export function scheduleAbandonedRequeue(options: AbandonedRequeueOptions) {
     if (options.timers.has('abandonedRequeue') || !options.socket) {
         return false;
     }
@@ -63,7 +70,7 @@ export function scheduleAbandonedRequeue(options: ClientLobbyFlowOptions) {
     return true;
 }
 
-export function clearAbandonedRequeue(options: ClientLobbyFlowOptions) {
+export function clearAbandonedRequeue(options: ClearAbandonedRequeueOptions) {
     options.timers.clear('abandonedRequeue');
 }
 

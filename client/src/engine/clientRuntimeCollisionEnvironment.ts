@@ -2,19 +2,20 @@ import { Bullet } from './bullet.js';
 import { ClientCollisionEnvironment } from './clientCollisionEnvironment.js';
 import { Obstacles } from './obstacles.js';
 import type { RoundState } from '../state/clientScreens.js';
+import type { Scenario } from '../../../shared/contracts.js';
 
 type RuntimeCollisionLines = Parameters<typeof Bullet.setCollisionLines>[0];
 type RuntimeObstacleBodies = Parameters<typeof Obstacles.setBodies>[0];
 
 type RuntimeCollisionEnvironmentOptions = {
     roundState: RoundState;
-    scenario: unknown | null | undefined;
+    scenario: Scenario | null | undefined;
     scenarioRenderer: {
         getObstacleBodies: (
-            scenario: unknown | null | undefined
+            scenario: Scenario | null | undefined
         ) => RuntimeObstacleBodies;
         getRockLines: (
-            scenario: unknown | null | undefined
+            scenario: Scenario | null | undefined
         ) => RuntimeCollisionLines;
     };
 };

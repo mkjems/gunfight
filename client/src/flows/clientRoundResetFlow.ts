@@ -1,23 +1,30 @@
 import { Config } from '../platform/config.js';
 import { RoundState } from '../state/clientScreens.js';
 
+type ReadyModel = {
+    clients: Array<{
+        id: string | number;
+        ready?: boolean;
+    }>;
+};
+
 type ClientRoundResetOptions = {
     bullets: {
         reset: () => void;
     };
-    isReadyToStart: (model: unknown) => boolean;
-    model: unknown;
+    isReadyToStart: (model?: ReadyModel | null) => boolean;
+    model?: ReadyModel | null;
     players: {
         resetAll: (options: { slots: typeof Config.player.slots }) => void;
     };
     renderHud: () => void;
-    resetAmmo: () => void;
+    resetAmmo?: () => void;
     roundData: {
         resetRoundFlags: () => void;
     };
     setRoundMessage: (message: string) => void;
     setRoundState: (roundState: RoundState) => void;
-    socket: {
+    socket?: {
         emit: (event: 'resetReady') => void;
     };
     startRoundRitual: (options: { resetScores: boolean }) => void;
@@ -26,6 +33,26 @@ type ClientRoundResetOptions = {
         clearMany: (names: string[]) => void;
     };
 };
+
+type ResetToStartScreenOptions = Omit<
+    ClientRoundResetOptions,
+    'isReadyToStart' | 'model' | 'startRoundRitual'
+> & {
+    resetAmmo: () => void;
+    socket: {
+        emit: (event: 'resetReady') => void;
+    };
+};
+
+type SharedRoundResetOptions = Pick<
+    ClientRoundResetOptions,
+    'bullets' | 'roundData' | 'setRoundMessage' | 'timers'
+>;
+
+type WaitingStateOptions = Pick<
+    ClientRoundResetOptions,
+    'renderHud' | 'setRoundState' | 'syncNameEditor'
+>;
 
 const RESET_TIMERS = ['reset', 'matchEnd'];
 
@@ -45,7 +72,7 @@ export function resetRound(options: ClientRoundResetOptions) {
     showWaitingState(options);
 }
 
-export function resetToStartScreen(options: ClientRoundResetOptions) {
+export function resetToStartScreen(options: ResetToStartScreenOptions) {
     options.players.resetAll({
         slots: Config.player.lobbySlots
     });
@@ -55,14 +82,14 @@ export function resetToStartScreen(options: ClientRoundResetOptions) {
     options.socket.emit('resetReady');
 }
 
-function resetSharedRoundState(options: ClientRoundResetOptions) {
+function resetSharedRoundState(options: SharedRoundResetOptions) {
     options.bullets.reset();
     options.setRoundMessage('');
     options.roundData.resetRoundFlags();
     options.timers.clearMany(RESET_TIMERS);
 }
 
-function showWaitingState(options: ClientRoundResetOptions) {
+function showWaitingState(options: WaitingStateOptions) {
     options.setRoundState(RoundState.WAITING);
     options.syncNameEditor();
     options.renderHud();
