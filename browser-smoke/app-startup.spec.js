@@ -139,3 +139,63 @@ test('built browser app renders the lobby component island', async ({
 
     expect(browserErrors).toEqual([]);
 });
+
+test('built browser app renders the name editor component island', async ({
+    page
+}) => {
+    const browserErrors = [];
+
+    page.on('pageerror', function (error) {
+        browserErrors.push(error.message);
+    });
+
+    page.on('console', function (message) {
+        if (message.type() === 'error') {
+            browserErrors.push(message.text());
+        }
+    });
+
+    await page.addInitScript(function () {
+        const RealDate = Date;
+        const fixedTime = new RealDate('2026-01-01T00:00:00.000Z').getTime();
+
+        class FixedDate extends RealDate {
+            constructor(...args) {
+                if (args.length) {
+                    super(...args);
+                    return;
+                }
+
+                super(fixedTime);
+            }
+
+            static now() {
+                return fixedTime;
+            }
+        }
+
+        FixedDate.UTC = RealDate.UTC;
+        FixedDate.parse = RealDate.parse;
+        globalThis.Date = FixedDate;
+        localStorage.setItem('gunfight-install-prompt-dismissed', '1');
+    });
+
+    await page.goto('/', {
+        waitUntil: 'domcontentloaded'
+    });
+
+    await expect(page.locator('#lobby-main')).toBeVisible();
+    await page.keyboard.press('e');
+
+    await expect(page.locator('#nameEditor')).toBeVisible();
+    await expect(page.locator('#nameEditorValue')).toHaveText('NAME:  ');
+    await expect(page.locator('#nameEditorGrid .name-editor-row')).toHaveCount(
+        5
+    );
+    await expect(
+        page.locator('#nameEditorGrid .name-editor-key').first()
+    ).toHaveText('A');
+    await expect(page.locator('#nameEditorHelp')).toContainText('SPACE SELECT');
+
+    expect(browserErrors).toEqual([]);
+});
