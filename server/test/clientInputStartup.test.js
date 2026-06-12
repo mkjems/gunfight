@@ -35,8 +35,8 @@ test('creates input and starts touch controls before the game loop', async funct
 
                 return input;
             },
-            initTouchControls() {
-                calls.push('initTouchControls');
+            initTouchControls(nextInput) {
+                calls.push(['initTouchControls', nextInput.id]);
             },
             inputController: null,
             startGameLoop() {
@@ -47,7 +47,7 @@ test('creates input and starts touch controls before the game loop', async funct
     );
     assert.deepEqual(calls, [
         'createInputController',
-        'initTouchControls',
+        ['initTouchControls', 'input'],
         'startGameLoop'
     ]);
 });

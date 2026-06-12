@@ -896,7 +896,10 @@ export function createGame(
                         }
                     );
                 },
-                initTouchControls: initTouchControls,
+                initTouchControls: function (nextInputController: any) {
+                    inputController = nextInputController;
+                    initTouchControls();
+                },
                 inputController: inputController,
                 startGameLoop: function () {
                     initGameLoop();

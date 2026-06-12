@@ -1,6 +1,6 @@
 type ClientInputStartupOptions<TInputController> = {
     createInputController: () => TInputController;
-    initTouchControls: () => void;
+    initTouchControls: (inputController: TInputController) => void;
     inputController?: TInputController | null;
     startGameLoop: () => void;
 };
@@ -15,7 +15,7 @@ export function start<TInputController>(
     }
 
     inputController = options.createInputController();
-    options.initTouchControls();
+    options.initTouchControls(inputController);
     options.startGameLoop();
 
     return inputController;
