@@ -1,21 +1,28 @@
-import { GameHudComponentScreen } from './gameHudComponentScreen.js';
-import { HighScoresComponentScreen } from './highScoresComponentScreen.js';
-import { ClientHudOverlay } from './clientHudOverlay.js';
-import { LobbyComponentScreen } from './lobbyComponentScreen.js';
-import { NameEditorComponentScreen } from './nameEditorComponentScreen.js';
+import { ClientAppMount } from './clientApp.js';
+import { createInstallPrompt } from './installPrompt.js';
 
 type ClientUiOptions = {
     document: Document;
+    localStorage?: Storage;
+    onRenderRequest?: () => void;
+    window?: Window;
 };
 
 export function create(options: ClientUiOptions) {
-    return ClientHudOverlay.create({
-        document: options.document,
-        GameHud: GameHudComponentScreen as any,
-        HighScoresScreen: HighScoresComponentScreen as any,
-        LobbyScreen: LobbyComponentScreen as any,
-        NameEditorScreen: NameEditorComponentScreen as any
+    const app = ClientAppMount.create({
+        root: options.document.getElementById('appRoot')
     });
+    const installPrompt = createInstallPrompt({
+        document: options.document,
+        localStorage: options.localStorage,
+        onChange: options.onRenderRequest,
+        window: options.window
+    });
+
+    return {
+        app,
+        installPrompt
+    };
 }
 
 export const ClientUi = {

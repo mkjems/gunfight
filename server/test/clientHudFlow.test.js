@@ -47,12 +47,10 @@ function createOptions(overrides = {}) {
     const calls = [];
     const elements = {
         canvas: {},
-        gameHud: {},
         hudCanvas: {
             height: 200,
             width: 300
-        },
-        lobbyHud: {}
+        }
     };
     const options = {
         ...elements,
@@ -68,14 +66,14 @@ function createOptions(overrides = {}) {
                 calls.push(['ammoHudRenderer.render', ammo, x, y, direction]);
             }
         },
+        app: {
+            render(state) {
+                calls.push(['app.render', state]);
+            }
+        },
         camera: {},
         cameraController: {},
         defaultSeconds: 70,
-        gameHudScreen: {
-            render(state) {
-                calls.push(['gameHudScreen.render', state]);
-            }
-        },
         gameHudViewModel: {
             getState(options) {
                 return {
@@ -83,6 +81,32 @@ function createOptions(overrides = {}) {
                     roundState: options.roundState
                 };
             }
+        },
+        getInstallPromptProps() {
+            calls.push('getInstallPromptProps');
+
+            return {
+                visible: false
+            };
+        },
+        getLobbyHudState() {
+            calls.push('getLobbyHudState');
+
+            return {
+                activeScreen: 'lobby-main',
+                canvasVisible: true,
+                hudCanvasVisible: true,
+                lobby: {
+                    playPrompt: 'PRESS P TO PLAY'
+                }
+            };
+        },
+        getTouchControlsProps() {
+            calls.push('getTouchControlsProps');
+
+            return {
+                enabled: true
+            };
         },
         hudContext: {
             clearRect(x, y, width, height) {
@@ -93,15 +117,9 @@ function createOptions(overrides = {}) {
             clients: [{ id: 'p1' }, { id: 'p2' }]
         },
         players: {},
-        renderLobbyHud() {
-            calls.push('renderLobbyHud');
-        },
         roundData: {},
         roundState: 'playing',
         scoreKeeper: {},
-        updateTouchControls() {
-            calls.push('updateTouchControls');
-        },
         ...overrides
     };
 
@@ -116,18 +134,36 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('renders waiting HUD through the lobby branch', async function () {
+test('renders waiting HUD through one app render', async function () {
     const hudFlow = await loadClientHudFlow();
-    const { calls, options } = createOptions({
+    const { calls, elements, options } = createOptions({
         roundState: 'waiting'
     });
 
     hudFlow.render(options);
 
+    assert.equal(elements.canvas.hidden, false);
+    assert.equal(elements.hudCanvas.hidden, false);
     assert.deepEqual(plain(calls), [
         ['hudContext.clearRect', 0, 0, 300, 200],
-        'renderLobbyHud',
-        'updateTouchControls'
+        'getLobbyHudState',
+        'getInstallPromptProps',
+        'getTouchControlsProps',
+        [
+            'app.render',
+            {
+                activeScreen: 'lobby-main',
+                installPrompt: {
+                    visible: false
+                },
+                lobby: {
+                    playPrompt: 'PRESS P TO PLAY'
+                },
+                touchControls: {
+                    enabled: true
+                }
+            }
+        ]
     ]);
 });
 
@@ -139,22 +175,30 @@ test('renders active game HUD and both ammo displays', async function () {
 
     assert.equal(elements.canvas.hidden, false);
     assert.equal(elements.hudCanvas.hidden, false);
-    assert.equal(elements.gameHud.hidden, false);
-    assert.equal(elements.lobbyHud.hidden, true);
     assert.deepEqual(plain(calls), [
         ['hudContext.clearRect', 0, 0, 300, 200],
+        'getInstallPromptProps',
+        'getTouchControlsProps',
         [
-            'gameHudScreen.render',
+            'app.render',
             {
-                defaultSeconds: 70,
-                roundState: 'playing'
+                activeScreen: 'game',
+                gameHud: {
+                    defaultSeconds: 70,
+                    roundState: 'playing'
+                },
+                installPrompt: {
+                    visible: false
+                },
+                touchControls: {
+                    enabled: true
+                }
             }
         ],
         ['ammo.get', 'p1'],
         ['ammoHudRenderer.render', 4, 122, 606, 1],
         ['ammo.get', 'p2'],
-        ['ammoHudRenderer.render', 2, 828, 606, -1],
-        'updateTouchControls'
+        ['ammoHudRenderer.render', 2, 828, 606, -1]
     ]);
 });
 
@@ -170,11 +214,22 @@ test('renders active game HUD without ammo when clients are missing', async func
 
     assert.deepEqual(plain(calls), [
         ['hudContext.clearRect', 0, 0, 300, 200],
+        'getInstallPromptProps',
+        'getTouchControlsProps',
         [
-            'gameHudScreen.render',
+            'app.render',
             {
-                defaultSeconds: 70,
-                roundState: 'playing'
+                activeScreen: 'game',
+                gameHud: {
+                    defaultSeconds: 70,
+                    roundState: 'playing'
+                },
+                installPrompt: {
+                    visible: false
+                },
+                touchControls: {
+                    enabled: true
+                }
             }
         ]
     ]);

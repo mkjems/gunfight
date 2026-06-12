@@ -1,6 +1,4 @@
 import { Config } from './config.js';
-import { TouchGameplayControlsComponentScreen } from './touchGameplayControlsComponentScreen.js';
-import { TouchLobbyControlsComponentScreen } from './touchLobbyControlsComponentScreen.js';
 
 type InputLike = {
     press: (key: string) => void;
@@ -53,25 +51,10 @@ type WindowLike = {
     };
 };
 
-type LobbyControlsScreenLike = {
-    render: (props: {
-        onEdit?: () => void;
-        onPlay?: () => void;
-        showButtons?: boolean;
-        visible?: boolean;
-    }) => void;
-};
-
-type GameplayControlsScreenLike = {
-    render: (props: { visible?: boolean }) => void;
-};
-
 type TouchControlsOptions = {
     document?: DocumentLike;
-    gameplayControlsScreen?: GameplayControlsScreenLike;
     getAimLevel?: () => number;
     input?: InputLike;
-    lobbyControlsScreen?: LobbyControlsScreenLike;
     window?: WindowLike;
 };
 
@@ -85,6 +68,23 @@ type TouchControlsState = {
     waiting?: boolean;
 };
 
+type TouchControlsRenderProps = {
+    debug: boolean;
+    editing: boolean;
+    enabled: boolean;
+    gameplay: {
+        visible: boolean;
+    };
+    lobby: {
+        onEdit?: () => void;
+        onPlay?: () => void;
+        showButtons: boolean;
+        visible: boolean;
+    };
+    playing: boolean;
+    waiting: boolean;
+};
+
 export function TouchControls(options: TouchControlsOptions = {}) {
     const input = options.input;
     const ownerDocument = (options.document || document) as DocumentLike;
@@ -95,19 +95,7 @@ export function TouchControls(options: TouchControlsOptions = {}) {
             return Config.player.defaultAim;
         };
     const maxAimLevel = Config.player.aimLevels.length - 1;
-    const root = ownerDocument.getElementById('touchControls');
-    const lobbyControlsScreen =
-        options.lobbyControlsScreen ||
-        new TouchLobbyControlsComponentScreen({
-            root: ownerDocument.getElementById(
-                'touchLobbyControls'
-            ) as unknown as HTMLElement | null
-        });
-    const gameplayControlsScreen =
-        options.gameplayControlsScreen ||
-        new TouchGameplayControlsComponentScreen({
-            root: root as unknown as HTMLElement | null
-        });
+    let root = ownerDocument.getElementById('touchControls');
     let joystick: ElementLike | null = null;
     let joystickKnob: ElementLike | null = null;
     let aimSlider: ElementLike | null = null;
@@ -116,30 +104,33 @@ export function TouchControls(options: TouchControlsOptions = {}) {
     let activeMoveKeys: Record<string, boolean> = {};
     let visible = false;
     let editing = false;
+    let mounted = false;
 
     function init() {
-        if (!root || !input) {
+        if (!input) {
             return;
         }
 
         visible = shouldEnableTouchControls();
 
         if (!visible) {
-            root.hidden = true;
-            lobbyControlsScreen.render({
-                visible: false
-            });
             return;
         }
 
-        root.classList.toggle(
-            'debug-touch',
-            ownerWindow.location.search.indexOf('touch=1') >= 0
-        );
-        root.hidden = false;
-        gameplayControlsScreen.render({
-            visible: false
-        });
+        mount();
+    }
+
+    function mount() {
+        if (mounted || !input) {
+            return mounted;
+        }
+
+        root = ownerDocument.getElementById('touchControls');
+
+        if (!root) {
+            return false;
+        }
+
         joystick = ownerDocument.getElementById('touchJoystick');
         joystickKnob = ownerDocument.getElementById('touchJoystickKnob');
         aimSlider = ownerDocument.getElementById('touchAimSlider');
@@ -156,6 +147,9 @@ export function TouchControls(options: TouchControlsOptions = {}) {
                 input.release(' ');
             }
         );
+        mounted = true;
+
+        return true;
     }
 
     function onPlayTap() {
@@ -357,27 +351,14 @@ export function TouchControls(options: TouchControlsOptions = {}) {
         button.addEventListener('lostpointercapture', onUp);
     }
 
-    function update(state: TouchControlsState = {}) {
-        if (!root || !visible) {
-            return;
+    function update(state: TouchControlsState = {}): TouchControlsRenderProps {
+        if (!visible) {
+            return getHiddenRenderProps();
         }
 
+        mount();
         editing = !!state.editing;
         const showGameplayControls = state.gameplay || state.playing || editing;
-        root.classList.toggle('is-waiting', state.waiting);
-        root.classList.toggle('is-playing', state.playing);
-        root.classList.toggle('is-editing', editing);
-
-        lobbyControlsScreen.render({
-            onEdit: onEditTap,
-            onPlay: onPlayTap,
-            showButtons: !state.highScoresVisible && !state.ready,
-            visible: !!state.waiting && !editing
-        });
-
-        gameplayControlsScreen.render({
-            visible: !!showGameplayControls
-        });
 
         if (!showGameplayControls) {
             resetJoystick();
@@ -391,6 +372,40 @@ export function TouchControls(options: TouchControlsOptions = {}) {
                     : getAimLevel()
             );
         }
+
+        return {
+            debug: ownerWindow.location.search.indexOf('touch=1') >= 0,
+            editing,
+            enabled: true,
+            gameplay: {
+                visible: !!showGameplayControls
+            },
+            lobby: {
+                onEdit: onEditTap,
+                onPlay: onPlayTap,
+                showButtons: !state.highScoresVisible && !state.ready,
+                visible: !!state.waiting && !editing
+            },
+            playing: !!state.playing,
+            waiting: !!state.waiting
+        };
+    }
+
+    function getHiddenRenderProps(): TouchControlsRenderProps {
+        return {
+            debug: false,
+            editing: false,
+            enabled: false,
+            gameplay: {
+                visible: false
+            },
+            lobby: {
+                showButtons: false,
+                visible: false
+            },
+            playing: false,
+            waiting: false
+        };
     }
 
     function clamp(value: number, min: number, max: number) {
@@ -400,6 +415,7 @@ export function TouchControls(options: TouchControlsOptions = {}) {
     init();
 
     return {
+        mount,
         update
     };
 }

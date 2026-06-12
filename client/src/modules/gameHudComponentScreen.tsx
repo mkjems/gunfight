@@ -1,18 +1,12 @@
-import { render as renderComponent } from 'preact';
-import { arePropsEqual } from './componentRenderProps.js';
 import { Config } from './config.js';
 
-type GameHudComponentScreenElements = {
-    root?: HTMLElement | null;
-};
-
-type HitMessage = {
+export type HitMessage = {
     text: string;
     x: number;
     y: number;
 };
 
-type GameHudComponentScreenRenderOptions = {
+export type GameHudProps = {
     hitMessage?: HitMessage | null;
     leftScore?: number;
     rightScore?: number;
@@ -24,34 +18,7 @@ type HitMessageProps = {
     hitMessage?: HitMessage | null;
 };
 
-export class GameHudComponentScreen {
-    elements: GameHudComponentScreenElements;
-    lastRenderedOptions?: GameHudComponentScreenRenderOptions;
-
-    constructor(elements: GameHudComponentScreenElements = {}) {
-        this.elements = elements;
-    }
-
-    render(options: GameHudComponentScreenRenderOptions = {}) {
-        if (!this.elements.root) {
-            return false;
-        }
-
-        if (
-            this.lastRenderedOptions &&
-            arePropsEqual(this.lastRenderedOptions, options)
-        ) {
-            return false;
-        }
-
-        renderComponent(<GameHudComponent {...options} />, this.elements.root);
-        this.lastRenderedOptions = options;
-
-        return true;
-    }
-}
-
-function GameHudComponent(options: GameHudComponentScreenRenderOptions) {
+export function GameHudComponent(options: GameHudProps) {
     return (
         <>
             <div id="scoreRow">

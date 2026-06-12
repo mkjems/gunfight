@@ -1,17 +1,9 @@
-import { render as renderComponent } from 'preact';
-import { arePropsEqual } from './componentRenderProps.js';
-
-type LobbyComponentScreenElements = {
-    highScores?: HTMLElement | null;
-    main?: HTMLElement | null;
-};
-
-type LobbySlot = {
+export type LobbySlot = {
     label: string;
     ready: boolean;
 };
 
-type LobbyComponentScreenRenderOptions = {
+export type LobbyComponentProps = {
     controls?: string[];
     editPrompt?: string;
     identityLines?: string[];
@@ -33,45 +25,7 @@ type TextProps = {
     text: string;
 };
 
-export class LobbyComponentScreen {
-    elements: LobbyComponentScreenElements;
-    lastRenderedOptions?: LobbyComponentScreenRenderOptions;
-
-    constructor(elements: LobbyComponentScreenElements = {}) {
-        this.elements = elements;
-    }
-
-    render(options: LobbyComponentScreenRenderOptions = {}) {
-        show(this.elements.main, true);
-        show(this.elements.highScores, false);
-
-        return this.renderMain(options);
-    }
-
-    clear() {
-        return this.renderMain({});
-    }
-
-    renderMain(options: LobbyComponentScreenRenderOptions) {
-        if (!this.elements.main) {
-            return false;
-        }
-
-        if (
-            this.lastRenderedOptions &&
-            arePropsEqual(this.lastRenderedOptions, options)
-        ) {
-            return false;
-        }
-
-        renderComponent(<LobbyMain {...options} />, this.elements.main);
-        this.lastRenderedOptions = options;
-
-        return true;
-    }
-}
-
-function LobbyMain(options: LobbyComponentScreenRenderOptions = {}) {
+export function LobbyMain(options: LobbyComponentProps = {}) {
     return (
         <>
             <h1>GUNFIGHT 1975</h1>
@@ -137,10 +91,4 @@ function LobbySlots(props: LobbySlotsProps) {
 
 function Text(props: TextProps) {
     return <>{props.text}</>;
-}
-
-function show(element: HTMLElement | null | undefined, visible: boolean) {
-    if (element) {
-        element.hidden = !visible;
-    }
 }

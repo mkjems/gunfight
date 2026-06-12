@@ -1,132 +1,123 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import {
+    mkdirSync,
+    mkdtempSync,
+    readFileSync,
+    rmSync,
+    writeFileSync
+} from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import test from 'node:test';
 import ts from 'typescript';
+import { Window } from 'happy-dom';
 
-async function loadClientHudOverlay() {
+function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientHudOverlay.ts'),
+        path.join(process.cwd(), 'client/src/modules', sourceName),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {
         compilerOptions: {
+            jsx: ts.JsxEmit.ReactJSX,
+            jsxImportSource: 'preact',
             module: ts.ModuleKind.ES2022,
             target: ts.ScriptTarget.ES2022
-        }
-    });
-    const encoded = Buffer.from(transpiled.outputText).toString('base64');
-    const module = await import('data:text/javascript;base64,' + encoded);
-
-    return module.ClientHudOverlay;
-}
-
-function createConstructors(calls) {
-    return {
-        GameHud: function (elements) {
-            calls.push(['GameHud', elements]);
-            this.kind = 'gameHudScreen';
         },
-        HighScoresScreen: function (elements) {
-            calls.push(['HighScoresScreen', elements]);
-            this.kind = 'highScoresScreen';
-        },
-        LobbyScreen: function (elements) {
-            calls.push(['LobbyScreen', elements]);
-            this.kind = 'lobbyScreen';
-        },
-        NameEditorScreen: function (elements) {
-            calls.push(['NameEditorScreen', elements]);
-            this.kind = 'nameEditorScreen';
-        }
-    };
-}
-
-function createDocument() {
-    const elements = {};
-
-    function getElement(id) {
-        if (!elements[id]) {
-            elements[id] = {
-                id: id
-            };
-        }
-
-        return elements[id];
-    }
-
-    return {
-        elements: elements,
-        getElementById: getElement
-    };
-}
-
-function plain(value) {
-    return JSON.parse(JSON.stringify(value));
-}
-
-test('creates HUD screens from DOM elements', async function () {
-    const calls = [];
-    const overlayModule = await loadClientHudOverlay();
-    const fakeDocument = createDocument();
-    const overlay = overlayModule.create({
-        document: fakeDocument,
-        ...createConstructors(calls)
+        fileName: sourceName
     });
 
-    assert.equal(overlay.gameHud.id, 'gameHud');
-    assert.equal(overlay.lobbyHud.id, 'lobbyHud');
-    assert.equal(overlay.gameHudScreen.kind, 'gameHudScreen');
-    assert.equal(overlay.highScoresScreen.kind, 'highScoresScreen');
-    assert.equal(overlay.lobbyScreen.kind, 'lobbyScreen');
-    assert.equal(overlay.nameEditorScreen.kind, 'nameEditorScreen');
-    assert.deepEqual(
-        plain(
-            calls.map(function (call) {
-                return [
-                    call[0],
-                    Object.fromEntries(
-                        Object.entries(call[1]).map(function (entry) {
-                            return [
-                                entry[0],
-                                entry[1] && entry[1].id ? entry[1].id : entry[1]
-                            ];
-                        })
-                    )
-                ];
-            })
-        ),
-        [
-            [
-                'GameHud',
-                {
-                    root: 'gameHud'
-                }
-            ],
-            [
-                'HighScoresScreen',
-                {
-                    lobbyMain: 'lobby-main',
-                    playPrompt: 'highScoresPlayPrompt',
-                    screen: 'highScoresScreen',
-                    table: 'highScoresTable'
-                }
-            ],
-            [
-                'LobbyScreen',
-                {
-                    highScores: 'highScoresScreen',
-                    main: 'lobby-main'
-                }
-            ],
-            [
-                'NameEditorScreen',
-                {
-                    editor: 'nameEditor',
-                    highScores: 'highScoresScreen',
-                    lobbyMain: 'lobby-main'
-                }
-            ]
-        ]
+    writeFileSync(
+        path.join(tempDirectory, outputName),
+        transpiled.outputText,
+        'utf8'
     );
+}
+
+async function loadClientUi() {
+    const cacheDirectory = path.join(process.cwd(), 'node_modules', '.cache');
+    mkdirSync(cacheDirectory, { recursive: true });
+
+    const tempDirectory = mkdtempSync(
+        path.join(cacheDirectory, 'gunfight-client-ui-')
+    );
+
+    [
+        ['clientScreens.ts', 'clientScreens.js'],
+        ['componentRenderProps.ts', 'componentRenderProps.js'],
+        ['config.ts', 'config.js'],
+        ['gameHudComponentScreen.tsx', 'gameHudComponentScreen.js'],
+        ['highScoresComponentScreen.tsx', 'highScoresComponentScreen.js'],
+        ['installPrompt.ts', 'installPrompt.js'],
+        ['lobbyComponentScreen.tsx', 'lobbyComponentScreen.js'],
+        ['nameEditorComponentScreen.tsx', 'nameEditorComponentScreen.js'],
+        [
+            'touchGameplayControlsComponentScreen.tsx',
+            'touchGameplayControlsComponentScreen.js'
+        ],
+        [
+            'touchLobbyControlsComponentScreen.tsx',
+            'touchLobbyControlsComponentScreen.js'
+        ],
+        ['clientApp.tsx', 'clientApp.js'],
+        ['clientUi.ts', 'clientUi.js']
+    ].forEach(function ([sourceName, outputName]) {
+        compileClientModule(sourceName, outputName, tempDirectory);
+    });
+
+    try {
+        const module = await import(
+            pathToFileURL(path.join(tempDirectory, 'clientUi.js')).href
+        );
+
+        return module.ClientUi;
+    } finally {
+        rmSync(tempDirectory, { force: true, recursive: true });
+    }
+}
+
+function createBrowser() {
+    const window = new Window();
+    const root = window.document.createElement('div');
+
+    root.id = 'appRoot';
+    window.document.body.appendChild(root);
+    globalThis.document = /** @type {any} */ (window.document);
+
+    return {
+        document: window.document,
+        root,
+        window
+    };
+}
+
+test('creates the single app root and install prompt controller', async function () {
+    const ClientUi = await loadClientUi();
+    const browser = createBrowser();
+    const ui = ClientUi.create({
+        document: browser.document,
+        localStorage: browser.window.localStorage,
+        window: browser.window
+    });
+
+    assert.ok(ui.app);
+    assert.ok(ui.installPrompt);
+
+    ui.app.render({
+        activeScreen: 'game',
+        gameHud: {
+            leftScore: 3
+        },
+        installPrompt: ui.installPrompt.getProps()
+    });
+
+    assert.equal(
+        /** @type {any} */ (browser.root.querySelector('#gameHud')).hidden,
+        false
+    );
+    assert.equal(
+        /** @type {any} */ (browser.root.querySelector('#lobbyHud')).hidden,
+        true
+    );
+    assert.equal(browser.root.querySelector('#scoreLeft').textContent, '3');
 });

@@ -1,4 +1,4 @@
-import { RoundState } from './clientScreens.js';
+import { RoundState, Screen } from './clientScreens.js';
 import { getState } from './gameHudViewModel.js';
 
 type ClientId = number | string;
@@ -29,27 +29,33 @@ type ClientHudFlowOptions = {
     ammoHudRenderer: {
         render: (ammo: number, x: number, y: number, direction: number) => void;
     };
+    app: {
+        render: (state: unknown) => void;
+    };
     camera: unknown;
     cameraController: unknown;
     canvas?: ElementLike | null;
     defaultSeconds: number;
-    gameHud?: ElementLike | null;
-    gameHudScreen: {
-        render: (state: unknown) => void;
-    };
     gameHudViewModel?: {
         getState: typeof getState;
     };
+    getInstallPromptProps?: () => unknown;
+    getLobbyHudState: () => {
+        activeScreen: Screen;
+        canvasVisible: boolean;
+        highScores?: unknown;
+        hudCanvasVisible: boolean;
+        lobby?: unknown;
+        nameEditor?: unknown;
+    };
+    getTouchControlsProps?: () => unknown;
     hudCanvas: HudCanvas;
     hudContext: HudContext;
-    lobbyHud?: ElementLike | null;
     model?: GameModel | null;
     players: unknown;
-    renderLobbyHud: () => void;
     roundData: unknown;
     roundState: RoundState;
     scoreKeeper: unknown;
-    updateTouchControls: () => void;
 };
 
 export function render(options: ClientHudFlowOptions) {
@@ -61,20 +67,21 @@ export function render(options: ClientHudFlowOptions) {
     );
 
     if (options.roundState === RoundState.WAITING) {
-        options.renderLobbyHud();
-        options.updateTouchControls();
+        renderLobbyApp(options);
         return;
     }
 
     show(options.canvas, true);
     show(options.hudCanvas, true);
-    show(options.gameHud, true);
-    show(options.lobbyHud, false);
+    options.app.render({
+        activeScreen: Screen.GAME,
+        gameHud: getGameHudState(options),
+        installPrompt: options.getInstallPromptProps?.(),
+        touchControls: options.getTouchControlsProps?.()
+    });
 
     const firstClient = options.model && options.model.clients?.[0];
     const secondClient = options.model && options.model.clients?.[1];
-
-    renderGameHud(options);
 
     if (!firstClient || !secondClient) {
         return;
@@ -92,23 +99,35 @@ export function render(options: ClientHudFlowOptions) {
         606,
         -1
     );
-    options.updateTouchControls();
 }
 
-export function renderGameHud(options: ClientHudFlowOptions) {
+function renderLobbyApp(options: ClientHudFlowOptions) {
+    const lobbyState = options.getLobbyHudState();
+
+    show(options.canvas, lobbyState.canvasVisible);
+    show(options.hudCanvas, lobbyState.hudCanvasVisible);
+    options.app.render({
+        activeScreen: lobbyState.activeScreen,
+        highScores: lobbyState.highScores,
+        installPrompt: options.getInstallPromptProps?.(),
+        lobby: lobbyState.lobby,
+        nameEditor: lobbyState.nameEditor,
+        touchControls: options.getTouchControlsProps?.()
+    });
+}
+
+export function getGameHudState(options: ClientHudFlowOptions) {
     const gameHudViewModel = options.gameHudViewModel || { getState };
 
-    options.gameHudScreen.render(
-        gameHudViewModel.getState({
-            camera: options.camera as never,
-            cameraController: options.cameraController as never,
-            defaultSeconds: options.defaultSeconds,
-            players: options.players as never,
-            roundData: options.roundData as never,
-            roundState: options.roundState,
-            scoreKeeper: options.scoreKeeper as never
-        })
-    );
+    return gameHudViewModel.getState({
+        camera: options.camera as never,
+        cameraController: options.cameraController as never,
+        defaultSeconds: options.defaultSeconds,
+        players: options.players as never,
+        roundData: options.roundData as never,
+        roundState: options.roundState,
+        scoreKeeper: options.scoreKeeper as never
+    });
 }
 
 function show(element: ElementLike | null | undefined, visible: boolean) {
@@ -118,6 +137,6 @@ function show(element: ElementLike | null | undefined, visible: boolean) {
 }
 
 export const ClientHudFlow = {
-    render,
-    renderGameHud
+    getGameHudState,
+    render
 };

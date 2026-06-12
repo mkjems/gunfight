@@ -45,42 +45,42 @@ flow modules, and websocket messages may drive visible Preact UI changes
 through that path. The flows then derive one Preact props tree. Components do
 not own websocket, gameplay, or synchronization state.
 
-- [ ] Render the whole DOM UI from a single app root.
-    - Replace the per-screen containers in `index.html` with one app root element inside `gameStage`.
-    - Move the rotate prompt and install prompt markup out of static HTML and into the app root.
-    - Render one app component from one guarded render call.
-    - Keep the gameplay canvas and HUD canvas as static elements outside the app.
-- [ ] Build a single overlay view model.
-    - Flows assemble one props tree: active screen, screen props, prompt props, and touch-control visibility props.
-    - Keep `ClientScreens` as the only owner of the active-screen decision.
-    - Keep socket callbacks routed through the existing runtime state and flow modules before rendering app props.
-    - Add a narrow socket-to-UI message path for server-driven UI events that are not gameplay simulation state.
-    - Server-driven UI messages become explicit app props or transient UI state owned by a flow module, then trigger the guarded app render.
-    - Keep the per-frame rendering rule: one value-equality check per frame, Preact idles when nothing changed.
-- [ ] Add a `ClientApp` component and app mount API.
-    - The app component composes game HUD, lobby, high scores, name editor, rotate prompt, install prompt, touch lobby controls, and touch gameplay controls.
-    - The app mount stores the last rendered props and does the single value-equality guard.
-    - The app mount exposes a post-render hook so imperative modules can acquire DOM references after the first render.
-- [ ] Replace screen wrapper classes with plain components composed in JSX.
-    - Screen selection becomes declarative composition in the app component, not hidden-flag side effects.
-    - Collapse `ClientUi`/`ClientHudOverlay` element wiring into the app mount, then delete obsolete wrapper modules.
-    - Preserve public element ids used by CSS, tests, and browser smoke checks.
-    - Update screen unit tests to render components through the app root with view-model props.
-- [ ] Convert the rotate prompt to a component.
-    - It is CSS/orientation driven, so the component is markup only.
-- [ ] Convert the install prompt to a component.
-    - Keep `beforeinstallprompt` handling, service worker registration, and dismiss persistence in the existing module.
-    - Reconnect the install prompt module to startup; it should not remain orphaned from the built client bundle.
-    - The component renders markup and emits install/dismiss actions.
-- [ ] Keep touch gameplay controls mounted and imperative inside the app.
-    - The joystick/aim/fire subtree stays always mounted with visibility props so imperatively bound pointer listeners and styles survive re-renders.
-    - Re-acquire element references and bind pointer listeners after the first app render.
-    - Keep joystick knob transforms and aim handle positions as imperative updates in `touchControls.ts`.
-- [ ] Verify layout, PWA behavior, and update the architecture docs.
-    - Fix stale `documentation/TODO.md` references in package scripts so `npm run check` can run the whole baseline.
-    - Update unit and browser smoke tests from component-island wording to single-root app wording.
-    - Verify mobile layout, touch positioning over the canvas, and service worker behavior.
-    - Update `documentation/UI-ownership.md` and `documentation/Architecture-flow.md` to the single-root model.
+- [x] Render the whole DOM UI from a single app root.
+    - [x] Replace the per-screen containers in `index.html` with one app root element inside `gameStage`.
+    - [x] Move the rotate prompt and install prompt markup out of static HTML and into the app root.
+    - [x] Render one app component from one guarded render call.
+    - [x] Keep the gameplay canvas and HUD canvas as static elements outside the app.
+- [x] Build a single overlay view model.
+    - [x] Flows assemble one props tree: active screen, screen props, prompt props, and touch-control visibility props.
+    - [x] Keep `ClientScreens` as the only owner of the active-screen decision.
+    - [x] Keep socket callbacks routed through the existing runtime state and flow modules before rendering app props.
+    - [x] Add a narrow socket-to-UI message path for server-driven UI events that are not gameplay simulation state.
+    - [x] Server-driven UI messages become explicit app props or transient UI state owned by a flow module, then trigger the guarded app render.
+    - [x] Keep the per-frame rendering rule: one value-equality check per frame, Preact idles when nothing changed.
+- [x] Add a `ClientApp` component and app mount API.
+    - [x] The app component composes game HUD, lobby, high scores, name editor, rotate prompt, install prompt, touch lobby controls, and touch gameplay controls.
+    - [x] The app mount stores the last rendered props and does the single value-equality guard.
+    - [x] The app mount exposes a post-render hook so imperative modules can acquire DOM references after the first render.
+- [x] Replace screen wrapper classes with plain components composed in JSX.
+    - [x] Screen selection becomes declarative composition in the app component, not hidden-flag side effects.
+    - [x] Collapse `ClientUi`/`ClientHudOverlay` element wiring into the app mount, then delete obsolete wrapper modules.
+    - [x] Preserve public element ids used by CSS, tests, and browser smoke checks.
+    - [x] Update screen unit tests to render components through the app root with view-model props.
+- [x] Convert the rotate prompt to a component.
+    - [x] It is CSS/orientation driven, so the component is markup only.
+- [x] Convert the install prompt to a component.
+    - [x] Keep `beforeinstallprompt` handling, service worker registration, and dismiss persistence in the existing module.
+    - [x] Reconnect the install prompt module to startup; it should not remain orphaned from the built client bundle.
+    - [x] The component renders markup and emits install/dismiss actions.
+- [x] Keep touch gameplay controls mounted and imperative inside the app.
+    - [x] The joystick/aim/fire subtree stays always mounted with visibility props so imperatively bound pointer listeners and styles survive re-renders.
+    - [x] Re-acquire element references and bind pointer listeners after the first app render.
+    - [x] Keep joystick knob transforms and aim handle positions as imperative updates in `touchControls.ts`.
+- [x] Verify layout, PWA behavior, and update the architecture docs.
+    - [x] Fix stale `documentation/TODO.md` references in package scripts so `npm run check` can run the whole baseline.
+    - [x] Update unit and browser smoke tests from component-island wording to single-root app wording.
+    - [x] Verify mobile layout, touch positioning over the canvas, and service worker behavior.
+    - [x] Update `documentation/UI-ownership.md` and `documentation/Architecture-flow.md` to the single-root model.
 
 ### P1.5 - Tighten The Canvas Gameplay Core
 

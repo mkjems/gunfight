@@ -1,11 +1,4 @@
-import { render as renderComponent } from 'preact';
-import { arePropsEqual } from './componentRenderProps.js';
-
-type TouchGameplayControlsComponentScreenElements = {
-    root?: HTMLElement | null;
-};
-
-type TouchGameplayControlsComponentScreenRenderOptions = {
+export type TouchGameplayControlsProps = {
     visible?: boolean;
 };
 
@@ -15,38 +8,8 @@ type TouchGameplayControlsComponentScreenRenderOptions = {
  * by the touch input module; see the per-frame rendering rule in
  * documentation/UI-ownership.md.
  */
-export class TouchGameplayControlsComponentScreen {
-    elements: TouchGameplayControlsComponentScreenElements;
-    lastRenderedOptions?: TouchGameplayControlsComponentScreenRenderOptions;
-
-    constructor(elements: TouchGameplayControlsComponentScreenElements = {}) {
-        this.elements = elements;
-    }
-
-    render(options: TouchGameplayControlsComponentScreenRenderOptions = {}) {
-        if (!this.elements.root) {
-            return false;
-        }
-
-        if (
-            this.lastRenderedOptions &&
-            arePropsEqual(this.lastRenderedOptions, options)
-        ) {
-            return false;
-        }
-
-        renderComponent(
-            <TouchGameplayControls {...options} />,
-            this.elements.root
-        );
-        this.lastRenderedOptions = options;
-
-        return true;
-    }
-}
-
-function TouchGameplayControls(
-    options: TouchGameplayControlsComponentScreenRenderOptions
+export function TouchGameplayControls(
+    options: TouchGameplayControlsProps = {}
 ) {
     return (
         <>

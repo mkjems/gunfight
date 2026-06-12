@@ -28,7 +28,7 @@ rendering rule).
 │                        │ render props                           │
 │            ┌───────────┴───────────┐                            │
 │            ▼                       ▼                            │
-│  CANVAS ENGINE (imperative)   PREACT COMPONENT SCREENS          │
+│  CANVAS ENGINE (imperative)   PREACT APP ROOT                   │
 │  scene, players, bullets,     lobby, high scores, name editor,  │
 │  collision, ammo HUD,         game HUD, touch lobby buttons,    │
 │  joystick/aim pointer math    touch gameplay markup             │
@@ -66,9 +66,12 @@ flowchart TD
     GAME --> CANVAS[ClientCanvasSetup: canvas + HUD canvas surfaces]
     GAME --> ASSETS[ClientAssets: images]
     GAME --> UI[ClientUi.create]
-    UI --> OVERLAY[ClientHudOverlay.create]
-    OVERLAY --> SCREENS["component screens:
-    GameHud, HighScores, Lobby, NameEditor"]
+    UI --> APP["ClientAppMount:
+    one guarded Preact render into appRoot"]
+    UI --> INSTALL[InstallPrompt controller]
+    APP --> SCREENS["ClientApp composition:
+    GameHud, HighScores, Lobby, NameEditor,
+    rotate prompt, install prompt, touch controls"]
     GAME --> SYSTEMS["ClientGameSystems.create:
     players, bullets, scene, collision,
     scoreKeeper, roundIntro, roundState,
@@ -78,8 +81,9 @@ flowchart TD
     NET -->|on joinedGame| INPUT[ClientInputStartup]
     INPUT --> KEYS[KeysModel: keyboard]
     INPUT --> TOUCH[TouchControls]
-    TOUCH --> TSCREENS["touch component screens:
-    TouchLobbyControls, TouchGameplayControls"]
+    TOUCH --> TOUCHDOM["app-rendered touch DOM:
+    pointer listeners, knob transform,
+    aim handle updates stay imperative"]
 ```
 
 `main.ts` builds the typed dependency bag (`ClientRuntimeDependencies`) in one
@@ -110,15 +114,15 @@ flowchart TD
     HUDFLOW -->|in round| HUDVM[GameHudViewModel]
     LOBBYFLOW --> SCREENSEL[ClientScreens: active screen decision]
     LOBBYFLOW --> LOBBYVM[ClientLobbyViewModel]
-    HUDVM -->|render props| COMP[component screens]
-    LOBBYVM -->|render props| COMP
+    HUDVM -->|render props| APP[ClientAppMount]
+    LOBBYVM -->|render props| APP
     FRAME --> TOUCHFLOW[ClientTouchControlsFlow]
     TOUCHFLOW -->|state props| TOUCH[TouchControls]
-    TOUCH -->|visibility props| COMP
+    TOUCH -->|visibility props| APP
     TOUCH -->|"imperative: knob transform,
     aim handle, pointer listeners"| DOM[touch DOM]
 
-    COMP -->|"actions: onPlay, onEdit, onSelect"| INPUTFLOWS["input flows:
+    APP -->|"actions: onPlay, onEdit, onSelect"| INPUTFLOWS["input flows:
     ClientGameplayInput, ClientNameEditorFlow"]
     INPUTFLOWS --> STATE
     INPUTFLOWS -->|emit| SERVER
@@ -139,9 +143,9 @@ The control rules, in one list:
    `ClientScreens`), when sounds play, and when socket events are sent.
 4. **View models control derivation only.** Pure functions from state to
    render props. No framework imports, no side effects.
-5. **Component screens control DOM markup only.** Render props in, action
-   callbacks out. They skip virtual-DOM work when props are value-equal, so
-   Preact does nothing on steady-state frames.
+5. **The Preact app controls DOM markup only.** Render props in, action
+   callbacks out. `ClientAppMount` skips virtual-DOM work when props are
+   value-equal, so Preact does nothing on steady-state frames.
 6. **The canvas engine and touch pointer math stay imperative.** Simulation,
    drawing, joystick/aim/fire pointer handling, and the ammo HUD never enter
    the component tree.

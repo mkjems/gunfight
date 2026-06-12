@@ -36,11 +36,10 @@ The component-owned area is the DOM overlay rendered around the canvas:
 - Mobile touch controls, including the virtual joystick, aim slider, fire
   button, and touch lobby buttons.
 
-The first component island should attach behind the existing HUD overlay
-boundary. It should replace one screen at a time, starting with the lowest-risk
-screen. Touch controls are part of the eventual component-owned DOM surface, but
-they should stay outside the first component migration until the safer overlay
-screens prove the boundary.
+The component surface now attaches once at `#appRoot` inside `#gameStage`.
+`ClientApp` renders the HUD overlay, lobby-family screens, rotate prompt,
+install prompt, touch lobby buttons, and touch gameplay markup. The gameplay
+canvas and HUD canvas remain static HTML siblings outside the Preact root.
 
 ### Flow modules choose when rendering happens
 
@@ -112,20 +111,19 @@ manager.
 ## Per-Frame Rendering Rule
 
 Flow modules render the HUD overlay and touch controls inside the animation
-frame loop, so component screens must keep Preact off the steady-state frame
-path:
+frame loop, so the app mount must keep Preact off the steady-state frame path:
 
-- Component screens skip virtual-DOM work when render props are value-equal to
+- `ClientAppMount` skips virtual-DOM work when render props are value-equal to
   the previous render. Flows may rebuild props objects and arrays every frame;
-  screens compare values, not identity.
+  the app mount compares values, not identity.
 - Action callbacks are treated as stable by contract. A rebuilt closure with the
   same meaning must not force a re-render.
 - Continuous pointer-driven values such as the joystick knob transform and the
   aim handle position are never render props. They stay imperative element
   updates owned by the touch input module, exactly like canvas gameplay.
-- Visibility side effects (`hidden` flags on sibling screens) still run on every
-  render call so screen switches stay correct even when virtual-DOM work is
-  skipped.
+- Canvas visibility remains an imperative flow side effect. DOM screen
+  visibility is expressed by the app props tree and rendered declaratively by
+  `ClientApp`.
 
 ## Migration Rule
 
@@ -143,19 +141,21 @@ When replacing an imperative DOM screen with a component:
 
 ## Current Boundary
 
-The lobby, high scores, name editor, game HUD, and touch control screens are
-Preact components. The old imperative DOM screen modules are removed. Touch
-pointer handling, knob transforms, and aim handle positions remain imperative
-inside the touch input module per the per-frame rendering rule. The
-architectural boundary is now:
+The lobby, high scores, name editor, game HUD, rotate prompt, install prompt,
+and touch controls are composed under one Preact root. The old imperative DOM
+screen modules and the `ClientHudOverlay` wrapper are removed. Touch pointer
+handling, knob transforms, and aim handle positions remain imperative inside
+the touch input module per the per-frame rendering rule. The architectural
+boundary is now:
 
 - Imperative gameplay and flow modules own state, timing, and side effects.
 - Framework-independent view models own render decisions.
-- Components own DOM markup and event wiring inside the overlay.
+- `ClientAppMount` owns the single guarded Preact render call.
+- Components own DOM markup and event wiring inside the app root.
 
 ## Renderer Spike Choice
 
-P1.4.11 chose Preact for the first component island.
+P1.4.11 chose Preact for the component UI.
 
 - Vanilla DOM modules fit the current code and remain useful as migration
   references, but they keep markup updates spread across manual DOM operations.
@@ -164,11 +164,12 @@ P1.4.11 chose Preact for the first component island.
 - Svelte and Solid are appealing for full component apps, but they add a larger
   compiler/framework decision before the project has enough component surface to
   justify it.
-- Preact gives the smallest practical island inside the existing Vite build,
-  with component rendering for DOM overlays while canvas gameplay stays
+- Preact gives the smallest practical component layer inside the existing Vite
+  build, with component rendering for DOM overlays while canvas gameplay stays
   imperative.
 
-The first runtime islands are the high scores screen table/prompt, the lobby
-screen sections, the name editor screen, and the game HUD labels behind the existing
-`ClientHudOverlay` boundary. The old imperative screen modules can stay as
-references until the rest of P1.4.12 removes obsolete screen modules.
+The runtime DOM UI is now rendered through `ClientAppMount` into `#appRoot`.
+Flows build one props tree containing the active screen, screen props, prompt
+props, and touch-control visibility props. Socket messages may drive visible UI
+changes by updating runtime state through `ClientNetwork` and flow modules; the
+result still arrives at Preact as explicit render props.

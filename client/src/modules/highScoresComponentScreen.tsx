@@ -1,21 +1,11 @@
-import { render as renderComponent } from 'preact';
-import { arePropsEqual } from './componentRenderProps.js';
-
-type HighScoreRow = {
+export type HighScoreRow = {
     deaths: number;
     kills: number;
     name: string;
     wins: number;
 };
 
-type HighScoresComponentScreenElements = {
-    lobbyMain?: HTMLElement | null;
-    playPrompt?: HTMLElement | null;
-    screen?: HTMLElement | null;
-    table?: HTMLElement | null;
-};
-
-type HighScoresComponentScreenRenderOptions = {
+export type HighScoresProps = {
     playPrompt?: string;
     rows?: HighScoreRow[];
 };
@@ -28,43 +18,18 @@ type HighScoresPromptProps = {
     text: string;
 };
 
-export class HighScoresComponentScreen {
-    elements: HighScoresComponentScreenElements;
-    lastRenderedOptions?: HighScoresComponentScreenRenderOptions;
-
-    constructor(elements: HighScoresComponentScreenElements = {}) {
-        this.elements = elements;
-    }
-
-    render(options: HighScoresComponentScreenRenderOptions = {}) {
-        show(this.elements.lobbyMain, false);
-        show(this.elements.screen, true);
-
-        if (
-            this.lastRenderedOptions &&
-            arePropsEqual(this.lastRenderedOptions, options)
-        ) {
-            return false;
-        }
-
-        if (this.elements.table) {
-            renderComponent(
-                <HighScoresTable rows={options.rows || []} />,
-                this.elements.table
-            );
-        }
-
-        if (this.elements.playPrompt) {
-            renderComponent(
-                <HighScoresPrompt text={options.playPrompt || ''} />,
-                this.elements.playPrompt
-            );
-        }
-
-        this.lastRenderedOptions = options;
-
-        return true;
-    }
+export function HighScoresScreen(options: HighScoresProps = {}) {
+    return (
+        <>
+            <h1>HIGH SCORES</h1>
+            <div id="highScoresTable">
+                <HighScoresTable rows={options.rows || []} />
+            </div>
+            <div id="highScoresPlayPrompt" className="blink-text">
+                <HighScoresPrompt text={options.playPrompt || ''} />
+            </div>
+        </>
+    );
 }
 
 function HighScoresTable(props: HighScoresTableProps) {
@@ -104,10 +69,4 @@ function HighScoresRow(props: { isHeader?: boolean; values: unknown[] }) {
 
 function HighScoresPrompt(props: HighScoresPromptProps) {
     return <>{props.text}</>;
-}
-
-function show(element: HTMLElement | null | undefined, visible: boolean) {
-    if (element) {
-        element.hidden = !visible;
-    }
 }

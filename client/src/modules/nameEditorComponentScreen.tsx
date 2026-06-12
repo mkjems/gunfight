@@ -1,26 +1,15 @@
-import { render as renderComponent } from 'preact';
-import { arePropsEqual } from './componentRenderProps.js';
-
-type NameEditorComponentScreenElements = {
-    editor?: HTMLElement | null;
-    highScores?: HTMLElement | null;
-    lobbyMain?: HTMLElement | null;
-};
-
-type NameEditorState = {
+export type NameEditorState = {
     cursorCol?: number;
     cursorRow?: number;
     grid?: string[][];
     name?: string;
 };
 
-type NameEditorComponentScreenRenderOptions = {
+export type NameEditorProps = {
     helpLines?: string[];
     onSelect?: (rowIndex: number, colIndex: number) => void;
     state?: NameEditorState;
 };
-
-type NameEditorComponentProps = NameEditorComponentScreenRenderOptions;
 
 type NameEditorGridProps = {
     cursorCol: number;
@@ -40,45 +29,7 @@ const emptyState: Required<NameEditorState> = {
     name: ''
 };
 
-export class NameEditorComponentScreen {
-    elements: NameEditorComponentScreenElements;
-    lastRenderedOptions?: NameEditorComponentScreenRenderOptions;
-
-    constructor(elements: NameEditorComponentScreenElements = {}) {
-        this.elements = elements;
-    }
-
-    render(options: NameEditorComponentScreenRenderOptions = {}) {
-        show(this.elements.lobbyMain, false);
-        show(this.elements.highScores, false);
-        show(this.elements.editor, true);
-
-        if (!this.elements.editor) {
-            return false;
-        }
-
-        if (
-            this.lastRenderedOptions &&
-            arePropsEqual(this.lastRenderedOptions, options)
-        ) {
-            return false;
-        }
-
-        renderComponent(
-            <NameEditorComponent {...options} />,
-            this.elements.editor
-        );
-        this.lastRenderedOptions = options;
-
-        return true;
-    }
-
-    hide() {
-        show(this.elements.editor, false);
-    }
-}
-
-function NameEditorComponent(props: NameEditorComponentProps) {
+export function NameEditorComponent(props: NameEditorProps = {}) {
     const state = {
         ...emptyState,
         ...(props.state || {})
@@ -155,10 +106,4 @@ function Lines(props: LinesProps) {
                 })}
         </>
     );
-}
-
-function show(element: HTMLElement | null | undefined, visible: boolean) {
-    if (element) {
-        element.hidden = !visible;
-    }
 }

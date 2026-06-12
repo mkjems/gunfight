@@ -84,25 +84,41 @@ test('updates touch controls with derived touch state', async function () {
     const flow = await loadClientTouchControlsFlow();
     const calls = [];
 
-    assert.equal(
-        flow.update({
-            aimLevel: 4,
-            editing: false,
-            highScoresVisible: true,
-            getTouchState(options) {
-                return {
-                    touchState: options
-                };
-            },
-            ready: false,
-            roundState: 'waiting',
-            touchControls: {
-                update(state) {
-                    calls.push(state);
+    assert.deepEqual(
+        plain(
+            flow.update({
+                aimLevel: 4,
+                editing: false,
+                highScoresVisible: true,
+                getTouchState(options) {
+                    return {
+                        touchState: options
+                    };
+                },
+                ready: false,
+                roundState: 'waiting',
+                touchControls: {
+                    update(state) {
+                        calls.push(state);
+
+                        return {
+                            renderedTouchState: state
+                        };
+                    }
+                }
+            })
+        ),
+        {
+            renderedTouchState: {
+                touchState: {
+                    aimLevel: 4,
+                    editing: false,
+                    highScoresVisible: true,
+                    ready: false,
+                    roundState: 'waiting'
                 }
             }
-        }),
-        true
+        }
     );
 
     assert.deepEqual(plain(calls), [
@@ -125,6 +141,6 @@ test('does not update missing touch controls', async function () {
         flow.update({
             touchControls: null
         }),
-        false
+        undefined
     );
 });

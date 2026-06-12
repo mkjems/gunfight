@@ -1,11 +1,4 @@
-import { render as renderComponent } from 'preact';
-import { arePropsEqual } from './componentRenderProps.js';
-
-type TouchLobbyControlsComponentScreenElements = {
-    root?: HTMLElement | null;
-};
-
-type TouchLobbyControlsComponentScreenRenderOptions = {
+export type TouchLobbyControlsProps = {
     onEdit?: () => void;
     onPlay?: () => void;
     showButtons?: boolean;
@@ -19,41 +12,7 @@ type TouchLobbyButtonProps = {
     visible?: boolean;
 };
 
-export class TouchLobbyControlsComponentScreen {
-    elements: TouchLobbyControlsComponentScreenElements;
-    lastRenderedOptions?: TouchLobbyControlsComponentScreenRenderOptions;
-
-    constructor(elements: TouchLobbyControlsComponentScreenElements = {}) {
-        this.elements = elements;
-    }
-
-    render(options: TouchLobbyControlsComponentScreenRenderOptions = {}) {
-        show(this.elements.root, !!options.visible);
-
-        if (!this.elements.root) {
-            return false;
-        }
-
-        if (
-            this.lastRenderedOptions &&
-            arePropsEqual(this.lastRenderedOptions, options)
-        ) {
-            return false;
-        }
-
-        renderComponent(
-            <TouchLobbyControls {...options} />,
-            this.elements.root
-        );
-        this.lastRenderedOptions = options;
-
-        return true;
-    }
-}
-
-function TouchLobbyControls(
-    options: TouchLobbyControlsComponentScreenRenderOptions
-) {
+export function TouchLobbyControls(options: TouchLobbyControlsProps = {}) {
     return (
         <>
             <TouchLobbyButton
@@ -86,10 +45,4 @@ function TouchLobbyButton(props: TouchLobbyButtonProps) {
             {props.label}
         </button>
     );
-}
-
-function show(element: HTMLElement | null | undefined, visible: boolean) {
-    if (element) {
-        element.hidden = !visible;
-    }
 }

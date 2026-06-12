@@ -30,7 +30,7 @@ test('built browser app loads and starts', async ({ page }) => {
     expect(browserErrors).toEqual([]);
 });
 
-test('built browser app renders the high scores component island', async ({
+test('built browser app renders high scores through the app root', async ({
     page
 }) => {
     const browserErrors = [];
@@ -85,7 +85,7 @@ test('built browser app renders the high scores component island', async ({
     expect(browserErrors).toEqual([]);
 });
 
-test('built browser app renders the lobby component island', async ({
+test('built browser app renders lobby through the app root', async ({
     page
 }) => {
     const browserErrors = [];
@@ -140,7 +140,7 @@ test('built browser app renders the lobby component island', async ({
     expect(browserErrors).toEqual([]);
 });
 
-test('built browser app renders the name editor component island', async ({
+test('built browser app renders the name editor through the app root', async ({
     page
 }) => {
     const browserErrors = [];

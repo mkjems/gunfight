@@ -17,7 +17,7 @@ type UpdateOptions = {
     ready?: boolean;
     roundState?: Parameters<typeof getTouchState>[0]['roundState'];
     touchControls?: {
-        update: (state: ReturnType<typeof getTouchState>) => void;
+        update: (state: ReturnType<typeof getTouchState>) => unknown;
     } | null;
 };
 
@@ -33,12 +33,12 @@ export function getLocalAimLevel(options: GetLocalAimLevelOptions) {
 
 export function update(options: UpdateOptions) {
     if (!options.touchControls) {
-        return false;
+        return undefined;
     }
 
     const resolveTouchState = options.getTouchState || getTouchState;
 
-    options.touchControls.update(
+    return options.touchControls.update(
         resolveTouchState({
             aimLevel: options.aimLevel,
             editing: options.editing,
@@ -47,8 +47,6 @@ export function update(options: UpdateOptions) {
             roundState: options.roundState
         } as never)
     );
-
-    return true;
 }
 
 export const ClientTouchControlsFlow = {

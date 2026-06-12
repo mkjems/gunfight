@@ -8,19 +8,12 @@ type ClassListLike = {
     remove: (className: string) => void;
 };
 
-type ElementLike = {
-    addEventListener?: (event: string, callback: () => void) => void;
-    classList: ClassListLike;
-    hidden: boolean;
-    textContent: string | null;
-};
-
 type DocumentLike = {
     addEventListener: (event: string, callback: () => void) => void;
     body: {
         classList: ClassListLike;
     };
-    getElementById: (id: string) => ElementLike | null;
+    readyState?: string;
 };
 
 type MatchMediaResult = {
@@ -32,15 +25,12 @@ type ServiceWorkerRegistrationLike = {
 };
 
 type ServiceWorkerContainerLike = {
-    getRegistrations: () => Promise<ServiceWorkerRegistrationLike[]>;
+    getRegistrations: () => Promise<readonly ServiceWorkerRegistrationLike[]>;
     register: (scriptUrl: string) => Promise<unknown>;
 };
 
 type WindowLike = {
-    addEventListener: (
-        event: string,
-        callback: (evt: BeforeInstallPromptEventLike) => void
-    ) => void;
+    addEventListener: (event: string, callback: (evt?: any) => void) => void;
     isSecureContext?: boolean;
     location: {
         hostname: string;
@@ -63,35 +53,44 @@ type StorageLike = {
 type InstallPromptOptions = {
     document?: DocumentLike;
     localStorage?: StorageLike;
+    onChange?: () => void;
     window?: WindowLike;
+};
+
+export type InstallPromptProps = {
+    canInstall: boolean;
+    onDismiss: () => void;
+    onInstall: () => void;
+    text: string;
+    visible: boolean;
 };
 
 export function createInstallPrompt(options: InstallPromptOptions = {}) {
     const ownerDocument = (options.document || document) as DocumentLike;
     const ownerWindow = (options.window || window) as unknown as WindowLike;
     const ownerStorage = (options.localStorage || localStorage) as StorageLike;
-    let deferredInstallPrompt: BeforeInstallPromptEventLike | null = null;
-    let promptElement: ElementLike | null;
-    let promptTextElement: ElementLike | null;
-    let promptButton: ElementLike | null;
-    let closeButton: ElementLike | null;
     const dismissedStorageKey = 'gunfight-install-prompt-dismissed';
+    let deferredInstallPrompt: BeforeInstallPromptEventLike | null = null;
+    let initialized = false;
+    let canInstall = false;
+    let text = 'SHARE - ADD TO HOME SCREEN';
+    let visible = false;
 
     function init() {
-        registerServiceWorker();
-
-        promptElement = ownerDocument.getElementById('installPrompt');
-        promptTextElement = ownerDocument.getElementById('installPromptText');
-        promptButton = ownerDocument.getElementById('installPromptButton');
-        closeButton = ownerDocument.getElementById('installPromptClose');
-
-        if (!promptElement || isStandalone() || wasDismissed()) {
+        if (initialized) {
             return;
         }
 
+        initialized = true;
+        registerServiceWorker();
         bindEvents();
         updateInstructionText();
-        showIfTouchDevice();
+
+        if (!isStandalone() && !wasDismissed()) {
+            showIfTouchDevice(false);
+        }
+
+        syncBodyClass();
     }
 
     function registerServiceWorker() {
@@ -136,77 +135,82 @@ export function createInstallPrompt(options: InstallPromptOptions = {}) {
 
     function bindEvents() {
         ownerWindow.addEventListener('beforeinstallprompt', function (evt) {
-            evt.preventDefault();
-            deferredInstallPrompt = evt;
+            const installEvent = evt as BeforeInstallPromptEventLike;
 
-            if (promptButton) {
-                promptButton.hidden = false;
-            }
-
+            installEvent.preventDefault();
+            deferredInstallPrompt = installEvent;
+            canInstall = true;
             showIfTouchDevice();
         });
 
         ownerWindow.addEventListener('appinstalled', hide);
-
-        if (closeButton) {
-            closeButton.addEventListener?.('click', function () {
-                ownerStorage.setItem(dismissedStorageKey, '1');
-                hide();
-            });
-        }
-
-        if (promptButton) {
-            promptButton.addEventListener?.('click', function () {
-                if (!deferredInstallPrompt) {
-                    return;
-                }
-
-                deferredInstallPrompt.prompt();
-                deferredInstallPrompt.userChoice.finally(function () {
-                    deferredInstallPrompt = null;
-                    if (promptButton) {
-                        promptButton.hidden = true;
-                    }
-                });
-            });
-        }
     }
 
     function updateInstructionText() {
-        if (!promptTextElement) {
-            return;
-        }
-
-        if (isIOS()) {
-            promptTextElement.textContent = 'SHARE - ADD TO HOME SCREEN';
-            return;
-        }
-
-        promptTextElement.textContent = 'MENU - INSTALL APP';
+        text = isIOS() ? 'SHARE - ADD TO HOME SCREEN' : 'MENU - INSTALL APP';
     }
 
-    function showIfTouchDevice() {
-        if (
-            !promptElement ||
-            !isTouchDevice() ||
-            isStandalone() ||
-            wasDismissed()
-        ) {
+    function showIfTouchDevice(shouldNotify = true) {
+        if (!isTouchDevice() || isStandalone() || wasDismissed()) {
             return;
         }
 
-        promptElement.hidden = false;
-        promptElement.classList.add('is-visible');
-        ownerDocument.body.classList.add('install-prompt-visible');
+        visible = true;
+        syncBodyClass();
+
+        if (shouldNotify) {
+            notify();
+        }
     }
 
     function hide() {
-        if (!promptElement) {
+        visible = false;
+        syncBodyClass();
+        notify();
+    }
+
+    function dismiss() {
+        try {
+            ownerStorage.setItem(dismissedStorageKey, '1');
+        } catch (err) {}
+
+        hide();
+    }
+
+    function install() {
+        if (!deferredInstallPrompt) {
             return;
         }
 
-        promptElement.classList.remove('is-visible');
-        promptElement.hidden = true;
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.finally(function () {
+            deferredInstallPrompt = null;
+            canInstall = false;
+            notify();
+        });
+    }
+
+    function getProps(): InstallPromptProps {
+        return {
+            canInstall,
+            onDismiss: dismiss,
+            onInstall: install,
+            text,
+            visible
+        };
+    }
+
+    function notify() {
+        syncBodyClass();
+        options.onChange?.();
+    }
+
+    function syncBodyClass() {
+        if (visible) {
+            ownerDocument.body.classList.add('install-prompt-visible');
+            return;
+        }
+
         ownerDocument.body.classList.remove('install-prompt-visible');
     }
 
@@ -237,16 +241,18 @@ export function createInstallPrompt(options: InstallPromptOptions = {}) {
         }
     }
 
-    ownerDocument.addEventListener('DOMContentLoaded', init);
+    if (ownerDocument.readyState === 'loading') {
+        ownerDocument.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 
     return {
+        getProps,
         hide
     };
 }
 
-export const InstallPrompt =
-    typeof document === 'undefined' || typeof window === 'undefined'
-        ? {
-              hide() {}
-          }
-        : createInstallPrompt();
+export const InstallPrompt = {
+    create: createInstallPrompt
+};

@@ -30,43 +30,10 @@
     </head>
 
     <body>
-        <div id="rotatePrompt">
-            <img
-                src="/images/RotatePlease.png"
-                alt="Rotate your device to landscape"
-            />
-        </div>
-        <div id="installPrompt" hidden>
-            <button
-                type="button"
-                id="installPromptClose"
-                aria-label="Dismiss install instructions"
-            >
-                X
-            </button>
-            <div>FULL SCREEN MODE</div>
-            <div id="installPromptText">SHARE - ADD TO HOME SCREEN</div>
-            <button type="button" id="installPromptButton" hidden>
-                INSTALL
-            </button>
-        </div>
         <div id="gameStage">
             <canvas id="canvas"></canvas>
             <canvas id="hudCanvas"></canvas>
-            <div id="hudOverlay" aria-live="polite">
-                <div id="gameHud" hidden></div>
-                <div id="lobbyHud" hidden>
-                    <div id="lobby-main"></div>
-                    <div id="highScoresScreen" hidden>
-                        <h1>HIGH SCORES</h1>
-                        <div id="highScoresTable"></div>
-                        <div id="highScoresPlayPrompt" class="blink-text"></div>
-                    </div>
-                    <div id="nameEditor" hidden></div>
-                    <div id="touchLobbyControls" hidden></div>
-                </div>
-            </div>
-            <div id="touchControls" hidden></div>
+            <div id="appRoot"></div>
         </div>
         <script type="module" src="/src/main.ts"></script>
     </body>

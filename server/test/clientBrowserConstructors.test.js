@@ -231,16 +231,9 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
     const { TouchControls } = await loadBrowserConstructors();
     const document = createTouchDocument();
     const calls = [];
-    const gameplayRenders = [];
-    const lobbyRenders = [];
     let aimLevel = 4;
     const controls = TouchControls({
         document,
-        gameplayControlsScreen: {
-            render(props) {
-                gameplayRenders.push(props);
-            }
-        },
         getAimLevel() {
             return aimLevel;
         },
@@ -261,11 +254,6 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
                 calls.push(['release', key]);
             }
         },
-        lobbyControlsScreen: {
-            render(props) {
-                lobbyRenders.push(props);
-            }
-        },
         window: {
             location: {
                 search: '?touch=1'
@@ -273,12 +261,9 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
         }
     });
 
-    assert.equal(document.elements.touchControls.hidden, false);
-    assert.equal(
-        document.elements.touchControls.classList.classes['debug-touch'],
-        true
-    );
-    assert.equal(gameplayRenders.at(-1).visible, false);
+    assert.ok(document.elements.touchJoystick.listeners.pointerdown);
+    assert.ok(document.elements.touchAimSlider.listeners.pointerdown);
+    assert.ok(document.elements.touchShootButton.listeners.pointerdown);
 
     document.elements.touchShootButton.fire('pointerdown');
     document.elements.touchShootButton.fire('pointerup');
@@ -291,35 +276,36 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
         clientY: 0
     });
 
-    controls.update({
+    let renderProps = controls.update({
         aimLevel: 6,
         playing: true,
         waiting: false
     });
 
-    assert.equal(gameplayRenders.at(-1).visible, true);
+    assert.equal(renderProps.debug, true);
+    assert.equal(renderProps.enabled, true);
+    assert.equal(renderProps.gameplay.visible, true);
     assert.equal(document.elements.touchAimHandle.style.top, '25%');
-    assert.equal(lobbyRenders.at(-1).visible, false);
+    assert.equal(renderProps.lobby.visible, false);
 
-    controls.update({
+    renderProps = controls.update({
         waiting: true
     });
 
-    assert.equal(gameplayRenders.at(-1).visible, false);
+    assert.equal(renderProps.gameplay.visible, false);
 
-    const lobbyProps = lobbyRenders.at(-1);
-    assert.equal(lobbyProps.visible, true);
-    assert.equal(lobbyProps.showButtons, true);
-    lobbyProps.onPlay();
-    lobbyProps.onEdit();
+    assert.equal(renderProps.lobby.visible, true);
+    assert.equal(renderProps.lobby.showButtons, true);
+    renderProps.lobby.onPlay();
+    renderProps.lobby.onEdit();
 
-    controls.update({
+    renderProps = controls.update({
         highScoresVisible: true,
         waiting: true
     });
 
-    assert.equal(lobbyRenders.at(-1).visible, true);
-    assert.equal(lobbyRenders.at(-1).showButtons, false);
+    assert.equal(renderProps.lobby.visible, true);
+    assert.equal(renderProps.lobby.showButtons, false);
 
     assert.deepEqual(calls, [
         ['press', ' '],

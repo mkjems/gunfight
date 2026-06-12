@@ -156,12 +156,8 @@ export function createGame(
             context: any,
             hudCanvas: any,
             hudContext: any,
-            gameHud: any,
-            lobbyHud: any,
-            gameHudScreen: any,
-            lobbyScreen: any,
-            highScoresScreen: any,
-            nameEditorScreen: any,
+            app: any,
+            installPrompt: any,
             ammoHudRenderer: any,
             assets: any,
             scenarioRenderer: any,
@@ -238,16 +234,19 @@ export function createGame(
         }
 
         function initHudOverlay() {
-            var overlay = dependencies.ClientUi.create({
-                document: document
+            var ui = dependencies.ClientUi.create({
+                document: document,
+                localStorage: window.localStorage,
+                onRenderRequest: function () {
+                    if (ammo) {
+                        renderHud();
+                    }
+                },
+                window: window
             });
 
-            gameHud = overlay.gameHud;
-            lobbyHud = overlay.lobbyHud;
-            gameHudScreen = overlay.gameHudScreen;
-            lobbyScreen = overlay.lobbyScreen;
-            highScoresScreen = overlay.highScoresScreen;
-            nameEditorScreen = overlay.nameEditorScreen;
+            app = ui.app;
+            installPrompt = ui.installPrompt;
         }
 
         function initAmmoHudRenderer() {
@@ -366,25 +365,28 @@ export function createGame(
         }
 
         function renderHud() {
+            if (!app || !ammo || !hudCanvas || !hudContext) {
+                return;
+            }
+
             dependencies.ClientHudFlow.render({
                 ammo: ammo,
                 ammoHudRenderer: ammoHudRenderer,
+                app: app,
                 camera: camera,
                 cameraController: cameraController,
                 canvas: canvas,
                 defaultSeconds: dependencies.Config.game.seconds,
-                gameHud: gameHud,
-                gameHudScreen: gameHudScreen,
                 hudCanvas: hudCanvas,
                 hudContext: hudContext,
-                lobbyHud: lobbyHud,
                 model: latestModel,
                 players: players,
-                renderLobbyHud: renderLobbyHud,
+                getInstallPromptProps: getInstallPromptProps,
+                getLobbyHudState: getLobbyHudState,
+                getTouchControlsProps: updateTouchControls,
                 roundData: roundData,
                 roundState: roundState,
-                scoreKeeper: scoreKeeper,
-                updateTouchControls: updateTouchControls
+                scoreKeeper: scoreKeeper
             });
         }
 
@@ -419,20 +421,13 @@ export function createGame(
             roundData.damageObstacle(id);
         }
 
-        function renderLobbyHud() {
-            dependencies.ClientLobbyHudFlow.render({
-                canvas: canvas,
-                gameHud: gameHud,
+        function getLobbyHudState() {
+            return dependencies.ClientLobbyHudFlow.getState({
                 highScores: highScores,
-                highScoresScreen: highScoresScreen,
-                hudCanvas: hudCanvas,
                 isTouchInterface: isTouchInterface,
-                lobbyHud: lobbyHud,
-                lobbyScreen: lobbyScreen,
                 localReadyRequested: localReadyRequested,
                 model: latestModel,
                 nameEditor: nameEditor,
-                nameEditorScreen: nameEditorScreen,
                 onNameEditorSelect: function (rowIndex: any, colIndex: any) {
                     nameEditor.select(rowIndex, colIndex);
                     renderHud();
@@ -440,6 +435,12 @@ export function createGame(
                 playerId: playerId,
                 roundState: roundState
             });
+        }
+
+        function getInstallPromptProps() {
+            return installPrompt && installPrompt.getProps
+                ? installPrompt.getProps()
+                : undefined;
         }
 
         function shouldShowHighScoresScreen() {
@@ -853,7 +854,7 @@ export function createGame(
         }
 
         function updateTouchControls() {
-            dependencies.ClientTouchControlsFlow.update({
+            return dependencies.ClientTouchControlsFlow.update({
                 aimLevel: getLocalAimLevel(),
                 editing: nameEditor && nameEditor.isActive(),
                 highScoresVisible: shouldShowHighScoresScreen(),

@@ -34,61 +34,38 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
     );
 }
 
-async function loadComponentScreens() {
+async function loadClientApp() {
     const cacheDirectory = path.join(process.cwd(), 'node_modules', '.cache');
     mkdirSync(cacheDirectory, { recursive: true });
 
     const tempDirectory = mkdtempSync(
-        path.join(cacheDirectory, 'gunfight-component-screens-')
+        path.join(cacheDirectory, 'gunfight-client-app-')
     );
 
-    compileClientModule(
-        'componentRenderProps.ts',
-        'componentRenderProps.js',
-        tempDirectory
-    );
-    compileClientModule('config.ts', 'config.js', tempDirectory);
-    compileClientModule(
-        'gameHudComponentScreen.tsx',
-        'gameHudComponentScreen.js',
-        tempDirectory
-    );
-    compileClientModule(
-        'highScoresComponentScreen.tsx',
-        'highScoresComponentScreen.js',
-        tempDirectory
-    );
-    compileClientModule(
-        'lobbyComponentScreen.tsx',
-        'lobbyComponentScreen.js',
-        tempDirectory
-    );
-    compileClientModule(
-        'nameEditorComponentScreen.tsx',
-        'nameEditorComponentScreen.js',
-        tempDirectory
-    );
-    compileClientModule(
-        'touchGameplayControlsComponentScreen.tsx',
-        'touchGameplayControlsComponentScreen.js',
-        tempDirectory
-    );
-    compileClientModule(
-        'touchLobbyControlsComponentScreen.tsx',
-        'touchLobbyControlsComponentScreen.js',
-        tempDirectory
-    );
+    [
+        ['clientScreens.ts', 'clientScreens.js'],
+        ['componentRenderProps.ts', 'componentRenderProps.js'],
+        ['config.ts', 'config.js'],
+        ['gameHudComponentScreen.tsx', 'gameHudComponentScreen.js'],
+        ['highScoresComponentScreen.tsx', 'highScoresComponentScreen.js'],
+        ['lobbyComponentScreen.tsx', 'lobbyComponentScreen.js'],
+        ['nameEditorComponentScreen.tsx', 'nameEditorComponentScreen.js'],
+        [
+            'touchGameplayControlsComponentScreen.tsx',
+            'touchGameplayControlsComponentScreen.js'
+        ],
+        [
+            'touchLobbyControlsComponentScreen.tsx',
+            'touchLobbyControlsComponentScreen.js'
+        ],
+        ['clientApp.tsx', 'clientApp.js']
+    ].forEach(function ([sourceName, outputName]) {
+        compileClientModule(sourceName, outputName, tempDirectory);
+    });
 
     try {
-        const modules = await Promise.all(
-            [
-                'gameHudComponentScreen.js',
-                'highScoresComponentScreen.js',
-                'lobbyComponentScreen.js',
-                'nameEditorComponentScreen.js',
-                'touchGameplayControlsComponentScreen.js',
-                'touchLobbyControlsComponentScreen.js'
-            ].map(function (fileName) {
+        const [appModule, screensModule] = await Promise.all(
+            ['clientApp.js', 'clientScreens.js'].map(function (fileName) {
                 return import(
                     pathToFileURL(path.join(tempDirectory, fileName)).href
                 );
@@ -96,14 +73,8 @@ async function loadComponentScreens() {
         );
 
         return {
-            GameHudComponentScreen: modules[0].GameHudComponentScreen,
-            HighScoresComponentScreen: modules[1].HighScoresComponentScreen,
-            LobbyComponentScreen: modules[2].LobbyComponentScreen,
-            NameEditorComponentScreen: modules[3].NameEditorComponentScreen,
-            TouchGameplayControlsComponentScreen:
-                modules[4].TouchGameplayControlsComponentScreen,
-            TouchLobbyControlsComponentScreen:
-                modules[5].TouchLobbyControlsComponentScreen
+            ClientAppMount: appModule.ClientAppMount,
+            Screen: screensModule.Screen
         };
     } finally {
         rmSync(tempDirectory, { force: true, recursive: true });
@@ -134,24 +105,29 @@ function query(element, selector) {
     return element.querySelector(selector);
 }
 
-test('renders game HUD scores, timer, round text, and hit messages', async function () {
-    const { GameHudComponentScreen } = await loadComponentScreens();
+test('renders game HUD scores, timer, round text, and hit messages through the app root', async function () {
+    const { ClientAppMount, Screen } = await loadClientApp();
     const browser = createBrowser();
     const root = browser.createElement();
-    const hud = new GameHudComponentScreen({ root });
+    const app = ClientAppMount.create({ root });
 
-    hud.render({
-        hitMessage: {
-            text: 'HIT!',
-            x: 475,
-            y: 320
-        },
-        leftScore: 2,
-        rightScore: 1,
-        roundMessage: 'DRAW!',
-        timerLabel: 67
+    app.render({
+        activeScreen: Screen.GAME,
+        gameHud: {
+            hitMessage: {
+                text: 'HIT!',
+                x: 475,
+                y: 320
+            },
+            leftScore: 2,
+            rightScore: 1,
+            roundMessage: 'DRAW!',
+            timerLabel: 67
+        }
     });
 
+    assert.equal(query(root, '#gameHud').hidden, false);
+    assert.equal(query(root, '#lobbyHud').hidden, true);
     assert.equal(root.querySelector('#scoreLeft').textContent, '2');
     assert.equal(root.querySelector('#scoreRight').textContent, '1');
     assert.equal(root.querySelector('#roundTimer').textContent, '67');
@@ -163,7 +139,10 @@ test('renders game HUD scores, timer, round text, and hit messages', async funct
     assert.equal(hitMessage.style.top, '50%');
     assert.equal(hitMessage.hidden, false);
 
-    hud.render();
+    app.render({
+        activeScreen: Screen.GAME,
+        gameHud: {}
+    });
 
     assert.equal(root.querySelector('#scoreLeft').textContent, '0');
     assert.equal(root.querySelector('#scoreRight').textContent, '0');
@@ -172,91 +151,104 @@ test('renders game HUD scores, timer, round text, and hit messages', async funct
     assert.equal(query(root, '#hitMessage').hidden, true);
 });
 
-test('renders high-score table rows and empty state', async function () {
-    const { HighScoresComponentScreen } = await loadComponentScreens();
+test('renders high-score table rows and empty state through the app root', async function () {
+    const { ClientAppMount, Screen } = await loadClientApp();
     const browser = createBrowser();
-    const elements = {
-        lobbyMain: browser.createElement(),
-        playPrompt: browser.createElement(),
-        screen: browser.createElement(),
-        table: browser.createElement()
-    };
-    const screen = new HighScoresComponentScreen(elements);
+    const root = browser.createElement();
+    const app = ClientAppMount.create({ root });
 
-    screen.render({
-        playPrompt: 'PRESS FIRE',
-        rows: [
-            {
-                deaths: 1,
-                kills: 3,
-                name: 'ADA',
-                wins: 2
-            }
-        ]
+    app.render({
+        activeScreen: Screen.HIGH_SCORES,
+        highScores: {
+            playPrompt: 'PRESS FIRE',
+            rows: [
+                {
+                    deaths: 1,
+                    kills: 3,
+                    name: 'ADA',
+                    wins: 2
+                }
+            ]
+        }
     });
 
-    assert.equal(elements.lobbyMain.hidden, true);
-    assert.equal(elements.screen.hidden, false);
-    assert.equal(elements.playPrompt.textContent, 'PRESS FIRE');
-    assert.equal(elements.table.children.length, 2);
+    assert.equal(query(root, '#lobby-main').hidden, true);
+    assert.equal(query(root, '#highScoresScreen').hidden, false);
     assert.equal(
-        elements.table.children[0].className,
+        query(root, '#highScoresScreen h1').textContent,
+        'HIGH SCORES'
+    );
+    assert.equal(
+        query(root, '#highScoresPlayPrompt').textContent,
+        'PRESS FIRE'
+    );
+    assert.equal(query(root, '#highScoresTable').children.length, 2);
+    assert.equal(
+        query(root, '#highScoresTable').children[0].className,
         'high-score-row is-header'
     );
-    assert.deepEqual(childTexts(elements.table.children[1]), [
+    assert.deepEqual(childTexts(query(root, '#highScoresTable').children[1]), [
         'ADA',
         '2',
         '3',
         '1'
     ]);
 
-    screen.render({
-        rows: []
+    app.render({
+        activeScreen: Screen.HIGH_SCORES,
+        highScores: {
+            rows: []
+        }
     });
 
-    assert.equal(elements.table.children.length, 2);
-    assert.equal(elements.table.children[1].className, 'high-score-empty');
-    assert.equal(elements.table.children[1].textContent, 'NO SCORES YET');
+    assert.equal(query(root, '#highScoresTable').children.length, 2);
+    assert.equal(
+        query(root, '#highScoresTable').children[1].className,
+        'high-score-empty'
+    );
+    assert.equal(
+        query(root, '#highScoresTable').children[1].textContent,
+        'NO SCORES YET'
+    );
 });
 
-test('renders and clears lobby screen sections', async function () {
-    const { LobbyComponentScreen } = await loadComponentScreens();
+test('renders lobby screen sections through the app root', async function () {
+    const { ClientAppMount, Screen } = await loadClientApp();
     const browser = createBrowser();
-    const elements = {
-        highScores: browser.createElement(),
-        main: browser.createElement()
-    };
-    const screen = new LobbyComponentScreen(elements);
+    const root = browser.createElement();
+    const app = ClientAppMount.create({ root });
 
-    screen.render({
-        controls: ['MOVE', 'FIRE'],
-        editPrompt: 'EDIT NAME',
-        identityLines: ['YOU ARE ADA'],
-        playPrompt: 'READY?',
-        showControls: true,
-        showEditPrompt: true,
-        slots: [
-            {
-                label: 'P1 READY',
-                ready: true
-            },
-            {
-                label: 'P2 WAITING',
-                ready: false
-            }
-        ]
+    app.render({
+        activeScreen: Screen.LOBBY_MAIN,
+        lobby: {
+            controls: ['MOVE', 'FIRE'],
+            editPrompt: 'EDIT NAME',
+            identityLines: ['YOU ARE ADA'],
+            playPrompt: 'READY?',
+            showControls: true,
+            showEditPrompt: true,
+            slots: [
+                {
+                    label: 'P1 READY',
+                    ready: true
+                },
+                {
+                    label: 'P2 WAITING',
+                    ready: false
+                }
+            ]
+        }
     });
 
-    assert.equal(elements.main.hidden, false);
-    assert.equal(elements.highScores.hidden, true);
-
-    const main = elements.main;
+    const main = query(root, '#lobby-main');
     const controls = query(main, '#lobbyControlsText');
     const editPrompt = query(main, '#lobbyEditPrompt');
     const identity = query(main, '#lobbyIdentity');
     const playPrompt = query(main, '#lobbyPlayPrompt');
     const slots = query(main, '#lobbySlots');
 
+    assert.equal(main.hidden, false);
+    assert.equal(query(root, '#highScoresScreen').hidden, true);
     assert.equal(controls.parentElement.hidden, false);
     assert.equal(editPrompt.hidden, false);
     assert.deepEqual(childTexts(identity), ['YOU ARE ADA']);
@@ -267,105 +259,89 @@ test('renders and clears lobby screen sections', async function () {
     assert.equal(editPrompt.textContent, 'EDIT NAME');
     assert.equal(playPrompt.textContent, 'READY?');
 
-    screen.clear();
+    app.render({
+        activeScreen: Screen.LOBBY_MAIN,
+        lobby: {}
+    });
 
-    assert.equal(main.querySelector('#lobbyIdentity').children.length, 0);
-    assert.equal(main.querySelector('#lobbyControlsText').children.length, 0);
-    assert.equal(main.querySelector('#lobbySlots').children.length, 0);
+    assert.equal(query(main, '#lobbyIdentity').children.length, 0);
+    assert.equal(query(main, '#lobbyControlsText').children.length, 0);
+    assert.equal(query(main, '#lobbySlots').children.length, 0);
     assert.equal(query(main, '#lobbyControlsText').parentElement.hidden, true);
     assert.equal(query(main, '#lobbyEditPrompt').hidden, true);
-    assert.equal(main.querySelector('#lobbyEditPrompt').textContent, '');
-    assert.equal(main.querySelector('#lobbyPlayPrompt').textContent, '');
+    assert.equal(query(main, '#lobbyEditPrompt').textContent, '');
+    assert.equal(query(main, '#lobbyPlayPrompt').textContent, '');
 });
 
-test('skips virtual-DOM work when render props are value-equal', async function () {
-    const {
-        GameHudComponentScreen,
-        LobbyComponentScreen,
-        TouchLobbyControlsComponentScreen
-    } = await loadComponentScreens();
+test('skips virtual-DOM work when app render props are value-equal', async function () {
+    const { ClientAppMount, Screen } = await loadClientApp();
     const browser = createBrowser();
+    const root = browser.createElement();
+    const renders = [];
+    const app = ClientAppMount.create({
+        afterRender() {
+            renders.push('rendered');
+        },
+        root
+    });
 
-    const hud = new GameHudComponentScreen({ root: browser.createElement() });
-
-    function hudProps(timerLabel) {
+    function props(timerLabel) {
         return {
-            hitMessage: {
-                text: 'HIT!',
-                x: 475,
-                y: 320
+            activeScreen: Screen.GAME,
+            gameHud: {
+                hitMessage: {
+                    text: 'HIT!',
+                    x: 475,
+                    y: 320
+                },
+                leftScore: 1,
+                rightScore: 2,
+                roundMessage: '',
+                timerLabel
             },
-            leftScore: 1,
-            rightScore: 2,
-            roundMessage: '',
-            timerLabel
-        };
-    }
-
-    assert.equal(hud.render(hudProps(70)), true);
-    assert.equal(hud.render(hudProps(70)), false);
-    assert.equal(hud.render(hudProps(69)), true);
-
-    const touch = new TouchLobbyControlsComponentScreen({
-        root: browser.createElement()
-    });
-
-    function touchProps(showButtons) {
-        return {
-            onEdit() {},
-            onPlay() {},
-            showButtons,
-            visible: true
-        };
-    }
-
-    assert.equal(touch.render(touchProps(true)), true);
-    assert.equal(touch.render(touchProps(true)), false);
-    assert.equal(touch.render(touchProps(false)), true);
-
-    const lobby = new LobbyComponentScreen({
-        highScores: browser.createElement(),
-        main: browser.createElement()
-    });
-
-    function lobbyProps() {
-        return {
-            identityLines: ['YOU ARE ADA'],
-            slots: [
-                {
-                    label: 'P1',
-                    ready: false
+            touchControls: {
+                enabled: true,
+                lobby: {
+                    onEdit() {},
+                    onPlay() {},
+                    showButtons: true,
+                    visible: true
                 }
-            ]
+            }
         };
     }
 
-    assert.equal(lobby.render(lobbyProps()), true);
-    assert.equal(lobby.render(lobbyProps()), false);
-    assert.equal(lobby.clear(), true);
-    assert.equal(lobby.clear(), false);
-    assert.equal(lobby.render(lobbyProps()), true);
+    assert.equal(app.render(props(70)), true);
+    assert.equal(app.render(props(70)), false);
+    assert.equal(app.render(props(69)), true);
+    assert.deepEqual(renders, ['rendered', 'rendered']);
 });
 
-test('renders touch lobby buttons and dispatches tap actions', async function () {
-    const { TouchLobbyControlsComponentScreen } = await loadComponentScreens();
+test('renders touch lobby buttons and dispatches tap actions through the app root', async function () {
+    const { ClientAppMount, Screen } = await loadClientApp();
     const browser = createBrowser();
     const actions = [];
     const root = browser.createElement();
-    const screen = new TouchLobbyControlsComponentScreen({ root });
+    const app = ClientAppMount.create({ root });
 
-    screen.render({
-        onEdit() {
-            actions.push('edit');
-        },
-        onPlay() {
-            actions.push('play');
-        },
-        showButtons: true,
-        visible: true
+    app.render({
+        activeScreen: Screen.LOBBY_MAIN,
+        touchControls: {
+            enabled: true,
+            lobby: {
+                onEdit() {
+                    actions.push('edit');
+                },
+                onPlay() {
+                    actions.push('play');
+                },
+                showButtons: true,
+                visible: true
+            }
+        }
     });
 
-    assert.equal(root.hidden, false);
+    assert.equal(query(root, '#touchLobbyControls').hidden, false);
 
     const editButton = query(root, '#touchEditButton');
     const playButton = query(root, '#touchPlayButton');
@@ -385,41 +361,74 @@ test('renders touch lobby buttons and dispatches tap actions', async function ()
     assert.equal(pointerDown.defaultPrevented, true);
     assert.deepEqual(actions, ['play', 'edit']);
 
-    screen.render({
-        showButtons: false,
-        visible: true
+    app.render({
+        activeScreen: Screen.LOBBY_MAIN,
+        touchControls: {
+            enabled: true,
+            lobby: {
+                showButtons: false,
+                visible: true
+            }
+        }
     });
 
-    assert.equal(root.hidden, false);
+    assert.equal(query(root, '#touchLobbyControls').hidden, false);
     assert.equal(query(root, '#touchEditButton').hidden, true);
     assert.equal(query(root, '#touchPlayButton').hidden, true);
 
-    screen.render({
-        visible: false
+    app.render({
+        activeScreen: Screen.LOBBY_MAIN,
+        touchControls: {
+            enabled: true,
+            lobby: {
+                visible: false
+            }
+        }
     });
 
-    assert.equal(root.hidden, true);
+    assert.equal(query(root, '#touchLobbyControls').hidden, true);
 });
 
 test('renders gameplay touch controls markup and keeps imperative styles', async function () {
-    const { TouchGameplayControlsComponentScreen } =
-        await loadComponentScreens();
+    const { ClientAppMount, Screen } = await loadClientApp();
     const browser = createBrowser();
     const root = browser.createElement();
-    const screen = new TouchGameplayControlsComponentScreen({ root });
+    const app = ClientAppMount.create({ root });
 
-    assert.equal(screen.render({ visible: false }), true);
+    app.render({
+        activeScreen: Screen.GAME,
+        touchControls: {
+            enabled: true,
+            gameplay: {
+                visible: false
+            }
+        }
+    });
+
+    assert.equal(query(root, '#touchControls').hidden, false);
     assert.equal(query(root, '#touchJoystick').hidden, true);
     assert.equal(query(root, '#touchActionControls').hidden, true);
 
-    assert.equal(screen.render({ visible: true }), true);
-    assert.equal(screen.render({ visible: true }), false);
+    app.render({
+        activeScreen: Screen.GAME,
+        touchControls: {
+            debug: true,
+            editing: true,
+            enabled: true,
+            gameplay: {
+                visible: true
+            },
+            playing: true
+        }
+    });
 
+    const touchRoot = query(root, '#touchControls');
     const joystick = query(root, '#touchJoystick');
     const knob = query(root, '#touchJoystickKnob');
     const aimHandle = query(root, '#touchAimHandle');
     const shootButton = query(root, '#touchShootButton');
 
+    assert.equal(touchRoot.className, 'debug-touch is-playing is-editing');
     assert.equal(joystick.hidden, false);
     assert.equal(joystick.getAttribute('aria-label'), 'Move');
     assert.equal(
@@ -432,53 +441,63 @@ test('renders gameplay touch controls markup and keeps imperative styles', async
     knob.style.transform = 'translate(5px, 6px)';
     aimHandle.style.top = '25%';
 
-    assert.equal(screen.render({ visible: false }), true);
-    assert.equal(screen.render({ visible: true }), true);
+    app.render({
+        activeScreen: Screen.GAME,
+        touchControls: {
+            enabled: true,
+            gameplay: {
+                visible: false
+            }
+        }
+    });
+    app.render({
+        activeScreen: Screen.GAME,
+        touchControls: {
+            enabled: true,
+            gameplay: {
+                visible: true
+            }
+        }
+    });
 
     assert.equal(query(root, '#touchJoystickKnob'), knob);
     assert.equal(knob.style.transform, 'translate(5px, 6px)');
     assert.equal(query(root, '#touchAimHandle').style.top, '25%');
 });
 
-test('renders name editor grid and dispatches pointer selections', async function () {
-    const { NameEditorComponentScreen } = await loadComponentScreens();
+test('renders name editor grid and dispatches pointer selections through the app root', async function () {
+    const { ClientAppMount, Screen } = await loadClientApp();
     const browser = createBrowser();
     const selected = [];
-    const elements = {
-        editor: browser.createElement(),
-        highScores: browser.createElement(),
-        lobbyMain: browser.createElement()
-    };
-    const screen = new NameEditorComponentScreen(elements);
+    const root = browser.createElement();
+    const app = ClientAppMount.create({ root });
 
-    screen.render({
-        helpLines: ['ARROWS MOVE', 'FIRE SELECTS'],
-        onSelect(rowIndex, colIndex) {
-            selected.push([rowIndex, colIndex]);
-        },
-        state: {
-            cursorCol: 1,
-            cursorRow: 0,
-            grid: [['A', 'B'], ['OK']],
-            name: 'ACE'
+    app.render({
+        activeScreen: Screen.LOBBY_EDIT_NAME,
+        nameEditor: {
+            helpLines: ['ARROWS MOVE', 'FIRE SELECTS'],
+            onSelect(rowIndex, colIndex) {
+                selected.push([rowIndex, colIndex]);
+            },
+            state: {
+                cursorCol: 1,
+                cursorRow: 0,
+                grid: [['A', 'B'], ['OK']],
+                name: 'ACE'
+            }
         }
     });
 
-    assert.equal(elements.lobbyMain.hidden, true);
-    assert.equal(elements.highScores.hidden, true);
-    assert.equal(elements.editor.hidden, false);
-
-    const editor = elements.editor;
-    assert.equal(
-        editor.querySelector('#nameEditorValue').textContent,
-        'NAME: ACE'
-    );
-    assert.deepEqual(childTexts(editor.querySelector('#nameEditorHelp')), [
+    assert.equal(query(root, '#lobby-main').hidden, true);
+    assert.equal(query(root, '#highScoresScreen').hidden, true);
+    assert.equal(query(root, '#nameEditor').hidden, false);
+    assert.equal(query(root, '#nameEditorValue').textContent, 'NAME: ACE');
+    assert.deepEqual(childTexts(query(root, '#nameEditorHelp')), [
         'ARROWS MOVE',
         'FIRE SELECTS'
     ]);
 
-    const grid = editor.querySelector('#nameEditorGrid');
+    const grid = query(root, '#nameEditorGrid');
     assert.equal(grid.children.length, 2);
     assert.equal(grid.children[0].className, 'name-editor-row is-short');
 
@@ -495,8 +514,4 @@ test('renders name editor grid and dispatches pointer selections', async functio
 
     assert.equal(pointerDown.defaultPrevented, true);
     assert.deepEqual(selected, [[0, 1]]);
-
-    screen.hide();
-
-    assert.equal(elements.editor.hidden, true);
 });

@@ -164,12 +164,8 @@ function createStartupDependencies(onNetworkStart) {
             ClientUi: {
                 create() {
                     return {
-                        gameHud: {},
-                        gameHudScreen: {},
-                        highScoresScreen: {},
-                        lobbyHud: {},
-                        lobbyScreen: {},
-                        nameEditorScreen: {}
+                        app: {},
+                        installPrompt: {}
                     };
                 }
             }
