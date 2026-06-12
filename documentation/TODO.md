@@ -337,8 +337,18 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 - [x] Convert name editor after lobby.
 - [x] Convert game HUD last because it is closest to active gameplay.
 - [ ] Remove old imperative DOM screen modules only after their replacement is covered by tests.
+    - [x] Port the screen unit tests to the Preact component screens.
+        - Render with happy-dom and assert on rendered DOM output.
+        - Keep the on-the-fly transpile pattern with the Preact JSX runtime.
+    - [ ] Delete `gameHud.ts`, `highScoresScreen.ts`, `lobbyScreen.ts`, and `nameEditorScreen.ts`.
+    - [ ] Delete the old `clientHudScreens.test.js` in the same change.
 - [ ] Convert touch controls after the screen/HUD component boundary is stable.
     - Keep joystick, aim, and fire input state in the existing input/touch flow modules.
+    - [ ] Convert the touch lobby buttons first; they are plain render-props-and-actions buttons like the converted screens.
+    - [ ] Spike per-frame joystick/aim rendering before converting gameplay controls.
+        - Check whether prop-driven re-renders keep up with per-frame knob and slider position updates.
+        - Prefer ref-based style updates inside the component if reconciliation is too slow.
+    - [ ] Convert the joystick, aim slider, and fire button, forwarding pointer events to the existing touch flow modules.
 
 ### P1.4.12.5 - Tighten The Canvas Gameplay Core
 
