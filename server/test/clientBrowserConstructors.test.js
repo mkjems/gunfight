@@ -51,6 +51,11 @@ async function loadBrowserConstructors() {
     compileClientModule('soundEffects.ts', 'soundEffects.js', tempDirectory);
     compileClientModule('touchControls.ts', 'touchControls.js', tempDirectory);
     compileClientModule(
+        'touchGameplayControlsComponentScreen.tsx',
+        'touchGameplayControlsComponentScreen.js',
+        tempDirectory
+    );
+    compileClientModule(
         'touchLobbyControlsComponentScreen.tsx',
         'touchLobbyControlsComponentScreen.js',
         tempDirectory
@@ -129,7 +134,6 @@ function createTouchDocument() {
         'touchControls',
         'touchJoystick',
         'touchJoystickKnob',
-        'touchActionControls',
         'touchAimSlider',
         'touchAimHandle',
         'touchShootButton'
@@ -227,10 +231,16 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
     const { TouchControls } = await loadBrowserConstructors();
     const document = createTouchDocument();
     const calls = [];
+    const gameplayRenders = [];
     const lobbyRenders = [];
     let aimLevel = 4;
     const controls = TouchControls({
         document,
+        gameplayControlsScreen: {
+            render(props) {
+                gameplayRenders.push(props);
+            }
+        },
         getAimLevel() {
             return aimLevel;
         },
@@ -268,6 +278,7 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
         document.elements.touchControls.classList.classes['debug-touch'],
         true
     );
+    assert.equal(gameplayRenders.at(-1).visible, false);
 
     document.elements.touchShootButton.fire('pointerdown');
     document.elements.touchShootButton.fire('pointerup');
@@ -286,14 +297,15 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
         waiting: false
     });
 
-    assert.equal(document.elements.touchActionControls.hidden, false);
-    assert.equal(document.elements.touchJoystick.hidden, false);
+    assert.equal(gameplayRenders.at(-1).visible, true);
     assert.equal(document.elements.touchAimHandle.style.top, '25%');
     assert.equal(lobbyRenders.at(-1).visible, false);
 
     controls.update({
         waiting: true
     });
+
+    assert.equal(gameplayRenders.at(-1).visible, false);
 
     const lobbyProps = lobbyRenders.at(-1);
     assert.equal(lobbyProps.visible, true);

@@ -1,4 +1,5 @@
 import { Config } from './config.js';
+import { TouchGameplayControlsComponentScreen } from './touchGameplayControlsComponentScreen.js';
 import { TouchLobbyControlsComponentScreen } from './touchLobbyControlsComponentScreen.js';
 
 type InputLike = {
@@ -61,8 +62,13 @@ type LobbyControlsScreenLike = {
     }) => void;
 };
 
+type GameplayControlsScreenLike = {
+    render: (props: { visible?: boolean }) => void;
+};
+
 type TouchControlsOptions = {
     document?: DocumentLike;
+    gameplayControlsScreen?: GameplayControlsScreenLike;
     getAimLevel?: () => number;
     input?: InputLike;
     lobbyControlsScreen?: LobbyControlsScreenLike;
@@ -97,12 +103,16 @@ export function TouchControls(options: TouchControlsOptions = {}) {
                 'touchLobbyControls'
             ) as unknown as HTMLElement | null
         });
-    const joystick = ownerDocument.getElementById('touchJoystick');
-    const joystickKnob = ownerDocument.getElementById('touchJoystickKnob');
-    const actionControls = ownerDocument.getElementById('touchActionControls');
-    const aimSlider = ownerDocument.getElementById('touchAimSlider');
-    const aimHandle = ownerDocument.getElementById('touchAimHandle');
-    const shootButton = ownerDocument.getElementById('touchShootButton');
+    const gameplayControlsScreen =
+        options.gameplayControlsScreen ||
+        new TouchGameplayControlsComponentScreen({
+            root: root as unknown as HTMLElement | null
+        });
+    let joystick: ElementLike | null = null;
+    let joystickKnob: ElementLike | null = null;
+    let aimSlider: ElementLike | null = null;
+    let aimHandle: ElementLike | null = null;
+    let shootButton: ElementLike | null = null;
     let activeMoveKeys: Record<string, boolean> = {};
     let visible = false;
     let editing = false;
@@ -127,6 +137,14 @@ export function TouchControls(options: TouchControlsOptions = {}) {
             ownerWindow.location.search.indexOf('touch=1') >= 0
         );
         root.hidden = false;
+        gameplayControlsScreen.render({
+            visible: false
+        });
+        joystick = ownerDocument.getElementById('touchJoystick');
+        joystickKnob = ownerDocument.getElementById('touchJoystickKnob');
+        aimSlider = ownerDocument.getElementById('touchAimSlider');
+        aimHandle = ownerDocument.getElementById('touchAimHandle');
+        shootButton = ownerDocument.getElementById('touchShootButton');
         bindJoystick();
         bindAimSlider();
         bindButton(
@@ -161,17 +179,19 @@ export function TouchControls(options: TouchControlsOptions = {}) {
     }
 
     function bindJoystick() {
-        if (!joystick) {
+        const element = joystick;
+
+        if (!element) {
             return;
         }
 
-        joystick.addEventListener('pointerdown', function (evt) {
+        element.addEventListener('pointerdown', function (evt) {
             evt.preventDefault();
-            joystick.setPointerCapture(evt.pointerId);
+            element.setPointerCapture(evt.pointerId);
             updateJoystick(evt);
         });
 
-        joystick.addEventListener('pointermove', function (evt) {
+        element.addEventListener('pointermove', function (evt) {
             if (evt.buttons === 0) {
                 return;
             }
@@ -180,9 +200,9 @@ export function TouchControls(options: TouchControlsOptions = {}) {
             updateJoystick(evt);
         });
 
-        joystick.addEventListener('pointerup', resetJoystick);
-        joystick.addEventListener('pointercancel', resetJoystick);
-        joystick.addEventListener('lostpointercapture', resetJoystick);
+        element.addEventListener('pointerup', resetJoystick);
+        element.addEventListener('pointercancel', resetJoystick);
+        element.addEventListener('lostpointercapture', resetJoystick);
     }
 
     function updateJoystick(evt: PointerEventLike) {
@@ -255,17 +275,19 @@ export function TouchControls(options: TouchControlsOptions = {}) {
     }
 
     function bindAimSlider() {
-        if (!aimSlider) {
+        const element = aimSlider;
+
+        if (!element) {
             return;
         }
 
-        aimSlider.addEventListener('pointerdown', function (evt) {
+        element.addEventListener('pointerdown', function (evt) {
             evt.preventDefault();
-            aimSlider.setPointerCapture(evt.pointerId);
+            element.setPointerCapture(evt.pointerId);
             updateAim(evt);
         });
 
-        aimSlider.addEventListener('pointermove', function (evt) {
+        element.addEventListener('pointermove', function (evt) {
             if (evt.buttons === 0) {
                 return;
             }
@@ -353,13 +375,9 @@ export function TouchControls(options: TouchControlsOptions = {}) {
             visible: !!state.waiting && !editing
         });
 
-        if (actionControls) {
-            actionControls.hidden = !showGameplayControls;
-        }
-
-        if (joystick) {
-            joystick.hidden = !showGameplayControls;
-        }
+        gameplayControlsScreen.render({
+            visible: !!showGameplayControls
+        });
 
         if (!showGameplayControls) {
             resetJoystick();

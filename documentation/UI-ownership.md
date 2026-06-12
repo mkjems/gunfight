@@ -143,10 +143,11 @@ When replacing an imperative DOM screen with a component:
 
 ## Current Boundary
 
-The lobby, high scores, name editor, and game HUD screens are Preact
-components. The old imperative DOM screen modules are removed. Touch controls
-are the remaining imperative DOM surface inside the overlay. The architectural
-boundary is now:
+The lobby, high scores, name editor, game HUD, and touch control screens are
+Preact components. The old imperative DOM screen modules are removed. Touch
+pointer handling, knob transforms, and aim handle positions remain imperative
+inside the touch input module per the per-frame rendering rule. The
+architectural boundary is now:
 
 - Imperative gameplay and flow modules own state, timing, and side effects.
 - Framework-independent view models own render decisions.

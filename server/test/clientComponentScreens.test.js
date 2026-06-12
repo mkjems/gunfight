@@ -69,6 +69,11 @@ async function loadComponentScreens() {
         tempDirectory
     );
     compileClientModule(
+        'touchGameplayControlsComponentScreen.tsx',
+        'touchGameplayControlsComponentScreen.js',
+        tempDirectory
+    );
+    compileClientModule(
         'touchLobbyControlsComponentScreen.tsx',
         'touchLobbyControlsComponentScreen.js',
         tempDirectory
@@ -81,6 +86,7 @@ async function loadComponentScreens() {
                 'highScoresComponentScreen.js',
                 'lobbyComponentScreen.js',
                 'nameEditorComponentScreen.js',
+                'touchGameplayControlsComponentScreen.js',
                 'touchLobbyControlsComponentScreen.js'
             ].map(function (fileName) {
                 return import(
@@ -94,8 +100,10 @@ async function loadComponentScreens() {
             HighScoresComponentScreen: modules[1].HighScoresComponentScreen,
             LobbyComponentScreen: modules[2].LobbyComponentScreen,
             NameEditorComponentScreen: modules[3].NameEditorComponentScreen,
+            TouchGameplayControlsComponentScreen:
+                modules[4].TouchGameplayControlsComponentScreen,
             TouchLobbyControlsComponentScreen:
-                modules[4].TouchLobbyControlsComponentScreen
+                modules[5].TouchLobbyControlsComponentScreen
         };
     } finally {
         rmSync(tempDirectory, { force: true, recursive: true });
@@ -391,6 +399,45 @@ test('renders touch lobby buttons and dispatches tap actions', async function ()
     });
 
     assert.equal(root.hidden, true);
+});
+
+test('renders gameplay touch controls markup and keeps imperative styles', async function () {
+    const { TouchGameplayControlsComponentScreen } =
+        await loadComponentScreens();
+    const browser = createBrowser();
+    const root = browser.createElement();
+    const screen = new TouchGameplayControlsComponentScreen({ root });
+
+    assert.equal(screen.render({ visible: false }), true);
+    assert.equal(query(root, '#touchJoystick').hidden, true);
+    assert.equal(query(root, '#touchActionControls').hidden, true);
+
+    assert.equal(screen.render({ visible: true }), true);
+    assert.equal(screen.render({ visible: true }), false);
+
+    const joystick = query(root, '#touchJoystick');
+    const knob = query(root, '#touchJoystickKnob');
+    const aimHandle = query(root, '#touchAimHandle');
+    const shootButton = query(root, '#touchShootButton');
+
+    assert.equal(joystick.hidden, false);
+    assert.equal(joystick.getAttribute('aria-label'), 'Move');
+    assert.equal(
+        query(root, '#touchAimSlider').getAttribute('aria-label'),
+        'Aim'
+    );
+    assert.ok(query(root, '#touchAimTrack'));
+    assert.equal(shootButton.textContent, 'FIRE');
+
+    knob.style.transform = 'translate(5px, 6px)';
+    aimHandle.style.top = '25%';
+
+    assert.equal(screen.render({ visible: false }), true);
+    assert.equal(screen.render({ visible: true }), true);
+
+    assert.equal(query(root, '#touchJoystickKnob'), knob);
+    assert.equal(knob.style.transform, 'translate(5px, 6px)');
+    assert.equal(query(root, '#touchAimHandle').style.top, '25%');
 });
 
 test('renders name editor grid and dispatches pointer selections', async function () {
