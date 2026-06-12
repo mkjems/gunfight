@@ -23,7 +23,7 @@ export function TouchLobbyControls(options: TouchLobbyControlsProps = {}) {
             />
             <TouchLobbyButton
                 id="touchPlayButton"
-                label="TAP PLAY"
+                label="PLAY GUNFIGHT"
                 onTap={options.onPlay}
                 visible={options.showButtons}
             />

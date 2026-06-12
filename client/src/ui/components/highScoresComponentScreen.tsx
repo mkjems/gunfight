@@ -7,10 +7,12 @@ export type HighScoreRow = {
 
 export type HighScoresProps = {
     playPrompt?: string;
+    rowLimit?: number;
     rows?: HighScoreRow[];
 };
 
 type HighScoresTableProps = {
+    rowLimit?: number;
     rows: HighScoreRow[];
 };
 
@@ -23,7 +25,10 @@ export function HighScoresScreen(options: HighScoresProps = {}) {
         <>
             <h1>HIGH SCORES</h1>
             <div id="highScoresTable">
-                <HighScoresTable rows={options.rows || []} />
+                <HighScoresTable
+                    rowLimit={options.rowLimit}
+                    rows={options.rows || []}
+                />
             </div>
             <div id="highScoresPlayPrompt" className="blink-text">
                 <HighScoresPrompt text={options.playPrompt || ''} />
@@ -39,26 +44,28 @@ function HighScoresTable(props: HighScoresTableProps) {
                 isHeader={true}
                 values={['PLACE', 'NAME', 'WINS', 'KILLS', 'DEATHS']}
             />
-            {getHighScoreRows(props.rows).map(function (row, index) {
-                return (
-                    <HighScoresRow
-                        key={getPlaceLabel(index)}
-                        values={[
-                            getPlaceLabel(index),
-                            row?.name || '',
-                            row?.wins ?? '',
-                            row?.kills ?? '',
-                            row?.deaths ?? ''
-                        ]}
-                    />
-                );
-            })}
+            {getHighScoreRows(props.rows, props.rowLimit).map(
+                function (row, index) {
+                    return (
+                        <HighScoresRow
+                            key={getPlaceLabel(index)}
+                            values={[
+                                getPlaceLabel(index),
+                                row?.name || '',
+                                row?.wins ?? '',
+                                row?.kills ?? '',
+                                row?.deaths ?? ''
+                            ]}
+                        />
+                    );
+                }
+            )}
         </>
     );
 }
 
-function getHighScoreRows(rows: HighScoreRow[]) {
-    return Array.from({ length: 10 }, function (_, index) {
+function getHighScoreRows(rows: HighScoreRow[], rowLimit = 10) {
+    return Array.from({ length: rowLimit }, function (_, index) {
         return rows[index] || null;
     });
 }

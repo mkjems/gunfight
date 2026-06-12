@@ -27,6 +27,7 @@ export type LobbyHudState = {
     canvasVisible: boolean;
     highScores?: {
         playPrompt: string;
+        rowLimit: number;
         rows: unknown[];
     };
     hudCanvasVisible: boolean;
@@ -101,6 +102,7 @@ function shouldShowHighScoresScreenForOptions(options: LobbyHudFlowOptions) {
 
 function getHighScoresState(options: LobbyHudFlowOptions, isTouch: boolean) {
     return {
+        rowLimit: isTouch ? 5 : 10,
         rows:
             options.highScores && options.highScores.length
                 ? options.highScores

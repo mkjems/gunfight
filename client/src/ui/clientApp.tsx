@@ -156,6 +156,11 @@ export function ClientApp(props: ClientAppProps) {
                     </div>
                     <div
                         hidden={!touchControls.lobby.visible}
+                        className={
+                            activeScreen === Screen.HIGH_SCORES
+                                ? 'is-high-scores'
+                                : ''
+                        }
                         id="touchLobbyControls"
                     >
                         <TouchLobbyControls {...touchControls.lobby} />

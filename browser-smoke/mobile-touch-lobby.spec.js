@@ -27,10 +27,10 @@ function captureBrowserErrors(page) {
     return browserErrors;
 }
 
-async function freezeHighScoreRotation(page) {
-    await page.addInitScript(function () {
+async function freezeHighScoreRotation(page, isoTime) {
+    await page.addInitScript(function (fixedIsoTime) {
         const RealDate = Date;
-        const fixedTime = new RealDate('2026-01-01T00:00:00.000Z').getTime();
+        const fixedTime = new RealDate(fixedIsoTime).getTime();
 
         class FixedDate extends RealDate {
             constructor(...args) {
@@ -50,7 +50,8 @@ async function freezeHighScoreRotation(page) {
         FixedDate.UTC = RealDate.UTC;
         FixedDate.parse = RealDate.parse;
         globalThis.Date = FixedDate;
-    });
+        localStorage.setItem('gunfight-install-prompt-dismissed', '1');
+    }, isoTime || '2026-01-01T00:00:00.000Z');
 }
 
 test.describe('mobile touch lobby', function () {
@@ -91,7 +92,75 @@ test.describe('mobile touch lobby', function () {
         await expect(page.locator('#touchEditButton')).toBeVisible();
         await expect(page.locator('#touchPlayButton')).toBeVisible();
         await expect(page.locator('#touchEditButton')).toHaveText('EDIT NAME');
-        await expect(page.locator('#touchPlayButton')).toHaveText('TAP PLAY');
+        await expect(page.locator('#touchPlayButton')).toHaveText(
+            'PLAY GUNFIGHT'
+        );
+
+        const controlsBox = await page
+            .locator('#touchLobbyControls')
+            .boundingBox();
+
+        if (!controlsBox) {
+            throw new Error('Touch lobby controls should have a layout box');
+        }
+
+        expect(
+            Math.abs(
+                controlsBox.y +
+                    controlsBox.height / 2 -
+                    page.viewportSize().height / 2
+            )
+        ).toBeLessThan(2);
+
+        expect(browserErrors).toEqual([]);
+    });
+
+    test('places touch buttons below the five-row high-score table', async ({
+        page
+    }) => {
+        const browserErrors = captureBrowserErrors(page);
+
+        await freezeHighScoreRotation(page, '2026-01-01T00:00:30.000Z');
+        await page.setViewportSize({
+            height: 390,
+            width: 844
+        });
+        await page.goto('/?touch=1', {
+            waitUntil: 'domcontentloaded'
+        });
+
+        if (await page.locator('#installPrompt').isVisible()) {
+            await page
+                .getByRole('button', {
+                    name: 'Dismiss install instructions'
+                })
+                .click();
+        }
+
+        await expect(page.locator('#highScoresScreen')).toBeVisible();
+        await expect(
+            page.locator('#highScoresTable .high-score-row')
+        ).toHaveCount(6);
+        await expect(page.locator('#highScoresTable')).toContainText('5TH');
+        await expect(page.locator('#highScoresTable')).not.toContainText('6TH');
+        await expect(page.locator('#touchLobbyControls')).toBeVisible();
+        await expect(page.locator('#touchEditButton')).toBeVisible();
+        await expect(page.locator('#touchPlayButton')).toBeVisible();
+
+        const tableBox = await page.locator('#highScoresTable').boundingBox();
+        const controlsBox = await page
+            .locator('#touchLobbyControls')
+            .boundingBox();
+
+        if (!tableBox || !controlsBox) {
+            throw new Error(
+                'High scores and touch controls should be laid out'
+            );
+        }
+
+        expect(controlsBox.y).toBeGreaterThanOrEqual(
+            tableBox.y + tableBox.height
+        );
 
         expect(browserErrors).toEqual([]);
     });

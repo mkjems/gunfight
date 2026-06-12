@@ -26,6 +26,16 @@
 - [x] I would like all the text to be real HTML text. Canvas text is blurry and the negative text looks inconsistent with html text. Can you make the html text follow the character
 - [x] Should we adjust specifications with some of these design changes - to not have stale specs.
 
+## P2.2 - Mobile phone quality assurance
+
+- [x] The buttons for 'play' and 'edit name' are missing.
+
+## P2.3 - Mobile high-score follow up
+
+- [x] Do not show the mobile `EDIT NAME` and `PLAY GUNFIGHT` buttons on top of the high-score table.
+- [x] On mobile, show only the top 5 high-score rows.
+- [x] On mobile high scores, show the action buttons underneath the table.
+
 ## P3 - Content Authoring Tools
 
 ### P3.1 Add a rock editor page.

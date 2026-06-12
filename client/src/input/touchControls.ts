@@ -383,7 +383,7 @@ export function TouchControls(options: TouchControlsOptions = {}) {
             lobby: {
                 onEdit: onEditTap,
                 onPlay: onPlayTap,
-                showButtons: !state.highScoresVisible && !state.ready,
+                showButtons: !state.ready,
                 visible: !!state.waiting && !editing
             },
             playing: !!state.playing,

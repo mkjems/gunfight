@@ -131,6 +131,32 @@ test('builds high scores app state with keyboard play prompt', async function ()
         canvasVisible: false,
         highScores: {
             playPrompt: 'PRESS P TO PLAY',
+            rowLimit: 10,
+            rows: [
+                {
+                    name: 'Ada'
+                }
+            ]
+        },
+        hudCanvasVisible: false
+    });
+});
+
+test('builds mobile high scores app state with five rows and no keyboard prompt', async function () {
+    const flow = await loadClientLobbyHudFlow();
+    const { options } = createRenderOptions({
+        isTouchInterface() {
+            return true;
+        },
+        now: 30000
+    });
+
+    assert.deepEqual(plain(flow.getState(options)), {
+        activeScreen: 'high-scores',
+        canvasVisible: false,
+        highScores: {
+            playPrompt: '',
+            rowLimit: 5,
             rows: [
                 {
                     name: 'Ada'

@@ -47,7 +47,7 @@ test('built browser app renders high scores through the app root', async ({
 
     await page.addInitScript(function () {
         const RealDate = Date;
-        const fixedTime = new RealDate('2026-01-01T00:00:07.000Z').getTime();
+        const fixedTime = new RealDate('2026-01-01T00:00:30.000Z').getTime();
 
         class FixedDate extends RealDate {
             constructor(...args) {
@@ -78,9 +78,13 @@ test('built browser app renders high scores through the app root', async ({
     await expect(
         page.locator('#highScoresTable .high-score-row.is-header')
     ).toContainText('NAME');
-    await expect(page.locator('#highScoresTable .high-score-empty')).toHaveText(
+    await expect(page.locator('#highScoresTable .high-score-row')).toHaveCount(
+        11
+    );
+    await expect(page.locator('#highScoresTable')).not.toContainText(
         'NO SCORES YET'
     );
+    await expect(page.locator('#highScoresTable')).toContainText('10TH');
 
     expect(browserErrors).toEqual([]);
 });
@@ -130,9 +134,14 @@ test('built browser app renders lobby through the app root', async ({
     });
 
     await expect(page.locator('#lobby-main')).toBeVisible();
-    await expect(page.locator('#lobbyIdentity')).toContainText('PLAYER 1');
-    await expect(page.locator('#lobbySlots')).toContainText('PLAYER 1');
-    await expect(page.locator('#lobbySlots')).toContainText('PLAYER 2');
+    await expect(page.locator('#lobby-main h1')).toHaveText('GUNFIGHT 1975');
+    await expect(page.locator('#lobbyIdentity')).toHaveCount(0);
+    await expect(page.locator('#lobbySlots')).toHaveCount(0);
+    await expect(page.locator('#lobbyControlsText')).toContainText(
+        'h j k l - left down up right'
+    );
+    await expect(page.locator('#lobbyPlayerLabels')).toContainText('PLAYER 1');
+    await expect(page.locator('#lobbyPlayerLabels')).toContainText('WAITING');
     await expect(page.locator('#lobbyPlayPrompt')).toHaveText(
         'PRESS P TO PLAY'
     );

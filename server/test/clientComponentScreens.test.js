@@ -253,6 +253,43 @@ test('renders high-score table rows with ten ranked places through the app root'
     );
 });
 
+test('renders mobile high scores with five rows and touch actions underneath', async function () {
+    const { ClientAppMount, Screen } = await loadClientApp();
+    const browser = createBrowser();
+    const root = browser.createElement();
+    const app = ClientAppMount.create({ root });
+
+    app.render({
+        activeScreen: Screen.HIGH_SCORES,
+        highScores: {
+            rowLimit: 5,
+            rows: []
+        },
+        touchControls: {
+            enabled: true,
+            lobby: {
+                showButtons: true,
+                visible: true
+            }
+        }
+    });
+
+    const touchControls = query(root, '#touchLobbyControls');
+
+    assert.equal(query(root, '#highScoresTable').children.length, 6);
+    assert.deepEqual(childTexts(query(root, '#highScoresTable').children[5]), [
+        '5TH',
+        '',
+        '',
+        '',
+        ''
+    ]);
+    assert.equal(touchControls.hidden, false);
+    assert.equal(touchControls.className, 'is-high-scores');
+    assert.equal(query(root, '#touchEditButton').hidden, false);
+    assert.equal(query(root, '#touchPlayButton').hidden, false);
+});
+
 test('renders lobby screen sections through the app root', async function () {
     const { ClientAppMount, Screen } = await loadClientApp();
     const browser = createBrowser();
@@ -393,7 +430,7 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
     const editButton = query(root, '#touchEditButton');
     const playButton = query(root, '#touchPlayButton');
     assert.equal(editButton.textContent, 'EDIT NAME');
-    assert.equal(playButton.textContent, 'TAP PLAY');
+    assert.equal(playButton.textContent, 'PLAY GUNFIGHT');
     assert.equal(editButton.hidden, false);
     assert.equal(playButton.hidden, false);
 
