@@ -147,7 +147,7 @@ P1.4.11 chose Preact for the first component island.
   with component rendering for DOM overlays while canvas gameplay stays
   imperative.
 
-The first runtime island is the high scores screen table/prompt behind the
-existing `ClientHudOverlay` boundary. The old imperative high-score screen module
-can stay as a reference until the rest of P1.4.12 removes obsolete screen
-modules.
+The first runtime islands are the high scores screen table/prompt and the lobby
+screen sections behind the existing `ClientHudOverlay` boundary. The old
+imperative screen modules can stay as references until the rest of P1.4.12
+removes obsolete screen modules.

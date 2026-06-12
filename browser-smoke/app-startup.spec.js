@@ -84,3 +84,58 @@ test('built browser app renders the high scores component island', async ({
 
     expect(browserErrors).toEqual([]);
 });
+
+test('built browser app renders the lobby component island', async ({
+    page
+}) => {
+    const browserErrors = [];
+
+    page.on('pageerror', function (error) {
+        browserErrors.push(error.message);
+    });
+
+    page.on('console', function (message) {
+        if (message.type() === 'error') {
+            browserErrors.push(message.text());
+        }
+    });
+
+    await page.addInitScript(function () {
+        const RealDate = Date;
+        const fixedTime = new RealDate('2026-01-01T00:00:00.000Z').getTime();
+
+        class FixedDate extends RealDate {
+            constructor(...args) {
+                if (args.length) {
+                    super(...args);
+                    return;
+                }
+
+                super(fixedTime);
+            }
+
+            static now() {
+                return fixedTime;
+            }
+        }
+
+        FixedDate.UTC = RealDate.UTC;
+        FixedDate.parse = RealDate.parse;
+        globalThis.Date = FixedDate;
+        localStorage.setItem('gunfight-install-prompt-dismissed', '1');
+    });
+
+    await page.goto('/', {
+        waitUntil: 'domcontentloaded'
+    });
+
+    await expect(page.locator('#lobby-main')).toBeVisible();
+    await expect(page.locator('#lobbyIdentity')).toContainText('PLAYER 1');
+    await expect(page.locator('#lobbySlots')).toContainText('PLAYER 1');
+    await expect(page.locator('#lobbySlots')).toContainText('PLAYER 2');
+    await expect(page.locator('#lobbyPlayPrompt')).toHaveText(
+        'PRESS P TO PLAY'
+    );
+
+    expect(browserErrors).toEqual([]);
+});

@@ -333,7 +333,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 ### P1.4.12 - Migrate UI Screens To Components Incrementally
 
 - [x] Convert high scores screen first.
-- [ ] Convert lobby screen after high scores.
+- [x] Convert lobby screen after high scores.
 - [ ] Convert name editor after lobby.
 - [ ] Convert game HUD last because it is closest to active gameplay.
 - [ ] Remove old imperative DOM screen modules only after their replacement is covered by tests.

@@ -1,7 +1,7 @@
 import { GameHud } from './gameHud.js';
 import { HighScoresComponentScreen } from './highScoresComponentScreen.js';
 import { ClientHudOverlay } from './clientHudOverlay.js';
-import { LobbyScreen } from './lobbyScreen.js';
+import { LobbyComponentScreen } from './lobbyComponentScreen.js';
 import { NameEditorScreen } from './nameEditorScreen.js';
 
 type ClientUiOptions = {
@@ -13,7 +13,7 @@ export function create(options: ClientUiOptions) {
         document: options.document,
         GameHud: GameHud as any,
         HighScoresScreen: HighScoresComponentScreen as any,
-        LobbyScreen: LobbyScreen as any,
+        LobbyScreen: LobbyComponentScreen as any,
         NameEditorScreen: NameEditorScreen as any
     });
 }
