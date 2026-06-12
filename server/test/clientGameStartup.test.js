@@ -27,7 +27,14 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
 async function loadCreateGame() {
     const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
 
-    compileClientModule('runtime/game.ts', 'runtime/game.js', tempDirectory);
+    [
+        ['runtime/game.ts', 'runtime/game.js'],
+        ['runtime/game/dependencies.ts', 'runtime/game/dependencies.js'],
+        ['runtime/game/payloadGuards.ts', 'runtime/game/payloadGuards.js'],
+        ['runtime/game/runtime.ts', 'runtime/game/runtime.js']
+    ].forEach(function ([sourceName, outputName]) {
+        compileClientModule(sourceName, outputName, tempDirectory);
+    });
 
     const module = await import(
         pathToFileURL(path.join(tempDirectory, 'runtime/game.js')).href
