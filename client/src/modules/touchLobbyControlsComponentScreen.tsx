@@ -1,4 +1,5 @@
 import { render as renderComponent } from 'preact';
+import { arePropsEqual } from './componentRenderProps.js';
 
 type TouchLobbyControlsComponentScreenElements = {
     root?: HTMLElement | null;
@@ -20,6 +21,7 @@ type TouchLobbyButtonProps = {
 
 export class TouchLobbyControlsComponentScreen {
     elements: TouchLobbyControlsComponentScreenElements;
+    lastRenderedOptions?: TouchLobbyControlsComponentScreenRenderOptions;
 
     constructor(elements: TouchLobbyControlsComponentScreenElements = {}) {
         this.elements = elements;
@@ -28,12 +30,24 @@ export class TouchLobbyControlsComponentScreen {
     render(options: TouchLobbyControlsComponentScreenRenderOptions = {}) {
         show(this.elements.root, !!options.visible);
 
-        if (this.elements.root) {
-            renderComponent(
-                <TouchLobbyControls {...options} />,
-                this.elements.root
-            );
+        if (!this.elements.root) {
+            return false;
         }
+
+        if (
+            this.lastRenderedOptions &&
+            arePropsEqual(this.lastRenderedOptions, options)
+        ) {
+            return false;
+        }
+
+        renderComponent(
+            <TouchLobbyControls {...options} />,
+            this.elements.root
+        );
+        this.lastRenderedOptions = options;
+
+        return true;
     }
 }
 

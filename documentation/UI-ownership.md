@@ -109,6 +109,24 @@ The preferred flow is:
 Components sit at the end of the render path. They do not become a second state
 manager.
 
+## Per-Frame Rendering Rule
+
+Flow modules render the HUD overlay and touch controls inside the animation
+frame loop, so component screens must keep Preact off the steady-state frame
+path:
+
+- Component screens skip virtual-DOM work when render props are value-equal to
+  the previous render. Flows may rebuild props objects and arrays every frame;
+  screens compare values, not identity.
+- Action callbacks are treated as stable by contract. A rebuilt closure with the
+  same meaning must not force a re-render.
+- Continuous pointer-driven values such as the joystick knob transform and the
+  aim handle position are never render props. They stay imperative element
+  updates owned by the touch input module, exactly like canvas gameplay.
+- Visibility side effects (`hidden` flags on sibling screens) still run on every
+  render call so screen switches stay correct even when virtual-DOM work is
+  skipped.
+
 ## Migration Rule
 
 When replacing an imperative DOM screen with a component:

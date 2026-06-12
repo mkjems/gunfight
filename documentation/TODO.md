@@ -345,9 +345,9 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 - [ ] Convert touch controls after the screen/HUD component boundary is stable.
     - Keep joystick, aim, and fire input state in the existing input/touch flow modules.
     - [x] Convert the touch lobby buttons first; they are plain render-props-and-actions buttons like the converted screens.
-    - [ ] Spike per-frame joystick/aim rendering before converting gameplay controls.
-        - Check whether prop-driven re-renders keep up with per-frame knob and slider position updates.
-        - Prefer ref-based style updates inside the component if reconciliation is too slow.
+    - [x] Spike per-frame joystick/aim rendering before converting gameplay controls.
+        - Finding: HUD and touch flows already render every frame, so component screens now skip virtual-DOM work when render props are value-equal.
+        - Decision: knob and aim handle positions stay imperative element updates, never render props. See the per-frame rendering rule in `documentation/UI-ownership.md`.
     - [ ] Convert the joystick, aim slider, and fire button, forwarding pointer events to the existing touch flow modules.
 
 ### P1.4.12.5 - Tighten The Canvas Gameplay Core

@@ -1,4 +1,5 @@
 import { render as renderComponent } from 'preact';
+import { arePropsEqual } from './componentRenderProps.js';
 
 type LobbyComponentScreenElements = {
     highScores?: HTMLElement | null;
@@ -34,6 +35,7 @@ type TextProps = {
 
 export class LobbyComponentScreen {
     elements: LobbyComponentScreenElements;
+    lastRenderedOptions?: LobbyComponentScreenRenderOptions;
 
     constructor(elements: LobbyComponentScreenElements = {}) {
         this.elements = elements;
@@ -43,15 +45,29 @@ export class LobbyComponentScreen {
         show(this.elements.main, true);
         show(this.elements.highScores, false);
 
-        if (this.elements.main) {
-            renderComponent(<LobbyMain {...options} />, this.elements.main);
-        }
+        return this.renderMain(options);
     }
 
     clear() {
-        if (this.elements.main) {
-            renderComponent(<LobbyMain />, this.elements.main);
+        return this.renderMain({});
+    }
+
+    renderMain(options: LobbyComponentScreenRenderOptions) {
+        if (!this.elements.main) {
+            return false;
         }
+
+        if (
+            this.lastRenderedOptions &&
+            arePropsEqual(this.lastRenderedOptions, options)
+        ) {
+            return false;
+        }
+
+        renderComponent(<LobbyMain {...options} />, this.elements.main);
+        this.lastRenderedOptions = options;
+
+        return true;
     }
 }
 

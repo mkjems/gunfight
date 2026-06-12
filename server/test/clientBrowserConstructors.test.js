@@ -41,6 +41,11 @@ async function loadBrowserConstructors() {
         path.join(cacheDirectory, 'gunfight-browser-constructors-')
     );
 
+    compileClientModule(
+        'componentRenderProps.ts',
+        'componentRenderProps.js',
+        tempDirectory
+    );
     compileClientModule('config.ts', 'config.js', tempDirectory);
     compileClientModule('camera.ts', 'camera.js', tempDirectory);
     compileClientModule('soundEffects.ts', 'soundEffects.js', tempDirectory);

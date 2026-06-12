@@ -1,4 +1,5 @@
 import { render as renderComponent } from 'preact';
+import { arePropsEqual } from './componentRenderProps.js';
 
 type HighScoreRow = {
     deaths: number;
@@ -29,6 +30,7 @@ type HighScoresPromptProps = {
 
 export class HighScoresComponentScreen {
     elements: HighScoresComponentScreenElements;
+    lastRenderedOptions?: HighScoresComponentScreenRenderOptions;
 
     constructor(elements: HighScoresComponentScreenElements = {}) {
         this.elements = elements;
@@ -37,6 +39,13 @@ export class HighScoresComponentScreen {
     render(options: HighScoresComponentScreenRenderOptions = {}) {
         show(this.elements.lobbyMain, false);
         show(this.elements.screen, true);
+
+        if (
+            this.lastRenderedOptions &&
+            arePropsEqual(this.lastRenderedOptions, options)
+        ) {
+            return false;
+        }
 
         if (this.elements.table) {
             renderComponent(
@@ -51,6 +60,10 @@ export class HighScoresComponentScreen {
                 this.elements.playPrompt
             );
         }
+
+        this.lastRenderedOptions = options;
+
+        return true;
     }
 }
 

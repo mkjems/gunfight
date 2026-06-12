@@ -42,6 +42,11 @@ async function loadComponentScreens() {
         path.join(cacheDirectory, 'gunfight-component-screens-')
     );
 
+    compileClientModule(
+        'componentRenderProps.ts',
+        'componentRenderProps.js',
+        tempDirectory
+    );
     compileClientModule('config.ts', 'config.js', tempDirectory);
     compileClientModule(
         'gameHudComponentScreen.tsx',
@@ -263,6 +268,75 @@ test('renders and clears lobby screen sections', async function () {
     assert.equal(query(main, '#lobbyEditPrompt').hidden, true);
     assert.equal(main.querySelector('#lobbyEditPrompt').textContent, '');
     assert.equal(main.querySelector('#lobbyPlayPrompt').textContent, '');
+});
+
+test('skips virtual-DOM work when render props are value-equal', async function () {
+    const {
+        GameHudComponentScreen,
+        LobbyComponentScreen,
+        TouchLobbyControlsComponentScreen
+    } = await loadComponentScreens();
+    const browser = createBrowser();
+
+    const hud = new GameHudComponentScreen({ root: browser.createElement() });
+
+    function hudProps(timerLabel) {
+        return {
+            hitMessage: {
+                text: 'HIT!',
+                x: 475,
+                y: 320
+            },
+            leftScore: 1,
+            rightScore: 2,
+            roundMessage: '',
+            timerLabel
+        };
+    }
+
+    assert.equal(hud.render(hudProps(70)), true);
+    assert.equal(hud.render(hudProps(70)), false);
+    assert.equal(hud.render(hudProps(69)), true);
+
+    const touch = new TouchLobbyControlsComponentScreen({
+        root: browser.createElement()
+    });
+
+    function touchProps(showButtons) {
+        return {
+            onEdit() {},
+            onPlay() {},
+            showButtons,
+            visible: true
+        };
+    }
+
+    assert.equal(touch.render(touchProps(true)), true);
+    assert.equal(touch.render(touchProps(true)), false);
+    assert.equal(touch.render(touchProps(false)), true);
+
+    const lobby = new LobbyComponentScreen({
+        highScores: browser.createElement(),
+        main: browser.createElement()
+    });
+
+    function lobbyProps() {
+        return {
+            identityLines: ['YOU ARE ADA'],
+            slots: [
+                {
+                    label: 'P1',
+                    ready: false
+                }
+            ]
+        };
+    }
+
+    assert.equal(lobby.render(lobbyProps()), true);
+    assert.equal(lobby.render(lobbyProps()), false);
+    assert.equal(lobby.clear(), true);
+    assert.equal(lobby.clear(), false);
+    assert.equal(lobby.render(lobbyProps()), true);
 });
 
 test('renders touch lobby buttons and dispatches tap actions', async function () {

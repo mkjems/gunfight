@@ -1,4 +1,5 @@
 import { render as renderComponent } from 'preact';
+import { arePropsEqual } from './componentRenderProps.js';
 
 type NameEditorComponentScreenElements = {
     editor?: HTMLElement | null;
@@ -41,6 +42,7 @@ const emptyState: Required<NameEditorState> = {
 
 export class NameEditorComponentScreen {
     elements: NameEditorComponentScreenElements;
+    lastRenderedOptions?: NameEditorComponentScreenRenderOptions;
 
     constructor(elements: NameEditorComponentScreenElements = {}) {
         this.elements = elements;
@@ -51,12 +53,24 @@ export class NameEditorComponentScreen {
         show(this.elements.highScores, false);
         show(this.elements.editor, true);
 
-        if (this.elements.editor) {
-            renderComponent(
-                <NameEditorComponent {...options} />,
-                this.elements.editor
-            );
+        if (!this.elements.editor) {
+            return false;
         }
+
+        if (
+            this.lastRenderedOptions &&
+            arePropsEqual(this.lastRenderedOptions, options)
+        ) {
+            return false;
+        }
+
+        renderComponent(
+            <NameEditorComponent {...options} />,
+            this.elements.editor
+        );
+        this.lastRenderedOptions = options;
+
+        return true;
     }
 
     hide() {

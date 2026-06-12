@@ -1,4 +1,5 @@
 import { render as renderComponent } from 'preact';
+import { arePropsEqual } from './componentRenderProps.js';
 import { Config } from './config.js';
 
 type GameHudComponentScreenElements = {
@@ -25,18 +26,28 @@ type HitMessageProps = {
 
 export class GameHudComponentScreen {
     elements: GameHudComponentScreenElements;
+    lastRenderedOptions?: GameHudComponentScreenRenderOptions;
 
     constructor(elements: GameHudComponentScreenElements = {}) {
         this.elements = elements;
     }
 
     render(options: GameHudComponentScreenRenderOptions = {}) {
-        if (this.elements.root) {
-            renderComponent(
-                <GameHudComponent {...options} />,
-                this.elements.root
-            );
+        if (!this.elements.root) {
+            return false;
         }
+
+        if (
+            this.lastRenderedOptions &&
+            arePropsEqual(this.lastRenderedOptions, options)
+        ) {
+            return false;
+        }
+
+        renderComponent(<GameHudComponent {...options} />, this.elements.root);
+        this.lastRenderedOptions = options;
+
+        return true;
     }
 }
 
