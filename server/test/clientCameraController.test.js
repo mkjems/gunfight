@@ -120,6 +120,64 @@ test('calculates visible canvas screen from browser viewport', async function ()
     });
 });
 
+test('updates camera viewport and resets when camera is disabled', async function () {
+    const ClientCameraController = await loadClientCameraController();
+    const calls = [];
+    const controller = new ClientCameraController({
+        window: createWindow({
+            innerHeight: 480,
+            innerWidth: 700
+        })
+    });
+    const camera = {
+        follow(player) {
+            calls.push(['camera.follow', player.id]);
+        },
+        reset() {
+            calls.push('camera.reset');
+        },
+        setScale(scale) {
+            calls.push(['camera.setScale', scale]);
+        },
+        setScreenSize(width, height) {
+            calls.push(['camera.setScreenSize', width, height]);
+        },
+        setVisibleScreen(x, y, width, height) {
+            calls.push(['camera.setVisibleScreen', x, y, width, height]);
+        }
+    };
+    const canvas = {
+        height: 640,
+        width: 950,
+        getBoundingClientRect() {
+            return {
+                bottom: 640,
+                height: 640,
+                left: 0,
+                right: 950,
+                top: 0,
+                width: 950
+            };
+        }
+    };
+
+    controller.update({
+        camera,
+        canvas,
+        player: {
+            id: 'p1'
+        },
+        roundState: 'waiting'
+    });
+
+    assert.deepEqual(plain(calls), [
+        ['camera.setScreenSize', 950, 640],
+        ['camera.setVisibleScreen', 0, 0, 700, 480],
+        ['camera.setScale', 1],
+        'camera.reset'
+    ]);
+});
+
 test('projects world points through the active camera', async function () {
     const ClientCameraController = await loadClientCameraController();
     const controller = new ClientCameraController({

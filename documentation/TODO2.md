@@ -106,7 +106,7 @@ not own websocket, gameplay, or synchronization state.
     - Keep browser dependencies injectable for startup tests.
     - Prefer small local contracts over importing concrete classes everywhere.
 
-- [ ] P1.5.2 - Strengthen gameplay regression coverage before deeper canvas
+- [x] P1.5.2 - Strengthen gameplay regression coverage before deeper canvas
       extraction.
     - Cover frame update order, camera use, player/bullet lifecycle, obstacle
       collision environment updates, hit pause, round reset, and match end.

@@ -227,6 +227,27 @@ test('ends the game by recording the result and scheduling the start reset', asy
     ]);
 });
 
+test('ends the game with the start-screen reset callback when available', async function () {
+    const flow = await loadClientRoundEndFlow();
+    const resetCallbacks = [];
+    const resetRound = function resetRound() {};
+    const resetToStartScreen = function resetToStartScreen() {};
+    const { options } = createRoundOptions({
+        resetRound,
+        resetToStartScreen,
+        timers: {
+            clearMany() {},
+            set(name, callback) {
+                resetCallbacks.push([name, callback]);
+            }
+        }
+    });
+
+    flow.endGame(options);
+
+    assert.deepEqual(resetCallbacks, [['reset', resetToStartScreen]]);
+});
+
 test('does not record a game result without a socket or result payload', async function () {
     const flow = await loadClientRoundEndFlow();
     const withoutSocket = createRoundOptions({

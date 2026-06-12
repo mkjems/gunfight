@@ -95,6 +95,37 @@ test('bullets fire once per owner and expose snapshots', async function () {
     assert.deepEqual(bullets.all(), {});
 });
 
+test('bullets replace deleted shots and clear active scene figures', async function () {
+    const { Bullets } = await loadGameplayConstructors();
+    const figures = [];
+    const bullets = new Bullets({
+        addFigure(figure) {
+            figures.push(figure);
+        }
+    });
+    const player = {
+        aim: 4,
+        facing: 1,
+        playerId: 'p1',
+        x: 100,
+        y: 200
+    };
+    const firstBullet = bullets.fire(player);
+
+    firstBullet.deleteMe = true;
+
+    const replacementBullet = bullets.fire(player);
+
+    assert.notEqual(replacementBullet, firstBullet);
+    assert.equal(bullets.all().p1, replacementBullet);
+    assert.deepEqual(figures, [firstBullet, replacementBullet]);
+
+    bullets.clear();
+
+    assert.equal(replacementBullet.deleteMe, true);
+    assert.deepEqual(bullets.all(), {});
+});
+
 test('bullet collision lines reflect ricochets', async function () {
     const { Bullet } = await loadGameplayConstructors();
     const ricochets = [];

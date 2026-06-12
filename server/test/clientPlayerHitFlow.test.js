@@ -189,6 +189,70 @@ test('resets after hit and emits advance-round when local player won', async fun
     ]);
 });
 
+test('resets after remote hit without advancing the round locally', async function () {
+    const flow = await loadClientPlayerHitFlow();
+    const calls = [];
+
+    flow.resetAfterHit({
+        bullets: {
+            reset() {
+                calls.push('bullets.reset');
+            }
+        },
+        endGame() {
+            calls.push('endGame');
+        },
+        hasMatchTimeExpired() {
+            return false;
+        },
+        players: {
+            all: {
+                p1: {
+                    clearDeathAnimation() {
+                        calls.push('p1.clearDeathAnimation');
+                    }
+                },
+                p2: {
+                    clearDeathAnimation() {
+                        calls.push('p2.clearDeathAnimation');
+                    }
+                }
+            }
+        },
+        resetAmmo() {
+            calls.push('resetAmmo');
+        },
+        roundData: {
+            clearHitMessage() {
+                calls.push('roundData.clearHitMessage');
+            },
+            consumeAdvanceRoundAfterHit() {
+                calls.push('roundData.consumeAdvanceRoundAfterHit');
+
+                return false;
+            }
+        },
+        socket: {
+            emit(event) {
+                calls.push(['socket.emit', event]);
+            }
+        },
+        startRoundRitual(options) {
+            calls.push(['startRoundRitual', options.resetScores]);
+        }
+    });
+
+    assert.deepEqual(calls, [
+        'roundData.clearHitMessage',
+        'p1.clearDeathAnimation',
+        'p2.clearDeathAnimation',
+        'roundData.consumeAdvanceRoundAfterHit',
+        'bullets.reset',
+        'resetAmmo',
+        ['startRoundRitual', false]
+    ]);
+});
+
 test('ends the game after hit pause if match time expired', async function () {
     const flow = await loadClientPlayerHitFlow();
     const calls = [];

@@ -108,6 +108,33 @@ test('updates bullet collision lines from the current scenario', async function 
     ]);
 });
 
+test('clears bullet collision lines when no scenario is active', async function () {
+    const environment = await loadClientCollisionEnvironment();
+    const { calls, options } = createOptions({
+        scenario: null,
+        scenarioRenderer: {
+            getObstacleBodies() {
+                return ['body'];
+            },
+            getRockLines(nextScenario) {
+                calls.push([
+                    'scenarioRenderer.getRockLines',
+                    nextScenario && nextScenario.id
+                ]);
+
+                return [];
+            }
+        }
+    });
+
+    environment.updateBulletLines(options);
+
+    assert.deepEqual(plain(calls), [
+        ['scenarioRenderer.getRockLines', null],
+        ['Bullet.setCollisionLines', []]
+    ]);
+});
+
 test('updates obstacle bodies from the current scenario during play', async function () {
     const environment = await loadClientCollisionEnvironment();
     const { calls, options } = createOptions();
