@@ -12,7 +12,8 @@
         "lint": "eslint --no-error-on-unmatched-pattern scripts \"server/**/*.js\" client/src browser-smoke playwright.config.js",
         "typecheck": "tsc --project tsconfig.json && tsc --project tsconfig.shared.json && tsc --project tsconfig.client.json",
         "test": "npm run build && node --test dist/server/test/*.test.js",
-        "test:browser": "npm run build && playwright test"
+        "test:browser": "npm run build && playwright test",
+        "test:browser:headed": "npm run build && PLAYWRIGHT_SCREENSHOTS=1 playwright test --headed --output=playwright-screenshots"
     },
     "dependencies": {
         "express": "^5.1.0",

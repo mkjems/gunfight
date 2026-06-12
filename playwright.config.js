@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 const smokePort = process.env.PLAYWRIGHT_PORT || '18080';
 const baseURL =
     process.env.PLAYWRIGHT_BASE_URL || `http://127.0.0.1:${smokePort}`;
+const screenshotMode = process.env.PLAYWRIGHT_SCREENSHOTS ? 'on' : 'off';
 
 export default defineConfig({
     expect: {
@@ -20,6 +21,7 @@ export default defineConfig({
     timeout: 30000,
     use: {
         baseURL,
+        screenshot: screenshotMode,
         trace: 'on-first-retry'
     },
     webServer: process.env.PLAYWRIGHT_BASE_URL

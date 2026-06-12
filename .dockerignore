@@ -3,6 +3,9 @@
 .codex
 node_modules
 dist
+playwright-report
+playwright-screenshots
+test-results
 npm-debug.log
 Dockerfile
 compose.yaml
