@@ -13,7 +13,7 @@
         "typecheck": "tsc --project tsconfig.json && tsc --project tsconfig.shared.json && tsc --project tsconfig.client.json",
         "test": "npm run build && node --test dist/server/test/*.test.js",
         "test:browser": "npm run build && playwright test",
-        "test:browser:headed": "npm run build && PLAYWRIGHT_SCREENSHOTS=1 playwright test --headed --output=playwright-screenshots"
+        "test:browser:ui": "npm run build && PLAYWRIGHT_SCREENSHOTS=1 playwright test --headed --output=playwright-screenshots"
     },
     "dependencies": {
         "express": "^5.1.0",

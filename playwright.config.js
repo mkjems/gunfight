@@ -31,5 +31,6 @@ export default defineConfig({
               reuseExistingServer: false,
               timeout: 30000,
               url: `${baseURL}/api`
-          }
+          },
+    workers: 1
 });
