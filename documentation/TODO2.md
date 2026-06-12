@@ -34,35 +34,51 @@
 ### P1.4.12.2 - Unify The Client UI Into One Preact Root
 
 Goal: stop filling islands of DOM. The client UI becomes one Preact app
-      rendered into a single root element, so components express composition and
-      rich interfaces instead of renting containers. The canvases stay outside the
-      component tree.
+rendered into a single root element, so components express composition and
+rich interfaces instead of renting containers. The canvases stay outside the
+component tree.
 
-Goal: Implement good code architecture so we have a nice expressive way to write user interface and also a speedy gameplay, and fluent virtual touch controls. 
-      The app is a SPA with websocket connection to the server.
-      We want the socket events to be able to send control messages to the Preact app that will affect the state, and the render tree off the preact app.
+Goal: Implement good code architecture so we have a nice expressive way to write user interface and also a speedy gameplay, and fluent virtual touch controls.
+The app is a SPA with websocket connection to the server.
+Socket events update the existing client runtime state through network and
+flow modules, and websocket messages may drive visible Preact UI changes
+through that path. The flows then derive one Preact props tree. Components do
+not own websocket, gameplay, or synchronization state.
 
 - [ ] Render the whole DOM UI from a single app root.
-    - Replace the per-screen containers in `index.html` with one app root element.
+    - Replace the per-screen containers in `index.html` with one app root element inside `gameStage`.
+    - Move the rotate prompt and install prompt markup out of static HTML and into the app root.
     - Render one app component from one guarded render call.
     - Keep the gameplay canvas and HUD canvas as static elements outside the app.
 - [ ] Build a single overlay view model.
-    - Flows assemble one props tree: active screen plus per-screen props.
+    - Flows assemble one props tree: active screen, screen props, prompt props, and touch-control visibility props.
     - Keep `ClientScreens` as the only owner of the active-screen decision.
+    - Keep socket callbacks routed through the existing runtime state and flow modules before rendering app props.
+    - Add a narrow socket-to-UI message path for server-driven UI events that are not gameplay simulation state.
+    - Server-driven UI messages become explicit app props or transient UI state owned by a flow module, then trigger the guarded app render.
     - Keep the per-frame rendering rule: one value-equality check per frame, Preact idles when nothing changed.
+- [ ] Add a `ClientApp` component and app mount API.
+    - The app component composes game HUD, lobby, high scores, name editor, rotate prompt, install prompt, touch lobby controls, and touch gameplay controls.
+    - The app mount stores the last rendered props and does the single value-equality guard.
+    - The app mount exposes a post-render hook so imperative modules can acquire DOM references after the first render.
 - [ ] Replace screen wrapper classes with plain components composed in JSX.
     - Screen selection becomes declarative composition in the app component, not hidden-flag side effects.
-    - Collapse `ClientUi`/`ClientHudOverlay` element wiring into the app mount.
+    - Collapse `ClientUi`/`ClientHudOverlay` element wiring into the app mount, then delete obsolete wrapper modules.
+    - Preserve public element ids used by CSS, tests, and browser smoke checks.
     - Update screen unit tests to render components through the app root with view-model props.
 - [ ] Convert the rotate prompt to a component.
     - It is CSS/orientation driven, so the component is markup only.
 - [ ] Convert the install prompt to a component.
     - Keep `beforeinstallprompt` handling, service worker registration, and dismiss persistence in the existing module.
+    - Reconnect the install prompt module to startup; it should not remain orphaned from the built client bundle.
     - The component renders markup and emits install/dismiss actions.
 - [ ] Keep touch gameplay controls mounted and imperative inside the app.
     - The joystick/aim/fire subtree stays always mounted with visibility props so imperatively bound pointer listeners and styles survive re-renders.
-    - Re-acquire element references after the first app render.
+    - Re-acquire element references and bind pointer listeners after the first app render.
+    - Keep joystick knob transforms and aim handle positions as imperative updates in `touchControls.ts`.
 - [ ] Verify layout, PWA behavior, and update the architecture docs.
+    - Fix stale `documentation/TODO.md` references in package scripts so `npm run check` can run the whole baseline.
+    - Update unit and browser smoke tests from component-island wording to single-root app wording.
     - Verify mobile layout, touch positioning over the canvas, and service worker behavior.
     - Update `documentation/UI-ownership.md` and `documentation/Architecture-flow.md` to the single-root model.
 
@@ -93,26 +109,26 @@ Goal: Implement good code architecture so we have a nice expressive way to write
     - Add focused tests for edge cases before refactoring the code that owns them.
     - Keep browser smoke tests as the full-app wiring guard.
 
-
 ## P2 - Lobby redesign
 
-- [ ] Show main lobby screen for 30 secs and high score screen for only 7 secs 
-- [ ] Do not show game ID in the main-lobby. Remove line 
+- [ ] Show main lobby screen for 30 secs and high score screen for only 7 secs
+- [ ] Do not show game ID in the main-lobby. Remove line
 
 - [ ] Implement new design for lobby from image
-- [ ] Do not show characters in the background on the high-scores-page. 
-
+- [ ] Do not show characters in the background on the high-scores-page.
 
 ## P3 - Content Authoring Tools
 
 ### P3.1 Add a rock editor page.
+
 - [ ] Add a rock editor page.
     - [ ] Provide a WYSIWYG preview for rock dimensions and polygon shape.
     - [ ] Accept rock JSON as input.
     - [ ] Output rock JSON for copying into project data.
     - [ ] Validate JSON and geometry with readable errors.
 
-## P3.5 Add a scenario editor page. 
+## P3.5 Add a scenario editor page.
+
 - [ ] Add a scenario editor page.
     - [ ] Provide a WYSIWYG preview of the full arena scenario.
     - [ ] Let the user place and adjust rocks, cacti, wagons, saloons, decorations, and player start positions.
@@ -121,6 +137,7 @@ Goal: Implement good code architecture so we have a nice expressive way to write
     - [ ] Validate JSON and scenario geometry with readable errors.
 
 ## P4 - Later Ideas
+
 - [ ] Add persistent high scores with a database.
 - [ ] Add private room codes.
 - [ ] Add spectator mode.
