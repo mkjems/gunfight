@@ -317,7 +317,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - Keep the factories close to existing module boundaries.
     - Preserve test seams at the flow/module level.
 
-- [ ] Narrow `createGame` toward a small set of dependencies.
+- [x] Narrow `createGame` toward a small set of dependencies.
     - Prefer browser dependencies plus a few grouped factories over dozens of individual module constructors.
     - Keep `document`, `window`, and `Image` injectable for browser startup tests.
     - Let full-app wiring be covered by browser smoke and later end-to-end tests.

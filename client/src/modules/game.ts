@@ -2,7 +2,7 @@ type AnyFunction = (...args: any[]) => any;
 type AnyModule = Record<string, any>;
 type AnyDependency = any;
 
-export type ClientGameDependencies = {
+type ClientGameRuntimeModules = {
     AmmoHudRenderer: AnyDependency;
     Camera: AnyDependency;
     CanvasTools: AnyModule;
@@ -70,6 +70,68 @@ export type ClientGameDependencies = {
     ClientUi: AnyModule;
 };
 
+export type ClientGameDependencies = {
+    bootstrap: {
+        ClientAssets: AnyDependency;
+        ClientCanvasSetup: AnyModule;
+        ClientGameLoop: AnyDependency;
+        ClientGameSystems: AnyModule;
+        ClientInputStartup: AnyModule;
+        ClientNetwork: AnyDependency;
+        requestAnimFrame: AnyFunction;
+    };
+    environment: {
+        CanvasTools: AnyModule;
+        ClientCollisionEnvironment: AnyModule;
+        Collision: AnyModule;
+        Obstacles: AnyModule;
+    };
+    flow: {
+        ClientAmmoFlow: AnyModule;
+        ClientFrameFlow: AnyModule;
+        ClientHitDetection: AnyModule;
+        ClientKeyEventFlow: AnyModule;
+        ClientLobbyFlow: AnyModule;
+        ClientMatchTimer: AnyModule;
+        ClientModelUpdateFlow: AnyModule;
+        ClientNameEditorFlow: AnyModule;
+        ClientObstacleSync: AnyModule;
+        ClientPlayerHitFlow: AnyModule;
+        ClientRoundEndFlow: AnyModule;
+        ClientRoundResetFlow: AnyModule;
+        ClientRoundRitual: AnyModule;
+        ClientRoundTransition: AnyModule;
+        ClientTouchControlsFlow: AnyModule;
+    };
+    model: {
+        ClientLobbyViewModel: AnyModule;
+        ClientModelSync: AnyModule;
+        ClientScreens: ClientGameRuntimeModules['ClientScreens'];
+    };
+    platform: {
+        Config: ClientGameRuntimeModules['Config'];
+    };
+    ui: {
+        AmmoHudRenderer: AnyDependency;
+        ClientHudFlow: AnyModule;
+        ClientLobbyHudFlow: AnyModule;
+        ClientUi: AnyModule;
+    };
+    browserConstructors: {
+        Camera: AnyDependency;
+        ClientCameraController: AnyDependency;
+        ClientGameSounds: AnyDependency;
+        ClientIdentity: AnyDependency;
+        ClientTouchEnvironment: AnyModule;
+        CollisionDebugRenderer: AnyDependency;
+        KeysModel: AnyDependency;
+        NameEditor: AnyDependency;
+        ScenarioRenderer: AnyDependency;
+        SoundEffects: AnyDependency;
+        TouchControls: AnyDependency;
+    };
+};
+
 export type ClientGameBrowser = {
     document?: Document;
     Image?: typeof globalThis.Image;
@@ -81,9 +143,10 @@ export type ClientGameController = {
 };
 
 export function createGame(
-    dependencies: ClientGameDependencies,
+    groupedDependencies: ClientGameDependencies,
     browser: ClientGameBrowser = {}
 ): ClientGameController {
+    const dependencies = flattenDependencies(groupedDependencies);
     const document = browser.document || globalThis.document;
     const window = browser.window || globalThis.window;
     const Image = browser.Image || globalThis.Image;
@@ -880,4 +943,18 @@ export function createGame(
             start: startOnce
         };
     })();
+}
+
+function flattenDependencies(
+    dependencies: ClientGameDependencies
+): ClientGameRuntimeModules {
+    return {
+        ...dependencies.bootstrap,
+        ...dependencies.environment,
+        ...dependencies.flow,
+        ...dependencies.model,
+        ...dependencies.platform,
+        ...dependencies.ui,
+        ...dependencies.browserConstructors
+    };
 }

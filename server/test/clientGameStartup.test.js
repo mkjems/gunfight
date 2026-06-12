@@ -59,97 +59,9 @@ async function loadClientGame(readyState) {
     const createGame = await loadCreateGame();
     const document = createDocument(readyState);
     let networkStarts = 0;
-    const dependencies = {
-        AmmoHudRenderer: function () {},
-        Camera: function () {},
-        ClientAssets: function () {
-            this.sprites = {
-                ammo: {},
-                cactus: {},
-                saloon: {},
-                wagon: {}
-            };
-            this.getRockPattern = function () {
-                return null;
-            };
-            this.load = function () {};
-        },
-        ClientCameraController: function () {
-            this.getCameraScale = function () {
-                return 1;
-            };
-        },
-        ClientCanvasSetup: {
-            create() {
-                return {
-                    canvas: {},
-                    context: {},
-                    hudCanvas: {},
-                    hudContext: {}
-                };
-            }
-        },
-        ClientGameSounds: function () {
-            this.playRicochet = function () {};
-        },
-        ClientGameSystems: {
-            create(options) {
-                return {
-                    ammo: {},
-                    bullets: {},
-                    highScores: [],
-                    localReadyRequested: false,
-                    players: {},
-                    positionSync: {},
-                    roundData: {},
-                    roundIntro: {},
-                    roundState: options.initialRoundState,
-                    scene: {},
-                    scoreKeeper: {},
-                    timers: {}
-                };
-            }
-        },
-        ClientUi: {
-            create() {
-                return {
-                    gameHud: {},
-                    gameHudScreen: {},
-                    highScoresScreen: {},
-                    lobbyHud: {},
-                    lobbyScreen: {},
-                    nameEditorScreen: {}
-                };
-            }
-        },
-        ClientIdentity: function () {},
-        ClientNetwork: function () {
-            networkStarts += 1;
-            this.socket = {};
-        },
-        ClientScreens: {
-            RoundState: {
-                WAITING: 'waiting'
-            }
-        },
-        CollisionDebugRenderer: function () {},
-        Config: {
-            canvas: {
-                height: 200,
-                width: 300
-            },
-            game: {
-                seconds: 60
-            }
-        },
-        NameEditor: function () {
-            this.isActive = function () {
-                return false;
-            };
-        },
-        ScenarioRenderer: function () {},
-        SoundEffects: function () {}
-    };
+    const dependencies = createStartupDependencies(function () {
+        networkStarts += 1;
+    });
     const game = createGame(dependencies, {
         document: document,
         Image: function () {},
@@ -164,6 +76,127 @@ async function loadClientGame(readyState) {
             return networkStarts;
         },
         game
+    };
+}
+
+function createStartupDependencies(onNetworkStart) {
+    return {
+        bootstrap: {
+            ClientAssets: function () {
+                this.sprites = {
+                    ammo: {},
+                    cactus: {},
+                    saloon: {},
+                    wagon: {}
+                };
+                this.getRockPattern = function () {
+                    return null;
+                };
+                this.load = function () {};
+            },
+            ClientCanvasSetup: {
+                create() {
+                    return {
+                        canvas: {},
+                        context: {},
+                        hudCanvas: {},
+                        hudContext: {}
+                    };
+                }
+            },
+            ClientGameLoop: function () {},
+            ClientGameSystems: {
+                create(options) {
+                    return {
+                        ammo: {},
+                        bullets: {},
+                        highScores: [],
+                        localReadyRequested: false,
+                        players: {},
+                        positionSync: {},
+                        roundData: {},
+                        roundIntro: {},
+                        roundState: options.initialRoundState,
+                        scene: {},
+                        scoreKeeper: {},
+                        timers: {}
+                    };
+                }
+            },
+            ClientInputStartup: {},
+            ClientNetwork: function () {
+                onNetworkStart();
+                this.socket = {};
+            },
+            requestAnimFrame: function () {}
+        },
+        environment: {
+            CanvasTools: {},
+            ClientCollisionEnvironment: {},
+            Collision: {},
+            Obstacles: {}
+        },
+        flow: {},
+        model: {
+            ClientLobbyViewModel: {},
+            ClientModelSync: {},
+            ClientScreens: {
+                RoundState: {
+                    WAITING: 'waiting'
+                }
+            }
+        },
+        platform: {
+            Config: {
+                canvas: {
+                    height: 200,
+                    width: 300
+                },
+                game: {
+                    seconds: 60
+                }
+            }
+        },
+        ui: {
+            AmmoHudRenderer: function () {},
+            ClientHudFlow: {},
+            ClientLobbyHudFlow: {},
+            ClientUi: {
+                create() {
+                    return {
+                        gameHud: {},
+                        gameHudScreen: {},
+                        highScoresScreen: {},
+                        lobbyHud: {},
+                        lobbyScreen: {},
+                        nameEditorScreen: {}
+                    };
+                }
+            }
+        },
+        browserConstructors: {
+            Camera: function () {},
+            ClientCameraController: function () {
+                this.getCameraScale = function () {
+                    return 1;
+                };
+            },
+            ClientGameSounds: function () {
+                this.playRicochet = function () {};
+            },
+            ClientIdentity: function () {},
+            ClientTouchEnvironment: {},
+            CollisionDebugRenderer: function () {},
+            KeysModel: function () {},
+            NameEditor: function () {
+                this.isActive = function () {
+                    return false;
+                };
+            },
+            ScenarioRenderer: function () {},
+            SoundEffects: function () {},
+            TouchControls: function () {}
+        }
     };
 }
 
