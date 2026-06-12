@@ -44,8 +44,8 @@ const keyboardIdleDuration = 15000;
 const canvasWidth = 950;
 const canvasHeight = 640;
 const markerOffsetY = -122;
-const nameOffsetY = 52;
-const statusOffsetY = 84;
+const nameOffsetY = 42;
+const statusOffsetY = 74;
 
 type LobbyPlayerPosition = {
     x: number;

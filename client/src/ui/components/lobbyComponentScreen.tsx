@@ -33,8 +33,8 @@ type TextProps = {
 export function LobbyMain(options: LobbyComponentProps = {}) {
     return (
         <>
-            <h1>GUNFIGHT 1975</h1>
-            <div id="lobbyInstructions">
+            <div class="lobbyInstructions">
+                <h1>GUNFIGHT 1975</h1>
                 <div id="lobbyControlsText" hidden={!options.showControls}>
                     <Lines lines={options.controls || []} />
                 </div>

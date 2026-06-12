@@ -314,7 +314,7 @@ h2 {
     margin: 0 0 clamp(42px, 11cqh, 78px);
 }
 
-#lobbyInstructions {
+.lobbyInstructions {
     align-items: center;
     display: flex;
     flex-direction: column;

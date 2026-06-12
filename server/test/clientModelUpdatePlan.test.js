@@ -100,27 +100,27 @@ test('plans a round start when a waiting game becomes ready', async function () 
                 resetChangedSlots: true,
                 slots: [
                     {
-                        x: 120,
-                        y: 430,
+                        x: 150,
+                        y: 400,
                         facing: 1,
                         frame: 0,
                         movementBounds: {
-                            minX: 76,
-                            maxX: 280,
-                            minY: 350,
-                            maxY: 470
+                            minX: 106,
+                            maxX: 310,
+                            minY: 320,
+                            maxY: 440
                         }
                     },
                     {
-                        x: 830,
-                        y: 430,
+                        x: 800,
+                        y: 400,
                         facing: -1,
                         frame: 2,
                         movementBounds: {
-                            minX: 670,
-                            maxX: 874,
-                            minY: 350,
-                            maxY: 470
+                            minX: 640,
+                            maxX: 844,
+                            minY: 320,
+                            maxY: 440
                         }
                     }
                 ]

@@ -75,28 +75,28 @@ test('builds lobby view models for keyboard clients', async function () {
                     negative: false,
                     text: 'PLAYER 1 - ACE',
                     x: 10,
-                    y: 58.125
+                    y: 56.5625
                 },
                 {
                     key: 'p1-status',
                     negative: false,
                     text: 'WAITING',
                     x: 10,
-                    y: 63.125
+                    y: 61.5625
                 },
                 {
                     key: 'p2-name',
                     negative: false,
                     text: 'PLAYER 2 - PLAYER 2',
                     x: 90,
-                    y: 58.125
+                    y: 56.5625
                 },
                 {
                     key: 'p2-status',
                     negative: true,
                     text: 'READY',
                     x: 90,
-                    y: 63.125
+                    y: 61.5625
                 }
             ],
             showEditPrompt: true,
