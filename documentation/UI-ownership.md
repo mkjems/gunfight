@@ -148,6 +148,6 @@ P1.4.11 chose Preact for the first component island.
   imperative.
 
 The first runtime islands are the high scores screen table/prompt, the lobby
-screen sections, and the name editor screen behind the existing
+screen sections, the name editor screen, and the game HUD labels behind the existing
 `ClientHudOverlay` boundary. The old imperative screen modules can stay as
 references until the rest of P1.4.12 removes obsolete screen modules.

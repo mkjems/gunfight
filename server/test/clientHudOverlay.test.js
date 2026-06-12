@@ -110,6 +110,7 @@ test('creates HUD screens from DOM elements', async function () {
                 {
                     hitMessage: 'hitMessage',
                     roundMessage: 'roundMessage',
+                    root: 'gameHud',
                     scoreLeft: 'scoreLeft',
                     scoreRight: 'scoreRight',
                     timer: 'roundTimer'

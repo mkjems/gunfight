@@ -28,6 +28,7 @@ function getConstructor<K extends keyof OverlayConstructors>(
 
 export function create(options: ClientHudOverlayOptions) {
     const document = options.document;
+    const gameHud = document.getElementById('gameHud');
     const lobbyMain = document.getElementById('lobby-main');
     const highScores = document.getElementById('highScoresScreen');
     const GameHud = getConstructor(options, 'GameHud');
@@ -36,9 +37,10 @@ export function create(options: ClientHudOverlayOptions) {
     const NameEditorScreen = getConstructor(options, 'NameEditorScreen');
 
     return {
-        gameHud: document.getElementById('gameHud'),
+        gameHud,
         lobbyHud: document.getElementById('lobbyHud'),
         gameHudScreen: new GameHud({
+            root: gameHud,
             scoreLeft: document.getElementById('scoreLeft'),
             scoreRight: document.getElementById('scoreRight'),
             timer: document.getElementById('roundTimer'),

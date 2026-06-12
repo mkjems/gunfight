@@ -201,7 +201,13 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
 
     await Promise.all([
         expect(desktop.locator('#gameHud')).toBeVisible(),
+        expect(desktop.locator('#scoreRow')).toBeVisible(),
+        expect(desktop.locator('#scoreLeft')).toHaveText('0'),
+        expect(desktop.locator('#scoreRight')).toHaveText('0'),
         expect(mobile.locator('#gameHud')).toBeVisible(),
+        expect(mobile.locator('#scoreRow')).toBeVisible(),
+        expect(mobile.locator('#scoreLeft')).toHaveText('0'),
+        expect(mobile.locator('#scoreRight')).toHaveText('0'),
         expect(mobile.locator('#touchJoystick')).toBeVisible(),
         expect(mobile.locator('#touchAimSlider')).toBeVisible(),
         expect(mobile.locator('#touchShootButton')).toBeVisible()
