@@ -82,6 +82,15 @@ not own websocket, gameplay, or synchronization state.
     - [x] Verify mobile layout, touch positioning over the canvas, and service worker behavior.
     - [x] Update `documentation/UI-ownership.md` and `documentation/Architecture-flow.md` to the single-root model.
 
+## P1.4.9 - improve client side folder structure
+
+- [ ] Investigate if it is possible to come up with a better folder structure for the client code
+    - Conveys meaning and is logical - you should be able to read the architecture idea. 
+    - Reflects the overall architecture
+    - Future proof to the extent possible 
+    - separate things like the game play from the preact component screens for example
+- [ ] Implement better folder structure
+
 ### P1.5 - Tighten The Canvas Gameplay Core
 
 - [ ] Treat canvas gameplay as a small imperative game engine behind the component UI.
