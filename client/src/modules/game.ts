@@ -4,24 +4,19 @@ type AnyDependency = any;
 
 export type ClientGameDependencies = {
     AmmoHudRenderer: AnyDependency;
-    Bullet: AnyDependency;
-    Bullets: AnyDependency;
     Camera: AnyDependency;
     CanvasTools: AnyModule;
-    ClientAmmo: AnyDependency;
     ClientAmmoFlow: AnyModule;
     ClientAssets: AnyDependency;
     ClientCameraController: AnyDependency;
     ClientCanvasSetup: AnyModule;
     ClientCollisionEnvironment: AnyModule;
     ClientFrameFlow: AnyModule;
-    ClientGameplayInput: AnyModule;
     ClientGameLoop: AnyDependency;
     ClientGameSounds: AnyDependency;
     ClientGameSystems: AnyModule;
     ClientHitDetection: AnyModule;
     ClientHudFlow: AnyModule;
-    ClientHudOverlay: AnyModule;
     ClientIdentity: AnyDependency;
     ClientInputStartup: AnyModule;
     ClientKeyEventFlow: AnyModule;
@@ -31,7 +26,6 @@ export type ClientGameDependencies = {
     ClientMatchTimer: AnyModule;
     ClientModelSync: AnyModule;
     ClientModelUpdateFlow: AnyModule;
-    ClientModelUpdatePlan: AnyModule;
     ClientNameEditorFlow: AnyModule;
     ClientNetwork: AnyDependency;
     ClientObstacleSync: AnyModule;
@@ -39,7 +33,6 @@ export type ClientGameDependencies = {
     ClientRoundEndFlow: AnyModule;
     ClientRoundResetFlow: AnyModule;
     ClientRoundRitual: AnyModule;
-    ClientRoundState: AnyDependency;
     ClientRoundTransition: AnyModule;
     ClientScreens: AnyModule & {
         RoundState: {
@@ -51,13 +44,10 @@ export type ClientGameDependencies = {
             WAITING: string;
         };
     };
-    ClientTimers: AnyDependency;
     ClientTouchControlsFlow: AnyModule;
     ClientTouchEnvironment: AnyModule;
-    ClientTouchState: AnyModule;
     Collision: AnyModule;
     CollisionDebugRenderer: AnyDependency;
-    Color: AnyModule;
     Config: AnyModule & {
         canvas: {
             height: number;
@@ -70,26 +60,14 @@ export type ClientGameDependencies = {
             defaultAim: number;
         };
     };
-    Controllable: AnyDependency;
-    GameHud: AnyDependency;
-    GameHudViewModel: AnyModule;
-    HighScoresScreen: AnyDependency;
-    InstallPrompt: AnyDependency;
     KeysModel: AnyDependency;
-    LobbyScreen: AnyDependency;
     NameEditor: AnyDependency;
-    NameEditorScreen: AnyDependency;
     Obstacles: AnyModule;
-    Pen: AnyDependency;
-    PlayerPositionSync: AnyDependency;
-    Players: AnyDependency;
     requestAnimFrame: AnyFunction;
-    RoundIntro: AnyDependency;
     ScenarioRenderer: AnyDependency;
-    Scene: AnyDependency;
-    ScoreKeeper: AnyDependency;
     SoundEffects: AnyDependency;
     TouchControls: AnyDependency;
+    ClientUi: AnyModule;
 };
 
 export type ClientGameBrowser = {
@@ -197,12 +175,8 @@ export function createGame(
         }
 
         function initHudOverlay() {
-            var overlay = dependencies.ClientHudOverlay.create({
-                document: document,
-                GameHud: dependencies.GameHud,
-                HighScoresScreen: dependencies.HighScoresScreen,
-                LobbyScreen: dependencies.LobbyScreen,
-                NameEditorScreen: dependencies.NameEditorScreen
+            var overlay = dependencies.ClientUi.create({
+                document: document
             });
 
             gameHud = overlay.gameHud;
@@ -275,16 +249,6 @@ export function createGame(
 
         function initGameState() {
             var systems = dependencies.ClientGameSystems.create({
-                Bullet: dependencies.Bullet,
-                Bullets: dependencies.Bullets,
-                ClientAmmo: dependencies.ClientAmmo,
-                ClientRoundState: dependencies.ClientRoundState,
-                ClientTimers: dependencies.ClientTimers,
-                PlayerPositionSync: dependencies.PlayerPositionSync,
-                Players: dependencies.Players,
-                RoundIntro: dependencies.RoundIntro,
-                Scene: dependencies.Scene,
-                ScoreKeeper: dependencies.ScoreKeeper,
                 initialRoundState: RoundState.WAITING,
                 playRicochet: gameSounds.playRicochet
             });
@@ -371,7 +335,6 @@ export function createGame(
 
         function updateBulletCollisionEnvironment() {
             dependencies.ClientCollisionEnvironment.updateBulletLines({
-                Bullet: dependencies.Bullet,
                 scenario: getCurrentScenario(),
                 scenarioRenderer: scenarioRenderer
             });
@@ -379,7 +342,6 @@ export function createGame(
 
         function updateMovementObstacleEnvironment() {
             dependencies.ClientCollisionEnvironment.updateObstacleBodies({
-                Obstacles: dependencies.Obstacles,
                 roundState: roundState,
                 scenario: getCurrentScenario(),
                 scenarioRenderer: scenarioRenderer

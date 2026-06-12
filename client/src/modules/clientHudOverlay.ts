@@ -1,39 +1,12 @@
 type HudElement = HTMLElement | null;
 type LobbySection = Element | ParentNode | null;
+type OverlayFactory = new (elements: any) => unknown;
 
 type OverlayConstructors = {
-    GameHud: new (elements: {
-        hitMessage: HudElement;
-        roundMessage: HudElement;
-        scoreLeft: HudElement;
-        scoreRight: HudElement;
-        timer: HudElement;
-    }) => unknown;
-    HighScoresScreen: new (elements: {
-        lobbyMain: HudElement;
-        playPrompt: HudElement;
-        screen: HudElement;
-        table: HudElement;
-    }) => unknown;
-    LobbyScreen: new (elements: {
-        controls: HudElement;
-        controlsSection: LobbySection;
-        editPrompt: HudElement;
-        editPromptSection: LobbySection;
-        highScores: HudElement;
-        identity: HudElement;
-        main: HudElement;
-        playPrompt: HudElement;
-        slots: HudElement;
-    }) => unknown;
-    NameEditorScreen: new (elements: {
-        editor: HudElement;
-        grid: HudElement;
-        help: HudElement;
-        highScores: HudElement;
-        lobbyMain: HudElement;
-        value: HudElement;
-    }) => unknown;
+    GameHud: OverlayFactory;
+    HighScoresScreen: OverlayFactory;
+    LobbyScreen: OverlayFactory;
+    NameEditorScreen: OverlayFactory;
 };
 
 type ClientHudOverlayOptions = OverlayConstructors & {

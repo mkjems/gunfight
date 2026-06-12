@@ -308,11 +308,11 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 
 ### P1.4.10.5 - Shrink The Client Bootstrap Dependency Bag
 
-- [ ] Treat the current `createGame` dependency bag as a migration scaffold, not the final shape.
+- [x] Treat the current `createGame` dependency bag as a migration scaffold, not the final shape.
     - Keep it useful while tests still need broad injection.
     - Avoid adding new one-off module dependencies directly to the top-level bag when a grouped factory would fit better.
 
-- [ ] Group runtime construction behind focused factories.
+- [x] Group runtime construction behind focused factories.
     - Add or strengthen factories such as `createClientSystems`, `createClientUi`, `createClientNetwork`, and `createGameRuntime` only where they reduce real bootstrap noise.
     - Keep the factories close to existing module boundaries.
     - Preserve test seams at the flow/module level.

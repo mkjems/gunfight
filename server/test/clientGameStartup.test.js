@@ -110,7 +110,7 @@ async function loadClientGame(readyState) {
                 };
             }
         },
-        ClientHudOverlay: {
+        ClientUi: {
             create() {
                 return {
                     gameHud: {},
