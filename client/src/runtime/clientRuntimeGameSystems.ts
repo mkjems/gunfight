@@ -17,16 +17,17 @@ type ClientRuntimeGameSystemsOptions = {
 
 export function create(options: ClientRuntimeGameSystemsOptions) {
     return ClientGameSystems.create({
-        Bullet: Bullet as any,
-        Bullets: Bullets as any,
-        ClientAmmo: ClientAmmo as any,
-        ClientRoundState: ClientRoundState as any,
-        ClientTimers: ClientTimers as any,
-        PlayerPositionSync: PlayerPositionSync as any,
-        Players: Players as any,
-        RoundIntro: RoundIntro as any,
-        Scene: Scene as any,
-        ScoreKeeper: ScoreKeeper as any,
+        Bullet,
+        createAmmo: () => ClientAmmo(),
+        createBullets: (scene: Scene) => new Bullets(scene),
+        createPlayers: (scene: Scene, bullets: Bullets) =>
+            new Players(scene, bullets),
+        createPositionSync: () => PlayerPositionSync(),
+        createRoundData: () => ClientRoundState(),
+        createRoundIntro: (players: Players) => RoundIntro({ players }),
+        createScene: () => new Scene(),
+        createScoreKeeper: () => ScoreKeeper(),
+        createTimers: () => ClientTimers(),
         initialRoundState: options.initialRoundState,
         playRicochet: options.playRicochet
     });

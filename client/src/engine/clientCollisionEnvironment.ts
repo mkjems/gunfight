@@ -1,27 +1,31 @@
 import { RoundState } from '../state/clientScreens.js';
 
-type CollisionEnvironmentOptions = {
+type CollisionEnvironmentOptions<TScenario, TLines, TBodies> = {
     Bullet: {
-        setCollisionLines: (lines: unknown) => void;
+        setCollisionLines: (lines: TLines) => void;
     };
     Obstacles: {
-        setBodies: (bodies: unknown) => void;
+        setBodies: (bodies: TBodies) => void;
     };
     roundState: RoundState;
-    scenario: unknown;
+    scenario: TScenario | null | undefined;
     scenarioRenderer: {
-        getObstacleBodies: (scenario: unknown) => unknown;
-        getRockLines: (scenario: unknown) => unknown;
+        getObstacleBodies: (scenario: TScenario | null | undefined) => TBodies;
+        getRockLines: (scenario: TScenario | null | undefined) => TLines;
     };
 };
 
-export function updateBulletLines(options: CollisionEnvironmentOptions) {
+export function updateBulletLines<TScenario, TLines, TBodies>(
+    options: CollisionEnvironmentOptions<TScenario, TLines, TBodies>
+) {
     options.Bullet.setCollisionLines(
         options.scenarioRenderer.getRockLines(options.scenario)
     );
 }
 
-export function updateObstacleBodies(options: CollisionEnvironmentOptions) {
+export function updateObstacleBodies<TScenario, TLines, TBodies>(
+    options: CollisionEnvironmentOptions<TScenario, TLines, TBodies>
+) {
     const scenario =
         options.roundState === RoundState.WAITING ? null : options.scenario;
 

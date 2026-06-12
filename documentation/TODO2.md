@@ -114,7 +114,7 @@ not own websocket, gameplay, or synchronization state.
       them.
     - Keep browser smoke tests as the full-app wiring guard.
 
-- [ ] P1.5.3 - Normalize factory and constructor conventions in gameplay
+- [x] P1.5.3 - Normalize factory and constructor conventions in gameplay
       modules.
     - Decide where function factories are intentional and where classes are
       clearer.

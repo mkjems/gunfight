@@ -1,7 +1,7 @@
 type Figure = {
     deleteMe?: boolean;
-    draw: (context: unknown) => void;
-    move: (lastUpdated: number, now: number) => void;
+    draw(context: unknown): void;
+    move(lastUpdated: number, now: number): void;
 };
 
 export class Scene {

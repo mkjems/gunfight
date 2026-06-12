@@ -16,7 +16,7 @@ type PlayerLike = {
         minX: number;
     };
     resetTo: (slot: PlayerSlot) => void;
-    slot: number;
+    slot?: number;
     x: number;
     y: number;
 };
@@ -65,7 +65,9 @@ export function RoundIntro(options: RoundIntroOptions) {
         Object.keys(players.all).forEach(function (id) {
             const player = players.all[id];
             const slot =
-                Config.player.slots[player.slot % Config.player.slots.length];
+                Config.player.slots[
+                    (player.slot || 0) % Config.player.slots.length
+                ];
 
             player.resetTo(slot);
             const bounds = player.getBounds();

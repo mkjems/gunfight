@@ -21,7 +21,7 @@ async function loadClientGameSystems() {
     return module.ClientGameSystems;
 }
 
-function createConstructors(calls) {
+function createSystemBuilders(calls) {
     function Scene() {
         this.kind = 'scene';
         calls.push('Scene');
@@ -48,29 +48,54 @@ function createConstructors(calls) {
 
     return {
         Bullet: {},
-        Bullets: Bullets,
-        ClientAmmo: function () {
-            this.kind = 'ammo';
+        createAmmo() {
             calls.push('ClientAmmo');
+
+            return {
+                kind: 'ammo'
+            };
         },
-        ClientRoundState: function () {
-            this.kind = 'roundData';
-            calls.push('ClientRoundState');
+        createBullets(scene) {
+            return new Bullets(scene);
         },
-        ClientTimers: function () {
-            this.kind = 'timers';
-            calls.push('ClientTimers');
+        createPlayers(scene, bullets) {
+            return new Players(scene, bullets);
         },
-        PlayerPositionSync: function () {
-            this.kind = 'positionSync';
+        createPositionSync() {
             calls.push('PlayerPositionSync');
+
+            return {
+                kind: 'positionSync'
+            };
         },
-        Players: Players,
-        RoundIntro: RoundIntro,
-        Scene: Scene,
-        ScoreKeeper: function () {
-            this.kind = 'scoreKeeper';
+        createRoundData() {
+            calls.push('ClientRoundState');
+
+            return {
+                kind: 'roundData'
+            };
+        },
+        createRoundIntro(players) {
+            return new RoundIntro({
+                players
+            });
+        },
+        createScene() {
+            return new Scene();
+        },
+        createScoreKeeper() {
             calls.push('ScoreKeeper');
+
+            return {
+                kind: 'scoreKeeper'
+            };
+        },
+        createTimers() {
+            calls.push('ClientTimers');
+
+            return {
+                kind: 'timers'
+            };
         }
     };
 }
@@ -79,14 +104,14 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('creates game systems with injectable constructors', async function () {
+test('creates game systems with injectable system builders', async function () {
     const systemsModule = await loadClientGameSystems();
     const calls = [];
-    const constructors = createConstructors(calls);
+    const builders = createSystemBuilders(calls);
     function playRicochet() {}
 
     const systems = systemsModule.create({
-        ...constructors,
+        ...builders,
         initialRoundState: 'waiting',
         playRicochet: playRicochet
     });
@@ -103,7 +128,7 @@ test('creates game systems with injectable constructors', async function () {
     assert.equal(systems.positionSync.kind, 'positionSync');
     assert.equal(systems.ammo.kind, 'ammo');
     assert.equal(systems.localReadyRequested, false);
-    assert.equal(constructors.Bullet.onRicochet, playRicochet);
+    assert.equal(builders.Bullet.onRicochet, playRicochet);
     assert.deepEqual(plain(calls), [
         'Scene',
         ['Bullets', 'scene'],
