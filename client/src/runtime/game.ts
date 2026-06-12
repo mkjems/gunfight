@@ -1,6 +1,347 @@
+import type { HighScoreEntry, Scenario } from '../../../shared/contracts.js';
+import type { RoundState as RoundStateValue } from '../state/clientScreens.js';
+
 type AnyFunction = (...args: any[]) => any;
 type AnyModule = Record<string, any>;
 type AnyDependency = any;
+type ClientId = number | string;
+
+type RuntimeSprite = {
+    complete?: boolean;
+    height?: number;
+    onload?: (() => void) | null;
+    src?: string;
+    width?: number;
+};
+
+type RuntimeCanvasSurfaces = {
+    canvas: HTMLCanvasElement;
+    context: CanvasRenderingContext2D;
+    hudCanvas: HTMLCanvasElement;
+    hudContext: CanvasRenderingContext2D;
+};
+
+type RuntimeApp = {
+    render: (state: unknown) => unknown;
+};
+
+type RuntimeInstallPrompt = {
+    getProps?: () => unknown;
+};
+
+type RuntimeAssets = {
+    getRockPattern: () => CanvasPattern | null;
+    load: () => void;
+    sprites: {
+        ammo: RuntimeSprite;
+        cactus: RuntimeSprite;
+        saloon: RuntimeSprite;
+        wagon: RuntimeSprite;
+    };
+};
+
+type RuntimeUi = {
+    app: RuntimeApp;
+    installPrompt?: RuntimeInstallPrompt;
+};
+
+type RuntimeCamera = {
+    apply: (context: CanvasRenderingContext2D) => void;
+    scale: number;
+    x: number;
+    y: number;
+};
+
+type RuntimeCameraController = {
+    getCameraScale: () => number;
+    shouldUseCamera: (options: {
+        camera: RuntimeCamera;
+        roundState: RoundStateValue;
+    }) => boolean;
+    update: (options: {
+        camera: RuntimeCamera;
+        canvas: HTMLCanvasElement;
+        player?: RuntimePlayer | null;
+        roundState: RoundStateValue;
+    }) => void;
+    worldToHudPoint?: (options: {
+        camera: RuntimeCamera;
+        roundState: RoundStateValue;
+        x: number;
+        y: number;
+    }) => {
+        x: number;
+        y: number;
+    };
+};
+
+type RuntimeGameSounds = {
+    playEmptyGun: () => void;
+    playGun: () => void;
+    playObstacleHit: (id?: string | null) => void;
+    playPain: () => void;
+    playReady: () => void;
+    playRicochet: () => void;
+};
+
+type RuntimeGameLoop = {
+    start: () => unknown;
+};
+
+type RuntimeScene = {
+    drawAll: (context: CanvasRenderingContext2D) => void;
+    moveAll: () => void;
+};
+
+type RuntimePlayer = {
+    aim: unknown;
+    clearDeathAnimation: () => void;
+    facing: unknown;
+    frame: number;
+    getAim?: () => number;
+    getHitBox?: () => {
+        height: number;
+        width: number;
+        x: number;
+        y: number;
+    };
+    playerId: ClientId;
+    playDeathAnimation?: () => void;
+    respondToKeyEvent?: (keyEvent: RuntimeKeyEvent) => void;
+    x: number;
+    y: number;
+};
+
+type RuntimePlayers = {
+    all: Record<string, RuntimePlayer | undefined>;
+    clearKeys: () => void;
+    label: (id?: ClientId | null) => string;
+    resetAll: (options: { slots: unknown }) => void;
+    sync: (model: RuntimeGameModel | null, options: unknown) => void;
+};
+
+type RuntimeBullet = {
+    deleteMe?: boolean;
+    getHitBox: () => {
+        height: number;
+        width: number;
+        x: number;
+        y: number;
+    };
+    ownerId: ClientId;
+    toSnapshot?: () => unknown;
+};
+
+type RuntimeBullets = {
+    all: () => Record<string, RuntimeBullet | null | undefined>;
+    clear: () => void;
+    fire: (
+        player: RuntimePlayer,
+        shot?: unknown
+    ) => RuntimeBullet | false | null | undefined;
+    remove: (id: ClientId) => void;
+    reset: () => void;
+};
+
+type RuntimeAmmo = {
+    get: (clientId: ClientId) => number;
+    hasAmmo: (clientId: ClientId) => boolean;
+    reloadIfAllEmpty: (clients?: RuntimeClient[]) => boolean;
+    reset: (clients?: RuntimeClient[]) => void;
+    spend: (clientId: ClientId) => boolean;
+};
+
+type RuntimeRoundData = {
+    clearHitMessage: () => void;
+    clearObstacleDamage: () => void;
+    clearRoundEnd: () => void;
+    clearRoundPauseFlags: () => void;
+    consumeAdvanceRoundAfterHit: () => boolean;
+    damageObstacle: (id: string) => void;
+    getHitMessage: () => { targetId: ClientId; text: string } | null;
+    getObstacleDamage: (id: string) => number;
+    getRoundEndsAt: () => number | null | undefined;
+    getRoundMessage: () => string;
+    getScenarioStartedAt: () => number | null;
+    getSecondsLeft: (defaultSeconds: number) => number;
+    hasMatchTimeExpired: () => boolean;
+    resetRoundFlags: () => void;
+    setAdvanceRoundAfterHit: (value: boolean) => void;
+    setHitMessage: (message: { targetId: ClientId; text: string }) => void;
+    setRoundEndsAt: (value: number) => void;
+    setRoundMessage: (message?: string) => void;
+    startScenario: () => void;
+};
+
+type RuntimeRoundIntro = {
+    clear: () => void;
+    complete: () => void;
+    start: () => void;
+    update: () => void;
+};
+
+type RuntimeScoreKeeper = {
+    addPoint: (slot: number) => void;
+    createGameResult?: (
+        model: RuntimeGameModel | null,
+        getClientName: (client: RuntimeClient) => string
+    ) => unknown;
+    getGameOverMessage: (
+        clients: RuntimeClient[] | undefined,
+        getClientName: (client: RuntimeClient) => string
+    ) => string;
+    getScore: (slot: number) => number;
+    resetRecordedResult: () => void;
+    resetScores: () => void;
+};
+
+type RuntimeTimers = {
+    clear: (name: string) => void;
+    clearMany: (names: string[]) => void;
+    has: (name: string) => boolean;
+    set: (name: string, callback: () => void, delay: number) => void;
+};
+
+type RuntimePositionSync = {
+    applyRemote: (options: {
+        data: RuntimePlayerPositionPayload;
+        localPlayerId?: ClientId | null;
+        players: RuntimePlayers;
+        playing: boolean;
+    }) => unknown;
+    syncLocal: (options: {
+        player?: RuntimePlayer | null;
+        playing: boolean;
+        socket: RuntimeSocket;
+    }) => unknown;
+};
+
+type RuntimeSystems = {
+    ammo: RuntimeAmmo;
+    bullets: RuntimeBullets;
+    highScores: HighScoreEntry[];
+    localReadyRequested: boolean;
+    players: RuntimePlayers;
+    positionSync: RuntimePositionSync;
+    roundData: RuntimeRoundData;
+    roundIntro: RuntimeRoundIntro;
+    roundState: RoundStateValue;
+    scene: RuntimeScene;
+    scoreKeeper: RuntimeScoreKeeper;
+    timers: RuntimeTimers;
+};
+
+type RuntimeScenarioRenderer = {
+    findBulletObstacleHit: (
+        allBullets: Record<string, RuntimeBullet | null | undefined>,
+        scenario?: Scenario | null
+    ) => RuntimeObstacleHit | null;
+    getObstacleBodies: (scenario?: Scenario | null) => unknown;
+    getRockLines: (scenario?: Scenario | null) => unknown;
+    render: (scenario?: Scenario | null) => void;
+};
+
+type RuntimeCollisionDebugRenderer = {
+    render: (options: unknown) => void;
+};
+
+type RuntimeNameEditor = {
+    close: (options?: { submit?: boolean }) => void;
+    handleKeyEvent: (keyEvent: RuntimeKeyEvent) => false | unknown;
+    isActive: () => boolean;
+    select: (rowIndex: number, colIndex: number) => void;
+    setName: (name: string) => void;
+};
+
+type RuntimeIdentity = {
+    getStoredPlayerName: () => string;
+    syncStoredPlayerName: (client?: RuntimeClient | null) => boolean;
+};
+
+type RuntimeInputController = {
+    isDown?: (key: string) => boolean;
+    press: (key: string) => void;
+    ready: () => void;
+    release: (key: string) => void;
+    releaseReady?: () => void;
+};
+
+type RuntimeTouchControls = {
+    mount: () => boolean;
+    update: (state: unknown) => unknown;
+};
+
+type RuntimeSocket = {
+    emit: (event: string, payload?: unknown) => void;
+};
+
+type RuntimeClient = {
+    id: ClientId;
+    name?: string;
+    ready?: boolean;
+    slot: number;
+};
+
+type RuntimeGameModel = {
+    clients: RuntimeClient[];
+    currentScenario?: Scenario | null;
+    gameId?: string;
+    message?: string;
+    playerLimit?: number;
+    roundNumber?: number;
+    status?: string;
+};
+
+type RuntimeJoinedGamePayload = {
+    model: RuntimeGameModel;
+    playerId: ClientId;
+};
+
+type RuntimeKeyEvent = {
+    action: string;
+    key: string;
+    player?: ClientId;
+    shot?: unknown;
+};
+
+type RuntimePlayerPositionPayload = {
+    aim: unknown;
+    facing: unknown;
+    frame: number;
+    player: ClientId;
+    x: number;
+    y: number;
+};
+
+type RuntimeObstacleDamagePayload = {
+    id: string;
+    ownerId: ClientId;
+    roundNumber?: number;
+};
+
+type RuntimeObstacleHit = {
+    bullet: RuntimeBullet;
+    obstacleId: string;
+};
+
+type RuntimePlayerHit = {
+    bullet: RuntimeBullet;
+    targetId: ClientId;
+    winnerId: ClientId;
+};
+
+type RuntimeHitDetectionResult =
+    | {
+          type: 'matchExpired' | 'none';
+      }
+    | {
+          hit: RuntimeObstacleHit;
+          type: 'obstacleHit';
+      }
+    | {
+          hit: RuntimePlayerHit;
+          type: 'playerHit';
+      };
 
 type ClientGameRuntimeModules = {
     AmmoHudRenderer: AnyDependency;
@@ -36,12 +377,12 @@ type ClientGameRuntimeModules = {
     ClientRoundTransition: AnyModule;
     ClientScreens: AnyModule & {
         RoundState: {
-            GAME_OVER: string;
-            HIT_PAUSE: string;
-            PLAYING: string;
-            RITUAL: string;
-            ROUND_OVER: string;
-            WAITING: string;
+            GAME_OVER: RoundStateValue;
+            HIT_PAUSE: RoundStateValue;
+            PLAYING: RoundStateValue;
+            RITUAL: RoundStateValue;
+            ROUND_OVER: RoundStateValue;
+            WAITING: RoundStateValue;
         };
     };
     ClientTouchControlsFlow: AnyModule;
@@ -152,48 +493,55 @@ export function createGame(
     const Image = browser.Image || globalThis.Image;
 
     return (function () {
-        var canvas: any,
-            context: any,
-            hudCanvas: any,
-            hudContext: any,
-            app: any,
-            installPrompt: any,
-            ammoHudRenderer: any,
-            assets: any,
-            scenarioRenderer: any,
-            collisionDebugRenderer: any,
-            identity: any,
-            nameEditor: any,
-            cameraController: any,
-            camera: any,
-            gameSounds: any,
-            gameLoop: any,
-            scene: any,
-            socket: any,
-            inputController: any,
-            touchControls: any,
-            players: any,
-            bullets: any,
-            roundState: any,
-            latestModel: any,
-            highScores: any,
-            scoreKeeper: any,
-            roundData: any,
-            timers: any,
-            positionSync: any,
-            ammo: any,
-            roundIntro: any,
-            localReadyRequested: any,
-            playerId: any;
-        var RoundState = dependencies.ClientScreens.RoundState;
-        var hasStarted = false;
+        let canvas: HTMLCanvasElement;
+        let context: CanvasRenderingContext2D;
+        let hudCanvas: HTMLCanvasElement;
+        let hudContext: CanvasRenderingContext2D;
+        let app: RuntimeApp;
+        let installPrompt: RuntimeInstallPrompt | undefined;
+        let ammoHudRenderer: {
+            render: (
+                ammo: number,
+                x: number,
+                y: number,
+                direction: number
+            ) => void;
+        };
+        let assets: RuntimeAssets;
+        let scenarioRenderer: RuntimeScenarioRenderer;
+        let collisionDebugRenderer: RuntimeCollisionDebugRenderer;
+        let identity: RuntimeIdentity;
+        let nameEditor: RuntimeNameEditor;
+        let cameraController: RuntimeCameraController;
+        let camera: RuntimeCamera;
+        let gameSounds: RuntimeGameSounds;
+        let gameLoop: RuntimeGameLoop;
+        let scene: RuntimeScene;
+        let socket: RuntimeSocket;
+        let inputController: RuntimeInputController | undefined;
+        let touchControls: RuntimeTouchControls | undefined;
+        let players: RuntimePlayers;
+        let bullets: RuntimeBullets;
+        let roundState: RoundStateValue;
+        let latestModel: RuntimeGameModel | null = null;
+        let highScores: HighScoreEntry[] = [];
+        let scoreKeeper: RuntimeScoreKeeper;
+        let roundData: RuntimeRoundData;
+        let timers: RuntimeTimers;
+        let positionSync: RuntimePositionSync;
+        let ammo: RuntimeAmmo;
+        let roundIntro: RuntimeRoundIntro;
+        let localReadyRequested = false;
+        let playerId: ClientId | null = null;
+        const RoundState = dependencies.ClientScreens.RoundState;
+        let hasStarted = false;
 
         function initCanvas() {
-            var surfaces = dependencies.ClientCanvasSetup.create({
+            const surfaces = dependencies.ClientCanvasSetup.create({
                 CanvasTools: dependencies.CanvasTools,
                 canvasConfig: dependencies.Config.canvas,
                 document: document
-            });
+            }) as RuntimeCanvasSurfaces;
 
             canvas = surfaces.canvas;
             context = surfaces.context;
@@ -221,7 +569,7 @@ export function createGame(
         function initAssets() {
             assets = new dependencies.ClientAssets({
                 Image: Image,
-                createRockPattern: function (image: any) {
+                createRockPattern: function (image: RuntimeSprite) {
                     return dependencies.CanvasTools.createScaledPattern({
                         context: context,
                         document: document,
@@ -234,7 +582,7 @@ export function createGame(
         }
 
         function initHudOverlay() {
-            var ui = dependencies.ClientUi.create({
+            const ui = dependencies.ClientUi.create({
                 document: document,
                 localStorage: window.localStorage,
                 onRenderRequest: function () {
@@ -243,7 +591,7 @@ export function createGame(
                     }
                 },
                 window: window
-            });
+            }) as RuntimeUi;
 
             app = ui.app;
             installPrompt = ui.installPrompt;
@@ -310,10 +658,10 @@ export function createGame(
         }
 
         function initGameState() {
-            var systems = dependencies.ClientGameSystems.create({
+            const systems = dependencies.ClientGameSystems.create({
                 initialRoundState: RoundState.WAITING,
                 playRicochet: gameSounds.playRicochet
-            });
+            }) as RuntimeSystems;
 
             scene = systems.scene;
             bullets = systems.bullets;
@@ -337,7 +685,7 @@ export function createGame(
             });
         }
 
-        function setRoundState(nextState: any) {
+        function setRoundState(nextState: RoundStateValue) {
             roundState = dependencies.ClientRoundTransition.resolve({
                 canTransition: dependencies.ClientScreens.canTransition,
                 currentState: roundState,
@@ -345,23 +693,35 @@ export function createGame(
             });
         }
 
-        function setRoundMessage(message: any) {
+        function setRoundMessage(message: string) {
             roundData.setRoundMessage(message);
             renderHud();
         }
 
-        function getPlayerSlot(id: any) {
+        function getPlayerSlot(id?: ClientId | null) {
             if (!latestModel) {
                 return -1;
             }
 
-            return latestModel.clients.findIndex(function (client: any) {
+            return latestModel.clients.findIndex(function (client) {
                 return client.id === id;
             });
         }
 
+        function getPlayer(id?: ClientId | null) {
+            if (id === null || typeof id === 'undefined') {
+                return undefined;
+            }
+
+            return players.all[id];
+        }
+
+        function getLocalPlayer() {
+            return getPlayer(playerId);
+        }
+
         function resetAmmo() {
-            ammo.reset(latestModel && latestModel.clients);
+            ammo.reset(latestModel?.clients);
         }
 
         function renderHud() {
@@ -413,11 +773,11 @@ export function createGame(
             });
         }
 
-        function getObstacleDamage(id: any) {
+        function getObstacleDamage(id: string) {
             return roundData.getObstacleDamage(id);
         }
 
-        function damageObstacle(id: any) {
+        function damageObstacle(id: string) {
             roundData.damageObstacle(id);
         }
 
@@ -428,7 +788,10 @@ export function createGame(
                 localReadyRequested: localReadyRequested,
                 model: latestModel,
                 nameEditor: nameEditor,
-                onNameEditorSelect: function (rowIndex: any, colIndex: any) {
+                onNameEditorSelect: function (
+                    rowIndex: number,
+                    colIndex: number
+                ) {
                     nameEditor.select(rowIndex, colIndex);
                     renderHud();
                 },
@@ -467,7 +830,7 @@ export function createGame(
             cameraController.update({
                 camera: camera,
                 canvas: canvas,
-                player: players.all[playerId],
+                player: getLocalPlayer(),
                 roundState: roundState
             });
         }
@@ -503,7 +866,7 @@ export function createGame(
             );
         }
 
-        function getClientName(client: any) {
+        function getClientName(client: RuntimeClient) {
             return dependencies.ClientLobbyViewModel.getClientName(client);
         }
 
@@ -511,7 +874,7 @@ export function createGame(
             return identity.getStoredPlayerName();
         }
 
-        function submitNameChange(name: any) {
+        function submitNameChange(name: string) {
             dependencies.ClientNameEditorFlow.submitNameChange({
                 name: name,
                 socket: socket
@@ -543,8 +906,8 @@ export function createGame(
             });
         }
 
-        function syncPlayers(model: any) {
-            var previousModel = latestModel;
+        function syncPlayers(model: RuntimeGameModel) {
+            const previousModel = latestModel;
 
             latestModel = model;
 
@@ -585,7 +948,7 @@ export function createGame(
             identity.syncStoredPlayerName(getLocalClient());
         }
 
-        function startRoundRitual(options?: any) {
+        function startRoundRitual(options?: { resetScores?: boolean }) {
             options = options || {};
 
             dependencies.ClientRoundRitual.start({
@@ -614,7 +977,7 @@ export function createGame(
             });
         }
 
-        function handleKeyEvent(keyEvent: any) {
+        function handleKeyEvent(keyEvent: RuntimeKeyEvent) {
             return dependencies.ClientKeyEventFlow.handle({
                 ammo: ammo,
                 bullets: bullets,
@@ -627,7 +990,7 @@ export function createGame(
                     renderHud();
                 },
                 onEmptyGun: gameSounds.playEmptyGun,
-                player: players.all[keyEvent.player],
+                player: getPlayer(keyEvent.player),
                 playerId: playerId,
                 renderHud: renderHud,
                 roundState: roundState
@@ -643,14 +1006,14 @@ export function createGame(
         }
 
         function checkForHits() {
-            var result = dependencies.ClientHitDetection.check({
+            const result = dependencies.ClientHitDetection.check({
                 bullets: bullets,
                 collision: dependencies.Collision,
                 findBulletObstacleHit: findBulletObstacleHit,
                 matchTimeExpired: roundData.hasMatchTimeExpired(),
                 players: players,
                 roundState: roundState
-            });
+            }) as RuntimeHitDetectionResult;
 
             if (result.type === 'matchExpired') {
                 endGame();
@@ -674,7 +1037,7 @@ export function createGame(
             );
         }
 
-        function handleObstacleHit(hit: any) {
+        function handleObstacleHit(hit: RuntimeObstacleHit) {
             dependencies.ClientObstacleSync.handleLocalHit({
                 applyDamage: applyObstacleDamage,
                 hit: hit,
@@ -684,7 +1047,7 @@ export function createGame(
             });
         }
 
-        function applyObstacleDamage(data: any) {
+        function applyObstacleDamage(data: RuntimeObstacleDamagePayload) {
             dependencies.ClientObstacleSync.applyDamage({
                 bullets: bullets,
                 damageObstacle: damageObstacle,
@@ -694,7 +1057,7 @@ export function createGame(
             });
         }
 
-        function handlePlayerHit(hit: any) {
+        function handlePlayerHit(hit: RuntimePlayerHit) {
             dependencies.ClientPlayerHitFlow.handleHit({
                 bullets: bullets,
                 hit: hit,
@@ -724,7 +1087,7 @@ export function createGame(
             });
         }
 
-        function endRound(winnerId: any) {
+        function endRound(winnerId?: ClientId | null) {
             dependencies.ClientRoundEndFlow.endRound({
                 bullets: bullets,
                 closeNameEditor: closeNameEditor,
@@ -824,12 +1187,12 @@ export function createGame(
         function syncLocalPlayerPosition() {
             positionSync.syncLocal({
                 playing: roundState === RoundState.PLAYING,
-                player: players.all[playerId],
+                player: getLocalPlayer(),
                 socket: socket
             });
         }
 
-        function applyRemotePlayerPosition(data: any) {
+        function applyRemotePlayerPosition(data: RuntimePlayerPositionPayload) {
             positionSync.applyRemote({
                 data: data,
                 localPlayerId: playerId,
@@ -849,7 +1212,7 @@ export function createGame(
         function getLocalAimLevel() {
             return dependencies.ClientTouchControlsFlow.getLocalAimLevel({
                 defaultAim: dependencies.Config.player.defaultAim,
-                player: players.all[playerId]
+                player: getLocalPlayer()
             });
         }
 
@@ -877,13 +1240,13 @@ export function createGame(
 
             socket = new dependencies.ClientNetwork({
                 getStoredPlayerName: getStoredPlayerName,
-                onHighScores: function (nextHighScores: any) {
+                onHighScores: function (nextHighScores: unknown) {
                     highScores = Array.isArray(nextHighScores)
-                        ? nextHighScores
+                        ? (nextHighScores as HighScoreEntry[])
                         : [];
                     renderHud();
                 },
-                onJoinedGame: function (data: any) {
+                onJoinedGame: function (data: RuntimeJoinedGamePayload) {
                     playerId = data.playerId;
                     syncPlayers(data.model);
                     startInputAndAnimation();
@@ -922,7 +1285,9 @@ export function createGame(
                         }
                     );
                 },
-                initTouchControls: function (nextInputController: any) {
+                initTouchControls: function (
+                    nextInputController: RuntimeInputController
+                ) {
                     inputController = nextInputController;
                     initTouchControls();
                 },

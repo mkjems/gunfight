@@ -93,30 +93,41 @@ not own websocket, gameplay, or synchronization state.
 
 ### P1.5 - Tighten The Canvas Gameplay Core
 
-- [ ] Treat canvas gameplay as a small imperative game engine behind the component UI.
-    - Keep canvas rendering, simulation, input application, hit detection, and round flow outside the component renderer.
-    - Make DOM components observe gameplay state through view models and explicit render props.
-    - Avoid moving active gameplay loops into UI component state.
+- [x] Refresh this old checklist against the current single-root component UI.
+    - The canvas gameplay boundary is now documented in
+      `documentation/UI-ownership.md` and `documentation/Architecture-flow.md`.
+    - The P1.5 work should tighten the imperative runtime without moving
+      simulation, drawing, touch pointer math, or synchronization into Preact.
 
-- [ ] Type the remaining `game.ts` runtime state.
-    - Replace broad `any` fields for canvas surfaces, assets, systems, socket, model, players, bullets, ammo, timers, and round data with named contracts.
+- [x] P1.5.1 - Type the remaining `game.ts` runtime state.
+    - Replace broad `any` fields for canvas surfaces, assets, systems, socket,
+      model, players, bullets, ammo, timers, and round data with named
+      contracts.
     - Keep browser dependencies injectable for startup tests.
     - Prefer small local contracts over importing concrete classes everywhere.
 
-- [ ] Split the large `createGame` closure into a runtime object when the seams are clearer.
-    - Keep startup, state accessors, network callbacks, input startup, frame update/render, and round orchestration easy to scan separately.
-    - Preserve the current grouped runtime dependency shape.
-    - Avoid behavior changes while extracting the runtime shape.
+- [ ] P1.5.2 - Strengthen gameplay regression coverage before deeper canvas
+      extraction.
+    - Cover frame update order, camera use, player/bullet lifecycle, obstacle
+      collision environment updates, hit pause, round reset, and match end.
+    - Add focused tests for edge cases before refactoring the code that owns
+      them.
+    - Keep browser smoke tests as the full-app wiring guard.
 
-- [ ] Normalize factory and constructor conventions in gameplay modules.
-    - Decide where function factories are intentional and where classes are clearer.
-    - Keep module exports consistent enough that runtime wiring does not need unnecessary casts.
+- [ ] P1.5.3 - Normalize factory and constructor conventions in gameplay
+      modules.
+    - Decide where function factories are intentional and where classes are
+      clearer.
+    - Keep module exports consistent enough that runtime wiring does not need
+      unnecessary casts.
     - Update tests alongside each conversion.
 
-- [ ] Strengthen gameplay regression coverage before deeper canvas changes.
-    - Cover frame update order, camera use, player/bullet lifecycle, obstacle collision environment updates, hit pause, round reset, and match end.
-    - Add focused tests for edge cases before refactoring the code that owns them.
-    - Keep browser smoke tests as the full-app wiring guard.
+- [ ] P1.5.4 - Split the large `createGame` closure into a runtime object once
+      the typed state and regression tests make the boundaries clear.
+    - Keep startup, state accessors, network callbacks, input startup, frame
+      update/render, and round orchestration easy to scan separately.
+    - Preserve the current grouped runtime dependency shape.
+    - Avoid behavior changes while extracting the runtime shape.
 
 ## P2 - Lobby redesign
 
