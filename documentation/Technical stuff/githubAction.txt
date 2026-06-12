@@ -1,9 +1,13 @@
 # push to master
+-> GitHub Actions runs deploy checks: format, lint, typecheck, and server tests
 -> GitHub Actions builds image
 -> pushes image to GHCR
 -> GitHub Actions SSHes into VPS
 -> VPS pulls latest image
 -> VPS restarts app with docker compose up -d
+
+Browser smoke tests are run with npm run test:browser when wanted. They are not
+part of the deploy workflow.
 
 
 # SSH into VPS

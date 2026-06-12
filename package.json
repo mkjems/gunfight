@@ -3,7 +3,8 @@
     "version": "0.0.1",
     "type": "module",
     "scripts": {
-        "check": "npm run format:check && npm run lint && npm run typecheck && npm test && npm run test:browser",
+        "check": "npm run check:deploy && npm run test:browser",
+        "check:deploy": "npm run format:check && npm run lint && npm run typecheck && npm test",
         "build": "tsc --project tsconfig.build.json && vite build && node scripts/copy-build-assets.js",
         "start": "node dist/server/server.js",
         "dev": "npm run build && node dist/server/server.js",
