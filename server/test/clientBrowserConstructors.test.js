@@ -318,7 +318,7 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
     });
 
     assert.equal(renderProps.lobby.visible, true);
-    assert.equal(renderProps.lobby.showButtons, false);
+    assert.equal(renderProps.lobby.showButtons, true);
 
     assert.deepEqual(calls, [
         ['press', ' '],
