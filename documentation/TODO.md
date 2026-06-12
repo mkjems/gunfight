@@ -340,6 +340,33 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 - [ ] Convert touch controls after the screen/HUD component boundary is stable.
     - Keep joystick, aim, and fire input state in the existing input/touch flow modules.
 
+### P1.4.12.5 - Tighten The Canvas Gameplay Core
+
+- [ ] Treat canvas gameplay as a small imperative game engine behind the component UI.
+    - Keep canvas rendering, simulation, input application, hit detection, and round flow outside the component renderer.
+    - Make DOM components observe gameplay state through view models and explicit render props.
+    - Avoid moving active gameplay loops into UI component state.
+
+- [ ] Type the remaining `game.ts` runtime state.
+    - Replace broad `any` fields for canvas surfaces, assets, systems, socket, model, players, bullets, ammo, timers, and round data with named contracts.
+    - Keep browser dependencies injectable for startup tests.
+    - Prefer small local contracts over importing concrete classes everywhere.
+
+- [ ] Split the large `createGame` closure into a runtime object when the seams are clearer.
+    - Keep startup, state accessors, network callbacks, input startup, frame update/render, and round orchestration easy to scan separately.
+    - Preserve the current grouped runtime dependency shape.
+    - Avoid behavior changes while extracting the runtime shape.
+
+- [ ] Normalize factory and constructor conventions in gameplay modules.
+    - Decide where function factories are intentional and where classes are clearer.
+    - Keep module exports consistent enough that runtime wiring does not need unnecessary casts.
+    - Update tests alongside each conversion.
+
+- [ ] Strengthen gameplay regression coverage before deeper canvas changes.
+    - Cover frame update order, camera use, player/bullet lifecycle, obstacle collision environment updates, hit pause, round reset, and match end.
+    - Add focused tests for edge cases before refactoring the code that owns them.
+    - Keep browser smoke tests as the full-app wiring guard.
+
 ### P1.4.13 - Prepare Future Tooling UI
 
 - [ ] Decide whether P3.5 rock/scenario editors should use the same component setup.
