@@ -1,4 +1,5 @@
 import { Config } from './config.js';
+import { TouchLobbyControlsComponentScreen } from './touchLobbyControlsComponentScreen.js';
 
 type InputLike = {
     press: (key: string) => void;
@@ -51,10 +52,20 @@ type WindowLike = {
     };
 };
 
+type LobbyControlsScreenLike = {
+    render: (props: {
+        onEdit?: () => void;
+        onPlay?: () => void;
+        showButtons?: boolean;
+        visible?: boolean;
+    }) => void;
+};
+
 type TouchControlsOptions = {
     document?: DocumentLike;
     getAimLevel?: () => number;
     input?: InputLike;
+    lobbyControlsScreen?: LobbyControlsScreenLike;
     window?: WindowLike;
 };
 
@@ -79,9 +90,13 @@ export function TouchControls(options: TouchControlsOptions = {}) {
         };
     const maxAimLevel = Config.player.aimLevels.length - 1;
     const root = ownerDocument.getElementById('touchControls');
-    const lobbyControls = ownerDocument.getElementById('touchLobbyControls');
-    const playButton = ownerDocument.getElementById('touchPlayButton');
-    const editButton = ownerDocument.getElementById('touchEditButton');
+    const lobbyControlsScreen =
+        options.lobbyControlsScreen ||
+        new TouchLobbyControlsComponentScreen({
+            root: ownerDocument.getElementById(
+                'touchLobbyControls'
+            ) as unknown as HTMLElement | null
+        });
     const joystick = ownerDocument.getElementById('touchJoystick');
     const joystickKnob = ownerDocument.getElementById('touchJoystickKnob');
     const actionControls = ownerDocument.getElementById('touchActionControls');
@@ -101,9 +116,9 @@ export function TouchControls(options: TouchControlsOptions = {}) {
 
         if (!visible) {
             root.hidden = true;
-            if (lobbyControls) {
-                lobbyControls.hidden = true;
-            }
+            lobbyControlsScreen.render({
+                visible: false
+            });
             return;
         }
 
@@ -123,13 +138,15 @@ export function TouchControls(options: TouchControlsOptions = {}) {
                 input.release(' ');
             }
         );
-        bindTap(playButton, function () {
-            input.ready();
-        });
-        bindTap(editButton, function () {
-            input.press('e');
-            input.release('e');
-        });
+    }
+
+    function onPlayTap() {
+        input?.ready();
+    }
+
+    function onEditTap() {
+        input?.press('e');
+        input?.release('e');
     }
 
     function shouldEnableTouchControls() {
@@ -318,17 +335,6 @@ export function TouchControls(options: TouchControlsOptions = {}) {
         button.addEventListener('lostpointercapture', onUp);
     }
 
-    function bindTap(button: ElementLike | null, onTap: () => void) {
-        if (!button) {
-            return;
-        }
-
-        button.addEventListener('pointerdown', function (evt) {
-            evt.preventDefault();
-            onTap();
-        });
-    }
-
     function update(state: TouchControlsState = {}) {
         if (!root || !visible) {
             return;
@@ -340,17 +346,12 @@ export function TouchControls(options: TouchControlsOptions = {}) {
         root.classList.toggle('is-playing', state.playing);
         root.classList.toggle('is-editing', editing);
 
-        if (lobbyControls) {
-            lobbyControls.hidden = !state.waiting || editing;
-        }
-
-        if (editButton) {
-            editButton.hidden = !!state.highScoresVisible || !!state.ready;
-        }
-
-        if (playButton) {
-            playButton.hidden = !!state.highScoresVisible || !!state.ready;
-        }
+        lobbyControlsScreen.render({
+            onEdit: onEditTap,
+            onPlay: onPlayTap,
+            showButtons: !state.highScoresVisible && !state.ready,
+            visible: !!state.waiting && !editing
+        });
 
         if (actionControls) {
             actionControls.hidden = !showGameplayControls;

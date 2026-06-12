@@ -63,6 +63,11 @@ async function loadComponentScreens() {
         'nameEditorComponentScreen.js',
         tempDirectory
     );
+    compileClientModule(
+        'touchLobbyControlsComponentScreen.tsx',
+        'touchLobbyControlsComponentScreen.js',
+        tempDirectory
+    );
 
     try {
         const modules = await Promise.all(
@@ -70,7 +75,8 @@ async function loadComponentScreens() {
                 'gameHudComponentScreen.js',
                 'highScoresComponentScreen.js',
                 'lobbyComponentScreen.js',
-                'nameEditorComponentScreen.js'
+                'nameEditorComponentScreen.js',
+                'touchLobbyControlsComponentScreen.js'
             ].map(function (fileName) {
                 return import(
                     pathToFileURL(path.join(tempDirectory, fileName)).href
@@ -82,7 +88,9 @@ async function loadComponentScreens() {
             GameHudComponentScreen: modules[0].GameHudComponentScreen,
             HighScoresComponentScreen: modules[1].HighScoresComponentScreen,
             LobbyComponentScreen: modules[2].LobbyComponentScreen,
-            NameEditorComponentScreen: modules[3].NameEditorComponentScreen
+            NameEditorComponentScreen: modules[3].NameEditorComponentScreen,
+            TouchLobbyControlsComponentScreen:
+                modules[4].TouchLobbyControlsComponentScreen
         };
     } finally {
         rmSync(tempDirectory, { force: true, recursive: true });
@@ -255,6 +263,60 @@ test('renders and clears lobby screen sections', async function () {
     assert.equal(query(main, '#lobbyEditPrompt').hidden, true);
     assert.equal(main.querySelector('#lobbyEditPrompt').textContent, '');
     assert.equal(main.querySelector('#lobbyPlayPrompt').textContent, '');
+});
+
+test('renders touch lobby buttons and dispatches tap actions', async function () {
+    const { TouchLobbyControlsComponentScreen } = await loadComponentScreens();
+    const browser = createBrowser();
+    const actions = [];
+    const root = browser.createElement();
+    const screen = new TouchLobbyControlsComponentScreen({ root });
+
+    screen.render({
+        onEdit() {
+            actions.push('edit');
+        },
+        onPlay() {
+            actions.push('play');
+        },
+        showButtons: true,
+        visible: true
+    });
+
+    assert.equal(root.hidden, false);
+
+    const editButton = query(root, '#touchEditButton');
+    const playButton = query(root, '#touchPlayButton');
+    assert.equal(editButton.textContent, 'EDIT NAME');
+    assert.equal(playButton.textContent, 'TAP PLAY');
+    assert.equal(editButton.hidden, false);
+    assert.equal(playButton.hidden, false);
+
+    const pointerDown = new browser.window.PointerEvent('pointerdown', {
+        cancelable: true
+    });
+    playButton.dispatchEvent(pointerDown);
+    editButton.dispatchEvent(
+        new browser.window.PointerEvent('pointerdown', { cancelable: true })
+    );
+
+    assert.equal(pointerDown.defaultPrevented, true);
+    assert.deepEqual(actions, ['play', 'edit']);
+
+    screen.render({
+        showButtons: false,
+        visible: true
+    });
+
+    assert.equal(root.hidden, false);
+    assert.equal(query(root, '#touchEditButton').hidden, true);
+    assert.equal(query(root, '#touchPlayButton').hidden, true);
+
+    screen.render({
+        visible: false
+    });
+
+    assert.equal(root.hidden, true);
 });
 
 test('renders name editor grid and dispatches pointer selections', async function () {

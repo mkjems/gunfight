@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import {
+    mkdirSync,
+    mkdtempSync,
+    readFileSync,
+    rmSync,
+    writeFileSync
+} from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import test from 'node:test';
@@ -13,9 +18,12 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
     );
     const transpiled = ts.transpileModule(source, {
         compilerOptions: {
+            jsx: ts.JsxEmit.ReactJSX,
+            jsxImportSource: 'preact',
             module: ts.ModuleKind.ES2022,
             target: ts.ScriptTarget.ES2022
-        }
+        },
+        fileName: sourceName
     });
 
     writeFileSync(
@@ -26,28 +34,42 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
 }
 
 async function loadBrowserConstructors() {
-    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+    const cacheDirectory = path.join(process.cwd(), 'node_modules', '.cache');
+    mkdirSync(cacheDirectory, { recursive: true });
+
+    const tempDirectory = mkdtempSync(
+        path.join(cacheDirectory, 'gunfight-browser-constructors-')
+    );
 
     compileClientModule('config.ts', 'config.js', tempDirectory);
     compileClientModule('camera.ts', 'camera.js', tempDirectory);
     compileClientModule('soundEffects.ts', 'soundEffects.js', tempDirectory);
     compileClientModule('touchControls.ts', 'touchControls.js', tempDirectory);
-
-    const [cameraModule, soundModule, touchModule] = await Promise.all(
-        ['camera.js', 'soundEffects.js', 'touchControls.js'].map(
-            function (fileName) {
-                return import(
-                    pathToFileURL(path.join(tempDirectory, fileName)).href
-                );
-            }
-        )
+    compileClientModule(
+        'touchLobbyControlsComponentScreen.tsx',
+        'touchLobbyControlsComponentScreen.js',
+        tempDirectory
     );
 
-    return {
-        Camera: cameraModule.Camera,
-        SoundEffects: soundModule.SoundEffects,
-        TouchControls: touchModule.TouchControls
-    };
+    try {
+        const [cameraModule, soundModule, touchModule] = await Promise.all(
+            ['camera.js', 'soundEffects.js', 'touchControls.js'].map(
+                function (fileName) {
+                    return import(
+                        pathToFileURL(path.join(tempDirectory, fileName)).href
+                    );
+                }
+            )
+        );
+
+        return {
+            Camera: cameraModule.Camera,
+            SoundEffects: soundModule.SoundEffects,
+            TouchControls: touchModule.TouchControls
+        };
+    } finally {
+        rmSync(tempDirectory, { force: true, recursive: true });
+    }
 }
 
 function createTouchElement(id) {
@@ -100,9 +122,6 @@ function createTouchElement(id) {
 function createTouchDocument() {
     const ids = [
         'touchControls',
-        'touchLobbyControls',
-        'touchPlayButton',
-        'touchEditButton',
         'touchJoystick',
         'touchJoystickKnob',
         'touchActionControls',
@@ -203,6 +222,7 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
     const { TouchControls } = await loadBrowserConstructors();
     const document = createTouchDocument();
     const calls = [];
+    const lobbyRenders = [];
     let aimLevel = 4;
     const controls = TouchControls({
         document,
@@ -226,6 +246,11 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
                 calls.push(['release', key]);
             }
         },
+        lobbyControlsScreen: {
+            render(props) {
+                lobbyRenders.push(props);
+            }
+        },
         window: {
             location: {
                 search: '?touch=1'
@@ -239,8 +264,6 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
         true
     );
 
-    document.elements.touchPlayButton.fire('pointerdown');
-    document.elements.touchEditButton.fire('pointerdown');
     document.elements.touchShootButton.fire('pointerdown');
     document.elements.touchShootButton.fire('pointerup');
     document.elements.touchJoystick.fire('pointerdown', {
@@ -261,10 +284,27 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
     assert.equal(document.elements.touchActionControls.hidden, false);
     assert.equal(document.elements.touchJoystick.hidden, false);
     assert.equal(document.elements.touchAimHandle.style.top, '25%');
+    assert.equal(lobbyRenders.at(-1).visible, false);
+
+    controls.update({
+        waiting: true
+    });
+
+    const lobbyProps = lobbyRenders.at(-1);
+    assert.equal(lobbyProps.visible, true);
+    assert.equal(lobbyProps.showButtons, true);
+    lobbyProps.onPlay();
+    lobbyProps.onEdit();
+
+    controls.update({
+        highScoresVisible: true,
+        waiting: true
+    });
+
+    assert.equal(lobbyRenders.at(-1).visible, true);
+    assert.equal(lobbyRenders.at(-1).showButtons, false);
+
     assert.deepEqual(calls, [
-        ['ready'],
-        ['press', 'e'],
-        ['release', 'e'],
         ['press', ' '],
         ['release', ' '],
         ['press', 'l'],
@@ -276,7 +316,12 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
         ['press', 'a'],
         ['release', 'a'],
         ['press', 'a'],
-        ['release', 'a']
+        ['release', 'a'],
+        ['release', ' '],
+        ['ready'],
+        ['press', 'e'],
+        ['release', 'e'],
+        ['release', ' ']
     ]);
 });
 
