@@ -210,7 +210,7 @@ test('players sync clients, reset slots, and remove departed players', async fun
     assert.deepEqual(removed, ['a']);
 });
 
-test('players attach lobby labels and constrain lobby movement', async function () {
+test('players constrain lobby movement', async function () {
     const { Players } = await loadGameplayConstructors();
     const players = new Players(
         {
@@ -229,14 +229,9 @@ test('players attach lobby labels and constrain lobby movement', async function 
 
     players.sync(
         {
-            clients: [
-                { id: 'a', name: 'ACE', ready: false },
-                { id: 'b', ready: true }
-            ]
+            clients: [{ id: 'a' }, { id: 'b' }]
         },
         {
-            lobbyLabels: true,
-            localPlayerId: 'a',
             slots: [
                 {
                     x: 100,
@@ -261,52 +256,6 @@ test('players attach lobby labels and constrain lobby movement', async function 
         }
     );
 
-    assert.deepEqual(players.all.a.lobbyLabel, {
-        local: true,
-        name: 'PLAYER 1 - ACE',
-        state: 'WAITING'
-    });
-    assert.deepEqual(players.all.b.lobbyLabel, {
-        local: false,
-        name: 'PLAYER 2 - PLAYER 2',
-        state: 'READY'
-    });
-
-    const drawCalls = [];
-    players.all.b.drawLobbyLabel({
-        fillStyle: '',
-        fillRect(x, y, width, height) {
-            drawCalls.push(['fillRect', this.fillStyle, x, y, width, height]);
-        },
-        fillText(text, x, y) {
-            drawCalls.push(['fillText', this.fillStyle, text, x, y]);
-        },
-        measureText(text) {
-            return {
-                width: text.length * 10
-            };
-        },
-        restore() {
-            drawCalls.push(['restore']);
-        },
-        save() {
-            drawCalls.push(['save']);
-        }
-    });
-
-    assert.deepEqual(
-        drawCalls.find(function (call) {
-            return call[0] === 'fillRect';
-        }),
-        ['fillRect', 'rgb(255,244,0)', 169, 172, 62, 24]
-    );
-    assert.deepEqual(
-        drawCalls.find(function (call) {
-            return call[0] === 'fillText' && call[2] === 'READY';
-        }),
-        ['fillText', 'rgb(0,0,0)', 'READY', 200, 184]
-    );
-
     players.all.a.respondToKeyEvent({ action: 'down', key: 'h' });
     players.all.a.move(0, 1000);
 
@@ -317,11 +266,9 @@ test('players attach lobby labels and constrain lobby movement', async function 
             clients: [{ id: 'a', name: 'ACE', ready: false }]
         },
         {
-            lobbyLabels: false,
             slots: [{ x: 150, y: 430, facing: 1, frame: 0 }]
         }
     );
 
-    assert.equal(players.all.a.lobbyLabel, null);
     assert.equal(players.all.a.movementBounds, null);
 });

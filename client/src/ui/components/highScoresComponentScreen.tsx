@@ -37,22 +37,30 @@ function HighScoresTable(props: HighScoresTableProps) {
         <>
             <HighScoresRow
                 isHeader={true}
-                values={['NAME', 'WINS', 'KILLS', 'DEATHS']}
+                values={['PLACE', 'NAME', 'WINS', 'KILLS', 'DEATHS']}
             />
-            {props.rows.length ? (
-                props.rows.map(function (row) {
-                    return (
-                        <HighScoresRow
-                            key={row.name}
-                            values={[row.name, row.wins, row.kills, row.deaths]}
-                        />
-                    );
-                })
-            ) : (
-                <div className="high-score-empty">NO SCORES YET</div>
-            )}
+            {getHighScoreRows(props.rows).map(function (row, index) {
+                return (
+                    <HighScoresRow
+                        key={getPlaceLabel(index)}
+                        values={[
+                            getPlaceLabel(index),
+                            row?.name || '',
+                            row?.wins ?? '',
+                            row?.kills ?? '',
+                            row?.deaths ?? ''
+                        ]}
+                    />
+                );
+            })}
         </>
     );
+}
+
+function getHighScoreRows(rows: HighScoreRow[]) {
+    return Array.from({ length: 10 }, function (_, index) {
+        return rows[index] || null;
+    });
 }
 
 function HighScoresRow(props: { isHeader?: boolean; values: unknown[] }) {
@@ -69,4 +77,22 @@ function HighScoresRow(props: { isHeader?: boolean; values: unknown[] }) {
 
 function HighScoresPrompt(props: HighScoresPromptProps) {
     return <>{props.text}</>;
+}
+
+function getPlaceLabel(index: number) {
+    const place = index + 1;
+
+    if (place === 1) {
+        return '1ST';
+    }
+
+    if (place === 2) {
+        return '2ND';
+    }
+
+    if (place === 3) {
+        return '3RD';
+    }
+
+    return place + 'TH';
 }

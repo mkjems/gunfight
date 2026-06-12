@@ -8,6 +8,7 @@ import {
 type LobbyHudFlowOptions = {
     highScores?: unknown[];
     isTouchInterface: () => boolean;
+    lastKeyboardActivityAt?: number | null;
     localReadyRequested?: boolean;
     model?: Parameters<typeof getLobbyViewModel>[0]['model'];
     nameEditor?: {
@@ -17,6 +18,7 @@ type LobbyHudFlowOptions = {
     now?: number;
     onNameEditorSelect: (rowIndex: number, colIndex: number) => void;
     playerId?: Parameters<typeof getLobbyViewModel>[0]['playerId'];
+    players?: Parameters<typeof getLobbyViewModel>[0]['players'];
     roundState: Parameters<typeof getActiveScreen>[0]['roundState'];
 };
 
@@ -72,7 +74,8 @@ export function getState(options: LobbyHudFlowOptions): LobbyHudState {
             isTouch,
             localReadyRequested: options.localReadyRequested,
             model: options.model,
-            playerId: options.playerId
+            playerId: options.playerId,
+            players: options.players
         })
     };
 }
@@ -89,6 +92,7 @@ function getActiveScreenForOptions(options: LobbyHudFlowOptions) {
 
 function shouldShowHighScoresScreenForOptions(options: LobbyHudFlowOptions) {
     return shouldShowHighScoresScreen({
+        lastKeyboardActivityAt: options.lastKeyboardActivityAt,
         localReadyRequested: options.localReadyRequested,
         model: options.model,
         now: options.now

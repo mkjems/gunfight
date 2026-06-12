@@ -97,8 +97,6 @@ test('plans a round start when a waiting game becomes ready', async function () 
             syncNameEditor: true,
             syncStoredPlayerName: true,
             syncPlayers: {
-                lobbyLabels: true,
-                localPlayerId: 'p1',
                 resetChangedSlots: true,
                 slots: [
                     {
@@ -157,8 +155,6 @@ test('plans abandoned-game recovery', async function () {
             syncNameEditor: true,
             syncStoredPlayerName: true,
             syncPlayers: {
-                lobbyLabels: false,
-                localPlayerId: 'p1',
                 resetChangedSlots: false,
                 slots: [
                     { x: 150, y: 430, facing: 1, frame: 0 },

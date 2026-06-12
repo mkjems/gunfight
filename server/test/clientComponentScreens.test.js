@@ -174,7 +174,7 @@ test('renders game HUD scores, timer, round text, and hit messages through the a
     assert.equal(query(root, '#hitMessage').hidden, true);
 });
 
-test('renders high-score table rows and empty state through the app root', async function () {
+test('renders high-score table rows with ten ranked places through the app root', async function () {
     const { ClientAppMount, Screen } = await loadClientApp();
     const browser = createBrowser();
     const root = browser.createElement();
@@ -205,12 +205,20 @@ test('renders high-score table rows and empty state through the app root', async
         query(root, '#highScoresPlayPrompt').textContent,
         'PRESS FIRE'
     );
-    assert.equal(query(root, '#highScoresTable').children.length, 2);
+    assert.equal(query(root, '#highScoresTable').children.length, 11);
     assert.equal(
         query(root, '#highScoresTable').children[0].className,
         'high-score-row is-header'
     );
+    assert.deepEqual(childTexts(query(root, '#highScoresTable').children[0]), [
+        'PLACE',
+        'NAME',
+        'WINS',
+        'KILLS',
+        'DEATHS'
+    ]);
     assert.deepEqual(childTexts(query(root, '#highScoresTable').children[1]), [
+        '1ST',
         'ADA',
         '2',
         '3',
@@ -224,14 +232,24 @@ test('renders high-score table rows and empty state through the app root', async
         }
     });
 
-    assert.equal(query(root, '#highScoresTable').children.length, 2);
+    assert.equal(query(root, '#highScoresTable').children.length, 11);
+    assert.deepEqual(childTexts(query(root, '#highScoresTable').children[1]), [
+        '1ST',
+        '',
+        '',
+        '',
+        ''
+    ]);
+    assert.deepEqual(childTexts(query(root, '#highScoresTable').children[10]), [
+        '10TH',
+        '',
+        '',
+        '',
+        ''
+    ]);
     assert.equal(
-        query(root, '#highScoresTable').children[1].className,
-        'high-score-empty'
-    );
-    assert.equal(
-        query(root, '#highScoresTable').children[1].textContent,
-        'NO SCORES YET'
+        query(root, '#highScoresTable').textContent.includes('NO SCORES YET'),
+        false
     );
 });
 
@@ -247,6 +265,21 @@ test('renders lobby screen sections through the app root', async function () {
             controls: ['MOVE', 'FIRE'],
             editPrompt: 'EDIT NAME',
             playPrompt: 'READY?',
+            playerLabels: [
+                {
+                    key: 'p1-name',
+                    text: 'PLAYER 1 - ACE',
+                    x: 12.5,
+                    y: 75
+                },
+                {
+                    key: 'p1-status',
+                    negative: true,
+                    text: 'READY',
+                    x: 12.5,
+                    y: 80
+                }
+            ],
             showControls: true,
             showEditPrompt: true
         }
@@ -255,6 +288,7 @@ test('renders lobby screen sections through the app root', async function () {
     const main = query(root, '#lobby-main');
     const controls = query(main, '#lobbyControlsText');
     const editPrompt = query(main, '#lobbyEditPrompt');
+    const labels = query(main, '#lobbyPlayerLabels');
     const playPrompt = query(main, '#lobbyPlayPrompt');
 
     assert.equal(main.hidden, false);
@@ -262,6 +296,15 @@ test('renders lobby screen sections through the app root', async function () {
     assert.equal(controls.hidden, false);
     assert.equal(editPrompt.hidden, false);
     assert.deepEqual(childTexts(controls), ['MOVE', 'FIRE']);
+    assert.deepEqual(childTexts(labels), ['PLAYER 1 - ACE', 'READY']);
+    assert.equal(
+        labels.children[0].getAttribute('style'),
+        'left: 12.5%; top: 75%;'
+    );
+    assert.equal(
+        labels.children[1].className,
+        'lobby-player-label negative-text'
+    );
     assert.equal(editPrompt.textContent, 'EDIT NAME');
     assert.equal(playPrompt.textContent, 'READY?');
 

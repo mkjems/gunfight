@@ -46,7 +46,11 @@ test('builds lobby view models for keyboard clients', async function () {
                 isTouch: false,
                 localReadyRequested: false,
                 model,
-                playerId: 'p1'
+                playerId: 'p1',
+                players: {
+                    p1: { x: 95, y: 320 },
+                    p2: { x: 855, y: 320 }
+                }
             })
         ),
         {
@@ -58,6 +62,43 @@ test('builds lobby view models for keyboard clients', async function () {
             ],
             showControls: true,
             slots: [],
+            playerLabels: [
+                {
+                    key: 'p1-you',
+                    negative: false,
+                    text: 'YOU',
+                    x: 10,
+                    y: 30.9375
+                },
+                {
+                    key: 'p1-name',
+                    negative: false,
+                    text: 'PLAYER 1 - ACE',
+                    x: 10,
+                    y: 58.125
+                },
+                {
+                    key: 'p1-status',
+                    negative: false,
+                    text: 'WAITING',
+                    x: 10,
+                    y: 63.125
+                },
+                {
+                    key: 'p2-name',
+                    negative: false,
+                    text: 'PLAYER 2 - PLAYER 2',
+                    x: 90,
+                    y: 58.125
+                },
+                {
+                    key: 'p2-status',
+                    negative: true,
+                    text: 'READY',
+                    x: 90,
+                    y: 63.125
+                }
+            ],
             showEditPrompt: true,
             editPrompt: 'PRESS E TO EDIT NAME',
             playPrompt: 'PRESS P TO PLAY'
@@ -102,11 +143,21 @@ test('decides lobby prompts and high score rotation', async function () {
     );
     assert.equal(
         lobby.shouldShowHighScoresScreen({
+            lastKeyboardActivityAt: 14000,
             localReadyRequested: false,
             model,
             now: 30000
         }),
         true
+    );
+    assert.equal(
+        lobby.shouldShowHighScoresScreen({
+            lastKeyboardActivityAt: 20000,
+            localReadyRequested: false,
+            model,
+            now: 30000
+        }),
+        false
     );
     assert.equal(
         lobby.shouldShowHighScoresScreen({

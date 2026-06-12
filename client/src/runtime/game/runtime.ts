@@ -95,6 +95,7 @@ export class ClientGameRuntime implements ClientGameController {
     private roundIntro!: RuntimeRoundIntro;
     private localReadyRequested = false;
     private playerId: ClientId | null = null;
+    private lastKeyboardActivityAt: number | null = null;
     private hasStarted = false;
 
     constructor(options: ClientGameRuntimeOptions) {
@@ -321,6 +322,7 @@ export class ClientGameRuntime implements ClientGameController {
                             );
                         },
                         onReady: () => {
+                            this.recordKeyboardActivity();
                             this.localReadyRequested = true;
                             this.renderHud();
                         }
@@ -449,6 +451,10 @@ export class ClientGameRuntime implements ClientGameController {
     };
 
     private handleKeyEvent = (keyEvent: RuntimeKeyEvent) => {
+        if (keyEvent.player === this.playerId) {
+            this.recordKeyboardActivity();
+        }
+
         return this.dependencies.ClientKeyEventFlow.handle({
             ammo: this.ammo,
             bullets: this.bullets,
@@ -777,6 +783,7 @@ export class ClientGameRuntime implements ClientGameController {
         return this.dependencies.ClientLobbyHudFlow.getState({
             highScores: this.highScores,
             isTouchInterface: this.isTouchInterface,
+            lastKeyboardActivityAt: this.lastKeyboardActivityAt,
             localReadyRequested: this.localReadyRequested,
             model: this.latestModel,
             nameEditor: this.nameEditor,
@@ -785,6 +792,7 @@ export class ClientGameRuntime implements ClientGameController {
                 this.renderHud();
             },
             playerId: this.playerId,
+            players: this.players.all,
             roundState: this.roundState
         });
     };
@@ -877,10 +885,15 @@ export class ClientGameRuntime implements ClientGameController {
     private shouldShowHighScoresScreen = () => {
         return this.dependencies.ClientLobbyViewModel.shouldShowHighScoresScreen(
             {
+                lastKeyboardActivityAt: this.lastKeyboardActivityAt,
                 localReadyRequested: this.localReadyRequested,
                 model: this.latestModel
             }
         );
+    };
+
+    private recordKeyboardActivity = () => {
+        this.lastKeyboardActivityAt = new Date().getTime();
     };
 
     private isLocalClientReady = () => {

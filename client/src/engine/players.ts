@@ -11,8 +11,6 @@ type BulletsLike = {
 
 type ClientLike = {
     id: string | number;
-    name?: string;
-    ready?: boolean;
 };
 
 type PlayerSlot = {
@@ -29,8 +27,6 @@ type PlayerSlot = {
 };
 
 type PlayersOptions = {
-    lobbyLabels?: boolean;
-    localPlayerId?: string | number | null;
     resetChangedSlots?: boolean;
     slots?: PlayerSlot[];
 };
@@ -63,7 +59,6 @@ export class Players {
             this.all[id].facing = slot.facing;
             this.all[id].idleFrame = slot.frame;
             this.all[id].setMovementBounds(slot.movementBounds);
-            this.syncLobbyLabel(this.all[id], client, index, options);
 
             if (slotChanged && options.resetChangedSlots) {
                 this.all[id].resetTo(slot);
@@ -79,7 +74,6 @@ export class Players {
         });
         this.all[id].slot = index;
         this.all[id].setMovementBounds(slot.movementBounds);
-        this.syncLobbyLabel(this.all[id], client, index, options);
         this.scene.addFigure(this.all[id]);
     }
 
@@ -121,27 +115,5 @@ export class Players {
         }
 
         return (this.all[id].slot || 0) + 1;
-    }
-
-    syncLobbyLabel(
-        player: Controllable,
-        client: ClientLike,
-        index: number,
-        options: PlayersOptions
-    ) {
-        if (!options.lobbyLabels) {
-            player.setLobbyLabel(null);
-            return;
-        }
-
-        player.setLobbyLabel({
-            local: client.id === options.localPlayerId,
-            name:
-                'PLAYER ' +
-                (index + 1) +
-                ' - ' +
-                (client.name || 'PLAYER ' + (index + 1)),
-            state: client.ready ? 'READY' : 'WAITING'
-        });
     }
 }

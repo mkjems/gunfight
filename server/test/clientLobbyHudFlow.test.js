@@ -111,6 +111,7 @@ test('builds lobby main app state', async function () {
             ],
             editPrompt: '',
             identityLines: [],
+            playerLabels: [],
             playPrompt: 'PRESS P TO PLAY',
             showControls: true,
             showEditPrompt: false,
@@ -138,6 +139,16 @@ test('builds high scores app state with keyboard play prompt', async function ()
         },
         hudCanvasVisible: false
     });
+});
+
+test('keeps main lobby visible after recent keyboard activity', async function () {
+    const flow = await loadClientLobbyHudFlow();
+    const { options } = createRenderOptions({
+        lastKeyboardActivityAt: 25000,
+        now: 30000
+    });
+
+    assert.equal(plain(flow.getState(options)).activeScreen, 'lobby-main');
 });
 
 test('builds name editor app state and passes selection callback', async function () {

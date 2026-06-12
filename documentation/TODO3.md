@@ -19,11 +19,12 @@
 - [x] Do not show characters in the background on the high-scores-page.
 
 ## P2.1 - Lobby redesign follow up
-- [ ] New rule: Only switch to the high score screen every 30 secs AND only if there has been no keyboard activity in the last 15 seconds.
-- [ ] The High score screen should have column at the beginning called 'Place'. It should have the row text 1ST, 2ND, 3RD, 5TH, etc .. up to 10TH    
-- [ ] I would like all the text to be real HTML text. Canvas text is blurry and the negative text looks inconsistent with html text. Can you make the html text follow the character
-- [ ] Should we adjust specifications with some of these design changes - to not have stale specs. 
 
+- [x] New rule: Only switch to the high score screen every 30 secs AND only if there has been no keyboard activity in the last 15 seconds.
+- [x] The High score screen should have column at the beginning called 'Place'. It should have the row text 1ST, 2ND, 3RD, 5TH, etc .. up to 10TH
+- [x] Always show 10 high-score rows with place labels and no `NO SCORES YET` text.
+- [x] I would like all the text to be real HTML text. Canvas text is blurry and the negative text looks inconsistent with html text. Can you make the html text follow the character
+- [x] Should we adjust specifications with some of these design changes - to not have stale specs.
 
 ## P3 - Content Authoring Tools
 

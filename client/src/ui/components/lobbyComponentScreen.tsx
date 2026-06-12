@@ -7,10 +7,19 @@ export type LobbyComponentProps = {
     controls?: string[];
     editPrompt?: string;
     identityLines?: string[];
+    playerLabels?: LobbyTextLine[];
     playPrompt?: string;
     showControls?: boolean;
     showEditPrompt?: boolean;
     slots?: LobbySlot[];
+};
+
+export type LobbyTextLine = {
+    key: string;
+    negative?: boolean;
+    text: string;
+    x: number;
+    y: number;
 };
 
 type LinesProps = {
@@ -36,6 +45,9 @@ export function LobbyMain(options: LobbyComponentProps = {}) {
                     <Text text={options.playPrompt || ''} />
                 </div>
             </div>
+            <div id="lobbyPlayerLabels">
+                <LobbyPlayerLabels labels={options.playerLabels || []} />
+            </div>
         </>
     );
 }
@@ -56,4 +68,28 @@ function Lines(props: LinesProps) {
 
 function Text(props: TextProps) {
     return <>{props.text}</>;
+}
+
+function LobbyPlayerLabels(props: { labels: LobbyTextLine[] }) {
+    return (
+        <>
+            {props.labels.map(function (label) {
+                return (
+                    <div
+                        className={
+                            'lobby-player-label' +
+                            (label.negative ? ' negative-text' : '')
+                        }
+                        key={label.key}
+                        style={{
+                            left: label.x + '%',
+                            top: label.y + '%'
+                        }}
+                    >
+                        {label.text}
+                    </div>
+                );
+            })}
+        </>
+    );
 }

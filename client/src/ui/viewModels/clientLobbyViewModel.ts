@@ -23,9 +23,11 @@ type LobbyOptions = {
 
 type LobbyViewModelOptions = LobbyOptions & {
     isTouch?: boolean;
+    players?: Record<ClientId, LobbyPlayerPosition | undefined>;
 };
 
 type HighScoresScreenOptions = {
+    lastKeyboardActivityAt?: number | null;
     localReadyRequested?: boolean;
     model?: LobbyModel | null;
     now?: number;
@@ -38,6 +40,25 @@ const controls = [
 ];
 const mainLobbyDuration = 30000;
 const highScoresDuration = 7000;
+const keyboardIdleDuration = 15000;
+const canvasWidth = 950;
+const canvasHeight = 640;
+const markerOffsetY = -122;
+const nameOffsetY = 52;
+const statusOffsetY = 84;
+
+type LobbyPlayerPosition = {
+    x: number;
+    y: number;
+};
+
+type LobbyTextLine = {
+    key: string;
+    negative?: boolean;
+    text: string;
+    x: number;
+    y: number;
+};
 
 export function getClientName(client: LobbyClient): string {
     return client.name || 'PLAYER ' + ((client.slot || 0) + 1);
@@ -93,6 +114,13 @@ export function shouldShowHighScoresScreen(
         return false;
     }
 
+    if (
+        typeof options.lastKeyboardActivityAt === 'number' &&
+        now - options.lastKeyboardActivityAt < keyboardIdleDuration
+    ) {
+        return false;
+    }
+
     return now % (mainLobbyDuration + highScoresDuration) >= mainLobbyDuration;
 }
 
@@ -106,11 +134,86 @@ export function getLobbyViewModel(options: LobbyViewModelOptions) {
         controls: isTouch ? [] : controls,
         showControls: !isTouch,
         slots: [],
+        playerLabels: getLobbyPlayerLabels(options),
         showEditPrompt: !isTouch && localClientWaiting,
         editPrompt:
             !isTouch && localClientWaiting ? 'PRESS E TO EDIT NAME' : '',
         playPrompt: showPlayPrompt ? 'PRESS P TO PLAY' : ''
     };
+}
+
+function getLobbyPlayerLabels(options: LobbyViewModelOptions): LobbyTextLine[] {
+    const clients = (options.model && options.model.clients) || [];
+    const players = options.players || {};
+    const labels: LobbyTextLine[] = [];
+
+    clients.forEach(function (client, index) {
+        const player = players[client.id];
+        const playerLabel =
+            'PLAYER ' +
+            (index + 1) +
+            ' - ' +
+            getClientName({
+                ...client,
+                slot: index
+            });
+        const state = client.ready ? 'READY' : 'WAITING';
+
+        if (!player) {
+            return;
+        }
+
+        if (client.id === options.playerId) {
+            labels.push(
+                createLobbyTextLine(
+                    String(client.id) + '-you',
+                    'YOU',
+                    player,
+                    markerOffsetY
+                )
+            );
+        }
+
+        labels.push(
+            createLobbyTextLine(
+                String(client.id) + '-name',
+                playerLabel,
+                player,
+                nameOffsetY
+            )
+        );
+        labels.push(
+            createLobbyTextLine(
+                String(client.id) + '-status',
+                state,
+                player,
+                statusOffsetY,
+                state === 'READY'
+            )
+        );
+    });
+
+    return labels;
+}
+
+function createLobbyTextLine(
+    key: string,
+    text: string,
+    player: LobbyPlayerPosition,
+    offsetY: number,
+    negative = false
+): LobbyTextLine {
+    return {
+        key,
+        negative,
+        text,
+        x: getPercent(player.x, canvasWidth),
+        y: getPercent(player.y + offsetY, canvasHeight)
+    };
+}
+
+function getPercent(value: number, total: number) {
+    return Math.round((value / total) * 1000000) / 10000;
 }
 
 export const ClientLobbyViewModel = {
