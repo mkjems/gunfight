@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gunfight-v18';
+const CACHE_NAME = 'gunfight-v19';
 const LOCAL_DEVELOPMENT_HOSTS = ['localhost', '127.0.0.1'];
 const IS_LOCAL_DEVELOPMENT =
     LOCAL_DEVELOPMENT_HOSTS.indexOf(self.location.hostname) >= 0;
