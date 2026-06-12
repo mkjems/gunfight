@@ -324,15 +324,15 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 
 ### P1.4.11 - Choose And Spike A Component Renderer
 
-- [ ] Compare vanilla DOM modules, Preact, Lit, and Svelte/Solid against this project.
-- [ ] Prefer Preact unless the spike shows it adds more complexity than it removes.
-- [ ] Add the smallest possible Preact island behind the existing HUD overlay.
-- [ ] Migrate one low-risk screen first, likely high scores.
-- [ ] Verify build, browser smoke test, service worker behavior, and mobile layout.
+- [x] Compare vanilla DOM modules, Preact, Lit, and Svelte/Solid against this project.
+- [x] Prefer Preact unless the spike shows it adds more complexity than it removes.
+- [x] Add the smallest possible Preact island behind the existing HUD overlay.
+- [x] Migrate one low-risk screen first, likely high scores.
+- [x] Verify build, browser smoke test, service worker behavior, and mobile layout.
 
 ### P1.4.12 - Migrate UI Screens To Components Incrementally
 
-- [ ] Convert high scores screen first.
+- [x] Convert high scores screen first.
 - [ ] Convert lobby screen after high scores.
 - [ ] Convert name editor after lobby.
 - [ ] Convert game HUD last because it is closest to active gameplay.

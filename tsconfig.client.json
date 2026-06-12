@@ -1,11 +1,13 @@
 {
     "compilerOptions": {
+        "jsx": "react-jsx",
+        "jsxImportSource": "preact",
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
         "noEmit": true,
         "strict": true,
         "target": "ES2022"
     },
-    "include": ["client/src/**/*.ts"],
+    "include": ["client/src/**/*.ts", "client/src/**/*.tsx"],
     "exclude": ["dist", "node_modules"]
 }

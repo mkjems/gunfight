@@ -13,6 +13,10 @@ export default defineConfig({
             }
         }
     },
+    esbuild: {
+        jsx: 'automatic',
+        jsxImportSource: 'preact'
+    },
     publicDir: false,
     root: 'client'
 });

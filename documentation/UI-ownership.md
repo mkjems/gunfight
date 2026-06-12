@@ -131,3 +131,23 @@ acceptable during the migration. The architectural boundary is now:
 - Imperative gameplay and flow modules own state, timing, and side effects.
 - Framework-independent view models own render decisions.
 - Future components own DOM markup and event wiring inside the overlay.
+
+## Renderer Spike Choice
+
+P1.4.11 chose Preact for the first component island.
+
+- Vanilla DOM modules fit the current code and remain useful as migration
+  references, but they keep markup updates spread across manual DOM operations.
+- Lit has a good web-component boundary, but custom element lifecycle and shadow
+  DOM choices are more machinery than this overlay needs right now.
+- Svelte and Solid are appealing for full component apps, but they add a larger
+  compiler/framework decision before the project has enough component surface to
+  justify it.
+- Preact gives the smallest practical island inside the existing Vite build,
+  with component rendering for DOM overlays while canvas gameplay stays
+  imperative.
+
+The first runtime island is the high scores screen table/prompt behind the
+existing `ClientHudOverlay` boundary. The old imperative high-score screen module
+can stay as a reference until the rest of P1.4.12 removes obsolete screen
+modules.
