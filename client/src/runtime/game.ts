@@ -483,832 +483,857 @@ export type ClientGameController = {
     start: () => void;
 };
 
+type ClientGameRuntimeOptions = {
+    dependencies: ClientGameRuntimeModules;
+    document: Document;
+    ImageCtor: typeof globalThis.Image;
+    window: Window;
+};
+
 export function createGame(
     groupedDependencies: ClientGameDependencies,
     browser: ClientGameBrowser = {}
 ): ClientGameController {
     const dependencies = flattenDependencies(groupedDependencies);
-    const document = browser.document || globalThis.document;
-    const window = browser.window || globalThis.window;
-    const Image = browser.Image || globalThis.Image;
+    const runtime = new ClientGameRuntime({
+        dependencies,
+        document: browser.document || globalThis.document,
+        ImageCtor: browser.Image || globalThis.Image,
+        window: browser.window || globalThis.window
+    });
 
-    return (function () {
-        let canvas: HTMLCanvasElement;
-        let context: CanvasRenderingContext2D;
-        let hudCanvas: HTMLCanvasElement;
-        let hudContext: CanvasRenderingContext2D;
-        let app: RuntimeApp;
-        let installPrompt: RuntimeInstallPrompt | undefined;
-        let ammoHudRenderer: {
-            render: (
-                ammo: number,
-                x: number,
-                y: number,
-                direction: number
-            ) => void;
-        };
-        let assets: RuntimeAssets;
-        let scenarioRenderer: RuntimeScenarioRenderer;
-        let collisionDebugRenderer: RuntimeCollisionDebugRenderer;
-        let identity: RuntimeIdentity;
-        let nameEditor: RuntimeNameEditor;
-        let cameraController: RuntimeCameraController;
-        let camera: RuntimeCamera;
-        let gameSounds: RuntimeGameSounds;
-        let gameLoop: RuntimeGameLoop;
-        let scene: RuntimeScene;
-        let socket: RuntimeSocket;
-        let inputController: RuntimeInputController | undefined;
-        let touchControls: RuntimeTouchControls | undefined;
-        let players: RuntimePlayers;
-        let bullets: RuntimeBullets;
-        let roundState: RoundStateValue;
-        let latestModel: RuntimeGameModel | null = null;
-        let highScores: HighScoreEntry[] = [];
-        let scoreKeeper: RuntimeScoreKeeper;
-        let roundData: RuntimeRoundData;
-        let timers: RuntimeTimers;
-        let positionSync: RuntimePositionSync;
-        let ammo: RuntimeAmmo;
-        let roundIntro: RuntimeRoundIntro;
-        let localReadyRequested = false;
-        let playerId: ClientId | null = null;
-        const RoundState = dependencies.ClientScreens.RoundState;
-        let hasStarted = false;
+    runtime.connectStartLifecycle();
 
-        function initCanvas() {
-            const surfaces = dependencies.ClientCanvasSetup.create({
-                CanvasTools: dependencies.CanvasTools,
-                canvasConfig: dependencies.Config.canvas,
-                document: document
-            }) as RuntimeCanvasSurfaces;
+    return runtime;
+}
 
-            canvas = surfaces.canvas;
-            context = surfaces.context;
-            hudCanvas = surfaces.hudCanvas;
-            hudContext = surfaces.hudContext;
-            initAssets();
-            initHudOverlay();
-            initAmmoHudRenderer();
-            initSoundEffects();
-            initScenarioRenderer();
-            initCollisionDebugRenderer();
-            initIdentity();
-            initNameEditor();
-            initCameraController();
-            initCamera();
+class ClientGameRuntime implements ClientGameController {
+    private readonly dependencies: ClientGameRuntimeModules;
+    private readonly document: Document;
+    private readonly ImageCtor: typeof globalThis.Image;
+    private readonly window: Window;
+    private readonly RoundState: ClientGameRuntimeModules['ClientScreens']['RoundState'];
+
+    private canvas!: HTMLCanvasElement;
+    private context!: CanvasRenderingContext2D;
+    private hudCanvas!: HTMLCanvasElement;
+    private hudContext!: CanvasRenderingContext2D;
+    private app!: RuntimeApp;
+    private installPrompt?: RuntimeInstallPrompt;
+    private ammoHudRenderer!: {
+        render: (ammo: number, x: number, y: number, direction: number) => void;
+    };
+    private assets!: RuntimeAssets;
+    private scenarioRenderer!: RuntimeScenarioRenderer;
+    private collisionDebugRenderer!: RuntimeCollisionDebugRenderer;
+    private identity!: RuntimeIdentity;
+    private nameEditor!: RuntimeNameEditor;
+    private cameraController!: RuntimeCameraController;
+    private camera!: RuntimeCamera;
+    private gameSounds!: RuntimeGameSounds;
+    private gameLoop!: RuntimeGameLoop;
+    private scene!: RuntimeScene;
+    private socket!: RuntimeSocket;
+    private inputController?: RuntimeInputController;
+    private touchControls?: RuntimeTouchControls;
+    private players!: RuntimePlayers;
+    private bullets!: RuntimeBullets;
+    private roundState!: RoundStateValue;
+    private latestModel: RuntimeGameModel | null = null;
+    private highScores: HighScoreEntry[] = [];
+    private scoreKeeper!: RuntimeScoreKeeper;
+    private roundData!: RuntimeRoundData;
+    private timers!: RuntimeTimers;
+    private positionSync!: RuntimePositionSync;
+    private ammo!: RuntimeAmmo;
+    private roundIntro!: RuntimeRoundIntro;
+    private localReadyRequested = false;
+    private playerId: ClientId | null = null;
+    private hasStarted = false;
+
+    constructor(options: ClientGameRuntimeOptions) {
+        this.dependencies = options.dependencies;
+        this.document = options.document;
+        this.ImageCtor = options.ImageCtor;
+        this.window = options.window;
+        this.RoundState = options.dependencies.ClientScreens.RoundState;
+    }
+
+    connectStartLifecycle() {
+        if (this.document.readyState === 'loading') {
+            this.document.addEventListener('DOMContentLoaded', () =>
+                this.startOnce()
+            );
+            return;
         }
 
-        function initNameEditor() {
-            nameEditor = new dependencies.NameEditor({
-                onChange: renderHud,
-                onSubmit: submitNameChange
-            });
+        this.startOnce();
+    }
+
+    start = () => {
+        this.startOnce();
+    };
+
+    private startOnce = () => {
+        if (this.hasStarted) {
+            return;
         }
 
-        function initAssets() {
-            assets = new dependencies.ClientAssets({
-                Image: Image,
-                createRockPattern: function (image: RuntimeSprite) {
-                    return dependencies.CanvasTools.createScaledPattern({
-                        context: context,
-                        document: document,
-                        image: image
-                    });
-                },
-                onAmmoLoaded: renderHud
-            });
-            assets.load();
-        }
+        this.hasStarted = true;
+        this.startRuntime();
+    };
 
-        function initHudOverlay() {
-            const ui = dependencies.ClientUi.create({
-                document: document,
-                localStorage: window.localStorage,
-                onRenderRequest: function () {
-                    if (ammo) {
-                        renderHud();
-                    }
-                },
-                window: window
-            }) as RuntimeUi;
+    private startRuntime = () => {
+        this.initCanvas();
+        this.initGameState();
 
-            app = ui.app;
-            installPrompt = ui.installPrompt;
-        }
+        this.socket = new this.dependencies.ClientNetwork({
+            getStoredPlayerName: this.getStoredPlayerName,
+            onHighScores: this.onHighScores,
+            onJoinedGame: this.onJoinedGame,
+            onKeyEvent: this.handleKeyEvent,
+            onPlayerPosition: this.applyRemotePlayerPosition,
+            onObstacleDamage: this.applyObstacleDamage,
+            onModelUpdate: this.syncPlayers
+        }).socket;
+    };
 
-        function initAmmoHudRenderer() {
-            ammoHudRenderer = new dependencies.AmmoHudRenderer({
-                context: hudContext,
-                sprite: assets.sprites.ammo
-            });
-        }
+    private initCanvas = () => {
+        const surfaces = this.dependencies.ClientCanvasSetup.create({
+            CanvasTools: this.dependencies.CanvasTools,
+            canvasConfig: this.dependencies.Config.canvas,
+            document: this.document
+        }) as RuntimeCanvasSurfaces;
 
-        function initCamera() {
-            camera = new dependencies.Camera({
-                worldWidth: dependencies.Config.canvas.width,
-                worldHeight: dependencies.Config.canvas.height,
-                screenWidth: dependencies.Config.canvas.width,
-                screenHeight: dependencies.Config.canvas.height,
-                scale: cameraController.getCameraScale()
-            });
-        }
+        this.canvas = surfaces.canvas;
+        this.context = surfaces.context;
+        this.hudCanvas = surfaces.hudCanvas;
+        this.hudContext = surfaces.hudContext;
+        this.initAssets();
+        this.initHudOverlay();
+        this.initAmmoHudRenderer();
+        this.initSoundEffects();
+        this.initScenarioRenderer();
+        this.initCollisionDebugRenderer();
+        this.initIdentity();
+        this.initNameEditor();
+        this.initCameraController();
+        this.initCamera();
+    };
 
-        function initSoundEffects() {
-            gameSounds = new dependencies.ClientGameSounds({
-                soundEffects: new dependencies.SoundEffects()
-            });
-        }
+    private initAssets = () => {
+        this.assets = new this.dependencies.ClientAssets({
+            Image: this.ImageCtor,
+            createRockPattern: (image: RuntimeSprite) => {
+                return this.dependencies.CanvasTools.createScaledPattern({
+                    context: this.context,
+                    document: this.document,
+                    image
+                });
+            },
+            onAmmoLoaded: this.renderHud
+        });
+        this.assets.load();
+    };
 
-        function initCameraController() {
-            cameraController = new dependencies.ClientCameraController({
-                window: window
-            });
-        }
-
-        function initScenarioRenderer() {
-            scenarioRenderer = new dependencies.ScenarioRenderer({
-                context: context,
-                getObstacleDamage: getObstacleDamage,
-                getRockPattern: function () {
-                    return assets.getRockPattern();
-                },
-                getScenarioStartedAt: function () {
-                    return roundData.getScenarioStartedAt();
-                },
-                sprites: {
-                    cactus: assets.sprites.cactus,
-                    saloon: assets.sprites.saloon,
-                    wagon: assets.sprites.wagon
+    private initHudOverlay = () => {
+        const ui = this.dependencies.ClientUi.create({
+            document: this.document,
+            localStorage: this.window.localStorage,
+            onRenderRequest: () => {
+                if (this.ammo) {
+                    this.renderHud();
                 }
-            });
-        }
+            },
+            window: this.window
+        }) as RuntimeUi;
 
-        function initCollisionDebugRenderer() {
-            collisionDebugRenderer = new dependencies.CollisionDebugRenderer(
-                context
-            );
-        }
+        this.app = ui.app;
+        this.installPrompt = ui.installPrompt;
+    };
 
-        function initIdentity() {
-            identity = new dependencies.ClientIdentity({
-                getClientName: getClientName,
-                storage: window.localStorage
-            });
-        }
+    private initAmmoHudRenderer = () => {
+        this.ammoHudRenderer = new this.dependencies.AmmoHudRenderer({
+            context: this.hudContext,
+            sprite: this.assets.sprites.ammo
+        });
+    };
 
-        function initGameState() {
-            const systems = dependencies.ClientGameSystems.create({
-                initialRoundState: RoundState.WAITING,
-                playRicochet: gameSounds.playRicochet
-            }) as RuntimeSystems;
+    private initSoundEffects = () => {
+        this.gameSounds = new this.dependencies.ClientGameSounds({
+            soundEffects: new this.dependencies.SoundEffects()
+        });
+    };
 
-            scene = systems.scene;
-            bullets = systems.bullets;
-            players = systems.players;
-            roundIntro = systems.roundIntro;
-            roundState = systems.roundState;
-            highScores = systems.highScores;
-            scoreKeeper = systems.scoreKeeper;
-            roundData = systems.roundData;
-            timers = systems.timers;
-            positionSync = systems.positionSync;
-            ammo = systems.ammo;
-            localReadyRequested = systems.localReadyRequested;
-        }
-
-        function initGameLoop() {
-            gameLoop = new dependencies.ClientGameLoop({
-                render: renderFrame,
-                scheduleFrame: dependencies.requestAnimFrame,
-                update: updateFrame
-            });
-        }
-
-        function setRoundState(nextState: RoundStateValue) {
-            roundState = dependencies.ClientRoundTransition.resolve({
-                canTransition: dependencies.ClientScreens.canTransition,
-                currentState: roundState,
-                nextState: nextState
-            });
-        }
-
-        function setRoundMessage(message: string) {
-            roundData.setRoundMessage(message);
-            renderHud();
-        }
-
-        function getPlayerSlot(id?: ClientId | null) {
-            if (!latestModel) {
-                return -1;
+    private initScenarioRenderer = () => {
+        this.scenarioRenderer = new this.dependencies.ScenarioRenderer({
+            context: this.context,
+            getObstacleDamage: this.getObstacleDamage,
+            getRockPattern: () => {
+                return this.assets.getRockPattern();
+            },
+            getScenarioStartedAt: () => {
+                return this.roundData.getScenarioStartedAt();
+            },
+            sprites: {
+                cactus: this.assets.sprites.cactus,
+                saloon: this.assets.sprites.saloon,
+                wagon: this.assets.sprites.wagon
             }
-
-            return latestModel.clients.findIndex(function (client) {
-                return client.id === id;
-            });
-        }
-
-        function getPlayer(id?: ClientId | null) {
-            if (id === null || typeof id === 'undefined') {
-                return undefined;
-            }
-
-            return players.all[id];
-        }
-
-        function getLocalPlayer() {
-            return getPlayer(playerId);
-        }
-
-        function resetAmmo() {
-            ammo.reset(latestModel?.clients);
-        }
-
-        function renderHud() {
-            if (!app || !ammo || !hudCanvas || !hudContext) {
-                return;
-            }
-
-            dependencies.ClientHudFlow.render({
-                ammo: ammo,
-                ammoHudRenderer: ammoHudRenderer,
-                app: app,
-                camera: camera,
-                cameraController: cameraController,
-                canvas: canvas,
-                defaultSeconds: dependencies.Config.game.seconds,
-                hudCanvas: hudCanvas,
-                hudContext: hudContext,
-                model: latestModel,
-                players: players,
-                getInstallPromptProps: getInstallPromptProps,
-                getLobbyHudState: getLobbyHudState,
-                getTouchControlsProps: updateTouchControls,
-                roundData: roundData,
-                roundState: roundState,
-                scoreKeeper: scoreKeeper
-            });
-        }
-
-        function getCurrentScenario() {
-            return latestModel && latestModel.currentScenario;
-        }
-
-        function drawScenario() {
-            scenarioRenderer.render(getCurrentScenario());
-        }
-
-        function updateBulletCollisionEnvironment() {
-            dependencies.ClientCollisionEnvironment.updateBulletLines({
-                scenario: getCurrentScenario(),
-                scenarioRenderer: scenarioRenderer
-            });
-        }
-
-        function updateMovementObstacleEnvironment() {
-            dependencies.ClientCollisionEnvironment.updateObstacleBodies({
-                roundState: roundState,
-                scenario: getCurrentScenario(),
-                scenarioRenderer: scenarioRenderer
-            });
-        }
-
-        function getObstacleDamage(id: string) {
-            return roundData.getObstacleDamage(id);
-        }
-
-        function damageObstacle(id: string) {
-            roundData.damageObstacle(id);
-        }
-
-        function getLobbyHudState() {
-            return dependencies.ClientLobbyHudFlow.getState({
-                highScores: highScores,
-                isTouchInterface: isTouchInterface,
-                localReadyRequested: localReadyRequested,
-                model: latestModel,
-                nameEditor: nameEditor,
-                onNameEditorSelect: function (
-                    rowIndex: number,
-                    colIndex: number
-                ) {
-                    nameEditor.select(rowIndex, colIndex);
-                    renderHud();
-                },
-                playerId: playerId,
-                roundState: roundState
-            });
-        }
-
-        function getInstallPromptProps() {
-            return installPrompt && installPrompt.getProps
-                ? installPrompt.getProps()
-                : undefined;
-        }
-
-        function shouldShowHighScoresScreen() {
-            return dependencies.ClientLobbyViewModel.shouldShowHighScoresScreen(
-                {
-                    localReadyRequested: localReadyRequested,
-                    model: latestModel
-                }
-            );
-        }
-
-        function isTouchInterface() {
-            return dependencies.ClientTouchEnvironment.isTouchInterface(window);
-        }
-
-        function shouldUseCamera() {
-            return cameraController.shouldUseCamera({
-                camera: camera,
-                roundState: roundState
-            });
-        }
-
-        function updateCamera() {
-            cameraController.update({
-                camera: camera,
-                canvas: canvas,
-                player: getLocalPlayer(),
-                roundState: roundState
-            });
-        }
-
-        function shouldShowLobbyPrompt() {
-            return dependencies.ClientLobbyViewModel.shouldShowLobbyPrompt({
-                localReadyRequested: localReadyRequested,
-                model: latestModel,
-                playerId: playerId
-            });
-        }
-
-        function isLocalClientReady() {
-            return dependencies.ClientLobbyViewModel.isLocalClientReady({
-                localReadyRequested: localReadyRequested,
-                model: latestModel,
-                playerId: playerId
-            });
-        }
-
-        function isLocalClientWaiting() {
-            return dependencies.ClientLobbyViewModel.isLocalClientWaiting({
-                localReadyRequested: localReadyRequested,
-                model: latestModel,
-                playerId: playerId
-            });
-        }
-
-        function getLocalClient() {
-            return dependencies.ClientLobbyViewModel.getLocalClient(
-                latestModel,
-                playerId
-            );
-        }
-
-        function getClientName(client: RuntimeClient) {
-            return dependencies.ClientLobbyViewModel.getClientName(client);
-        }
-
-        function getStoredPlayerName() {
-            return identity.getStoredPlayerName();
-        }
-
-        function submitNameChange(name: string) {
-            dependencies.ClientNameEditorFlow.submitNameChange({
-                name: name,
-                socket: socket
-            });
-        }
-
-        function syncNameEditor() {
-            dependencies.ClientNameEditorFlow.sync({
-                client: getLocalClient(),
-                identity: identity,
-                editor: nameEditor
-            });
-        }
-
-        function closeNameEditor() {
-            dependencies.ClientNameEditorFlow.close(nameEditor);
-        }
-
-        function enterLobbyState() {
-            dependencies.ClientLobbyFlow.enter({
-                bullets: bullets,
-                players: players,
-                roundData: roundData,
-                roundIntro: roundIntro,
-                scoreKeeper: scoreKeeper,
-                setRoundState: setRoundState,
-                syncNameEditor: syncNameEditor,
-                timers: timers
-            });
-        }
-
-        function syncPlayers(model: RuntimeGameModel) {
-            const previousModel = latestModel;
-
-            latestModel = model;
-
-            dependencies.ClientModelUpdateFlow.sync({
-                clearAbandonedRequeue: clearAbandonedRequeue,
-                clearLocalReadyRequest: function () {
-                    localReadyRequested = false;
-                },
-                enterLobbyState: enterLobbyState,
-                model: model,
-                playerId: playerId,
-                players: players,
-                playReadySound: gameSounds.playReady,
-                previousModel: previousModel,
-                renderHud: renderHud,
-                roundState: roundState,
-                scheduleAbandonedRequeue: scheduleAbandonedRequeue,
-                startRoundRitual: startRoundRitual,
-                syncNameEditor: syncNameEditor,
-                syncStoredPlayerName: syncStoredPlayerName
-            });
-        }
-
-        function scheduleAbandonedRequeue() {
-            dependencies.ClientLobbyFlow.scheduleAbandonedRequeue({
-                socket: socket,
-                timers: timers
-            });
-        }
-
-        function clearAbandonedRequeue() {
-            dependencies.ClientLobbyFlow.clearAbandonedRequeue({
-                timers: timers
-            });
-        }
-
-        function syncStoredPlayerName() {
-            identity.syncStoredPlayerName(getLocalClient());
-        }
-
-        function startRoundRitual(options?: { resetScores?: boolean }) {
-            options = options || {};
-
-            dependencies.ClientRoundRitual.start({
-                bullets: bullets,
-                closeNameEditor: closeNameEditor,
-                endGame: endGame,
-                hasMatchTimeExpired: roundData.hasMatchTimeExpired,
-                renderHud: renderHud,
-                resetAmmo: resetAmmo,
-                resetScores: options.resetScores,
-                roundData: roundData,
-                roundIntro: roundIntro,
-                scheduleMatchEnd: scheduleMatchEnd,
-                scoreKeeper: scoreKeeper,
-                setRoundMessage: setRoundMessage,
-                setRoundState: setRoundState,
-                timers: timers
-            });
-        }
-
-        function scheduleMatchEnd() {
-            dependencies.ClientMatchTimer.scheduleEnd({
-                endGame: endGame,
-                roundData: roundData,
-                timers: timers
-            });
-        }
-
-        function handleKeyEvent(keyEvent: RuntimeKeyEvent) {
-            return dependencies.ClientKeyEventFlow.handle({
-                ammo: ammo,
-                bullets: bullets,
-                isLocalClientWaiting: isLocalClientWaiting,
-                keyEvent: keyEvent,
-                nameEditor: nameEditor,
-                onGunFired: gameSounds.playGun,
-                onBulletFired: function () {
-                    reloadIfBothPlayersAreOutOfAmmo();
-                    renderHud();
-                },
-                onEmptyGun: gameSounds.playEmptyGun,
-                player: getPlayer(keyEvent.player),
-                playerId: playerId,
-                renderHud: renderHud,
-                roundState: roundState
-            });
-        }
-
-        function reloadIfBothPlayersAreOutOfAmmo() {
-            dependencies.ClientAmmoFlow.reloadIfBothPlayersAreOut({
-                ammo: ammo,
-                model: latestModel,
-                roundState: roundState
-            });
-        }
-
-        function checkForHits() {
-            const result = dependencies.ClientHitDetection.check({
-                bullets: bullets,
-                collision: dependencies.Collision,
-                findBulletObstacleHit: findBulletObstacleHit,
-                matchTimeExpired: roundData.hasMatchTimeExpired(),
-                players: players,
-                roundState: roundState
-            }) as RuntimeHitDetectionResult;
-
-            if (result.type === 'matchExpired') {
-                endGame();
-                return;
-            }
-
-            if (result.type === 'obstacleHit') {
-                handleObstacleHit(result.hit);
-                return;
-            }
-
-            if (result.type === 'playerHit') {
-                handlePlayerHit(result.hit);
-            }
-        }
-
-        function findBulletObstacleHit() {
-            return scenarioRenderer.findBulletObstacleHit(
-                bullets.all(),
-                getCurrentScenario()
-            );
-        }
-
-        function handleObstacleHit(hit: RuntimeObstacleHit) {
-            dependencies.ClientObstacleSync.handleLocalHit({
-                applyDamage: applyObstacleDamage,
-                hit: hit,
-                model: latestModel,
-                playerId: playerId,
-                socket: socket
-            });
-        }
-
-        function applyObstacleDamage(data: RuntimeObstacleDamagePayload) {
-            dependencies.ClientObstacleSync.applyDamage({
-                bullets: bullets,
-                damageObstacle: damageObstacle,
-                data: data,
-                model: latestModel,
-                playObstacleHit: gameSounds.playObstacleHit
-            });
-        }
-
-        function handlePlayerHit(hit: RuntimePlayerHit) {
-            dependencies.ClientPlayerHitFlow.handleHit({
-                bullets: bullets,
-                hit: hit,
-                playerId: playerId,
-                players: players,
-                playPain: gameSounds.playPain,
-                renderHud: renderHud,
-                resetAfterHit: resetAfterHit,
-                roundData: roundData,
-                scoreKeeper: scoreKeeper,
-                setRoundState: setRoundState,
-                timers: timers,
-                winnerSlot: getPlayerSlot(hit.winnerId)
-            });
-        }
-
-        function resetAfterHit() {
-            dependencies.ClientPlayerHitFlow.resetAfterHit({
-                bullets: bullets,
-                endGame: endGame,
-                hasMatchTimeExpired: roundData.hasMatchTimeExpired,
-                players: players,
-                resetAmmo: resetAmmo,
-                roundData: roundData,
-                socket: socket,
-                startRoundRitual: startRoundRitual
-            });
-        }
-
-        function endRound(winnerId?: ClientId | null) {
-            dependencies.ClientRoundEndFlow.endRound({
-                bullets: bullets,
-                closeNameEditor: closeNameEditor,
-                getPlayerSlot: getPlayerSlot,
-                players: players,
-                renderHud: renderHud,
-                resetRound: resetRound,
-                roundData: roundData,
-                roundIntro: roundIntro,
-                scoreKeeper: scoreKeeper,
-                setRoundMessage: setRoundMessage,
-                setRoundState: setRoundState,
-                timers: timers,
-                winnerId: winnerId
-            });
-        }
-
-        function endGame() {
-            dependencies.ClientRoundEndFlow.endGame({
-                bullets: bullets,
-                closeNameEditor: closeNameEditor,
-                getClientName: getClientName,
-                model: latestModel,
-                players: players,
-                renderHud: renderHud,
-                resetToStartScreen: resetToStartScreen,
-                roundData: roundData,
-                roundIntro: roundIntro,
-                scoreKeeper: scoreKeeper,
-                setRoundMessage: setRoundMessage,
-                setRoundState: setRoundState,
-                socket: socket,
-                timers: timers
-            });
-        }
-
-        function resetRound() {
-            dependencies.ClientRoundResetFlow.resetRound({
-                bullets: bullets,
-                isReadyToStart: dependencies.ClientModelSync.isReadyToStart,
-                model: latestModel,
-                players: players,
-                renderHud: renderHud,
-                roundData: roundData,
-                setRoundMessage: setRoundMessage,
-                setRoundState: setRoundState,
-                startRoundRitual: startRoundRitual,
-                syncNameEditor: syncNameEditor,
-                timers: timers
-            });
-        }
-
-        function resetToStartScreen() {
-            dependencies.ClientRoundResetFlow.resetToStartScreen({
-                bullets: bullets,
-                players: players,
-                renderHud: renderHud,
-                resetAmmo: resetAmmo,
-                roundData: roundData,
-                setRoundMessage: setRoundMessage,
-                setRoundState: setRoundState,
-                socket: socket,
-                syncNameEditor: syncNameEditor,
-                timers: timers
-            });
-        }
-
-        function updateFrame() {
-            dependencies.ClientFrameFlow.update({
-                checkForHits: checkForHits,
-                roundIntro: roundIntro,
-                scene: scene,
-                syncLocalPlayerPosition: syncLocalPlayerPosition,
-                updateBulletCollisionEnvironment:
-                    updateBulletCollisionEnvironment,
-                updateCamera: updateCamera,
-                updateMovementObstacleEnvironment:
-                    updateMovementObstacleEnvironment
-            });
-        }
-
-        function renderFrame() {
-            dependencies.ClientFrameFlow.render({
-                camera: camera,
-                canvas: canvas,
-                context: context,
-                drawCollisionBodies: drawCollisionBodies,
-                drawScenario: drawScenario,
-                renderHud: renderHud,
-                roundState: roundState,
-                scene: scene,
-                shouldUseCamera: shouldUseCamera,
-                updateTouchControls: updateTouchControls
-            });
-        }
-
-        function syncLocalPlayerPosition() {
-            positionSync.syncLocal({
-                playing: roundState === RoundState.PLAYING,
-                player: getLocalPlayer(),
-                socket: socket
-            });
-        }
-
-        function applyRemotePlayerPosition(data: RuntimePlayerPositionPayload) {
-            positionSync.applyRemote({
-                data: data,
-                localPlayerId: playerId,
-                players: players,
-                playing: roundState === RoundState.PLAYING
-            });
-        }
-
-        function initTouchControls() {
-            touchControls = new dependencies.TouchControls({
-                input: inputController,
-                getAimLevel: getLocalAimLevel
-            });
-            updateTouchControls();
-        }
-
-        function getLocalAimLevel() {
-            return dependencies.ClientTouchControlsFlow.getLocalAimLevel({
-                defaultAim: dependencies.Config.player.defaultAim,
-                player: getLocalPlayer()
-            });
-        }
-
-        function updateTouchControls() {
-            return dependencies.ClientTouchControlsFlow.update({
-                aimLevel: getLocalAimLevel(),
-                editing: nameEditor && nameEditor.isActive(),
-                highScoresVisible: shouldShowHighScoresScreen(),
-                ready: isLocalClientReady(),
-                roundState: roundState,
-                touchControls: touchControls
-            });
-        }
-
-        function drawCollisionBodies() {
-            collisionDebugRenderer.render({
-                obstacleBodies: dependencies.Obstacles.all(),
-                players: players.all
-            });
-        }
-
-        function start() {
-            initCanvas();
-            initGameState();
-
-            socket = new dependencies.ClientNetwork({
-                getStoredPlayerName: getStoredPlayerName,
-                onHighScores: function (nextHighScores: unknown) {
-                    highScores = Array.isArray(nextHighScores)
-                        ? (nextHighScores as HighScoreEntry[])
-                        : [];
-                    renderHud();
-                },
-                onJoinedGame: function (data: RuntimeJoinedGamePayload) {
-                    playerId = data.playerId;
-                    syncPlayers(data.model);
-                    startInputAndAnimation();
-                },
-                onKeyEvent: handleKeyEvent,
-                onPlayerPosition: applyRemotePlayerPosition,
-                onObstacleDamage: applyObstacleDamage,
-                onModelUpdate: syncPlayers
-            }).socket;
-        }
-
-        function startOnce() {
-            if (hasStarted) {
-                return;
-            }
-
-            hasStarted = true;
-            start();
-        }
-
-        function startInputAndAnimation() {
-            inputController = dependencies.ClientInputStartup.start({
-                createInputController: function () {
-                    return new dependencies.KeysModel(
-                        socket,
-                        playerId,
-                        handleKeyEvent,
-                        {
-                            canReady: function () {
-                                return !nameEditor || !nameEditor.isActive();
-                            },
-                            onReady: function () {
-                                localReadyRequested = true;
-                                renderHud();
-                            }
+        });
+    };
+
+    private initCollisionDebugRenderer = () => {
+        this.collisionDebugRenderer =
+            new this.dependencies.CollisionDebugRenderer(this.context);
+    };
+
+    private initIdentity = () => {
+        this.identity = new this.dependencies.ClientIdentity({
+            getClientName: this.getClientName,
+            storage: this.window.localStorage
+        });
+    };
+
+    private initNameEditor = () => {
+        this.nameEditor = new this.dependencies.NameEditor({
+            onChange: this.renderHud,
+            onSubmit: this.submitNameChange
+        });
+    };
+
+    private initCameraController = () => {
+        this.cameraController = new this.dependencies.ClientCameraController({
+            window: this.window
+        });
+    };
+
+    private initCamera = () => {
+        this.camera = new this.dependencies.Camera({
+            worldWidth: this.dependencies.Config.canvas.width,
+            worldHeight: this.dependencies.Config.canvas.height,
+            screenWidth: this.dependencies.Config.canvas.width,
+            screenHeight: this.dependencies.Config.canvas.height,
+            scale: this.cameraController.getCameraScale()
+        });
+    };
+
+    private initGameState = () => {
+        const systems = this.dependencies.ClientGameSystems.create({
+            initialRoundState: this.RoundState.WAITING,
+            playRicochet: this.gameSounds.playRicochet
+        }) as RuntimeSystems;
+
+        this.scene = systems.scene;
+        this.bullets = systems.bullets;
+        this.players = systems.players;
+        this.roundIntro = systems.roundIntro;
+        this.roundState = systems.roundState;
+        this.highScores = systems.highScores;
+        this.scoreKeeper = systems.scoreKeeper;
+        this.roundData = systems.roundData;
+        this.timers = systems.timers;
+        this.positionSync = systems.positionSync;
+        this.ammo = systems.ammo;
+        this.localReadyRequested = systems.localReadyRequested;
+    };
+
+    private initGameLoop = () => {
+        this.gameLoop = new this.dependencies.ClientGameLoop({
+            render: this.renderFrame,
+            scheduleFrame: this.dependencies.requestAnimFrame,
+            update: this.updateFrame
+        });
+    };
+
+    private initTouchControls = () => {
+        this.touchControls = new this.dependencies.TouchControls({
+            input: this.inputController,
+            getAimLevel: this.getLocalAimLevel
+        });
+        this.updateTouchControls();
+    };
+
+    private startInputAndAnimation = () => {
+        this.inputController = this.dependencies.ClientInputStartup.start({
+            createInputController: () => {
+                return new this.dependencies.KeysModel(
+                    this.socket,
+                    this.playerId,
+                    this.handleKeyEvent,
+                    {
+                        canReady: () => {
+                            return (
+                                !this.nameEditor || !this.nameEditor.isActive()
+                            );
+                        },
+                        onReady: () => {
+                            this.localReadyRequested = true;
+                            this.renderHud();
                         }
-                    );
-                },
-                initTouchControls: function (
-                    nextInputController: RuntimeInputController
-                ) {
-                    inputController = nextInputController;
-                    initTouchControls();
-                },
-                inputController: inputController,
-                startGameLoop: function () {
-                    initGameLoop();
-                    gameLoop.start();
-                }
-            });
+                    }
+                );
+            },
+            initTouchControls: (
+                nextInputController: RuntimeInputController
+            ) => {
+                this.inputController = nextInputController;
+                this.initTouchControls();
+            },
+            inputController: this.inputController,
+            startGameLoop: () => {
+                this.initGameLoop();
+                this.gameLoop.start();
+            }
+        });
+    };
+
+    private renderHud = () => {
+        if (!this.app || !this.ammo || !this.hudCanvas || !this.hudContext) {
+            return;
         }
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', startOnce);
-        } else {
-            startOnce();
+        this.dependencies.ClientHudFlow.render({
+            ammo: this.ammo,
+            ammoHudRenderer: this.ammoHudRenderer,
+            app: this.app,
+            camera: this.camera,
+            cameraController: this.cameraController,
+            canvas: this.canvas,
+            defaultSeconds: this.dependencies.Config.game.seconds,
+            hudCanvas: this.hudCanvas,
+            hudContext: this.hudContext,
+            model: this.latestModel,
+            players: this.players,
+            getInstallPromptProps: this.getInstallPromptProps,
+            getLobbyHudState: this.getLobbyHudState,
+            getTouchControlsProps: this.updateTouchControls,
+            roundData: this.roundData,
+            roundState: this.roundState,
+            scoreKeeper: this.scoreKeeper
+        });
+    };
+
+    private updateFrame = () => {
+        this.dependencies.ClientFrameFlow.update({
+            checkForHits: this.checkForHits,
+            roundIntro: this.roundIntro,
+            scene: this.scene,
+            syncLocalPlayerPosition: this.syncLocalPlayerPosition,
+            updateBulletCollisionEnvironment:
+                this.updateBulletCollisionEnvironment,
+            updateCamera: this.updateCamera,
+            updateMovementObstacleEnvironment:
+                this.updateMovementObstacleEnvironment
+        });
+    };
+
+    private renderFrame = () => {
+        this.dependencies.ClientFrameFlow.render({
+            camera: this.camera,
+            canvas: this.canvas,
+            context: this.context,
+            drawCollisionBodies: this.drawCollisionBodies,
+            drawScenario: this.drawScenario,
+            renderHud: this.renderHud,
+            roundState: this.roundState,
+            scene: this.scene,
+            shouldUseCamera: this.shouldUseCamera,
+            updateTouchControls: this.updateTouchControls
+        });
+    };
+
+    private onHighScores = (nextHighScores: unknown) => {
+        this.highScores = Array.isArray(nextHighScores)
+            ? (nextHighScores as HighScoreEntry[])
+            : [];
+        this.renderHud();
+    };
+
+    private onJoinedGame = (data: RuntimeJoinedGamePayload) => {
+        this.playerId = data.playerId;
+        this.syncPlayers(data.model);
+        this.startInputAndAnimation();
+    };
+
+    private syncPlayers = (model: RuntimeGameModel) => {
+        const previousModel = this.latestModel;
+
+        this.latestModel = model;
+
+        this.dependencies.ClientModelUpdateFlow.sync({
+            clearAbandonedRequeue: this.clearAbandonedRequeue,
+            clearLocalReadyRequest: () => {
+                this.localReadyRequested = false;
+            },
+            enterLobbyState: this.enterLobbyState,
+            model,
+            playerId: this.playerId,
+            players: this.players,
+            playReadySound: this.gameSounds.playReady,
+            previousModel,
+            renderHud: this.renderHud,
+            roundState: this.roundState,
+            scheduleAbandonedRequeue: this.scheduleAbandonedRequeue,
+            startRoundRitual: this.startRoundRitual,
+            syncNameEditor: this.syncNameEditor,
+            syncStoredPlayerName: this.syncStoredPlayerName
+        });
+    };
+
+    private handleKeyEvent = (keyEvent: RuntimeKeyEvent) => {
+        return this.dependencies.ClientKeyEventFlow.handle({
+            ammo: this.ammo,
+            bullets: this.bullets,
+            isLocalClientWaiting: this.isLocalClientWaiting,
+            keyEvent,
+            nameEditor: this.nameEditor,
+            onGunFired: this.gameSounds.playGun,
+            onBulletFired: () => {
+                this.reloadIfBothPlayersAreOutOfAmmo();
+                this.renderHud();
+            },
+            onEmptyGun: this.gameSounds.playEmptyGun,
+            player: this.getPlayer(keyEvent.player),
+            playerId: this.playerId,
+            renderHud: this.renderHud,
+            roundState: this.roundState
+        });
+    };
+
+    private applyRemotePlayerPosition = (
+        data: RuntimePlayerPositionPayload
+    ) => {
+        this.positionSync.applyRemote({
+            data,
+            localPlayerId: this.playerId,
+            players: this.players,
+            playing: this.roundState === this.RoundState.PLAYING
+        });
+    };
+
+    private applyObstacleDamage = (data: RuntimeObstacleDamagePayload) => {
+        this.dependencies.ClientObstacleSync.applyDamage({
+            bullets: this.bullets,
+            damageObstacle: this.damageObstacle,
+            data,
+            model: this.latestModel,
+            playObstacleHit: this.gameSounds.playObstacleHit
+        });
+    };
+
+    private setRoundState = (nextState: RoundStateValue) => {
+        this.roundState = this.dependencies.ClientRoundTransition.resolve({
+            canTransition: this.dependencies.ClientScreens.canTransition,
+            currentState: this.roundState,
+            nextState
+        });
+    };
+
+    private setRoundMessage = (message: string) => {
+        this.roundData.setRoundMessage(message);
+        this.renderHud();
+    };
+
+    private startRoundRitual = (options?: { resetScores?: boolean }) => {
+        options = options || {};
+
+        this.dependencies.ClientRoundRitual.start({
+            bullets: this.bullets,
+            closeNameEditor: this.closeNameEditor,
+            endGame: this.endGame,
+            hasMatchTimeExpired: this.roundData.hasMatchTimeExpired,
+            renderHud: this.renderHud,
+            resetAmmo: this.resetAmmo,
+            resetScores: options.resetScores,
+            roundData: this.roundData,
+            roundIntro: this.roundIntro,
+            scheduleMatchEnd: this.scheduleMatchEnd,
+            scoreKeeper: this.scoreKeeper,
+            setRoundMessage: this.setRoundMessage,
+            setRoundState: this.setRoundState,
+            timers: this.timers
+        });
+    };
+
+    private scheduleMatchEnd = () => {
+        this.dependencies.ClientMatchTimer.scheduleEnd({
+            endGame: this.endGame,
+            roundData: this.roundData,
+            timers: this.timers
+        });
+    };
+
+    private checkForHits = () => {
+        const result = this.dependencies.ClientHitDetection.check({
+            bullets: this.bullets,
+            collision: this.dependencies.Collision,
+            findBulletObstacleHit: this.findBulletObstacleHit,
+            matchTimeExpired: this.roundData.hasMatchTimeExpired(),
+            players: this.players,
+            roundState: this.roundState
+        }) as RuntimeHitDetectionResult;
+
+        if (result.type === 'matchExpired') {
+            this.endGame();
+            return;
         }
 
-        return {
-            start: startOnce
-        };
-    })();
+        if (result.type === 'obstacleHit') {
+            this.handleObstacleHit(result.hit);
+            return;
+        }
+
+        if (result.type === 'playerHit') {
+            this.handlePlayerHit(result.hit);
+        }
+    };
+
+    private handleObstacleHit = (hit: RuntimeObstacleHit) => {
+        this.dependencies.ClientObstacleSync.handleLocalHit({
+            applyDamage: this.applyObstacleDamage,
+            hit,
+            model: this.latestModel,
+            playerId: this.playerId,
+            socket: this.socket
+        });
+    };
+
+    private handlePlayerHit = (hit: RuntimePlayerHit) => {
+        this.dependencies.ClientPlayerHitFlow.handleHit({
+            bullets: this.bullets,
+            hit,
+            playerId: this.playerId,
+            players: this.players,
+            playPain: this.gameSounds.playPain,
+            renderHud: this.renderHud,
+            resetAfterHit: this.resetAfterHit,
+            roundData: this.roundData,
+            scoreKeeper: this.scoreKeeper,
+            setRoundState: this.setRoundState,
+            timers: this.timers,
+            winnerSlot: this.getPlayerSlot(hit.winnerId)
+        });
+    };
+
+    private resetAfterHit = () => {
+        this.dependencies.ClientPlayerHitFlow.resetAfterHit({
+            bullets: this.bullets,
+            endGame: this.endGame,
+            hasMatchTimeExpired: this.roundData.hasMatchTimeExpired,
+            players: this.players,
+            resetAmmo: this.resetAmmo,
+            roundData: this.roundData,
+            socket: this.socket,
+            startRoundRitual: this.startRoundRitual
+        });
+    };
+
+    private endRound = (winnerId?: ClientId | null) => {
+        this.dependencies.ClientRoundEndFlow.endRound({
+            bullets: this.bullets,
+            closeNameEditor: this.closeNameEditor,
+            getPlayerSlot: this.getPlayerSlot,
+            players: this.players,
+            renderHud: this.renderHud,
+            resetRound: this.resetRound,
+            roundData: this.roundData,
+            roundIntro: this.roundIntro,
+            scoreKeeper: this.scoreKeeper,
+            setRoundMessage: this.setRoundMessage,
+            setRoundState: this.setRoundState,
+            timers: this.timers,
+            winnerId
+        });
+    };
+
+    private endGame = () => {
+        this.dependencies.ClientRoundEndFlow.endGame({
+            bullets: this.bullets,
+            closeNameEditor: this.closeNameEditor,
+            getClientName: this.getClientName,
+            model: this.latestModel,
+            players: this.players,
+            renderHud: this.renderHud,
+            resetToStartScreen: this.resetToStartScreen,
+            roundData: this.roundData,
+            roundIntro: this.roundIntro,
+            scoreKeeper: this.scoreKeeper,
+            setRoundMessage: this.setRoundMessage,
+            setRoundState: this.setRoundState,
+            socket: this.socket,
+            timers: this.timers
+        });
+    };
+
+    private resetRound = () => {
+        this.dependencies.ClientRoundResetFlow.resetRound({
+            bullets: this.bullets,
+            isReadyToStart: this.dependencies.ClientModelSync.isReadyToStart,
+            model: this.latestModel,
+            players: this.players,
+            renderHud: this.renderHud,
+            roundData: this.roundData,
+            setRoundMessage: this.setRoundMessage,
+            setRoundState: this.setRoundState,
+            startRoundRitual: this.startRoundRitual,
+            syncNameEditor: this.syncNameEditor,
+            timers: this.timers
+        });
+    };
+
+    private resetToStartScreen = () => {
+        this.dependencies.ClientRoundResetFlow.resetToStartScreen({
+            bullets: this.bullets,
+            players: this.players,
+            renderHud: this.renderHud,
+            resetAmmo: this.resetAmmo,
+            roundData: this.roundData,
+            setRoundMessage: this.setRoundMessage,
+            setRoundState: this.setRoundState,
+            socket: this.socket,
+            syncNameEditor: this.syncNameEditor,
+            timers: this.timers
+        });
+    };
+
+    private enterLobbyState = () => {
+        this.dependencies.ClientLobbyFlow.enter({
+            bullets: this.bullets,
+            players: this.players,
+            roundData: this.roundData,
+            roundIntro: this.roundIntro,
+            scoreKeeper: this.scoreKeeper,
+            setRoundState: this.setRoundState,
+            syncNameEditor: this.syncNameEditor,
+            timers: this.timers
+        });
+    };
+
+    private scheduleAbandonedRequeue = () => {
+        this.dependencies.ClientLobbyFlow.scheduleAbandonedRequeue({
+            socket: this.socket,
+            timers: this.timers
+        });
+    };
+
+    private clearAbandonedRequeue = () => {
+        this.dependencies.ClientLobbyFlow.clearAbandonedRequeue({
+            timers: this.timers
+        });
+    };
+
+    private syncLocalPlayerPosition = () => {
+        this.positionSync.syncLocal({
+            playing: this.roundState === this.RoundState.PLAYING,
+            player: this.getLocalPlayer(),
+            socket: this.socket
+        });
+    };
+
+    private updateBulletCollisionEnvironment = () => {
+        this.dependencies.ClientCollisionEnvironment.updateBulletLines({
+            scenario: this.getCurrentScenario(),
+            scenarioRenderer: this.scenarioRenderer
+        });
+    };
+
+    private updateMovementObstacleEnvironment = () => {
+        this.dependencies.ClientCollisionEnvironment.updateObstacleBodies({
+            roundState: this.roundState,
+            scenario: this.getCurrentScenario(),
+            scenarioRenderer: this.scenarioRenderer
+        });
+    };
+
+    private updateCamera = () => {
+        this.cameraController.update({
+            camera: this.camera,
+            canvas: this.canvas,
+            player: this.getLocalPlayer(),
+            roundState: this.roundState
+        });
+    };
+
+    private drawScenario = () => {
+        this.scenarioRenderer.render(this.getCurrentScenario());
+    };
+
+    private drawCollisionBodies = () => {
+        this.collisionDebugRenderer.render({
+            obstacleBodies: this.dependencies.Obstacles.all(),
+            players: this.players.all
+        });
+    };
+
+    private updateTouchControls = () => {
+        return this.dependencies.ClientTouchControlsFlow.update({
+            aimLevel: this.getLocalAimLevel(),
+            editing: this.nameEditor && this.nameEditor.isActive(),
+            highScoresVisible: this.shouldShowHighScoresScreen(),
+            ready: this.isLocalClientReady(),
+            roundState: this.roundState,
+            touchControls: this.touchControls
+        });
+    };
+
+    private getLobbyHudState = () => {
+        return this.dependencies.ClientLobbyHudFlow.getState({
+            highScores: this.highScores,
+            isTouchInterface: this.isTouchInterface,
+            localReadyRequested: this.localReadyRequested,
+            model: this.latestModel,
+            nameEditor: this.nameEditor,
+            onNameEditorSelect: (rowIndex: number, colIndex: number) => {
+                this.nameEditor.select(rowIndex, colIndex);
+                this.renderHud();
+            },
+            playerId: this.playerId,
+            roundState: this.roundState
+        });
+    };
+
+    private getInstallPromptProps = () => {
+        return this.installPrompt && this.installPrompt.getProps
+            ? this.installPrompt.getProps()
+            : undefined;
+    };
+
+    private getCurrentScenario = () => {
+        return this.latestModel && this.latestModel.currentScenario;
+    };
+
+    private findBulletObstacleHit = () => {
+        return this.scenarioRenderer.findBulletObstacleHit(
+            this.bullets.all(),
+            this.getCurrentScenario()
+        );
+    };
+
+    private getObstacleDamage = (id: string) => {
+        return this.roundData.getObstacleDamage(id);
+    };
+
+    private damageObstacle = (id: string) => {
+        this.roundData.damageObstacle(id);
+    };
+
+    private getPlayerSlot = (id?: ClientId | null) => {
+        if (!this.latestModel) {
+            return -1;
+        }
+
+        return this.latestModel.clients.findIndex(function (client) {
+            return client.id === id;
+        });
+    };
+
+    private getPlayer = (id?: ClientId | null) => {
+        if (id === null || typeof id === 'undefined') {
+            return undefined;
+        }
+
+        return this.players.all[id];
+    };
+
+    private getLocalPlayer = () => {
+        return this.getPlayer(this.playerId);
+    };
+
+    private getLocalClient = () => {
+        return this.dependencies.ClientLobbyViewModel.getLocalClient(
+            this.latestModel,
+            this.playerId
+        );
+    };
+
+    private getClientName = (client: RuntimeClient) => {
+        return this.dependencies.ClientLobbyViewModel.getClientName(client);
+    };
+
+    private getStoredPlayerName = () => {
+        return this.identity.getStoredPlayerName();
+    };
+
+    private getLocalAimLevel = () => {
+        return this.dependencies.ClientTouchControlsFlow.getLocalAimLevel({
+            defaultAim: this.dependencies.Config.player.defaultAim,
+            player: this.getLocalPlayer()
+        });
+    };
+
+    private isTouchInterface = () => {
+        return this.dependencies.ClientTouchEnvironment.isTouchInterface(
+            this.window
+        );
+    };
+
+    private shouldUseCamera = () => {
+        return this.cameraController.shouldUseCamera({
+            camera: this.camera,
+            roundState: this.roundState
+        });
+    };
+
+    private shouldShowHighScoresScreen = () => {
+        return this.dependencies.ClientLobbyViewModel.shouldShowHighScoresScreen(
+            {
+                localReadyRequested: this.localReadyRequested,
+                model: this.latestModel
+            }
+        );
+    };
+
+    private isLocalClientReady = () => {
+        return this.dependencies.ClientLobbyViewModel.isLocalClientReady({
+            localReadyRequested: this.localReadyRequested,
+            model: this.latestModel,
+            playerId: this.playerId
+        });
+    };
+
+    private isLocalClientWaiting = () => {
+        return this.dependencies.ClientLobbyViewModel.isLocalClientWaiting({
+            localReadyRequested: this.localReadyRequested,
+            model: this.latestModel,
+            playerId: this.playerId
+        });
+    };
+
+    private submitNameChange = (name: string) => {
+        this.dependencies.ClientNameEditorFlow.submitNameChange({
+            name,
+            socket: this.socket
+        });
+    };
+
+    private syncNameEditor = () => {
+        this.dependencies.ClientNameEditorFlow.sync({
+            client: this.getLocalClient(),
+            identity: this.identity,
+            editor: this.nameEditor
+        });
+    };
+
+    private closeNameEditor = () => {
+        this.dependencies.ClientNameEditorFlow.close(this.nameEditor);
+    };
+
+    private syncStoredPlayerName = () => {
+        this.identity.syncStoredPlayerName(this.getLocalClient());
+    };
+
+    private resetAmmo = () => {
+        this.ammo.reset(this.latestModel?.clients);
+    };
+
+    private reloadIfBothPlayersAreOutOfAmmo = () => {
+        this.dependencies.ClientAmmoFlow.reloadIfBothPlayersAreOut({
+            ammo: this.ammo,
+            model: this.latestModel,
+            roundState: this.roundState
+        });
+    };
 }
 
 function flattenDependencies(

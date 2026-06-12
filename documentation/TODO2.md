@@ -122,7 +122,7 @@ not own websocket, gameplay, or synchronization state.
       unnecessary casts.
     - Update tests alongside each conversion.
 
-- [ ] P1.5.4 - Split the large `createGame` closure into a runtime object once
+- [x] P1.5.4 - Split the large `createGame` closure into a runtime object once
       the typed state and regression tests make the boundaries clear.
     - Keep startup, state accessors, network callbacks, input startup, frame
       update/render, and round orchestration easy to scan separately.
