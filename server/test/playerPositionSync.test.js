@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 async function loadPlayerPositionSync() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/playerPositionSync.ts'),
+        path.join(process.cwd(), 'client/src/network/playerPositionSync.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {

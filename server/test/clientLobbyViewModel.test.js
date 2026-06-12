@@ -6,7 +6,10 @@ import ts from 'typescript';
 
 async function loadClientLobbyViewModel() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientLobbyViewModel.ts'),
+        path.join(
+            process.cwd(),
+            'client/src/ui/viewModels/clientLobbyViewModel.ts'
+        ),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {

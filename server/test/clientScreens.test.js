@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 async function loadClientScreens() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientScreens.ts'),
+        path.join(process.cwd(), 'client/src/state/clientScreens.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {

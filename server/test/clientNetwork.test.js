@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 async function loadClientNetwork() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientNetwork.ts'),
+        path.join(process.cwd(), 'client/src/network/clientNetwork.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {

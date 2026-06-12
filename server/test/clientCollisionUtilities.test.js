@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -8,7 +8,7 @@ import ts from 'typescript';
 
 function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules', sourceName),
+        path.join(process.cwd(), 'client/src', sourceName),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {
@@ -18,26 +18,35 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
         }
     });
 
-    writeFileSync(
-        path.join(tempDirectory, outputName),
-        transpiled.outputText,
-        'utf8'
-    );
+    const outputPath = path.join(tempDirectory, outputName);
+
+    mkdirSync(path.dirname(outputPath), { recursive: true });
+    writeFileSync(outputPath, transpiled.outputText, 'utf8');
 }
 
 async function loadCollisionUtilities() {
     const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
 
-    compileClientModule('collision.ts', 'collision.js', tempDirectory);
-    compileClientModule('obstacles.ts', 'obstacles.js', tempDirectory);
-    compileClientModule('scene.ts', 'scene.js', tempDirectory);
+    compileClientModule(
+        'engine/collision.ts',
+        'engine/collision.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'engine/obstacles.ts',
+        'engine/obstacles.js',
+        tempDirectory
+    );
+    compileClientModule('engine/scene.ts', 'engine/scene.js', tempDirectory);
 
     const [collisionModule, obstaclesModule, sceneModule] = await Promise.all(
-        ['collision.js', 'obstacles.js', 'scene.js'].map(function (fileName) {
-            return import(
-                pathToFileURL(path.join(tempDirectory, fileName)).href
-            );
-        })
+        ['engine/collision.js', 'engine/obstacles.js', 'engine/scene.js'].map(
+            function (fileName) {
+                return import(
+                    pathToFileURL(path.join(tempDirectory, fileName)).href
+                );
+            }
+        )
     );
 
     return {

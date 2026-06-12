@@ -13,7 +13,7 @@ import ts from 'typescript';
 
 function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules', sourceName),
+        path.join(process.cwd(), 'client/src', sourceName),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {
@@ -26,11 +26,10 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
         fileName: sourceName
     });
 
-    writeFileSync(
-        path.join(tempDirectory, outputName),
-        transpiled.outputText,
-        'utf8'
-    );
+    const outputPath = path.join(tempDirectory, outputName);
+
+    mkdirSync(path.dirname(outputPath), { recursive: true });
+    writeFileSync(outputPath, transpiled.outputText, 'utf8');
 }
 
 async function loadBrowserConstructors() {
@@ -42,34 +41,48 @@ async function loadBrowserConstructors() {
     );
 
     compileClientModule(
-        'componentRenderProps.ts',
-        'componentRenderProps.js',
-        tempDirectory
-    );
-    compileClientModule('config.ts', 'config.js', tempDirectory);
-    compileClientModule('camera.ts', 'camera.js', tempDirectory);
-    compileClientModule('soundEffects.ts', 'soundEffects.js', tempDirectory);
-    compileClientModule('touchControls.ts', 'touchControls.js', tempDirectory);
-    compileClientModule(
-        'touchGameplayControlsComponentScreen.tsx',
-        'touchGameplayControlsComponentScreen.js',
+        'ui/componentRenderProps.ts',
+        'ui/componentRenderProps.js',
         tempDirectory
     );
     compileClientModule(
-        'touchLobbyControlsComponentScreen.tsx',
-        'touchLobbyControlsComponentScreen.js',
+        'platform/config.ts',
+        'platform/config.js',
+        tempDirectory
+    );
+    compileClientModule('engine/camera.ts', 'engine/camera.js', tempDirectory);
+    compileClientModule(
+        'platform/soundEffects.ts',
+        'platform/soundEffects.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'input/touchControls.ts',
+        'input/touchControls.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'ui/components/touchGameplayControlsComponentScreen.tsx',
+        'ui/components/touchGameplayControlsComponentScreen.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'ui/components/touchLobbyControlsComponentScreen.tsx',
+        'ui/components/touchLobbyControlsComponentScreen.js',
         tempDirectory
     );
 
     try {
         const [cameraModule, soundModule, touchModule] = await Promise.all(
-            ['camera.js', 'soundEffects.js', 'touchControls.js'].map(
-                function (fileName) {
-                    return import(
-                        pathToFileURL(path.join(tempDirectory, fileName)).href
-                    );
-                }
-            )
+            [
+                'engine/camera.js',
+                'platform/soundEffects.js',
+                'input/touchControls.js'
+            ].map(function (fileName) {
+                return import(
+                    pathToFileURL(path.join(tempDirectory, fileName)).href
+                );
+            })
         );
 
         return {

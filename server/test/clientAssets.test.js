@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 async function loadClientAssets() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientAssets.ts'),
+        path.join(process.cwd(), 'client/src/platform/clientAssets.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {

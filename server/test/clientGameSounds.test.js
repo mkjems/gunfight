@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 async function loadClientGameSounds() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientGameSounds.ts'),
+        path.join(process.cwd(), 'client/src/platform/clientGameSounds.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {

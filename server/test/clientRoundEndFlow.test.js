@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -8,7 +8,7 @@ import ts from 'typescript';
 
 function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules', sourceName),
+        path.join(process.cwd(), 'client/src', sourceName),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {
@@ -18,26 +18,34 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
         }
     });
 
-    writeFileSync(
-        path.join(tempDirectory, outputName),
-        transpiled.outputText,
-        'utf8'
-    );
+    const outputPath = path.join(tempDirectory, outputName);
+
+    mkdirSync(path.dirname(outputPath), { recursive: true });
+    writeFileSync(outputPath, transpiled.outputText, 'utf8');
 }
 
 async function loadClientRoundEndFlow() {
     const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
 
-    compileClientModule('config.ts', 'config.js', tempDirectory);
-    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
     compileClientModule(
-        'clientRoundEndFlow.ts',
-        'clientRoundEndFlow.js',
+        'platform/config.ts',
+        'platform/config.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'state/clientScreens.ts',
+        'state/clientScreens.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'flows/clientRoundEndFlow.ts',
+        'flows/clientRoundEndFlow.js',
         tempDirectory
     );
 
     const module = await import(
-        pathToFileURL(path.join(tempDirectory, 'clientRoundEndFlow.js')).href
+        pathToFileURL(path.join(tempDirectory, 'flows/clientRoundEndFlow.js'))
+            .href
     );
 
     return module.ClientRoundEndFlow;

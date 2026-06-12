@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 async function loadClientTimers() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientTimers.ts'),
+        path.join(process.cwd(), 'client/src/state/clientTimers.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {

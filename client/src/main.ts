@@ -1,5 +1,5 @@
-import { ClientRuntimeDependencies } from './modules/clientRuntimeDependencies.js';
-import { createGame } from './modules/game.js';
+import { ClientRuntimeDependencies } from './runtime/clientRuntimeDependencies.js';
+import { createGame } from './runtime/game.js';
 
 type GlobalWithSocketIo = typeof globalThis & {
     io?: unknown;

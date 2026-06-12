@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -8,7 +8,7 @@ import ts from 'typescript';
 
 function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules', sourceName),
+        path.join(process.cwd(), 'client/src', sourceName),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {
@@ -18,26 +18,33 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
         }
     });
 
-    writeFileSync(
-        path.join(tempDirectory, outputName),
-        transpiled.outputText,
-        'utf8'
-    );
+    const outputPath = path.join(tempDirectory, outputName);
+
+    mkdirSync(path.dirname(outputPath), { recursive: true });
+    writeFileSync(outputPath, transpiled.outputText, 'utf8');
 }
 
 async function loadClientHudFlow() {
     const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
 
-    compileClientModule('clientScreens.ts', 'clientScreens.js', tempDirectory);
     compileClientModule(
-        'gameHudViewModel.ts',
-        'gameHudViewModel.js',
+        'state/clientScreens.ts',
+        'state/clientScreens.js',
         tempDirectory
     );
-    compileClientModule('clientHudFlow.ts', 'clientHudFlow.js', tempDirectory);
+    compileClientModule(
+        'ui/viewModels/gameHudViewModel.ts',
+        'ui/viewModels/gameHudViewModel.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'flows/clientHudFlow.ts',
+        'flows/clientHudFlow.js',
+        tempDirectory
+    );
 
     const module = await import(
-        pathToFileURL(path.join(tempDirectory, 'clientHudFlow.js')).href
+        pathToFileURL(path.join(tempDirectory, 'flows/clientHudFlow.js')).href
     );
 
     return module.ClientHudFlow;

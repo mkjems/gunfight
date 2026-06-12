@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -8,7 +8,7 @@ import ts from 'typescript';
 
 function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules', sourceName),
+        path.join(process.cwd(), 'client/src', sourceName),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {
@@ -18,32 +18,37 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
         }
     });
 
-    writeFileSync(
-        path.join(tempDirectory, outputName),
-        transpiled.outputText,
-        'utf8'
-    );
+    const outputPath = path.join(tempDirectory, outputName);
+
+    mkdirSync(path.dirname(outputPath), { recursive: true });
+    writeFileSync(outputPath, transpiled.outputText, 'utf8');
 }
 
 async function loadDrawingUtilities() {
     const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
 
-    compileClientModule('color.ts', 'color.js', tempDirectory);
-    compileClientModule('pen.ts', 'pen.js', tempDirectory);
     compileClientModule(
-        'requestAnimationFrame.ts',
-        'requestAnimationFrame.js',
+        'platform/color.ts',
+        'platform/color.js',
+        tempDirectory
+    );
+    compileClientModule('platform/pen.ts', 'platform/pen.js', tempDirectory);
+    compileClientModule(
+        'platform/requestAnimationFrame.ts',
+        'platform/requestAnimationFrame.js',
         tempDirectory
     );
 
     const [colorModule, penModule, animationModule] = await Promise.all(
-        ['color.js', 'pen.js', 'requestAnimationFrame.js'].map(
-            function (fileName) {
-                return import(
-                    pathToFileURL(path.join(tempDirectory, fileName)).href
-                );
-            }
-        )
+        [
+            'platform/color.js',
+            'platform/pen.js',
+            'platform/requestAnimationFrame.js'
+        ].map(function (fileName) {
+            return import(
+                pathToFileURL(path.join(tempDirectory, fileName)).href
+            );
+        })
     );
 
     return {

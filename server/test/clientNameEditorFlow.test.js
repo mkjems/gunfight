@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 async function loadClientNameEditorFlow() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientNameEditorFlow.ts'),
+        path.join(process.cwd(), 'client/src/flows/clientNameEditorFlow.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {

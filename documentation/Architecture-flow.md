@@ -37,6 +37,29 @@ rendering rule).
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+## Client Source Folders
+
+Client modules are grouped by the architecture boundary they belong to:
+
+- `client/src/runtime/` — startup orchestration, dependency wiring, game loop
+  construction, and runtime system factories.
+- `client/src/ui/` — the single Preact app root, component screens, HUD/lobby
+  view models, install prompt controller, and DOM/HUD UI render orchestration.
+- `client/src/engine/` — imperative canvas gameplay objects and render helpers:
+  players, bullets, scene, camera, collision, obstacles, scenarios, ammo,
+  score, and round intro state.
+- `client/src/flows/` — side-effect orchestration between state, engine,
+  network, input, UI, and timers.
+- `client/src/input/` — keyboard, touch controls, touch-interface state, and
+  name-editor input model.
+- `client/src/network/` — Socket.IO client wiring and synchronization helpers
+  for public models, positions, model-update plans, and obstacle damage.
+- `client/src/platform/` — browser/platform adapters and shared utilities:
+  config, canvas setup/tools, assets, audio, identity storage, drawing helpers,
+  and animation-frame scheduling.
+- `client/src/state/` — framework-independent state utilities and shared client
+  state enums such as screens, round state, and timers.
+
 ## Server: What It Owns And Emits
 
 `server/server.js` constructs Express, Socket.IO, and the three game modules,

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -8,7 +8,7 @@ import ts from 'typescript';
 
 function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules', sourceName),
+        path.join(process.cwd(), 'client/src', sourceName),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {
@@ -18,29 +18,48 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
         }
     });
 
-    writeFileSync(
-        path.join(tempDirectory, outputName),
-        transpiled.outputText,
-        'utf8'
-    );
+    const outputPath = path.join(tempDirectory, outputName);
+
+    mkdirSync(path.dirname(outputPath), { recursive: true });
+    writeFileSync(outputPath, transpiled.outputText, 'utf8');
 }
 
 async function loadStateUtilities() {
     const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
 
-    compileClientModule('config.ts', 'config.js', tempDirectory);
-    compileClientModule('keysModel.ts', 'keysModel.js', tempDirectory);
-    compileClientModule('nameEditor.ts', 'nameEditor.js', tempDirectory);
-    compileClientModule('scoreKeeper.ts', 'scoreKeeper.js', tempDirectory);
-    compileClientModule('roundIntro.ts', 'roundIntro.js', tempDirectory);
+    compileClientModule(
+        'platform/config.ts',
+        'platform/config.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'input/keysModel.ts',
+        'input/keysModel.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'input/nameEditor.ts',
+        'input/nameEditor.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'engine/scoreKeeper.ts',
+        'engine/scoreKeeper.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'engine/roundIntro.ts',
+        'engine/roundIntro.js',
+        tempDirectory
+    );
 
     const [keysModule, nameEditorModule, scoreKeeperModule, roundIntroModule] =
         await Promise.all(
             [
-                'keysModel.js',
-                'nameEditor.js',
-                'scoreKeeper.js',
-                'roundIntro.js'
+                'input/keysModel.js',
+                'input/nameEditor.js',
+                'engine/scoreKeeper.js',
+                'engine/roundIntro.js'
             ].map(function (fileName) {
                 return import(
                     pathToFileURL(path.join(tempDirectory, fileName)).href

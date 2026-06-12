@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -8,7 +8,7 @@ import ts from 'typescript';
 
 function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules', sourceName),
+        path.join(process.cwd(), 'client/src', sourceName),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {
@@ -18,25 +18,24 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
         }
     });
 
-    writeFileSync(
-        path.join(tempDirectory, outputName),
-        transpiled.outputText,
-        'utf8'
-    );
+    const outputPath = path.join(tempDirectory, outputName);
+
+    mkdirSync(path.dirname(outputPath), { recursive: true });
+    writeFileSync(outputPath, transpiled.outputText, 'utf8');
 }
 
 async function loadGameplayConstructors() {
     const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
 
     [
-        'config.ts',
-        'color.ts',
-        'pen.ts',
-        'obstacles.ts',
-        'bullet.ts',
-        'bullets.ts',
-        'controllable.ts',
-        'players.ts'
+        'platform/config.ts',
+        'platform/color.ts',
+        'platform/pen.ts',
+        'engine/obstacles.ts',
+        'engine/bullet.ts',
+        'engine/bullets.ts',
+        'engine/controllable.ts',
+        'engine/players.ts'
     ].forEach(function (sourceName) {
         compileClientModule(
             sourceName,
@@ -47,13 +46,16 @@ async function loadGameplayConstructors() {
 
     const [bulletModule, bulletsModule, controllableModule, playersModule] =
         await Promise.all(
-            ['bullet.js', 'bullets.js', 'controllable.js', 'players.js'].map(
-                function (fileName) {
-                    return import(
-                        pathToFileURL(path.join(tempDirectory, fileName)).href
-                    );
-                }
-            )
+            [
+                'engine/bullet.js',
+                'engine/bullets.js',
+                'engine/controllable.js',
+                'engine/players.js'
+            ].map(function (fileName) {
+                return import(
+                    pathToFileURL(path.join(tempDirectory, fileName)).href
+                );
+            })
         );
 
     return {

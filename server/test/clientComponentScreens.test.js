@@ -14,7 +14,7 @@ import { Window } from 'happy-dom';
 
 function compileClientModule(sourceName, outputName, tempDirectory) {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules', sourceName),
+        path.join(process.cwd(), 'client/src', sourceName),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {
@@ -27,11 +27,10 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
         fileName: sourceName
     });
 
-    writeFileSync(
-        path.join(tempDirectory, outputName),
-        transpiled.outputText,
-        'utf8'
-    );
+    const outputPath = path.join(tempDirectory, outputName);
+
+    mkdirSync(path.dirname(outputPath), { recursive: true });
+    writeFileSync(outputPath, transpiled.outputText, 'utf8');
 }
 
 async function loadClientApp() {
@@ -43,33 +42,47 @@ async function loadClientApp() {
     );
 
     [
-        ['clientScreens.ts', 'clientScreens.js'],
-        ['componentRenderProps.ts', 'componentRenderProps.js'],
-        ['config.ts', 'config.js'],
-        ['gameHudComponentScreen.tsx', 'gameHudComponentScreen.js'],
-        ['highScoresComponentScreen.tsx', 'highScoresComponentScreen.js'],
-        ['lobbyComponentScreen.tsx', 'lobbyComponentScreen.js'],
-        ['nameEditorComponentScreen.tsx', 'nameEditorComponentScreen.js'],
+        ['state/clientScreens.ts', 'state/clientScreens.js'],
+        ['ui/componentRenderProps.ts', 'ui/componentRenderProps.js'],
+        ['platform/config.ts', 'platform/config.js'],
         [
-            'touchGameplayControlsComponentScreen.tsx',
-            'touchGameplayControlsComponentScreen.js'
+            'ui/components/gameHudComponentScreen.tsx',
+            'ui/components/gameHudComponentScreen.js'
         ],
         [
-            'touchLobbyControlsComponentScreen.tsx',
-            'touchLobbyControlsComponentScreen.js'
+            'ui/components/highScoresComponentScreen.tsx',
+            'ui/components/highScoresComponentScreen.js'
         ],
-        ['clientApp.tsx', 'clientApp.js']
+        [
+            'ui/components/lobbyComponentScreen.tsx',
+            'ui/components/lobbyComponentScreen.js'
+        ],
+        [
+            'ui/components/nameEditorComponentScreen.tsx',
+            'ui/components/nameEditorComponentScreen.js'
+        ],
+        [
+            'ui/components/touchGameplayControlsComponentScreen.tsx',
+            'ui/components/touchGameplayControlsComponentScreen.js'
+        ],
+        [
+            'ui/components/touchLobbyControlsComponentScreen.tsx',
+            'ui/components/touchLobbyControlsComponentScreen.js'
+        ],
+        ['ui/clientApp.tsx', 'ui/clientApp.js']
     ].forEach(function ([sourceName, outputName]) {
         compileClientModule(sourceName, outputName, tempDirectory);
     });
 
     try {
         const [appModule, screensModule] = await Promise.all(
-            ['clientApp.js', 'clientScreens.js'].map(function (fileName) {
-                return import(
-                    pathToFileURL(path.join(tempDirectory, fileName)).href
-                );
-            })
+            ['ui/clientApp.js', 'state/clientScreens.js'].map(
+                function (fileName) {
+                    return import(
+                        pathToFileURL(path.join(tempDirectory, fileName)).href
+                    );
+                }
+            )
         );
 
         return {

@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 async function loadClientCanvasSetup() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientCanvasSetup.ts'),
+        path.join(process.cwd(), 'client/src/platform/clientCanvasSetup.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {

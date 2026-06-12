@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 async function loadClientInputStartup() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientInputStartup.ts'),
+        path.join(process.cwd(), 'client/src/runtime/clientInputStartup.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {

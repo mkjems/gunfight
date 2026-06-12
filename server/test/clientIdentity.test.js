@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 async function loadClientIdentity() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientIdentity.ts'),
+        path.join(process.cwd(), 'client/src/platform/clientIdentity.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {

@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 async function loadClientRoundTransition() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientRoundTransition.ts'),
+        path.join(process.cwd(), 'client/src/flows/clientRoundTransition.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {

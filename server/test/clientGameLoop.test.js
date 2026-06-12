@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 async function loadClientGameLoop() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientGameLoop.ts'),
+        path.join(process.cwd(), 'client/src/runtime/clientGameLoop.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {

@@ -277,7 +277,7 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
     - Add a named `ClientGameDependencies` contract.
     - Keep dependency value shapes broad while old factory-style modules are narrowed incrementally.
 
-- [x] Remove `// @ts-nocheck` from `client/src/modules/game.ts` incrementally.
+- [x] Remove `// @ts-nocheck` from `client/src/runtime/game.ts` incrementally.
     - Add explicit bootstrap state and callback parameter types.
     - Leave deeper runtime object typing for later architecture-health work.
 

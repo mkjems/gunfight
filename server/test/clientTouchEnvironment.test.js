@@ -6,10 +6,7 @@ import ts from 'typescript';
 
 async function loadClientTouchEnvironment() {
     const source = readFileSync(
-        path.join(
-            process.cwd(),
-            'client/src/modules/clientTouchEnvironment.ts'
-        ),
+        path.join(process.cwd(), 'client/src/input/clientTouchEnvironment.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {

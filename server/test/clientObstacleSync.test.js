@@ -6,7 +6,7 @@ import ts from 'typescript';
 
 async function loadClientObstacleSync() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/modules/clientObstacleSync.ts'),
+        path.join(process.cwd(), 'client/src/network/clientObstacleSync.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {
