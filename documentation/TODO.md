@@ -306,6 +306,22 @@ Goal: move the client toward TypeScript and componentized UI without stopping no
 - [x] Keep screen-state transitions in `ClientScreens`, not inside components.
     - Flow modules continue to choose when rendering happens and when side effects run.
 
+### P1.4.10.5 - Shrink The Client Bootstrap Dependency Bag
+
+- [ ] Treat the current `createGame` dependency bag as a migration scaffold, not the final shape.
+    - Keep it useful while tests still need broad injection.
+    - Avoid adding new one-off module dependencies directly to the top-level bag when a grouped factory would fit better.
+
+- [ ] Group runtime construction behind focused factories.
+    - Add or strengthen factories such as `createClientSystems`, `createClientUi`, `createClientNetwork`, and `createGameRuntime` only where they reduce real bootstrap noise.
+    - Keep the factories close to existing module boundaries.
+    - Preserve test seams at the flow/module level.
+
+- [ ] Narrow `createGame` toward a small set of dependencies.
+    - Prefer browser dependencies plus a few grouped factories over dozens of individual module constructors.
+    - Keep `document`, `window`, and `Image` injectable for browser startup tests.
+    - Let full-app wiring be covered by browser smoke and later end-to-end tests.
+
 ### P1.4.11 - Choose And Spike A Component Renderer
 
 - [ ] Compare vanilla DOM modules, Preact, Lit, and Svelte/Solid against this project.
