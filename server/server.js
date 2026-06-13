@@ -254,7 +254,11 @@ io.on('connection', function (socket) {
             return;
         }
 
-        context.game.model.readyClient(context.client);
+        if (!context.game.model.readyClient(context.client)) {
+            emitGameModel(context.game);
+            return;
+        }
+
         model = lobby.getModel(context.game);
 
         if (isReadyToStart(model)) {

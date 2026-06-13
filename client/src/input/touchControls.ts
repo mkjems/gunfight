@@ -61,6 +61,7 @@ type TouchControlsOptions = {
 
 type TouchControlsState = {
     aimLevel?: number;
+    canPlay?: boolean;
     editing?: boolean;
     gameplay?: boolean;
     highScoresVisible?: boolean;
@@ -83,6 +84,7 @@ type TouchControlsRenderProps = {
         onPlay?: () => void;
         showBackButton: boolean;
         showMainButtons: boolean;
+        showPlayButton: boolean;
         visible: boolean;
     };
     playing: boolean;
@@ -404,6 +406,8 @@ export function TouchControls(options: TouchControlsOptions = {}) {
                 onPlay: onPlayTap,
                 showBackButton: showHighScores,
                 showMainButtons: showLobbyNavigation && !showHighScores,
+                showPlayButton:
+                    showLobbyNavigation && !showHighScores && !!state.canPlay,
                 visible: showLobbyNavigation
             },
             playing: !!state.playing,
@@ -422,6 +426,7 @@ export function TouchControls(options: TouchControlsOptions = {}) {
             lobby: {
                 showBackButton: false,
                 showMainButtons: false,
+                showPlayButton: false,
                 visible: false
             },
             playing: false,

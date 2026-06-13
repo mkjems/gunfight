@@ -113,7 +113,7 @@ test('builds lobby main app state', async function () {
             highScoresPrompt: '',
             identityLines: [],
             playerLabels: [],
-            playPrompt: 'PRESS P TO PLAY',
+            playPrompt: '',
             showControls: true,
             showEditPrompt: false,
             slots: []

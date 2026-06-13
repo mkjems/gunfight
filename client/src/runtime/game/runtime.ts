@@ -306,6 +306,7 @@ export class ClientGameRuntime implements ClientGameController {
                     {
                         canReady: () => {
                             return (
+                                this.canRequestReady() &&
                                 !this.highScoresVisible &&
                                 (!this.nameEditor ||
                                     !this.nameEditor.isActive())
@@ -761,6 +762,7 @@ export class ClientGameRuntime implements ClientGameController {
         return this.dependencies.ClientTouchControlsFlow.update({
             aimLevel: this.getLocalAimLevel(),
             editing: this.nameEditor && this.nameEditor.isActive(),
+            canPlay: this.canRequestReady(),
             highScoresVisible: this.shouldShowHighScoresScreen(),
             ready: this.isLocalClientReady(),
             roundState: this.roundState,
@@ -900,6 +902,14 @@ export class ClientGameRuntime implements ClientGameController {
 
     private isLocalClientWaiting = () => {
         return this.dependencies.ClientLobbyViewModel.isLocalClientWaiting({
+            localReadyRequested: this.localReadyRequested,
+            model: this.latestModel,
+            playerId: this.playerId
+        });
+    };
+
+    private canRequestReady = () => {
+        return this.dependencies.ClientLobbyViewModel.canLocalClientReady({
             localReadyRequested: this.localReadyRequested,
             model: this.latestModel,
             playerId: this.playerId

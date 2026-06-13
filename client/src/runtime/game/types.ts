@@ -351,6 +351,7 @@ export type RuntimeTouchControls = {
 
 export type RuntimeTouchControlsState = {
     aimLevel?: number;
+    canPlay?: boolean;
     editing?: boolean;
     gameplay?: boolean;
     highScoresVisible?: boolean;

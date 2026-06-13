@@ -7,7 +7,8 @@
 - [ ] We should look into the current state model a come up with an improvement.
 - [ ] We should look into if disconnect and re-connect are handled correct from mobile and desktop.
 - [ ] How do we pair up players who have lost they opponent? Do we use alone players? or wait for their old opponents to reconnect.
-- [ ] Should you be able to be in ready state when you have no opponent?
+- [x] Should you be able to be in ready state when you have no opponent? No. `READY` requires a connected opponent.
+- [x] If a player loses their opponent because of disconnect or reload, the remaining player loses `READY` state and returns to waiting for an opponent.
 
 ## Content Authoring Tools
 
@@ -31,7 +32,6 @@
 ## Improve visual effects
 
 ### Add particle layer for more special effects
-
 
 ## Other Ideas
 

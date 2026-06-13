@@ -305,6 +305,7 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
     assert.equal(renderProps.lobby.visible, false);
 
     renderProps = controls.update({
+        canPlay: true,
         waiting: true
     });
 
@@ -312,10 +313,20 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
 
     assert.equal(renderProps.lobby.visible, true);
     assert.equal(renderProps.lobby.showMainButtons, true);
+    assert.equal(renderProps.lobby.showPlayButton, true);
     assert.equal(renderProps.lobby.showBackButton, false);
     renderProps.lobby.onPlay();
     renderProps.lobby.onEdit();
     renderProps.lobby.onHighScores();
+
+    renderProps = controls.update({
+        canPlay: false,
+        waiting: true
+    });
+
+    assert.equal(renderProps.lobby.visible, true);
+    assert.equal(renderProps.lobby.showMainButtons, true);
+    assert.equal(renderProps.lobby.showPlayButton, false);
 
     renderProps = controls.update({
         highScoresVisible: true,
@@ -347,6 +358,7 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
         ['release', 'e'],
         ['press', 's'],
         ['release', 's'],
+        ['release', ' '],
         ['release', ' '],
         ['press', 's'],
         ['release', 's']

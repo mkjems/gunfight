@@ -107,6 +107,9 @@ the `gfmodel` snapshot:
 `readying` means two clients are paired. The clients may both be unready, one
 ready, or both ready briefly before the server marks the game as `playing`.
 
+`ready` is only valid while two clients are connected. A lone waiting client
+cannot become ready.
+
 `playing` means both clients reached ready at least once and the server has
 broadcast the model that starts the match on the clients.
 
@@ -125,6 +128,9 @@ Status is derived from connection count except for `playing`, `abandoned`, and
 - leave during `playing`: `abandoned`
 - both clients ready: server calls `markPlaying`
 
+When a disconnect leaves fewer than two clients, `gfmodel` clears the remaining
+client's `ready` flag.
+
 ### Connection and pairing lifecycle
 
 On socket connection:
@@ -141,10 +147,11 @@ On socket connection:
 On disconnect or explicit leave:
 
 1. The lobby removes the socket client from its game and from `gfmodel`.
-2. If no clients remain, the game becomes `closed` and is deleted.
-3. If the game was `playing`, it becomes `abandoned`.
-4. Otherwise the status is refreshed from the remaining client count.
-5. If a model still exists, the server emits `modelUpdate` to the remaining
+2. `gfmodel` clears remaining ready flags if fewer than two clients remain.
+3. If no clients remain, the game becomes `closed` and is deleted.
+4. If the game was `playing`, it becomes `abandoned`.
+5. Otherwise the status is refreshed from the remaining client count.
+6. If a model still exists, the server emits `modelUpdate` to the remaining
    room.
 
 On `requeue`, or `leaveGame` with rejoin requested, the server removes the
@@ -156,12 +163,14 @@ the current game, stores it on the lobby client, and emits `modelUpdate`.
 
 ### Readiness and round selection
 
-The client emits `clientReady` when the player presses play.
+The client emits `clientReady` when the player presses play. The client only
+offers this action when a connected opponent exists.
 
-The server handles `clientReady` by setting that client's `ready` flag in
-`gfmodel`. When the second client becomes ready, `gfmodel` advances the
-scenario and increments `roundNumber`. The server then marks the session
-`playing` and emits `modelUpdate`.
+The server handles `clientReady` by asking `gfmodel` to set that client's
+`ready` flag. `gfmodel` rejects the request when fewer than two clients are
+connected. When the second client becomes ready, `gfmodel` advances the scenario
+and increments `roundNumber`. The server then marks the session `playing` and
+emits `modelUpdate`.
 
 The browser starts gameplay when it receives a model with at least two ready
 clients while its local round state is `waiting`. This starts the local round
@@ -178,19 +187,19 @@ next-ritual timing.
 
 ### Mutating socket events
 
-| Event              | Direction                | Server action                                                                    |
-| ------------------ | ------------------------ | -------------------------------------------------------------------------------- |
-| `joinLobby`        | client to server         | Join this socket to a waiting or new game.                                       |
-| `updateName`       | client to server         | Sanitize and store the client's name; emit `modelUpdate`.                        |
-| `leaveGame`        | client to server         | Remove the socket from the game; optionally rejoin.                              |
-| `requeue`          | client to server         | Leave the current game and join a waiting or new game.                           |
-| `clientReady`      | client to server         | Mark the client ready; start the server-side playing status when both are ready. |
-| `resetReady`       | client to server         | Clear ready flags for all clients in the game.                                   |
-| `advanceRound`     | client to server         | Advance scenario and `roundNumber`.                                              |
-| `recordGameResult` | client to server         | Record high scores and broadcast the table.                                      |
-| `clientKeyEvent`   | client to server to peer | Relay keyboard/input event to the opponent.                                      |
-| `playerPosition`   | client to server to peer | Relay local player position to the opponent.                                     |
-| `obstacleDamage`   | client to server to peer | Relay validated obstacle damage to the opponent.                                 |
+| Event              | Direction                | Server action                                                                            |
+| ------------------ | ------------------------ | ---------------------------------------------------------------------------------------- |
+| `joinLobby`        | client to server         | Join this socket to a waiting or new game.                                               |
+| `updateName`       | client to server         | Sanitize and store the client's name; emit `modelUpdate`.                                |
+| `leaveGame`        | client to server         | Remove the socket from the game; optionally rejoin.                                      |
+| `requeue`          | client to server         | Leave the current game and join a waiting or new game.                                   |
+| `clientReady`      | client to server         | Mark the client ready only when paired; start server-side `playing` when both are ready. |
+| `resetReady`       | client to server         | Clear ready flags for all clients in the game.                                           |
+| `advanceRound`     | client to server         | Advance scenario and `roundNumber`.                                                      |
+| `recordGameResult` | client to server         | Record high scores and broadcast the table.                                              |
+| `clientKeyEvent`   | client to server to peer | Relay keyboard/input event to the opponent.                                              |
+| `playerPosition`   | client to server to peer | Relay local player position to the opponent.                                             |
+| `obstacleDamage`   | client to server to peer | Relay validated obstacle damage to the opponent.                                         |
 
 ### Client state
 
@@ -262,7 +271,8 @@ sends a model update to the remaining player. The remaining client enters local
 lobby state, shows the abandoned/opponent-left state, and schedules a `requeue`
 after the configured delay.
 
-If a player leaves before `playing`, the remaining game returns to `waiting`.
+If a player leaves before `playing`, the remaining game returns to `waiting` and
+the remaining player is no longer ready.
 
 ### Known weaknesses
 

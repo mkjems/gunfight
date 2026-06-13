@@ -77,6 +77,18 @@ export function isLocalClientReady(options: LobbyOptions): boolean {
     return !!options.localReadyRequested || !!(client && client.ready);
 }
 
+export function hasOpponent(options: LobbyOptions): boolean {
+    const clients = (options.model && options.model.clients) || [];
+    const localClient = getLocalClient(options.model, options.playerId);
+
+    return !!(
+        localClient &&
+        clients.some(function (client) {
+            return client.id !== localClient.id;
+        })
+    );
+}
+
 export function isLocalClientWaiting(options: LobbyOptions): boolean {
     const client = getLocalClient(options.model, options.playerId);
 
@@ -88,10 +100,14 @@ export function isLocalClientWaiting(options: LobbyOptions): boolean {
     );
 }
 
+export function canLocalClientReady(options: LobbyOptions): boolean {
+    return isLocalClientWaiting(options) && hasOpponent(options);
+}
+
 export function shouldShowLobbyPrompt(options: LobbyOptions): boolean {
     return (
         (!options.model || options.model.status !== 'abandoned') &&
-        !isLocalClientReady(options)
+        canLocalClientReady(options)
     );
 }
 
@@ -252,7 +268,9 @@ function getPercent(value: number, total: number) {
 
 export const ClientLobbyViewModel = {
     getClientName,
+    canLocalClientReady,
     getLobbyViewModel,
+    hasOpponent,
     getLocalClient,
     isLocalClientReady,
     isLocalClientWaiting,

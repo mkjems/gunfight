@@ -515,6 +515,22 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
         touchControls: {
             enabled: true,
             lobby: {
+                showMainButtons: true,
+                showPlayButton: false,
+                visible: true
+            }
+        }
+    });
+
+    assert.equal(query(root, '#touchEditButton').hidden, false);
+    assert.equal(query(root, '#touchHighScoresButton').hidden, false);
+    assert.equal(query(root, '#touchPlayButton').hidden, true);
+
+    app.render({
+        activeScreen: Screen.LOBBY_MAIN,
+        touchControls: {
+            enabled: true,
+            lobby: {
                 showBackButton: true,
                 visible: true
             }

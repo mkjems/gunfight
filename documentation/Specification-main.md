@@ -4,6 +4,26 @@ Gunfight is a browser-based remake of the 1975 arcade game. It is a single-page 
 
 The game runs in desktop browsers and mobile browsers. On mobile it should work best as an installed PWA launched from the home screen.
 
+## Related documentation
+
+This file is the main product specification. For deeper detail, use these living
+documents:
+
+- [TODO4.md](TODO4.md): active work plan.
+- [Game-design.md](Game-design.md): visual style, tone, and content direction.
+- [Rules-of-the-game.md](Rules-of-the-game.md%20): detailed game rules.
+- [High-scores-feature.md](High-scores-feature.md): high-score behavior.
+- [Connection-state-model.md](Connection-state-model.md): connection,
+  pairing, readiness, and disconnect behavior.
+- [State-ownership.md](State-ownership.md): server/client state ownership.
+- [UI-ownership.md](UI-ownership.md): canvas and DOM UI ownership.
+- [Architecture-flow.md](Architecture-flow.md): system flow and runtime
+  architecture.
+
+Operational notes live in `documentation/Technical stuff`. Completed plans live
+in `documentation/Completed-plans` and are historical, not current
+specification.
+
 ## Project goals
 
 - Recreate the simple, tense feel of the original Gunfight.
@@ -34,13 +54,15 @@ It shows:
 - desktop controls
 - prompt to edit name
 - prompt to see high scores
-- prompt to play
+- prompt to play when an opponent is connected
 
 The lobby does not show the game id or a separate local identity line. The lobby background shows the player's avatar. If an opponent is connected, both avatars are visible. On desktop, the player can move in the lobby to learn the controls, but cannot shoot.
 
 Each avatar shows the player's name and lobby state beneath the character. This text is rendered as HTML overlay text and follows the avatar while it moves. The lobby does not prefix names with `PLAYER 1` or `PLAYER 2`. The status text changes with the player's lobby state; `READY` is shown as negative text. The local player is marked clearly with a small `YOU` marker and is rendered on the left side of the lobby. The opponent is rendered on the right side of the lobby. Lobby-side placement is presentation-only; server player id, gameplay slot, HUD placement, and scoring behavior stay unchanged. Lobby movement is constrained to side areas so avatars and their following labels stay readable and do not overlap the central lobby instructions.
 
 When the local player is alone in a waiting lobby, the right side shows a lobby-only opponent placeholder: a large negative-text `?` marker and the text `LOOKING FOR OPPONENT`. The placeholder is derived only for presentation. It does not add a fake client, player, score, HUD entry, sync state, or gameplay object. If a real opponent client is present, the real opponent is shown instead. If the game is abandoned, the abandoned/opponent-left state takes precedence over the generic placeholder.
+
+A player cannot enter `READY` while alone. If a player loses their opponent because of disconnect or reload, the remaining player loses `READY` state and returns to waiting for an opponent.
 
 The lobby does not rotate automatically to high scores. High scores are opened only by explicit player navigation.
 
@@ -51,7 +73,7 @@ The lobby does not rotate automatically to high scores. High scores are opened o
 - `READY`: player has chosen to play.
 - `OPPONENT LEFT`: matched opponent disconnected.
 
-When both players are ready, the game starts.
+When both connected players are ready, the game starts.
 
 When the local player has pressed `P` and entered `READY`, the lobby does not show edit-name, high-score, or play navigation. Pressing `E`, `S`, or `P` does not navigate away from the ready lobby state. Navigation becomes available again only after the local player returns to `WAITING`.
 
@@ -59,14 +81,14 @@ When the local player has pressed `P` and entered `READY`, the lobby does not sh
 
 - `E`: edit name, only while the local player is `WAITING`
 - `S`: open high scores from the main lobby, or return from high scores to the main lobby, only while the local player is `WAITING`
-- `P`: ready/play
+- `P`: ready/play, only when an opponent is connected
 - `H J K L`: move left, down, up, right
 - `A Z`: aim up and down
 - `Space`: shoot in game only
 
 ### Mobile lobby
 
-Mobile users do not see keyboard instructions. The lobby uses stacked touch buttons for play, edit name, and high scores. The play button is shown first and uses negative button styling. Virtual movement and fire controls stay hidden until gameplay. Non-interactive mobile HUD text cannot be selected by touch.
+Mobile users do not see keyboard instructions. The lobby uses stacked touch buttons for play, edit name, and high scores. The play button is shown first and uses negative button styling when an opponent is connected. Virtual movement and fire controls stay hidden until gameplay. Non-interactive mobile HUD text cannot be selected by touch.
 
 Mobile lobby action buttons are centered horizontally and vertically over the lobby screen so they remain visible when the scaled game stage is taller than the browser viewport.
 

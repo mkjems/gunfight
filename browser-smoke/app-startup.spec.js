@@ -161,9 +161,7 @@ test('built browser app renders lobby through the app root', async ({
     await expect(page.locator('#lobbyPlayerLabels')).not.toContainText(
         'PLAYER 1 -'
     );
-    await expect(page.locator('#lobbyPlayPrompt')).toHaveText(
-        'PRESS P TO PLAY'
-    );
+    await expect(page.locator('#lobbyPlayPrompt')).toHaveText('');
     await expect(page.locator('#lobbyHighScoresPrompt')).toHaveText(
         'PRESS S TO SEE HIGH SCORES'
     );

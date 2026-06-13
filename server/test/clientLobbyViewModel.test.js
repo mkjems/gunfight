@@ -146,6 +146,7 @@ test('shows a lobby-only opponent placeholder when the local client is alone', a
             y: 74.0625
         }
     ]);
+    assert.equal(viewModel.playPrompt, '');
 });
 
 test('does not show the opponent placeholder when an opponent exists or the lobby is abandoned', async function () {
@@ -210,6 +211,28 @@ test('decides lobby prompts and explicit high score visibility', async function 
         lobby.shouldShowLobbyPrompt({
             localReadyRequested: false,
             model,
+            playerId: 'p1'
+        }),
+        false
+    );
+    assert.equal(
+        lobby.canLocalClientReady({
+            localReadyRequested: false,
+            model,
+            playerId: 'p1'
+        }),
+        false
+    );
+    assert.equal(
+        lobby.canLocalClientReady({
+            localReadyRequested: false,
+            model: {
+                status: 'readying',
+                clients: [
+                    { id: 'p1', ready: false, slot: 0 },
+                    { id: 'p2', ready: false, slot: 1 }
+                ]
+            },
             playerId: 'p1'
         }),
         true

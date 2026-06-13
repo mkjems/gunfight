@@ -124,6 +124,24 @@ test('reports lobby states and ready flags for each player slot', function () {
     );
 });
 
+test('does not allow a client to become ready before an opponent joins', function () {
+    const lobby = createTestLobby();
+    const first = lobby.join('socket-1', { name: 'one' });
+
+    assert.equal(first.game.model.readyClient(first.client), false);
+
+    const model = lobby.getModel(first.game);
+
+    assert.equal(model.status, 'waiting');
+    assert.equal(model.message, 'LOOKING FOR CHALLENGER');
+    assert.deepEqual(
+        model.clients.map(function (client) {
+            return client.ready;
+        }),
+        [false]
+    );
+});
+
 test('keeps game rooms and models isolated', function () {
     const lobby = createTestLobby();
     const firstA = lobby.join('a-1', { name: 'ace' });
@@ -185,11 +203,34 @@ test('disconnect before ready frees the waiting slot for another client', functi
     );
 });
 
+test('disconnect before play clears the remaining client ready state', function () {
+    const lobby = createTestLobby();
+    const first = lobby.join('socket-1', { name: 'one' });
+    const second = lobby.join('socket-2', { name: 'two' });
+
+    first.game.model.readyClient(first.client);
+
+    const left = lobby.leave('socket-2');
+
+    assert.equal(left.model.status, 'waiting');
+    assert.deepEqual(
+        lobby.getModel(first.game).clients.map(function (client) {
+            return {
+                name: client.name,
+                ready: client.ready
+            };
+        }),
+        [{ name: 'ONE', ready: false }]
+    );
+});
+
 test('disconnect during play abandons the game and avoids pairing new clients into it', function () {
     const lobby = createTestLobby();
     const first = lobby.join('socket-1', { name: 'one' });
     const second = lobby.join('socket-2', { name: 'two' });
 
+    first.game.model.readyClient(first.client);
+    first.game.model.readyClient(second.client);
     lobby.markPlaying(first.game);
 
     const left = lobby.leave('socket-1');
@@ -198,6 +239,12 @@ test('disconnect during play abandons the game and avoids pairing new clients in
     assert.equal(left.game.id, second.game.id);
     assert.equal(left.model.status, 'abandoned');
     assert.equal(left.model.message, 'OPPONENT LEFT');
+    assert.deepEqual(
+        left.model.clients.map(function (client) {
+            return client.ready;
+        }),
+        [false]
+    );
     assert.equal(lobby.getModel(second.game).clients.length, 1);
     assert.notEqual(third.game.id, second.game.id);
     assert.equal(third.game.id, 'G0002');

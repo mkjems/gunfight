@@ -92,6 +92,7 @@ test('updates touch controls with derived touch state', async function () {
         plain(
             flow.update({
                 aimLevel: 4,
+                canPlay: true,
                 editing: false,
                 highScoresVisible: true,
                 getTouchState(options) {
@@ -116,6 +117,7 @@ test('updates touch controls with derived touch state', async function () {
             renderedTouchState: {
                 touchState: {
                     aimLevel: 4,
+                    canPlay: true,
                     editing: false,
                     highScoresVisible: true,
                     ready: false,
@@ -129,6 +131,7 @@ test('updates touch controls with derived touch state', async function () {
         {
             touchState: {
                 aimLevel: 4,
+                canPlay: true,
                 editing: false,
                 highScoresVisible: true,
                 ready: false,

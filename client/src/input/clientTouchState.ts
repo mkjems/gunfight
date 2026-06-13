@@ -2,6 +2,7 @@ import { RoundState } from '../state/clientScreens.js';
 
 type TouchStateOptions = {
     aimLevel: number;
+    canPlay?: boolean;
     editing?: boolean;
     highScoresVisible?: boolean;
     ready?: boolean;
@@ -28,6 +29,7 @@ export function getTouchState(options: TouchStateOptions) {
         highScoresVisible:
             options.roundState === RoundState.WAITING &&
             !!options.highScoresVisible,
+        canPlay: !!options.canPlay,
         ready: !!options.ready,
         aimLevel: options.aimLevel
     };

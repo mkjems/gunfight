@@ -5,6 +5,7 @@ export type TouchLobbyControlsProps = {
     onPlay?: () => void;
     showBackButton?: boolean;
     showMainButtons?: boolean;
+    showPlayButton?: boolean;
     visible?: boolean;
 };
 
@@ -24,7 +25,7 @@ export function TouchLobbyControls(options: TouchLobbyControlsProps = {}) {
                 label="PLAY GUNFIGHT"
                 negative={true}
                 onTap={options.onPlay}
-                visible={options.showMainButtons}
+                visible={options.showPlayButton ?? options.showMainButtons}
             />
             <TouchLobbyButton
                 id="touchEditButton"

@@ -92,16 +92,10 @@ test.describe('mobile touch lobby', function () {
         await expect(page.locator('#touchLobbyControls')).toBeVisible();
         await expect(page.locator('#touchEditButton')).toBeVisible();
         await expect(page.locator('#touchHighScoresButton')).toBeVisible();
-        await expect(page.locator('#touchPlayButton')).toBeVisible();
+        await expect(page.locator('#touchPlayButton')).toBeHidden();
         await expect(page.locator('#touchEditButton')).toHaveText('EDIT NAME');
         await expect(page.locator('#touchHighScoresButton')).toHaveText(
             'HIGH SCORES'
-        );
-        await expect(page.locator('#touchPlayButton')).toHaveText(
-            'PLAY GUNFIGHT'
-        );
-        await expect(page.locator('#touchPlayButton')).toHaveClass(
-            'negative-button'
         );
 
         const touchStyles = await page

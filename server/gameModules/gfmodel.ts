@@ -77,6 +77,12 @@ export function createGameModel() {
                     clients.splice(i, 1);
                 }
             }
+
+            if (clients.length < 2) {
+                clients.forEach(function (remainingClient) {
+                    remainingClient.ready = false;
+                });
+            }
         },
 
         getModel: function (): GameModelSnapshot {
@@ -87,11 +93,15 @@ export function createGameModel() {
             };
         },
 
-        readyClient: function (client: GameModelClient): void {
+        readyClient: function (client: GameModelClient): boolean {
             const wasReadyToStart = areAllReady();
             const existingClient = clients.find(function (item) {
                 return item.id === client.id;
             });
+
+            if (clients.length < 2) {
+                return false;
+            }
 
             if (existingClient) {
                 existingClient.ready = true;
@@ -100,6 +110,8 @@ export function createGameModel() {
             if (!wasReadyToStart && areAllReady()) {
                 advanceRound();
             }
+
+            return !!existingClient;
         },
 
         resetReady: function (): void {

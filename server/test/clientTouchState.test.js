@@ -56,6 +56,7 @@ test('builds touch state for waiting lobby screens', async function () {
         plain(
             touchState.getTouchState({
                 aimLevel: 4,
+                canPlay: true,
                 editing: false,
                 highScoresVisible: true,
                 ready: false,
@@ -68,6 +69,7 @@ test('builds touch state for waiting lobby screens', async function () {
             playing: false,
             editing: false,
             highScoresVisible: true,
+            canPlay: true,
             ready: false,
             aimLevel: 4
         }
@@ -81,6 +83,7 @@ test('builds touch state for active gameplay screens', async function () {
         plain(
             touchState.getTouchState({
                 aimLevel: 2,
+                canPlay: false,
                 editing: true,
                 highScoresVisible: true,
                 ready: true,
@@ -93,6 +96,7 @@ test('builds touch state for active gameplay screens', async function () {
             playing: true,
             editing: true,
             highScoresVisible: false,
+            canPlay: false,
             ready: true,
             aimLevel: 2
         }

@@ -11,6 +11,7 @@ type GetLocalAimLevelOptions = {
 
 type UpdateOptions = {
     aimLevel?: number;
+    canPlay?: boolean;
     editing?: boolean;
     getTouchState?: typeof getTouchState;
     highScoresVisible?: boolean;
@@ -41,6 +42,7 @@ export function update(options: UpdateOptions) {
     return options.touchControls.update(
         resolveTouchState({
             aimLevel: options.aimLevel,
+            canPlay: options.canPlay,
             editing: options.editing,
             highScoresVisible: options.highScoresVisible,
             ready: options.ready,
