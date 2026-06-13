@@ -21,6 +21,18 @@
 
 ## P5 Content Authoring Tools
 
+Goal statement:
+
+When P5 is complete, creating arena content should be a visual workflow instead
+of a code-editing workflow. The designer should be able to open browser-based
+tools, import existing JSON, adjust rocks and full scenarios directly in a
+WYSIWYG preview, see validation errors in plain language, and export clean JSON
+that can be copied back into the project data files. The rock editor should make
+small reusable rock definitions easy to shape and test. The scenario editor
+should compose those rocks with cacti, wagons, saloons, decorations, and player
+start positions inside the full arena, so a complete playable scene can be
+iterated on visually before it becomes game data.
+
 ### P5.1 Add a rock editor page.
 
 - [ ] Add a rock editor page.
