@@ -29,6 +29,8 @@ export function create(options: CreatePlanOptions) {
     );
     const shouldStartRound =
         options.roundState === RoundState.WAITING && syncState.readyToStart;
+    const syncLobbySlots =
+        options.roundState === RoundState.WAITING && !shouldStartRound;
 
     return {
         clearAbandonedRequeue: !syncState.abandoned,
@@ -41,11 +43,12 @@ export function create(options: CreatePlanOptions) {
         syncNameEditor: true,
         syncStoredPlayerName: true,
         syncPlayers: {
+            localPlayerFirst: syncLobbySlots,
+            localPlayerId: syncLobbySlots ? options.playerId : undefined,
             resetChangedSlots: options.roundState === RoundState.WAITING,
-            slots:
-                options.roundState === RoundState.WAITING
-                    ? Config.player.lobbySlots
-                    : Config.player.slots
+            slots: syncLobbySlots
+                ? Config.player.lobbySlots
+                : Config.player.slots
         }
     };
 }

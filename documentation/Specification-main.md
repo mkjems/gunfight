@@ -28,15 +28,15 @@ The lobby is the landing page and waiting room.
 It shows:
 
 - title `GUNFIGHT 1975`
-- local player avatar, slot, name, and ready state
-- opponent avatar, slot, name, and ready state when an opponent is connected
+- local player avatar, name, and ready state
+- opponent avatar, name, and ready state when an opponent is connected
 - desktop controls
 - prompt to edit name
 - prompt to play
 
 The lobby does not show the game id or a separate local identity line. The lobby background shows the player's avatar. If an opponent is connected, both avatars are visible. On desktop, the player can move in the lobby to learn the controls, but cannot shoot.
 
-Each avatar shows its player label and lobby state beneath the character. This text is rendered as HTML overlay text and follows the avatar while it moves. The status text changes with the player's lobby state; `READY` is shown as negative text. The local player is marked clearly before movement starts, for example with a small `YOU` marker or an equivalent local-only highlight. Lobby movement is constrained to side areas so avatars and their following labels stay readable and do not overlap the central lobby instructions.
+Each avatar shows the player's name and lobby state beneath the character. This text is rendered as HTML overlay text and follows the avatar while it moves. The lobby does not prefix names with `PLAYER 1` or `PLAYER 2`. The status text changes with the player's lobby state; `READY` is shown as negative text. The local player is marked clearly with a small `YOU` marker and is rendered on the left side of the lobby. The opponent is rendered on the right side of the lobby. Lobby-side placement is presentation-only; server player id, gameplay slot, HUD placement, and scoring behavior stay unchanged. Lobby movement is constrained to side areas so avatars and their following labels stay readable and do not overlap the central lobby instructions.
 
 While no player is ready, the app may rotate from the main lobby to high scores every 30 seconds. High scores are shown only when there has been no keyboard activity in the last 15 seconds.
 

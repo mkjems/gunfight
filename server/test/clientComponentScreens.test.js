@@ -305,7 +305,7 @@ test('renders lobby screen sections through the app root', async function () {
             playerLabels: [
                 {
                     key: 'p1-name',
-                    text: 'PLAYER 1 - ACE',
+                    text: 'ACE',
                     x: 12.5,
                     y: 75
                 },
@@ -333,7 +333,7 @@ test('renders lobby screen sections through the app root', async function () {
     assert.equal(controls.hidden, false);
     assert.equal(editPrompt.hidden, false);
     assert.deepEqual(childTexts(controls), ['MOVE', 'FIRE']);
-    assert.deepEqual(childTexts(labels), ['PLAYER 1 - ACE', 'READY']);
+    assert.deepEqual(childTexts(labels), ['ACE', 'READY']);
     assert.equal(
         labels.children[0].getAttribute('style'),
         'left: 12.5%; top: 75%;'

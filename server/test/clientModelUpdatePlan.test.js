@@ -97,34 +97,66 @@ test('plans a round start when a waiting game becomes ready', async function () 
             syncNameEditor: true,
             syncStoredPlayerName: true,
             syncPlayers: {
+                localPlayerFirst: false,
                 resetChangedSlots: true,
                 slots: [
-                    {
-                        x: 150,
-                        y: 400,
-                        facing: 1,
-                        frame: 0,
-                        movementBounds: {
-                            minX: 106,
-                            maxX: 310,
-                            minY: 320,
-                            maxY: 440
-                        }
-                    },
-                    {
-                        x: 800,
-                        y: 400,
-                        facing: -1,
-                        frame: 2,
-                        movementBounds: {
-                            minX: 640,
-                            maxX: 844,
-                            minY: 320,
-                            maxY: 440
-                        }
-                    }
+                    { x: 150, y: 430, facing: 1, frame: 0 },
+                    { x: 800, y: 430, facing: -1, frame: 2 }
                 ]
             }
+        }
+    );
+});
+
+test('plans local-first lobby slots while waiting in the lobby', async function () {
+    const plan = await loadClientModelUpdatePlan();
+    const model = {
+        clients: [
+            { id: 'p1', ready: false },
+            { id: 'p2', ready: false }
+        ],
+        status: 'readying'
+    };
+
+    assert.deepEqual(
+        plain(
+            plan.create({
+                model,
+                playerId: 'p2',
+                previousModel: null,
+                roundState: 'waiting'
+            }).syncPlayers
+        ),
+        {
+            localPlayerFirst: true,
+            localPlayerId: 'p2',
+            resetChangedSlots: true,
+            slots: [
+                {
+                    x: 150,
+                    y: 400,
+                    facing: 1,
+                    frame: 0,
+                    movementBounds: {
+                        minX: 106,
+                        maxX: 310,
+                        minY: 320,
+                        maxY: 440
+                    }
+                },
+                {
+                    x: 800,
+                    y: 400,
+                    facing: -1,
+                    frame: 2,
+                    movementBounds: {
+                        minX: 640,
+                        maxX: 844,
+                        minY: 320,
+                        maxY: 440
+                    }
+                }
+            ]
         }
     );
 });
@@ -155,6 +187,7 @@ test('plans abandoned-game recovery', async function () {
             syncNameEditor: true,
             syncStoredPlayerName: true,
             syncPlayers: {
+                localPlayerFirst: false,
                 resetChangedSlots: false,
                 slots: [
                     { x: 150, y: 430, facing: 1, frame: 0 },

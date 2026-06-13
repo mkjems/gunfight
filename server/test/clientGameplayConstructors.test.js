@@ -272,3 +272,35 @@ test('players constrain lobby movement', async function () {
 
     assert.equal(players.all.a.movementBounds, null);
 });
+
+test('players can assign the local client to the first lobby slot', async function () {
+    const { Players } = await loadGameplayConstructors();
+    const players = new Players(
+        {
+            addFigure() {}
+        },
+        {
+            remove() {}
+        }
+    );
+
+    players.sync(
+        {
+            clients: [{ id: 'remote' }, { id: 'local' }]
+        },
+        {
+            localPlayerFirst: true,
+            localPlayerId: 'local',
+            resetChangedSlots: true,
+            slots: [
+                { x: 100, y: 100, facing: 1, frame: 0 },
+                { x: 200, y: 100, facing: -1, frame: 2 }
+            ]
+        }
+    );
+
+    assert.equal(players.all.local.slot, 0);
+    assert.equal(players.all.local.x, 100);
+    assert.equal(players.all.remote.slot, 1);
+    assert.equal(players.all.remote.x, 200);
+});

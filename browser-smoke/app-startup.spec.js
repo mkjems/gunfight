@@ -140,8 +140,11 @@ test('built browser app renders lobby through the app root', async ({
     await expect(page.locator('#lobbyControlsText')).toContainText(
         'h j k l - left down up right'
     );
-    await expect(page.locator('#lobbyPlayerLabels')).toContainText('PLAYER 1');
+    await expect(page.locator('#lobbyPlayerLabels')).toContainText('YOU');
     await expect(page.locator('#lobbyPlayerLabels')).toContainText('WAITING');
+    await expect(page.locator('#lobbyPlayerLabels')).not.toContainText(
+        'PLAYER 1 -'
+    );
     await expect(page.locator('#lobbyPlayPrompt')).toHaveText(
         'PRESS P TO PLAY'
     );

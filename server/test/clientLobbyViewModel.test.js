@@ -36,7 +36,7 @@ test('builds lobby view models for keyboard clients', async function () {
         status: 'waiting',
         clients: [
             { id: 'p1', name: 'ACE', ready: false, slot: 0 },
-            { id: 'p2', ready: true, slot: 1 }
+            { id: 'p2', name: 'CAL', ready: true, slot: 1 }
         ]
     };
 
@@ -73,7 +73,7 @@ test('builds lobby view models for keyboard clients', async function () {
                 {
                     key: 'p1-name',
                     negative: false,
-                    text: 'PLAYER 1 - ACE',
+                    text: 'ACE',
                     x: 10,
                     y: 56.5625
                 },
@@ -87,7 +87,7 @@ test('builds lobby view models for keyboard clients', async function () {
                 {
                     key: 'p2-name',
                     negative: false,
-                    text: 'PLAYER 2 - PLAYER 2',
+                    text: 'CAL',
                     x: 90,
                     y: 56.5625
                 },

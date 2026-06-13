@@ -13,6 +13,8 @@ type ClientLike = {
     id: string | number;
 };
 
+type ClientId = ClientLike['id'];
+
 type PlayerSlot = {
     facing: number;
     frame: number;
@@ -27,6 +29,8 @@ type PlayerSlot = {
 };
 
 type PlayersOptions = {
+    localPlayerFirst?: boolean;
+    localPlayerId?: ClientId | null;
     resetChangedSlots?: boolean;
     slots?: PlayerSlot[];
 };
@@ -77,10 +81,32 @@ export class Players {
         this.scene.addFigure(this.all[id]);
     }
 
-    sync(model: { clients: ClientLike[] }, options?: PlayersOptions) {
-        const activePlayers: Record<string, boolean> = {};
+    getOrderedClients(clients: ClientLike[], options: PlayersOptions = {}) {
+        if (!options.localPlayerFirst || options.localPlayerId === undefined) {
+            return clients;
+        }
 
-        model.clients.forEach((client, index) => {
+        const localClient = clients.find((client) => {
+            return client.id === options.localPlayerId;
+        });
+
+        if (!localClient) {
+            return clients;
+        }
+
+        return [
+            localClient,
+            ...clients.filter((client) => {
+                return client.id !== options.localPlayerId;
+            })
+        ];
+    }
+
+    sync(model: { clients: ClientLike[] }, options: PlayersOptions = {}) {
+        const activePlayers: Record<string, boolean> = {};
+        const clients = this.getOrderedClients(model.clients, options);
+
+        clients.forEach((client, index) => {
             activePlayers[client.id] = true;
             this.ensure(client, index, options);
         });
