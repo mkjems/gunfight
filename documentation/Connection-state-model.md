@@ -1,12 +1,10 @@
-
 # Connection state model and ownership
 
 Users come and go to the server. Therefore it is important that we have a clear model of how to handle connection, disconnect, pairing with opponent and readiness to play and all the other state objects and variables that is involved in producing the game.
 
 This is an attempt to write down how the state is handled today, under AS IS, and how we would like it to be when it is robust and nice under TO BE IN A PERFECT WORLD
 
-This document aims to describe this, in the simplest clearest way by describing how it is modeled in data and structures and the rules and events that govern the change in the model: 
-
+This document aims to describe this, in the simplest clearest way by describing how it is modeled in data and structures and the rules and events that govern the change in the model:
 
 ## AS IS
 
@@ -180,19 +178,19 @@ next-ritual timing.
 
 ### Mutating socket events
 
-| Event | Direction | Server action |
-| --- | --- | --- |
-| `joinLobby` | client to server | Join this socket to a waiting or new game. |
-| `updateName` | client to server | Sanitize and store the client's name; emit `modelUpdate`. |
-| `leaveGame` | client to server | Remove the socket from the game; optionally rejoin. |
-| `requeue` | client to server | Leave the current game and join a waiting or new game. |
-| `clientReady` | client to server | Mark the client ready; start the server-side playing status when both are ready. |
-| `resetReady` | client to server | Clear ready flags for all clients in the game. |
-| `advanceRound` | client to server | Advance scenario and `roundNumber`. |
-| `recordGameResult` | client to server | Record high scores and broadcast the table. |
-| `clientKeyEvent` | client to server to peer | Relay keyboard/input event to the opponent. |
-| `playerPosition` | client to server to peer | Relay local player position to the opponent. |
-| `obstacleDamage` | client to server to peer | Relay validated obstacle damage to the opponent. |
+| Event              | Direction                | Server action                                                                    |
+| ------------------ | ------------------------ | -------------------------------------------------------------------------------- |
+| `joinLobby`        | client to server         | Join this socket to a waiting or new game.                                       |
+| `updateName`       | client to server         | Sanitize and store the client's name; emit `modelUpdate`.                        |
+| `leaveGame`        | client to server         | Remove the socket from the game; optionally rejoin.                              |
+| `requeue`          | client to server         | Leave the current game and join a waiting or new game.                           |
+| `clientReady`      | client to server         | Mark the client ready; start the server-side playing status when both are ready. |
+| `resetReady`       | client to server         | Clear ready flags for all clients in the game.                                   |
+| `advanceRound`     | client to server         | Advance scenario and `roundNumber`.                                              |
+| `recordGameResult` | client to server         | Record high scores and broadcast the table.                                      |
+| `clientKeyEvent`   | client to server to peer | Relay keyboard/input event to the opponent.                                      |
+| `playerPosition`   | client to server to peer | Relay local player position to the opponent.                                     |
+| `obstacleDamage`   | client to server to peer | Relay validated obstacle damage to the opponent.                                 |
 
 ### Client state
 

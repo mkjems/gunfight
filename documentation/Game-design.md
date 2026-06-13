@@ -1,4 +1,3 @@
-
 This is a video of the original game 'Gunfight' we are essentially re-creating.
 
 https://www.youtube.com/watch?v=NrkySVIdeCI&t=42s
@@ -9,6 +8,3 @@ Game should be playable in the Desktop browser and on Mobile browsers as a PWA, 
 We want to keep the 1975 look and feel.
 
 But we are not just copying. It would be fun if there was some new 'Stranger Things' like twist to the plot :)
-
-
-

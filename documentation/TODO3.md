@@ -47,9 +47,9 @@ GOAL: Make the lobby experience more clear and not confusing
 ## P3.2 - Clean up navigation
 
 - [ ] Navigation in lobby should be like this little diagram on both mobile and desktop:
-    Lobby-main (navigation: edit-name, high-score, set-ready. But NO links, or buttons in state READY )
-    |-- edit-name (navigation: back)
-    `-- high-score (navigation: back)
+      Lobby-main (navigation: edit-name, high-score, set-ready. But NO links, or buttons in state READY )
+      |-- edit-name (navigation: back)
+      `-- high-score (navigation: back)
 
 - [ ] Once user sets status READY navigation away from lobby-main is removed! (remember mobile)
 - [ ] On mobile the three lobby-main buttons are stacked vertically
@@ -59,8 +59,8 @@ GOAL: Make the lobby experience more clear and not confusing
 - [ ] On desktop we should use key 'S' and the text 'PRESS S TO RETURN TO LOBBY' to take you from the high-score page back to main lobby.
 
 ## P3.2.5 - Improve 'No opponent' experience
-- [ ] When user is not paired with opponent show 'LOOKING FOR OPPONENT' graphics. 
 
+- [ ] When user is not paired with opponent show 'LOOKING FOR OPPONENT' graphics.
 
 ## P3.3 - State model review and future plans
 
@@ -115,4 +115,5 @@ GOAL: Make the lobby experience more clear and not confusing
 - [ ] Add the number of wins/kills after the name in the lobby: LUKE 5/10
 
 ## MAYBE Ideas
+
 - [ ] We should remove the automatic changing between lobby and high score. make sure we remove the fancy timing logic
