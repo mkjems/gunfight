@@ -148,6 +148,61 @@ test('routes waiting local key events through the active name editor', async fun
     assert.deepEqual(gameplayCalls, []);
 });
 
+test('opens and closes high scores from local waiting navigation', async function () {
+    const flow = await loadClientKeyEventFlow();
+    const { calls, options } = createOptions({
+        keyEvent: {
+            action: 'down',
+            key: 's',
+            player: 'p1'
+        },
+        returnToLobby() {
+            calls.push('returnToLobby');
+        },
+        roundState: 'waiting',
+        showHighScores() {
+            calls.push('showHighScores');
+        }
+    });
+
+    assert.equal(flow.handle(options), false);
+    assert.deepEqual(calls, [
+        'isLocalClientWaiting',
+        'showHighScores',
+        'renderHud'
+    ]);
+
+    calls.length = 0;
+    assert.equal(
+        flow.handle({
+            ...options,
+            highScoresVisible: true
+        }),
+        false
+    );
+    assert.deepEqual(calls, [
+        'isLocalClientWaiting',
+        'returnToLobby',
+        'renderHud'
+    ]);
+});
+
+test('blocks other local waiting keys while high scores are visible', async function () {
+    const flow = await loadClientKeyEventFlow();
+    const { calls, options } = createOptions({
+        highScoresVisible: true,
+        keyEvent: {
+            action: 'down',
+            key: 'h',
+            player: 'p1'
+        },
+        roundState: 'waiting'
+    });
+
+    assert.equal(flow.handle(options), false);
+    assert.deepEqual(calls, ['isLocalClientWaiting']);
+});
+
 test('delegates gameplay key events to gameplay input', async function () {
     const gameplayCalls = [];
     const flow = await loadClientKeyEventFlow();

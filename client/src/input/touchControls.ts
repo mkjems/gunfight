@@ -76,9 +76,12 @@ type TouchControlsRenderProps = {
         visible: boolean;
     };
     lobby: {
+        onBack?: () => void;
         onEdit?: () => void;
+        onHighScores?: () => void;
         onPlay?: () => void;
-        showButtons: boolean;
+        showBackButton: boolean;
+        showMainButtons: boolean;
         visible: boolean;
     };
     playing: boolean;
@@ -159,6 +162,16 @@ export function TouchControls(options: TouchControlsOptions = {}) {
     function onEditTap() {
         input?.press('e');
         input?.release('e');
+    }
+
+    function onHighScoresTap() {
+        input?.press('s');
+        input?.release('s');
+    }
+
+    function onBackTap() {
+        input?.press('s');
+        input?.release('s');
     }
 
     function shouldEnableTouchControls() {
@@ -359,6 +372,8 @@ export function TouchControls(options: TouchControlsOptions = {}) {
         mount();
         editing = !!state.editing;
         const showGameplayControls = state.gameplay || state.playing || editing;
+        const showLobbyNavigation = !!state.waiting && !state.ready && !editing;
+        const showHighScores = showLobbyNavigation && !!state.highScoresVisible;
 
         if (!showGameplayControls) {
             resetJoystick();
@@ -381,10 +396,13 @@ export function TouchControls(options: TouchControlsOptions = {}) {
                 visible: !!showGameplayControls
             },
             lobby: {
+                onBack: onBackTap,
                 onEdit: onEditTap,
+                onHighScores: onHighScoresTap,
                 onPlay: onPlayTap,
-                showButtons: !state.ready,
-                visible: !!state.waiting && !editing
+                showBackButton: showHighScores,
+                showMainButtons: showLobbyNavigation && !showHighScores,
+                visible: showLobbyNavigation
             },
             playing: !!state.playing,
             waiting: !!state.waiting
@@ -400,7 +418,8 @@ export function TouchControls(options: TouchControlsOptions = {}) {
                 visible: false
             },
             lobby: {
-                showButtons: false,
+                showBackButton: false,
+                showMainButtons: false,
                 visible: false
             },
             playing: false,

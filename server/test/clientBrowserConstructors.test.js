@@ -308,9 +308,11 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
     assert.equal(renderProps.gameplay.visible, false);
 
     assert.equal(renderProps.lobby.visible, true);
-    assert.equal(renderProps.lobby.showButtons, true);
+    assert.equal(renderProps.lobby.showMainButtons, true);
+    assert.equal(renderProps.lobby.showBackButton, false);
     renderProps.lobby.onPlay();
     renderProps.lobby.onEdit();
+    renderProps.lobby.onHighScores();
 
     renderProps = controls.update({
         highScoresVisible: true,
@@ -318,7 +320,9 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
     });
 
     assert.equal(renderProps.lobby.visible, true);
-    assert.equal(renderProps.lobby.showButtons, true);
+    assert.equal(renderProps.lobby.showMainButtons, false);
+    assert.equal(renderProps.lobby.showBackButton, true);
+    renderProps.lobby.onBack();
 
     assert.deepEqual(calls, [
         ['press', ' '],
@@ -337,7 +341,11 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
         ['ready'],
         ['press', 'e'],
         ['release', 'e'],
-        ['release', ' ']
+        ['press', 's'],
+        ['release', 's'],
+        ['release', ' '],
+        ['press', 's'],
+        ['release', 's']
     ]);
 });
 

@@ -2,7 +2,7 @@
 
 ## P2 - Lobby redesign
 
-- [x] Show main lobby screen for 30 secs and high score screen for only 7 secs
+- [x] Earlier auto-rotation timing was replaced by explicit high-score navigation in P3.2.
 - [x] Redesign the main lobby into a simpler arcade title screen.
     - [x] Remove the game ID from the main lobby.
     - [x] Remove the separate redundant local player name line.
@@ -20,7 +20,7 @@
 
 ## P2.1 - Lobby redesign follow up
 
-- [x] New rule: Only switch to the high score screen every 30 secs AND only if there has been no keyboard activity in the last 15 seconds.
+- [x] Earlier idle high-score rotation was replaced by explicit high-score navigation in P3.2.
 - [x] The High score screen should have column at the beginning called 'Place'. It should have the row text 1ST, 2ND, 3RD, 5TH, etc .. up to 10TH
 - [x] Always show 10 high-score rows with place labels and no `NO SCORES YET` text.
 - [x] I would like all the text to be real HTML text. Canvas text is blurry and the negative text looks inconsistent with html text. Can you make the html text follow the character
@@ -44,9 +44,9 @@ GOAL: Make the lobby experience more clear and not confusing
 - [x] In the lobby only, render the local player on the left side and the opponent on the right side, independent of server slot/player id.
 - [x] Keep gameplay slot, server slot, HUD placement, and scoring behavior unchanged.
 
-## P3.2 - Clean up navigation
+## P3.2 - Clean up navigation - Remove auto time based navigation to High-score page
 
-- [ ] Navigation in lobby should follow this model on both mobile and desktop:
+- [x] Navigation in lobby should follow this model on both mobile and desktop:
 
 ```mermaid
 flowchart TD
@@ -64,16 +64,17 @@ flowchart TD
     Ready -->|"opponent also ready"| Game
 ```
 
-- [ ] Once user sets status READY navigation away from lobby-main is removed! (remember mobile)
-- [ ] On mobile the three lobby-main buttons are stacked vertically
-- [ ] Navigation from edit-name and high-scores pages is simplified to just 'Back to lobby'
-- [ ] Navigation is done with buttons on mobile but with retro style keyboard keys on desktop
-- [ ] On desktop we should use key 'S' and the text 'PRESS S TO SEE HIGH SCORES' that takes you from main-lobby the high-score page.
-- [ ] On desktop we should use key 'S' and the text 'PRESS S TO RETURN TO LOBBY' to take you from the high-score page back to main lobby.
+- [x] Once user sets status READY navigation away from lobby-main is removed! (remember mobile)
+- [x] On mobile the three lobby-main buttons are stacked vertically
+- [x] Navigation from edit-name and high-scores pages is simplified to just 'Back to lobby'
+- [x] Navigation is done with buttons on mobile but with retro style keyboard keys on desktop
+- [x] On desktop we should use key 'S' and the text 'PRESS S TO SEE HIGH SCORES' that takes you from main-lobby the high-score page.
+- [x] On desktop we should use key 'S' and the text 'PRESS S TO RETURN TO LOBBY' to take you from the high-score page back to main lobby.
+- [x] We should remove the automatic changing between lobby and high score. make sure we remove the fancy timing logic
 
 ## P3.2.5 - Improve 'No opponent' experience
 
-- [ ] When user is not paired with opponent show 'LOOKING FOR OPPONENT' graphics.
+- [ ] When user is not paired with opponent show 'LOOKING FOR OPPONENT' 
 
 ## P3.3 - State model review and future plans
 
@@ -89,6 +90,8 @@ flowchart TD
 # Backlog
 
 ## Sensible robust and not confusing and not ugly game
+
+- [ ] When editing name, start with the existing name prefilled (Like it used to be).
 
 - [ ] When both players have marked themselves as ready - I would like a leave-lobby-for-game-sequence. I would like the lobby screen to keep the players in the lobby for a few seconds so you can see the READY status in negative text for 2 seconds and hear the ready sound before switching to the game screen.
 
@@ -129,4 +132,4 @@ flowchart TD
 
 ## MAYBE Ideas
 
-- [ ] We should remove the automatic changing between lobby and high score. make sure we remove the fancy timing logic
+

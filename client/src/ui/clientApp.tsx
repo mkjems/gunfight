@@ -68,7 +68,8 @@ const defaultTouchControls: TouchControlsAppProps = {
         visible: false
     },
     lobby: {
-        showButtons: false,
+        showBackButton: false,
+        showMainButtons: false,
         visible: false
     },
     playing: false,

@@ -74,7 +74,14 @@ test('built browser app renders high scores through the app root', async ({
         waitUntil: 'domcontentloaded'
     });
 
+    await expect(page.locator('#lobby-main')).toBeVisible();
+
+    await page.keyboard.press('s');
+
     await expect(page.locator('#highScoresScreen')).toBeVisible();
+    await expect(page.locator('#highScoresBackPrompt')).toHaveText(
+        'PRESS S TO RETURN TO LOBBY'
+    );
     await expect(
         page.locator('#highScoresTable .high-score-row.is-header')
     ).toContainText('NAME');
@@ -85,6 +92,10 @@ test('built browser app renders high scores through the app root', async ({
         'NO SCORES YET'
     );
     await expect(page.locator('#highScoresTable')).toContainText('10TH');
+
+    await page.keyboard.press('s');
+
+    await expect(page.locator('#lobby-main')).toBeVisible();
 
     expect(browserErrors).toEqual([]);
 });
@@ -147,6 +158,9 @@ test('built browser app renders lobby through the app root', async ({
     );
     await expect(page.locator('#lobbyPlayPrompt')).toHaveText(
         'PRESS P TO PLAY'
+    );
+    await expect(page.locator('#lobbyHighScoresPrompt')).toHaveText(
+        'PRESS S TO SEE HIGH SCORES'
     );
 
     expect(browserErrors).toEqual([]);

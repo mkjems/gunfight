@@ -6,6 +6,7 @@ export type LobbySlot = {
 export type LobbyComponentProps = {
     controls?: string[];
     editPrompt?: string;
+    highScoresPrompt?: string;
     identityLines?: string[];
     playerLabels?: LobbyTextLine[];
     playPrompt?: string;
@@ -40,6 +41,9 @@ export function LobbyMain(options: LobbyComponentProps = {}) {
                 </div>
                 <div id="lobbyEditPrompt" hidden={!options.showEditPrompt}>
                     <Text text={options.editPrompt || ''} />
+                </div>
+                <div id="lobbyHighScoresPrompt">
+                    <Text text={options.highScoresPrompt || ''} />
                 </div>
                 <div id="lobbyPlayPrompt" className="blink-text">
                     <Text text={options.playPrompt || ''} />

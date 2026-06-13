@@ -1,7 +1,10 @@
 export type TouchLobbyControlsProps = {
+    onBack?: () => void;
     onEdit?: () => void;
+    onHighScores?: () => void;
     onPlay?: () => void;
-    showButtons?: boolean;
+    showBackButton?: boolean;
+    showMainButtons?: boolean;
     visible?: boolean;
 };
 
@@ -19,13 +22,25 @@ export function TouchLobbyControls(options: TouchLobbyControlsProps = {}) {
                 id="touchEditButton"
                 label="EDIT NAME"
                 onTap={options.onEdit}
-                visible={options.showButtons}
+                visible={options.showMainButtons}
+            />
+            <TouchLobbyButton
+                id="touchHighScoresButton"
+                label="HIGH SCORES"
+                onTap={options.onHighScores}
+                visible={options.showMainButtons}
             />
             <TouchLobbyButton
                 id="touchPlayButton"
                 label="PLAY GUNFIGHT"
                 onTap={options.onPlay}
-                visible={options.showButtons}
+                visible={options.showMainButtons}
+            />
+            <TouchLobbyButton
+                id="touchBackButton"
+                label="BACK TO LOBBY"
+                onTap={options.onBack}
+                visible={options.showBackButton}
             />
         </>
     );

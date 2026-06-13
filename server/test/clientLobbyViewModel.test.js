@@ -62,6 +62,7 @@ test('builds lobby view models for keyboard clients', async function () {
             ],
             showControls: true,
             slots: [],
+            highScoresPrompt: 'PRESS S TO SEE HIGH SCORES',
             playerLabels: [
                 {
                     key: 'p1-you',
@@ -126,7 +127,7 @@ test('omits static lobby slot rows for touch clients', async function () {
     );
 });
 
-test('decides lobby prompts and high score rotation', async function () {
+test('decides lobby prompts and explicit high score visibility', async function () {
     const lobby = await loadClientLobbyViewModel();
     const model = {
         status: 'waiting',
@@ -143,27 +144,28 @@ test('decides lobby prompts and high score rotation', async function () {
     );
     assert.equal(
         lobby.shouldShowHighScoresScreen({
-            lastKeyboardActivityAt: 14000,
+            highScoresVisible: true,
             localReadyRequested: false,
             model,
-            now: 30000
+            playerId: 'p1'
         }),
         true
     );
     assert.equal(
         lobby.shouldShowHighScoresScreen({
-            lastKeyboardActivityAt: 20000,
+            highScoresVisible: false,
             localReadyRequested: false,
             model,
-            now: 30000
+            playerId: 'p1'
         }),
         false
     );
     assert.equal(
         lobby.shouldShowHighScoresScreen({
+            highScoresVisible: true,
             localReadyRequested: true,
             model,
-            now: 30000
+            playerId: 'p1'
         }),
         false
     );

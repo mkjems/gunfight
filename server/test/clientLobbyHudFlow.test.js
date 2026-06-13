@@ -110,6 +110,7 @@ test('builds lobby main app state', async function () {
                 'Space - shoot'
             ],
             editPrompt: '',
+            highScoresPrompt: '',
             identityLines: [],
             playerLabels: [],
             playPrompt: 'PRESS P TO PLAY',
@@ -120,17 +121,23 @@ test('builds lobby main app state', async function () {
     });
 });
 
-test('builds high scores app state with keyboard play prompt', async function () {
+test('builds high scores app state with keyboard back prompt', async function () {
     const flow = await loadClientLobbyHudFlow();
     const { options } = createRenderOptions({
-        now: 30000
+        highScoresVisible: true,
+        model: {
+            clients: [{ id: 'p1', ready: false }],
+            gameId: 'game-1',
+            status: 'waiting'
+        }
     });
 
     assert.deepEqual(plain(flow.getState(options)), {
         activeScreen: 'high-scores',
         canvasVisible: false,
         highScores: {
-            playPrompt: 'PRESS P TO PLAY',
+            backPrompt: 'PRESS S TO RETURN TO LOBBY',
+            playPrompt: '',
             rowLimit: 10,
             rows: [
                 {
@@ -145,16 +152,22 @@ test('builds high scores app state with keyboard play prompt', async function ()
 test('builds mobile high scores app state with five rows and no keyboard prompt', async function () {
     const flow = await loadClientLobbyHudFlow();
     const { options } = createRenderOptions({
+        highScoresVisible: true,
         isTouchInterface() {
             return true;
         },
-        now: 30000
+        model: {
+            clients: [{ id: 'p1', ready: false }],
+            gameId: 'game-1',
+            status: 'waiting'
+        }
     });
 
     assert.deepEqual(plain(flow.getState(options)), {
         activeScreen: 'high-scores',
         canvasVisible: false,
         highScores: {
+            backPrompt: '',
             playPrompt: '',
             rowLimit: 5,
             rows: [
@@ -167,11 +180,15 @@ test('builds mobile high scores app state with five rows and no keyboard prompt'
     });
 });
 
-test('keeps main lobby visible after recent keyboard activity', async function () {
+test('keeps main lobby visible until high scores are selected', async function () {
     const flow = await loadClientLobbyHudFlow();
     const { options } = createRenderOptions({
-        lastKeyboardActivityAt: 25000,
-        now: 30000
+        highScoresVisible: false,
+        model: {
+            clients: [{ id: 'p1', ready: false }],
+            gameId: 'game-1',
+            status: 'waiting'
+        }
     });
 
     assert.equal(plain(flow.getState(options)).activeScreen, 'lobby-main');
@@ -203,7 +220,7 @@ test('builds name editor app state and passes selection callback', async functio
     assert.deepEqual(plain(state.nameEditor.helpLines), [
         'H J K L MOVE',
         'SPACE SELECT',
-        'E DONE'
+        'E BACK TO LOBBY'
     ]);
 
     state.nameEditor.onSelect(1, 2);

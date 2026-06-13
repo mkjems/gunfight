@@ -14,6 +14,7 @@ type ClientKeyEventFlowOptions = {
     gameplayInput?: {
         handle: typeof handleGameplayInput;
     };
+    highScoresVisible?: boolean;
     isLocalClientWaiting: () => boolean;
     keyEvent: KeyEvent;
     nameEditor?: {
@@ -25,11 +26,36 @@ type ClientKeyEventFlowOptions = {
     player: unknown;
     playerId?: number | string;
     renderHud: () => void;
+    returnToLobby?: () => void;
     roundState: RoundState;
+    showHighScores?: () => void;
 };
 
 export function handle(options: ClientKeyEventFlowOptions) {
     const keyEvent = options.keyEvent;
+    const isLocalWaitingKey =
+        options.roundState === RoundState.WAITING &&
+        keyEvent.player === options.playerId &&
+        (keyEvent.key === 's' || !!options.highScoresVisible) &&
+        options.isLocalClientWaiting();
+
+    if (isLocalWaitingKey && keyEvent.key === 's') {
+        if (keyEvent.action === 'down') {
+            if (options.highScoresVisible) {
+                options.returnToLobby?.();
+            } else {
+                options.showHighScores?.();
+            }
+
+            options.renderHud();
+        }
+
+        return false;
+    }
+
+    if (isLocalWaitingKey && options.highScoresVisible) {
+        return false;
+    }
 
     if (
         options.roundState === RoundState.WAITING &&

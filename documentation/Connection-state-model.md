@@ -227,7 +227,7 @@ The active screen is derived locally:
 
 - any non-`waiting` round state shows `Game`
 - `waiting` plus active name editor shows `Lobby-edit-name`
-- `waiting` plus idle high-score rotation shows `High-scores`
+- `waiting` plus explicit high-score navigation shows `High-scores`
 - otherwise `Lobby-main`
 
 Legal local round transitions live in `client/src/state/clientScreens.ts`.

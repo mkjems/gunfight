@@ -16,6 +16,7 @@ type LobbyModel = {
 };
 
 type LobbyOptions = {
+    highScoresVisible?: boolean;
     localReadyRequested?: boolean;
     model?: LobbyModel | null;
     playerId?: ClientId | null;
@@ -26,21 +27,11 @@ type LobbyViewModelOptions = LobbyOptions & {
     players?: Record<ClientId, LobbyPlayerPosition | undefined>;
 };
 
-type HighScoresScreenOptions = {
-    lastKeyboardActivityAt?: number | null;
-    localReadyRequested?: boolean;
-    model?: LobbyModel | null;
-    now?: number;
-};
-
 const controls = [
     'h j k l - left down up right',
     'a z - aim up down',
     'Space - shoot'
 ];
-const mainLobbyDuration = 30000;
-const highScoresDuration = 7000;
-const keyboardIdleDuration = 15000;
 const canvasWidth = 950;
 const canvasHeight = 640;
 const markerOffsetY = -122;
@@ -101,27 +92,8 @@ export function shouldShowLobbyPrompt(options: LobbyOptions): boolean {
     );
 }
 
-export function shouldShowHighScoresScreen(
-    options: HighScoresScreenOptions
-): boolean {
-    const clients = (options.model && options.model.clients) || [];
-    const hasReadyClient = clients.some(function (client) {
-        return client.ready;
-    });
-    const now = options.now || new Date().getTime();
-
-    if (hasReadyClient || options.localReadyRequested) {
-        return false;
-    }
-
-    if (
-        typeof options.lastKeyboardActivityAt === 'number' &&
-        now - options.lastKeyboardActivityAt < keyboardIdleDuration
-    ) {
-        return false;
-    }
-
-    return now % (mainLobbyDuration + highScoresDuration) >= mainLobbyDuration;
+export function shouldShowHighScoresScreen(options: LobbyOptions): boolean {
+    return !!options.highScoresVisible && isLocalClientWaiting(options);
 }
 
 export function getLobbyViewModel(options: LobbyViewModelOptions) {
@@ -138,6 +110,8 @@ export function getLobbyViewModel(options: LobbyViewModelOptions) {
         showEditPrompt: !isTouch && localClientWaiting,
         editPrompt:
             !isTouch && localClientWaiting ? 'PRESS E TO EDIT NAME' : '',
+        highScoresPrompt:
+            !isTouch && localClientWaiting ? 'PRESS S TO SEE HIGH SCORES' : '',
         playPrompt: showPlayPrompt ? 'PRESS P TO PLAY' : ''
     };
 }

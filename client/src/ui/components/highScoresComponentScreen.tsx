@@ -6,6 +6,7 @@ export type HighScoreRow = {
 };
 
 export type HighScoresProps = {
+    backPrompt?: string;
     playPrompt?: string;
     rowLimit?: number;
     rows?: HighScoreRow[];
@@ -32,6 +33,9 @@ export function HighScoresScreen(options: HighScoresProps = {}) {
             </div>
             <div id="highScoresPlayPrompt" className="blink-text">
                 <HighScoresPrompt text={options.playPrompt || ''} />
+            </div>
+            <div id="highScoresBackPrompt">
+                <HighScoresPrompt text={options.backPrompt || ''} />
             </div>
         </>
     );

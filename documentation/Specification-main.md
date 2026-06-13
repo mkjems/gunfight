@@ -32,13 +32,14 @@ It shows:
 - opponent avatar, name, and ready state when an opponent is connected
 - desktop controls
 - prompt to edit name
+- prompt to see high scores
 - prompt to play
 
 The lobby does not show the game id or a separate local identity line. The lobby background shows the player's avatar. If an opponent is connected, both avatars are visible. On desktop, the player can move in the lobby to learn the controls, but cannot shoot.
 
 Each avatar shows the player's name and lobby state beneath the character. This text is rendered as HTML overlay text and follows the avatar while it moves. The lobby does not prefix names with `PLAYER 1` or `PLAYER 2`. The status text changes with the player's lobby state; `READY` is shown as negative text. The local player is marked clearly with a small `YOU` marker and is rendered on the left side of the lobby. The opponent is rendered on the right side of the lobby. Lobby-side placement is presentation-only; server player id, gameplay slot, HUD placement, and scoring behavior stay unchanged. Lobby movement is constrained to side areas so avatars and their following labels stay readable and do not overlap the central lobby instructions.
 
-While no player is ready, the app may rotate from the main lobby to high scores every 30 seconds. High scores are shown only when there has been no keyboard activity in the last 15 seconds.
+The lobby does not rotate automatically to high scores. High scores are opened only by explicit player navigation.
 
 ### State of players in Lobby
 
@@ -49,11 +50,12 @@ While no player is ready, the app may rotate from the main lobby to high scores 
 
 When both players are ready, the game starts.
 
-When the local player has pressed `P` and entered `READY`, the lobby does not show `PRESS E TO EDIT NAME`, and pressing `E` does not open the edit name screen. Name editing becomes available again only after the local player returns to `WAITING`.
+When the local player has pressed `P` and entered `READY`, the lobby does not show edit-name, high-score, or play navigation. Pressing `E`, `S`, or `P` does not navigate away from the ready lobby state. Navigation becomes available again only after the local player returns to `WAITING`.
 
 ### Desktop lobby controls
 
 - `E`: edit name, only while the local player is `WAITING`
+- `S`: open high scores from the main lobby, or return from high scores to the main lobby, only while the local player is `WAITING`
 - `P`: ready/play
 - `H J K L`: move left, down, up, right
 - `A Z`: aim up and down
@@ -61,11 +63,11 @@ When the local player has pressed `P` and entered `READY`, the lobby does not sh
 
 ### Mobile lobby
 
-Mobile users do not see keyboard instructions. The lobby uses touch buttons for edit name and play. Virtual movement and fire controls stay hidden until gameplay.
+Mobile users do not see keyboard instructions. The lobby uses stacked touch buttons for edit name, high scores, and play. Virtual movement and fire controls stay hidden until gameplay.
 
 Mobile lobby action buttons are centered horizontally and vertically over the lobby screen so they remain visible when the scaled game stage is taller than the browser viewport.
 
-On mobile high scores, only the top 5 score places are shown. The edit name and play buttons are shown underneath the high-score table, never over the table.
+On mobile high scores, only the top 5 score places are shown. A `BACK TO LOBBY` button is shown underneath the high-score table, never over the table. Edit-name and play buttons are not shown on the high-score screen.
 
 ## Edit name screen
 

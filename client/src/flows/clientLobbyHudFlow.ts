@@ -1,21 +1,19 @@
 import { getActiveScreen, Screen } from '../state/clientScreens.js';
 import {
     getLobbyViewModel,
-    shouldShowHighScoresScreen,
-    shouldShowLobbyPrompt
+    shouldShowHighScoresScreen
 } from '../ui/viewModels/clientLobbyViewModel.js';
 
 type LobbyHudFlowOptions = {
     highScores?: unknown[];
+    highScoresVisible?: boolean;
     isTouchInterface: () => boolean;
-    lastKeyboardActivityAt?: number | null;
     localReadyRequested?: boolean;
     model?: Parameters<typeof getLobbyViewModel>[0]['model'];
     nameEditor?: {
         getState: () => unknown;
         isActive: () => boolean;
     } | null;
-    now?: number;
     onNameEditorSelect: (rowIndex: number, colIndex: number) => void;
     playerId?: Parameters<typeof getLobbyViewModel>[0]['playerId'];
     players?: Parameters<typeof getLobbyViewModel>[0]['players'];
@@ -52,7 +50,7 @@ export function getState(options: LobbyHudFlowOptions): LobbyHudState {
                 state: options.nameEditor?.getState(),
                 helpLines: isTouch
                     ? []
-                    : ['H J K L MOVE', 'SPACE SELECT', 'E DONE'],
+                    : ['H J K L MOVE', 'SPACE SELECT', 'E BACK TO LOBBY'],
                 onSelect: options.onNameEditorSelect
             }
         };
@@ -93,33 +91,23 @@ function getActiveScreenForOptions(options: LobbyHudFlowOptions) {
 
 function shouldShowHighScoresScreenForOptions(options: LobbyHudFlowOptions) {
     return shouldShowHighScoresScreen({
-        lastKeyboardActivityAt: options.lastKeyboardActivityAt,
+        highScoresVisible: options.highScoresVisible,
         localReadyRequested: options.localReadyRequested,
         model: options.model,
-        now: options.now
+        playerId: options.playerId
     });
 }
 
 function getHighScoresState(options: LobbyHudFlowOptions, isTouch: boolean) {
     return {
+        backPrompt: isTouch ? '' : 'PRESS S TO RETURN TO LOBBY',
         rowLimit: isTouch ? 5 : 10,
         rows:
             options.highScores && options.highScores.length
                 ? options.highScores
                 : [],
-        playPrompt:
-            shouldShowLobbyPromptForOptions(options) && !isTouch
-                ? 'PRESS P TO PLAY'
-                : ''
+        playPrompt: ''
     };
-}
-
-function shouldShowLobbyPromptForOptions(options: LobbyHudFlowOptions) {
-    return shouldShowLobbyPrompt({
-        localReadyRequested: options.localReadyRequested,
-        model: options.model,
-        playerId: options.playerId
-    });
 }
 
 export const ClientLobbyHudFlow = {

@@ -40,7 +40,7 @@ export function KeysModel(
 ) {
     const ownerDocument = (options.document || document) as DocumentLike;
     const internalKeyStatus: Record<string, boolean> = {};
-    const inputKeys = ['h', 'j', 'k', 'l', 'a', 'z', ' ', 'e'];
+    const inputKeys = ['h', 'j', 'k', 'l', 'a', 'z', ' ', 'e', 's'];
 
     function emitKeyEvent(key: string, action: KeyAction) {
         const keyEvent = {

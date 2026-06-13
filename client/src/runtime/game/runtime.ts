@@ -87,6 +87,7 @@ export class ClientGameRuntime implements ClientGameController {
     private roundState!: RoundStateValue;
     private latestModel: RuntimeGameModel | null = null;
     private highScores: HighScoreEntry[] = [];
+    private highScoresVisible = false;
     private scoreKeeper!: RuntimeScoreKeeper;
     private roundData!: RuntimeRoundData;
     private timers!: RuntimeTimers;
@@ -95,7 +96,6 @@ export class ClientGameRuntime implements ClientGameController {
     private roundIntro!: RuntimeRoundIntro;
     private localReadyRequested = false;
     private playerId: ClientId | null = null;
-    private lastKeyboardActivityAt: number | null = null;
     private hasStarted = false;
 
     constructor(options: ClientGameRuntimeOptions) {
@@ -318,11 +318,13 @@ export class ClientGameRuntime implements ClientGameController {
                     {
                         canReady: () => {
                             return (
-                                !this.nameEditor || !this.nameEditor.isActive()
+                                !this.highScoresVisible &&
+                                (!this.nameEditor ||
+                                    !this.nameEditor.isActive())
                             );
                         },
                         onReady: () => {
-                            this.recordKeyboardActivity();
+                            this.highScoresVisible = false;
                             this.localReadyRequested = true;
                             this.renderHud();
                         }
@@ -451,13 +453,10 @@ export class ClientGameRuntime implements ClientGameController {
     };
 
     private handleKeyEvent = (keyEvent: RuntimeKeyEvent) => {
-        if (keyEvent.player === this.playerId) {
-            this.recordKeyboardActivity();
-        }
-
         return this.dependencies.ClientKeyEventFlow.handle({
             ammo: this.ammo,
             bullets: this.bullets,
+            highScoresVisible: this.shouldShowHighScoresScreen(),
             isLocalClientWaiting: this.isLocalClientWaiting,
             keyEvent,
             nameEditor: this.nameEditor,
@@ -470,7 +469,9 @@ export class ClientGameRuntime implements ClientGameController {
             player: this.getPlayer(keyEvent.player),
             playerId: this.playerId ?? undefined,
             renderHud: this.renderHud,
-            roundState: this.roundState
+            returnToLobby: this.returnToLobby,
+            roundState: this.roundState,
+            showHighScores: this.showHighScores
         });
     };
 
@@ -530,6 +531,7 @@ export class ClientGameRuntime implements ClientGameController {
 
     private startRoundRitual = (options?: { resetScores?: boolean }) => {
         options = options || {};
+        this.highScoresVisible = false;
 
         this.dependencies.ClientRoundRitual.start({
             bullets: this.bullets,
@@ -782,8 +784,8 @@ export class ClientGameRuntime implements ClientGameController {
     private getLobbyHudState = () => {
         return this.dependencies.ClientLobbyHudFlow.getState({
             highScores: this.highScores,
+            highScoresVisible: this.shouldShowHighScoresScreen(),
             isTouchInterface: this.isTouchInterface,
-            lastKeyboardActivityAt: this.lastKeyboardActivityAt,
             localReadyRequested: this.localReadyRequested,
             model: this.latestModel,
             nameEditor: this.nameEditor,
@@ -885,15 +887,20 @@ export class ClientGameRuntime implements ClientGameController {
     private shouldShowHighScoresScreen = () => {
         return this.dependencies.ClientLobbyViewModel.shouldShowHighScoresScreen(
             {
-                lastKeyboardActivityAt: this.lastKeyboardActivityAt,
+                highScoresVisible: this.highScoresVisible,
                 localReadyRequested: this.localReadyRequested,
-                model: this.latestModel
+                model: this.latestModel,
+                playerId: this.playerId
             }
         );
     };
 
-    private recordKeyboardActivity = () => {
-        this.lastKeyboardActivityAt = new Date().getTime();
+    private showHighScores = () => {
+        this.highScoresVisible = true;
+    };
+
+    private returnToLobby = () => {
+        this.highScoresVisible = false;
     };
 
     private isLocalClientReady = () => {

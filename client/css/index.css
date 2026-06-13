@@ -337,7 +337,8 @@ h2 {
     margin-bottom: 50px;
 }
 
-#lobbyEditPrompt:empty {
+#lobbyEditPrompt:empty,
+#lobbyHighScoresPrompt:empty {
     display: none;
 }
 
@@ -491,6 +492,7 @@ h2 {
 #touchLobbyControls {
     align-items: center;
     display: flex;
+    flex-direction: column;
     gap: clamp(8px, 1.4cqw, 14px);
     justify-content: center;
     left: 0;
@@ -513,7 +515,14 @@ h2 {
     display: none;
 }
 
+#touchControls button[hidden],
+#touchLobbyControls button[hidden] {
+    display: none;
+}
+
 #touchEditButton,
+#touchHighScoresButton,
+#touchBackButton,
 #touchPlayButton {
     min-height: 1.65em;
     min-width: 0;

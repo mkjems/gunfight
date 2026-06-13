@@ -90,8 +90,12 @@ test.describe('mobile touch lobby', function () {
         await expect(page.locator('#lobby-main')).toBeVisible();
         await expect(page.locator('#touchLobbyControls')).toBeVisible();
         await expect(page.locator('#touchEditButton')).toBeVisible();
+        await expect(page.locator('#touchHighScoresButton')).toBeVisible();
         await expect(page.locator('#touchPlayButton')).toBeVisible();
         await expect(page.locator('#touchEditButton')).toHaveText('EDIT NAME');
+        await expect(page.locator('#touchHighScoresButton')).toHaveText(
+            'HIGH SCORES'
+        );
         await expect(page.locator('#touchPlayButton')).toHaveText(
             'PLAY GUNFIGHT'
         );
@@ -137,6 +141,9 @@ test.describe('mobile touch lobby', function () {
                 .click();
         }
 
+        await expect(page.locator('#lobby-main')).toBeVisible();
+        await page.locator('#touchHighScoresButton').click();
+
         await expect(page.locator('#highScoresScreen')).toBeVisible();
         await expect(
             page.locator('#highScoresTable .high-score-row')
@@ -144,8 +151,10 @@ test.describe('mobile touch lobby', function () {
         await expect(page.locator('#highScoresTable')).toContainText('5TH');
         await expect(page.locator('#highScoresTable')).not.toContainText('6TH');
         await expect(page.locator('#touchLobbyControls')).toBeVisible();
-        await expect(page.locator('#touchEditButton')).toBeVisible();
-        await expect(page.locator('#touchPlayButton')).toBeVisible();
+        await expect(page.locator('#touchEditButton')).toBeHidden();
+        await expect(page.locator('#touchHighScoresButton')).toBeHidden();
+        await expect(page.locator('#touchPlayButton')).toBeHidden();
+        await expect(page.locator('#touchBackButton')).toBeVisible();
 
         const tableBox = await page.locator('#highScoresTable').boundingBox();
         const controlsBox = await page
@@ -161,6 +170,9 @@ test.describe('mobile touch lobby', function () {
         expect(controlsBox.y).toBeGreaterThanOrEqual(
             tableBox.y + tableBox.height
         );
+
+        await page.locator('#touchBackButton').click();
+        await expect(page.locator('#lobby-main')).toBeVisible();
 
         expect(browserErrors).toEqual([]);
     });

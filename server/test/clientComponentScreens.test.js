@@ -183,7 +183,7 @@ test('renders high-score table rows with ten ranked places through the app root'
     app.render({
         activeScreen: Screen.HIGH_SCORES,
         highScores: {
-            playPrompt: 'PRESS FIRE',
+            backPrompt: 'PRESS S',
             rows: [
                 {
                     deaths: 1,
@@ -201,10 +201,8 @@ test('renders high-score table rows with ten ranked places through the app root'
         query(root, '#highScoresScreen h1').textContent,
         'HIGH SCORES'
     );
-    assert.equal(
-        query(root, '#highScoresPlayPrompt').textContent,
-        'PRESS FIRE'
-    );
+    assert.equal(query(root, '#highScoresBackPrompt').textContent, 'PRESS S');
+    assert.equal(query(root, '#highScoresPlayPrompt').textContent, '');
     assert.equal(query(root, '#highScoresTable').children.length, 11);
     assert.equal(
         query(root, '#highScoresTable').children[0].className,
@@ -268,7 +266,7 @@ test('renders mobile high scores with five rows and touch actions underneath', a
         touchControls: {
             enabled: true,
             lobby: {
-                showButtons: true,
+                showBackButton: true,
                 visible: true
             }
         }
@@ -286,8 +284,10 @@ test('renders mobile high scores with five rows and touch actions underneath', a
     ]);
     assert.equal(touchControls.hidden, false);
     assert.equal(touchControls.className, 'is-high-scores');
-    assert.equal(query(root, '#touchEditButton').hidden, false);
-    assert.equal(query(root, '#touchPlayButton').hidden, false);
+    assert.equal(query(root, '#touchEditButton').hidden, true);
+    assert.equal(query(root, '#touchHighScoresButton').hidden, true);
+    assert.equal(query(root, '#touchPlayButton').hidden, true);
+    assert.equal(query(root, '#touchBackButton').hidden, false);
 });
 
 test('renders lobby screen sections through the app root', async function () {
@@ -301,6 +301,7 @@ test('renders lobby screen sections through the app root', async function () {
         lobby: {
             controls: ['MOVE', 'FIRE'],
             editPrompt: 'EDIT NAME',
+            highScoresPrompt: 'SCORES',
             playPrompt: 'READY?',
             playerLabels: [
                 {
@@ -326,6 +327,7 @@ test('renders lobby screen sections through the app root', async function () {
     const controls = query(main, '#lobbyControlsText');
     const editPrompt = query(main, '#lobbyEditPrompt');
     const labels = query(main, '#lobbyPlayerLabels');
+    const highScoresPrompt = query(main, '#lobbyHighScoresPrompt');
     const playPrompt = query(main, '#lobbyPlayPrompt');
 
     assert.equal(main.hidden, false);
@@ -343,6 +345,7 @@ test('renders lobby screen sections through the app root', async function () {
         'lobby-player-label negative-text'
     );
     assert.equal(editPrompt.textContent, 'EDIT NAME');
+    assert.equal(highScoresPrompt.textContent, 'SCORES');
     assert.equal(playPrompt.textContent, 'READY?');
 
     app.render({
@@ -354,6 +357,7 @@ test('renders lobby screen sections through the app root', async function () {
     assert.equal(query(main, '#lobbyControlsText').hidden, true);
     assert.equal(query(main, '#lobbyEditPrompt').hidden, true);
     assert.equal(query(main, '#lobbyEditPrompt').textContent, '');
+    assert.equal(query(main, '#lobbyHighScoresPrompt').textContent, '');
     assert.equal(query(main, '#lobbyPlayPrompt').textContent, '');
 });
 
@@ -386,9 +390,11 @@ test('skips virtual-DOM work when app render props are value-equal', async funct
             touchControls: {
                 enabled: true,
                 lobby: {
+                    onBack() {},
                     onEdit() {},
+                    onHighScores() {},
                     onPlay() {},
-                    showButtons: true,
+                    showMainButtons: true,
                     visible: true
                 }
             }
@@ -416,10 +422,13 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
                 onEdit() {
                     actions.push('edit');
                 },
+                onHighScores() {
+                    actions.push('scores');
+                },
                 onPlay() {
                     actions.push('play');
                 },
-                showButtons: true,
+                showMainButtons: true,
                 visible: true
             }
         }
@@ -428,29 +437,38 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
     assert.equal(query(root, '#touchLobbyControls').hidden, false);
 
     const editButton = query(root, '#touchEditButton');
+    const highScoresButton = query(root, '#touchHighScoresButton');
     const playButton = query(root, '#touchPlayButton');
+    const backButton = query(root, '#touchBackButton');
     assert.equal(editButton.textContent, 'EDIT NAME');
+    assert.equal(highScoresButton.textContent, 'HIGH SCORES');
     assert.equal(playButton.textContent, 'PLAY GUNFIGHT');
+    assert.equal(backButton.textContent, 'BACK TO LOBBY');
     assert.equal(editButton.hidden, false);
+    assert.equal(highScoresButton.hidden, false);
     assert.equal(playButton.hidden, false);
+    assert.equal(backButton.hidden, true);
 
     const pointerDown = new browser.window.PointerEvent('pointerdown', {
         cancelable: true
     });
     playButton.dispatchEvent(pointerDown);
+    highScoresButton.dispatchEvent(
+        new browser.window.PointerEvent('pointerdown', { cancelable: true })
+    );
     editButton.dispatchEvent(
         new browser.window.PointerEvent('pointerdown', { cancelable: true })
     );
 
     assert.equal(pointerDown.defaultPrevented, true);
-    assert.deepEqual(actions, ['play', 'edit']);
+    assert.deepEqual(actions, ['play', 'scores', 'edit']);
 
     app.render({
         activeScreen: Screen.LOBBY_MAIN,
         touchControls: {
             enabled: true,
             lobby: {
-                showButtons: false,
+                showBackButton: true,
                 visible: true
             }
         }
@@ -458,7 +476,9 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
 
     assert.equal(query(root, '#touchLobbyControls').hidden, false);
     assert.equal(query(root, '#touchEditButton').hidden, true);
+    assert.equal(query(root, '#touchHighScoresButton').hidden, true);
     assert.equal(query(root, '#touchPlayButton').hidden, true);
+    assert.equal(query(root, '#touchBackButton').hidden, false);
 
     app.render({
         activeScreen: Screen.LOBBY_MAIN,
