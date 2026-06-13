@@ -6,7 +6,7 @@ Completed-plans folder is a graveyard for plans/doc we have completed and are no
 
 The human write the specifications but the agents help with keeping it up to date as work is done and the project evolves.
 
-For daily work, agents and human collaborate to describe/outline what the next changes will be, in the form of checkmark and tasks in TODO files.
+For daily work, agents and human collaborate to describe/outline what the next changes will be, in the form of checkmark and tasks in the documentation/TODO{number} file.
 
 When we agree that the work described in the TODO is sensible and good we implement it.  
 
