@@ -64,7 +64,7 @@ test('particle layer spawns and clears pixel effects', async function () {
         y: 200
     });
 
-    assert.equal(layer.count(), 11);
+    assert.equal(layer.count(), 9);
 
     layer.clear();
 
@@ -86,11 +86,11 @@ test('particle layer expires particles by lifetime', async function () {
         y: 60
     });
 
-    assert.equal(layer.count(), 6);
+    assert.equal(layer.count(), 5);
 
     layer.update(0.1);
 
-    assert.equal(layer.count(), 6);
+    assert.equal(layer.count(), 5);
 
     layer.update(0.08);
     layer.update(0.08);
@@ -140,11 +140,45 @@ test('particle layer renders hard square pixels', async function () {
     });
     layer.render(context);
 
-    assert.equal(calls.length, 5);
+    assert.equal(calls.length, 6);
     calls.forEach(function (call) {
+        assert.equal(call[0], 'rgb(255,244,0)');
         assert.equal(Number.isInteger(call[1]), true);
         assert.equal(Number.isInteger(call[2]), true);
-        assert.equal(call[3] >= 1, true);
+        assert.equal(call[3], 3);
         assert.equal(call[3], call[4]);
+        assert.equal(call[1] % 2, 0);
+        assert.equal(call[2] % 2, 0);
+    });
+});
+
+test('zero-jitter bursts start on the source pixel grid', async function () {
+    const ParticleLayer = await loadParticleLayer();
+    const layer = new ParticleLayer({
+        random() {
+            return 1;
+        }
+    });
+    const calls = [];
+    const context = {
+        fillStyle: '',
+        fillRect(x, y, width, height) {
+            calls.push([x, y, width, height]);
+        }
+    };
+
+    layer.spawnMuzzleFlash({
+        facing: 1,
+        x: 101,
+        y: 199
+    });
+    layer.render(context);
+
+    assert.equal(calls.length, 6);
+    calls.forEach(function (call) {
+        assert.equal(call[0], 102);
+        assert.equal(call[1], 200);
+        assert.equal(call[2], 3);
+        assert.equal(call[2], call[3]);
     });
 });

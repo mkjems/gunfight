@@ -9,9 +9,9 @@ type ParticleLayerOptions = {
 
 type Particle = {
     age: number;
-    color: string;
     friction: number;
     gravity: number;
+    gridSize: number;
     lifetime: number;
     size: number;
     vx: number;
@@ -34,26 +34,23 @@ type ParticleRenderContext = {
 };
 
 type BurstOptions = {
-    colors: string[];
     count: number;
     direction?: number;
     friction?: number;
     gravity?: number;
+    gridSize?: number;
     lifetime: [number, number];
-    size: [number, number];
+    originJitter?: number;
+    pixelSize?: number;
     speed: [number, number];
     spread: number;
     x: number;
     y: number;
 };
 
-const colors = {
-    black: 'rgb(0,0,0)',
-    darkYellow: 'rgb(126,116,0)',
-    gray: 'rgb(86,86,86)',
-    white: 'rgb(255,255,255)',
-    yellow: Config.colors.yellow
-};
+const pixelColor = Config.colors.yellow;
+const pixelUnit = Math.max(1, Config.graphics.scale || 1);
+const defaultPixelSize = 3;
 
 export class ParticleLayer {
     private readonly maxParticles: number;
@@ -97,12 +94,12 @@ export class ParticleLayer {
 
     render(context: ParticleRenderContext) {
         this.particles.forEach(function (particle) {
-            const size = Math.max(1, Math.round(particle.size));
+            const size = snapBlockSize(particle.size);
 
-            context.fillStyle = particle.color;
+            context.fillStyle = pixelColor;
             context.fillRect(
-                Math.round(particle.x),
-                Math.round(particle.y),
+                snapToPixelGrid(particle.x, particle.gridSize),
+                snapToPixelGrid(particle.y, particle.gridSize),
                 size,
                 size
             );
@@ -111,15 +108,16 @@ export class ParticleLayer {
 
     spawnMuzzleFlash(source: ParticleSource) {
         this.spawnBurst({
-            colors: [colors.yellow, colors.white, colors.darkYellow],
-            count: 7,
+            count: 6,
             direction: getSourceDirection(source),
-            friction: 0.82,
-            gravity: 20,
-            lifetime: [0.06, 0.14],
-            size: [2, 5],
-            speed: [45, 145],
-            spread: Math.PI / 3,
+            friction: 0.72,
+            gravity: 8,
+            gridSize: pixelUnit,
+            lifetime: [0.07, 0.15],
+            originJitter: 0,
+            pixelSize: defaultPixelSize,
+            speed: [80, 210],
+            spread: Math.PI / 4,
             x: source.x,
             y: source.y
         });
@@ -127,15 +125,16 @@ export class ParticleLayer {
 
     spawnGunSmoke(source: ParticleSource) {
         this.spawnBurst({
-            colors: [colors.gray, colors.black, colors.darkYellow],
-            count: 4,
+            count: 3,
             direction: getSourceDirection(source) + Math.PI,
-            friction: 0.9,
-            gravity: -8,
-            lifetime: [0.12, 0.28],
-            size: [2, 4],
-            speed: [8, 35],
-            spread: Math.PI,
+            friction: 0.82,
+            gravity: -4,
+            gridSize: pixelUnit,
+            lifetime: [0.11, 0.24],
+            originJitter: pixelUnit,
+            pixelSize: defaultPixelSize,
+            speed: [18, 58],
+            spread: Math.PI * 0.7,
             x: source.x,
             y: source.y
         });
@@ -143,15 +142,16 @@ export class ParticleLayer {
 
     spawnRicochetSparks(source: ParticleSource) {
         this.spawnBurst({
-            colors: [colors.yellow, colors.white, colors.black],
-            count: 6,
+            count: 5,
             direction: getSourceDirection(source) + Math.PI,
-            friction: 0.88,
-            gravity: 42,
-            lifetime: [0.12, 0.28],
-            size: [2, 4],
-            speed: [55, 190],
-            spread: Math.PI * 0.85,
+            friction: 0.76,
+            gravity: 36,
+            gridSize: pixelUnit,
+            lifetime: [0.11, 0.26],
+            originJitter: 0,
+            pixelSize: defaultPixelSize,
+            speed: [95, 250],
+            spread: Math.PI * 0.55,
             x: source.x,
             y: source.y
         });
@@ -159,15 +159,16 @@ export class ParticleLayer {
 
     spawnRockChips(source: ParticleSource) {
         this.spawnBurst({
-            colors: [colors.yellow, colors.darkYellow, colors.black],
-            count: 5,
+            count: 6,
             direction: getSourceDirection(source) + Math.PI,
-            friction: 0.9,
-            gravity: 70,
+            friction: 0.82,
+            gravity: 82,
+            gridSize: pixelUnit,
             lifetime: [0.18, 0.38],
-            size: [2, 5],
-            speed: [35, 120],
-            spread: Math.PI,
+            originJitter: pixelUnit,
+            pixelSize: defaultPixelSize,
+            speed: [55, 160],
+            spread: Math.PI * 0.8,
             x: source.x,
             y: source.y
         });
@@ -177,17 +178,16 @@ export class ParticleLayer {
         const isCactus = source.obstacleId?.startsWith('cactus:');
 
         this.spawnBurst({
-            colors: isCactus
-                ? [colors.yellow, colors.darkYellow, colors.black]
-                : [colors.yellow, colors.gray, colors.black],
-            count: isCactus ? 8 : 10,
+            count: isCactus ? 7 : 9,
             direction: getSourceDirection(source) + Math.PI,
-            friction: 0.9,
-            gravity: 85,
+            friction: 0.84,
+            gravity: 100,
+            gridSize: pixelUnit,
             lifetime: [0.2, 0.42],
-            size: [2, 5],
-            speed: [35, 150],
-            spread: Math.PI * 1.2,
+            originJitter: pixelUnit,
+            pixelSize: defaultPixelSize,
+            speed: [60, 185],
+            spread: Math.PI,
             x: source.x,
             y: source.y
         });
@@ -195,21 +195,29 @@ export class ParticleLayer {
 
     spawnPlayerHit(source: ParticleSource) {
         this.spawnBurst({
-            colors: [colors.yellow, colors.white, colors.black],
-            count: 14,
+            count: 11,
             direction: getSourceDirection(source) + Math.PI,
-            friction: 0.86,
-            gravity: 95,
-            lifetime: [0.18, 0.34],
-            size: [2, 5],
-            speed: [45, 180],
-            spread: Math.PI * 1.4,
+            friction: 0.8,
+            gravity: 120,
+            gridSize: pixelUnit,
+            lifetime: [0.18, 0.36],
+            originJitter: pixelUnit,
+            pixelSize: defaultPixelSize,
+            speed: [75, 230],
+            spread: Math.PI * 1.1,
             x: source.x,
             y: source.y
         });
     }
 
     private spawnBurst(options: BurstOptions) {
+        const gridSize = options.gridSize || pixelUnit;
+        const pixelSize = snapBlockSize(options.pixelSize || defaultPixelSize);
+        const originJitter =
+            typeof options.originJitter === 'number'
+                ? options.originJitter
+                : gridSize;
+
         for (let index = 0; index < options.count; index += 1) {
             const direction =
                 (options.direction || 0) +
@@ -218,18 +226,24 @@ export class ParticleLayer {
 
             this.addParticle({
                 age: 0,
-                color: this.pick(options.colors),
                 friction: options.friction || 1,
+                gridSize,
                 gravity: options.gravity || 0,
                 lifetime: this.between(
                     options.lifetime[0],
                     options.lifetime[1]
                 ),
-                size: this.between(options.size[0], options.size[1]),
+                size: pixelSize,
                 vx: Math.cos(direction) * speed,
                 vy: Math.sin(direction) * speed,
-                x: options.x + this.between(-2, 2),
-                y: options.y + this.between(-2, 2)
+                x: snapToPixelGrid(
+                    options.x + this.between(-originJitter, originJitter),
+                    gridSize
+                ),
+                y: snapToPixelGrid(
+                    options.y + this.between(-originJitter, originJitter),
+                    gridSize
+                )
             });
         }
     }
@@ -245,15 +259,6 @@ export class ParticleLayer {
     private between(min: number, max: number) {
         return min + (max - min) * this.random();
     }
-
-    private pick(values: string[]) {
-        return values[
-            Math.min(
-                values.length - 1,
-                Math.floor(this.random() * values.length)
-            )
-        ];
-    }
 }
 
 function getSourceDirection(source: ParticleSource) {
@@ -265,4 +270,12 @@ function getSourceDirection(source: ParticleSource) {
     }
 
     return source.facing && source.facing < 0 ? Math.PI : 0;
+}
+
+function snapToPixelGrid(value: number, gridSize = pixelUnit) {
+    return Math.round(value / gridSize) * gridSize;
+}
+
+function snapBlockSize(value: number) {
+    return Math.max(1, Math.round(value));
 }
