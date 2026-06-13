@@ -17,9 +17,9 @@ The game runs in desktop browsers and mobile browsers. On mobile it should work 
 The app has four main screens:
 
 - Lobby-main
-- Lobby-Edit-name
+- Lobby-edit-name
 - Game
-- High scores
+- High-scores
 
 ## Lobby screen
 
@@ -233,12 +233,3 @@ Mobile-specific behavior:
 - western objects such as cacti, wagons, rocks, and saloons
 - short sound effects for ready, gunshot, empty gun, hit, ricochet, and obstacle hits
 - minimal text, written like cabinet-era arcade UI
-
-## Non-goals for now
-
-- user accounts
-- persistent database-backed scores
-- ranked matchmaking
-- games with more than two players
-- chat
-- long tutorials
