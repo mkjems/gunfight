@@ -209,6 +209,26 @@ export function createLobby(options: LobbyOptions = {}) {
         return waitingGame;
     }
 
+    function findAutoPairTarget(sourceGameId: string): GameSession | null {
+        let waitingGame: GameSession | null = null;
+
+        games.forEach(function (game) {
+            if (waitingGame) {
+                return;
+            }
+
+            if (
+                game.id !== sourceGameId &&
+                game.status === 'waiting' &&
+                game.clients.length === 1
+            ) {
+                waitingGame = game;
+            }
+        });
+
+        return waitingGame;
+    }
+
     function getGameForSocket(socketId: string): GameSession | null {
         const client = clientsBySocketId.get(socketId);
 
@@ -349,6 +369,7 @@ export function createLobby(options: LobbyOptions = {}) {
     }
 
     return {
+        findAutoPairTarget: findAutoPairTarget,
         getClientForSocket: getClientForSocket,
         getGame: getGame,
         getGameForSocket: getGameForSocket,

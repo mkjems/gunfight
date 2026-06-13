@@ -113,6 +113,37 @@ function leaveSocketGame(socket) {
     return left;
 }
 
+function autoPairWaitingPlayer(game) {
+    const targetGame = game && lobby.findAutoPairTarget(game.id);
+    const waitingClient = game && game.clients.length === 1 && game.clients[0];
+    const waitingSocket =
+        waitingClient && io.sockets.sockets.get(waitingClient.socketId);
+    const name = waitingClient && waitingClient.name;
+
+    if (
+        !game ||
+        game.status !== 'waiting' ||
+        !targetGame ||
+        !waitingClient ||
+        !waitingSocket
+    ) {
+        return null;
+    }
+
+    leaveSocketGame(waitingSocket);
+    return joinSocketGame(waitingSocket, {
+        name: name
+    });
+}
+
+function autoPairAfterLeave(left) {
+    if (!left || !left.model) {
+        return null;
+    }
+
+    return autoPairWaitingPlayer(left.game);
+}
+
 function getNameFromSocketHandshake(socket) {
     return (
         getNameFromPayload(socket.handshake.auth) ||
@@ -129,7 +160,7 @@ io.on('connection', function (socket) {
     socket.emit('highScores', highScores.getTable());
 
     socket.on('disconnect', function (reason) {
-        leaveSocketGame(socket);
+        autoPairAfterLeave(leaveSocketGame(socket));
 
         console.log('client disconnected', client.id, reason);
     });
@@ -166,6 +197,8 @@ io.on('connection', function (socket) {
         /** @param {unknown} data */
         function (data) {
             const left = leaveSocketGame(socket);
+
+            autoPairAfterLeave(left);
 
             socket.emit('leftGame', {
                 gameId: left && left.game.id

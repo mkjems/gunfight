@@ -57,6 +57,7 @@ flowchart LR
     Abandoned -->|"requeue"| Waiting
     Waiting -->|"last client leaves"| Closed["closed<br/>deleted"]
     Readying -->|"one client leaves"| Waiting
+    Waiting -->|"another one-player waiting game exists"| Readying
     Playing -->|"game over + resetReady"| Readying
     Closed --> NoGame
 ```
@@ -131,6 +132,16 @@ Status is derived from connection count except for `playing`, `abandoned`, and
 When a disconnect leaves fewer than two clients, `gfmodel` clears the remaining
 client's `ready` flag.
 
+There should not be two separate one-player `waiting` games. After a leave or
+disconnect creates a one-player `waiting` game, the server looks for another
+one-player `waiting` game. If one exists, the server moves one waiting socket
+into the other game, sends that moved socket a fresh `joinedGame`, and emits the
+paired model to the target room. The moved client receives a new game id/player
+id just as it would during a normal requeue. Both clients remain unready.
+
+Only single-client `waiting` games are eligible for automatic pairing. The
+server does not move clients out of `playing` or `abandoned` games.
+
 ### Connection and pairing lifecycle
 
 On socket connection:
@@ -153,6 +164,8 @@ On disconnect or explicit leave:
 5. Otherwise the status is refreshed from the remaining client count.
 6. If a model still exists, the server emits `modelUpdate` to the remaining
    room.
+7. If the remaining game is a one-player `waiting` game and another one-player
+   `waiting` game exists, the server automatically pairs those waiting players.
 
 On `requeue`, or `leaveGame` with rejoin requested, the server removes the
 socket from its current game and immediately joins it to a waiting or new game

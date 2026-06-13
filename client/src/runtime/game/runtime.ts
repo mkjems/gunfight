@@ -403,6 +403,7 @@ export class ClientGameRuntime implements ClientGameController {
         }
 
         this.playerId = joinedGame.playerId;
+        this.inputController?.setPlayerId?.(joinedGame.playerId);
         this.syncPlayers(joinedGame.model);
         this.startInputAndAnimation();
     };

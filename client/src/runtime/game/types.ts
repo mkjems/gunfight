@@ -342,6 +342,7 @@ export type RuntimeInputController = {
     ready: () => void;
     release: (key: string) => void;
     releaseReady?: () => void;
+    setPlayerId?: (playerId: ClientId) => void;
 };
 
 export type RuntimeTouchControls = {

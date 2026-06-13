@@ -12,8 +12,8 @@ function captureBrowserErrors(page, label, browserErrors) {
     });
 }
 
-async function preparePage(page) {
-    await page.addInitScript(function () {
+async function preparePage(page, options = {}) {
+    await page.addInitScript(function (setupOptions) {
         window.__gunfightSocketEmits = [];
         window.__gunfightWrapIo = function (ioFactory) {
             if (ioFactory.__gunfightWrapped) {
@@ -55,34 +55,38 @@ async function preparePage(page) {
             }
         });
 
-        const RealDate = Date;
-        const fixedTime = new RealDate('2026-01-01T00:00:00.000Z').getTime();
+        if (setupOptions.freezeDate !== false) {
+            const RealDate = Date;
+            const fixedTime = new RealDate(
+                '2026-01-01T00:00:00.000Z'
+            ).getTime();
 
-        class FixedDate extends RealDate {
-            constructor(...args) {
-                if (args.length) {
-                    super(...args);
-                    return;
+            class FixedDate extends RealDate {
+                constructor(...args) {
+                    if (args.length) {
+                        super(...args);
+                        return;
+                    }
+
+                    super(fixedTime);
                 }
 
-                super(fixedTime);
+                static now() {
+                    return fixedTime;
+                }
             }
 
-            static now() {
-                return fixedTime;
-            }
+            FixedDate.UTC = RealDate.UTC;
+            FixedDate.parse = RealDate.parse;
+            globalThis.Date = FixedDate;
         }
 
-        FixedDate.UTC = RealDate.UTC;
-        FixedDate.parse = RealDate.parse;
-        globalThis.Date = FixedDate;
-
         localStorage.setItem('gunfight-install-prompt-dismissed', '1');
-    });
+    }, options);
 }
 
-async function gotoPreparedLobby(page, url) {
-    await preparePage(page);
+async function gotoPreparedLobby(page, url, options) {
+    await preparePage(page, options);
     await page.goto(url, {
         waitUntil: 'domcontentloaded'
     });
@@ -134,6 +138,27 @@ async function getAmmoBoxPositions(page) {
 function expectAmmoBoxesStable(before, after) {
     expect(Math.abs(after.leftX - before.leftX)).toBeLessThanOrEqual(1);
     expect(Math.abs(after.rightX - before.rightX)).toBeLessThanOrEqual(1);
+}
+
+async function getYouLabelBox(page) {
+    const box = await page
+        .locator('#lobbyPlayerLabels .lobby-player-label')
+        .filter({
+            hasText: 'YOU'
+        })
+        .first()
+        .boundingBox();
+
+    expect(box).not.toBeNull();
+
+    return (
+        box || {
+            height: 0,
+            width: 0,
+            x: 0,
+            y: 0
+        }
+    );
 }
 
 async function clickTouchControl(page, locator) {
@@ -307,4 +332,115 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
 
     await desktopContext.close();
     await mobileContext.close();
+});
+
+test('alone waiting clients are auto paired after opponents leave', async ({
+    browser
+}) => {
+    const browserErrors = [];
+    const contextA = await browser.newContext({
+        viewport: {
+            height: 720,
+            width: 1100
+        }
+    });
+    const contextB = await browser.newContext({
+        viewport: {
+            height: 720,
+            width: 1100
+        }
+    });
+    const contextC = await browser.newContext({
+        viewport: {
+            height: 720,
+            width: 1100
+        }
+    });
+    const contextD = await browser.newContext({
+        viewport: {
+            height: 720,
+            width: 1100
+        }
+    });
+    const playerA = await contextA.newPage();
+    const playerB = await contextB.newPage();
+    const playerC = await contextC.newPage();
+    const playerD = await contextD.newPage();
+
+    captureBrowserErrors(playerA, 'playerA', browserErrors);
+    captureBrowserErrors(playerB, 'playerB', browserErrors);
+    captureBrowserErrors(playerC, 'playerC', browserErrors);
+    captureBrowserErrors(playerD, 'playerD', browserErrors);
+
+    await gotoPreparedLobby(playerA, '/', {
+        freezeDate: false
+    });
+    await gotoPreparedLobby(playerB, '/', {
+        freezeDate: false
+    });
+    await expect(playerA.locator('#lobbyPlayPrompt')).toHaveText(
+        'PRESS P TO PLAY'
+    );
+
+    await gotoPreparedLobby(playerC, '/', {
+        freezeDate: false
+    });
+    await gotoPreparedLobby(playerD, '/', {
+        freezeDate: false
+    });
+    await expect(playerC.locator('#lobbyPlayPrompt')).toHaveText(
+        'PRESS P TO PLAY'
+    );
+
+    await playerB.close();
+    await expect(playerA.locator('#lobbyPlayPrompt')).toHaveText('');
+    await playerD.close();
+
+    await Promise.all([
+        expect(playerA.locator('#lobbyPlayPrompt')).toHaveText(
+            'PRESS P TO PLAY'
+        ),
+        expect(playerC.locator('#lobbyPlayPrompt')).toHaveText(
+            'PRESS P TO PLAY'
+        ),
+        expect(playerA.locator('#lobbyPlayerLabels')).not.toContainText(
+            'LOOKING FOR OPPONENT'
+        ),
+        expect(playerC.locator('#lobbyPlayerLabels')).not.toContainText(
+            'LOOKING FOR OPPONENT'
+        )
+    ]);
+
+    await playerC.bringToFront();
+    await playerC.locator('body').click({
+        position: {
+            x: 20,
+            y: 20
+        }
+    });
+
+    const playerCBeforeMove = await getYouLabelBox(playerC);
+
+    await playerC.keyboard.down('h');
+    await playerC.waitForTimeout(200);
+    await playerC.keyboard.up('h');
+
+    const playerCAfterMove = await getYouLabelBox(playerC);
+
+    expect(playerCAfterMove.x).toBeLessThan(playerCBeforeMove.x - 1);
+
+    await playerA.keyboard.press('p');
+    await playerC.keyboard.press('p');
+
+    await Promise.all([
+        expect(playerA.locator('#roundMessage')).toHaveText('GET READY'),
+        expect(playerC.locator('#roundMessage')).toHaveText('GET READY')
+    ]);
+
+    expect(browserErrors).toEqual([]);
+
+    await contextA.close();
+    await contextC.close();
+    await contextB.close();
+    await contextD.close();
 });

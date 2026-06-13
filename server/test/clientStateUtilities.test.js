@@ -213,6 +213,89 @@ test('keys model ignores editable targets and gates ready events', async functio
     ]);
 });
 
+test('keys model can retarget local input to a new player id', async function () {
+    const { KeysModel } = await loadStateUtilities();
+    const document = createDocument();
+    const calls = [];
+    const model = KeysModel(
+        {
+            emit(eventName, payload) {
+                calls.push(['socket', eventName, payload]);
+            }
+        },
+        'old-player',
+        function (keyEvent) {
+            calls.push(['local', keyEvent]);
+        },
+        {
+            document
+        }
+    );
+
+    model.press('h');
+    assert.equal(model.isDown('h'), true);
+
+    model.setPlayerId('new-player');
+    assert.equal(model.isDown('h'), false);
+
+    model.press('h');
+    model.release('h');
+
+    assert.deepEqual(calls, [
+        [
+            'local',
+            {
+                action: 'down',
+                key: 'h',
+                player: 'old-player'
+            }
+        ],
+        [
+            'socket',
+            'clientKeyEvent',
+            {
+                action: 'down',
+                key: 'h',
+                player: 'old-player'
+            }
+        ],
+        [
+            'local',
+            {
+                action: 'down',
+                key: 'h',
+                player: 'new-player'
+            }
+        ],
+        [
+            'socket',
+            'clientKeyEvent',
+            {
+                action: 'down',
+                key: 'h',
+                player: 'new-player'
+            }
+        ],
+        [
+            'local',
+            {
+                action: 'up',
+                key: 'h',
+                player: 'new-player'
+            }
+        ],
+        [
+            'socket',
+            'clientKeyEvent',
+            {
+                action: 'up',
+                key: 'h',
+                player: 'new-player'
+            }
+        ]
+    ]);
+});
+
 test('name editor sanitizes, edits, and submits names', async function () {
     const { NameEditor } = await loadStateUtilities();
     const calls = [];

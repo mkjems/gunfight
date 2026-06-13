@@ -223,11 +223,18 @@ Expected behavior:
 
 The server creates two-player game rooms.
 
+The server should not leave two separate one-player waiting games idle. When a
+disconnect or leave creates a one-player `waiting` game, and another
+one-player `waiting` game already exists, the server automatically pairs those
+players into one game. Both players remain unready and must choose play again.
+Players are not moved out of `playing` games.
+
 Server responsibilities:
 
 - serve the web client
 - assign player ids and game ids
-- pair waiting players into games
+- pair waiting players into games, including auto-pairing separate alone
+  waiting players
 - store player names and ready state
 - choose the current scenario
 - relay input, position, obstacle damage, and round events inside each room

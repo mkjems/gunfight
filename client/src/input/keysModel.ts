@@ -41,11 +41,12 @@ export function KeysModel(
     const ownerDocument = (options.document || document) as DocumentLike;
     const internalKeyStatus: Record<string, boolean> = {};
     const inputKeys = ['h', 'j', 'k', 'l', 'a', 'z', ' ', 'e', 's'];
+    let currentPlayerId = playerId;
 
     function emitKeyEvent(key: string, action: KeyAction) {
         const keyEvent = {
             key,
-            player: playerId,
+            player: currentPlayerId,
             action
         };
         const result = onLocalKeyEvent(keyEvent);
@@ -180,11 +181,20 @@ export function KeysModel(
         return internalKeyStatus[key] ? true : false;
     }
 
+    function setPlayerId(nextPlayerId: string | number) {
+        currentPlayerId = nextPlayerId;
+
+        Object.keys(internalKeyStatus).forEach(function (key) {
+            internalKeyStatus[key] = false;
+        });
+    }
+
     return {
         isDown: isKeyDown,
         press,
         ready,
         release,
-        releaseReady
+        releaseReady,
+        setPlayerId
     };
 }

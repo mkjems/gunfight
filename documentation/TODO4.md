@@ -13,10 +13,11 @@
     - [x] Should you be able to be in ready state when you have no opponent? No. `READY` requires a connected opponent.
     - [x] If a player loses their opponent because of disconnect or reload, the remaining player loses `READY` state and returns to waiting for an opponent.
 
-- [ ] Auto pair alone players
-    - [ ] When two players are alone in separate waiting games, automatically pair them into one game.
-    - [ ] When pairing previously alone players, clear ready state for both players.
-    - [ ] Do not pair players out of `playing` games; only pair `waiting` single-player games.
+- [x] Auto pair alone players
+    - [x] When two players are alone in separate waiting games, automatically pair them into one game.
+    - [x] When pairing previously alone players, clear ready state for both players.
+    - [x] Do not pair players out of `playing` games; only pair `waiting` single-player games.
+    - [x] Update docs
 
 ## Content Authoring Tools
 

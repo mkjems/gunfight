@@ -224,6 +224,44 @@ test('disconnect before play clears the remaining client ready state', function 
     );
 });
 
+test('finds another alone waiting game for automatic pairing', function () {
+    const lobby = createTestLobby();
+    const firstA = lobby.join('a-1', { name: 'ace' });
+    const secondA = lobby.join('a-2', { name: 'doc' });
+    const firstB = lobby.join('b-1', { name: 'kid' });
+    const secondB = lobby.join('b-2', { name: 'rex' });
+
+    firstA.game.model.readyClient(firstA.client);
+    firstB.game.model.readyClient(firstB.client);
+    lobby.leave(secondA.client.socketId);
+
+    assert.equal(lobby.findAutoPairTarget(firstA.game.id), null);
+
+    lobby.leave(secondB.client.socketId);
+
+    const target = lobby.findAutoPairTarget(firstB.game.id);
+
+    assert.equal(target.id, firstA.game.id);
+    assert.deepEqual(
+        lobby.getModel(firstA.game).clients.map(function (client) {
+            return {
+                name: client.name,
+                ready: client.ready
+            };
+        }),
+        [{ name: 'ACE', ready: false }]
+    );
+    assert.deepEqual(
+        lobby.getModel(firstB.game).clients.map(function (client) {
+            return {
+                name: client.name,
+                ready: client.ready
+            };
+        }),
+        [{ name: 'KID', ready: false }]
+    );
+});
+
 test('disconnect during play abandons the game and avoids pairing new clients into it', function () {
     const lobby = createTestLobby();
     const first = lobby.join('socket-1', { name: 'one' });
