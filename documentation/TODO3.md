@@ -74,7 +74,22 @@ flowchart TD
 
 ## P3.2.5 - Improve 'No opponent' experience
 
-- [ ] When user is not paired with opponent show 'LOOKING FOR OPPONENT' 
+- [ ] When user is not paired with opponent show `LOOKING FOR OPPONENT`.
+- [ ] Recommended presentation:
+    - Keep the local player on the left as today.
+    - On the right lobby side, show a simple opponent placeholder instead of empty space.
+    - Use a large `?` marker where the opponent avatar would be.
+    - Show `LOOKING FOR OPPONENT` beneath the marker.
+    - Keep it in the same right-side area that the opponent will occupy when matched, so the screen does not jump when an opponent arrives.
+- [ ] The placeholder should be lobby-only presentation state.
+    - Do not create a fake opponent client in the server model.
+    - Do not add a fake player to gameplay, scoring, ammo, or HUD state.
+    - Prefer deriving it at the last lobby template/render-props layer from the absence of an opponent.
+    - It should not change matchmaking, state modeling, player sync, slots, or canvas gameplay objects.
+- [ ] The real opponent always wins over the placeholder.
+    - When an opponent client is present, render the real opponent exactly as today.
+    - The placeholder should disappear as soon as an opponent client is present.
+- [ ] If the game is `abandoned`, prefer the abandoned/opponent-left message over the generic looking-for-opponent placeholder.
 
 ## P3.3 - State model review and future plans
 
@@ -131,5 +146,3 @@ flowchart TD
 - [ ] Add the number of wins/kills after the name in the lobby: LUKE 5/10
 
 ## MAYBE Ideas
-
-
