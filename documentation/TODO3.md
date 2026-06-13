@@ -99,6 +99,7 @@ flowchart TD
 - [x] When editing name, start with the existing name prefilled (Like it used to be).
 
 ## P3.2.7 Even more tweaks
+
 - [ ] On mobile, the ammunition indicator is not visible. Consider making it DOM. Should be down in the bottom row.
 - [ ] I would like the name of the players on each side of the screen next to the score in the scoreRow. Symmetrical.
 
