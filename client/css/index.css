@@ -363,6 +363,12 @@ h2 {
     white-space: nowrap;
 }
 
+.lobby-player-label.is-opponent-placeholder-marker {
+    font-size: 2em;
+    line-height: 1;
+    padding: 0 0.12em;
+}
+
 .lobby-section {
     margin: var(--lobby-margin);
 }

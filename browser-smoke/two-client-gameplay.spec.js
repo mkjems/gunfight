@@ -175,6 +175,9 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
     await Promise.all([
         expect(desktop.locator('#lobbyPlayerLabels')).toContainText('YOU'),
         expect(desktop.locator('#lobbyPlayerLabels')).not.toContainText(
+            'LOOKING FOR OPPONENT'
+        ),
+        expect(desktop.locator('#lobbyPlayerLabels')).not.toContainText(
             'PLAYER 2 -'
         ),
         expect(mobile.locator('#touchLobbyControls')).toBeVisible(),

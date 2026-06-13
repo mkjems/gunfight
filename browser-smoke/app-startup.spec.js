@@ -153,6 +153,10 @@ test('built browser app renders lobby through the app root', async ({
     );
     await expect(page.locator('#lobbyPlayerLabels')).toContainText('YOU');
     await expect(page.locator('#lobbyPlayerLabels')).toContainText('WAITING');
+    await expect(page.locator('#lobbyPlayerLabels')).toContainText('?');
+    await expect(page.locator('#lobbyPlayerLabels')).toContainText(
+        'LOOKING FOR OPPONENT'
+    );
     await expect(page.locator('#lobbyPlayerLabels')).not.toContainText(
         'PLAYER 1 -'
     );

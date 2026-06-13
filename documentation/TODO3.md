@@ -74,29 +74,36 @@ flowchart TD
 
 ## P3.2.5 - Improve 'No opponent' experience
 
-- [ ] When user is not paired with opponent show `LOOKING FOR OPPONENT`.
-- [ ] Recommended presentation:
+- [x] When user is not paired with opponent show `LOOKING FOR OPPONENT`.
+- [x] Recommended presentation:
     - Keep the local player on the left as today.
     - On the right lobby side, show a simple opponent placeholder instead of empty space.
     - Use a large `?` marker where the opponent avatar would be.
     - Show `LOOKING FOR OPPONENT` beneath the marker.
     - Keep it in the same right-side area that the opponent will occupy when matched, so the screen does not jump when an opponent arrives.
-- [ ] The placeholder should be lobby-only presentation state.
+- [x] The placeholder should be lobby-only presentation state.
     - Do not create a fake opponent client in the server model.
     - Do not add a fake player to gameplay, scoring, ammo, or HUD state.
     - Prefer deriving it at the last lobby template/render-props layer from the absence of an opponent.
     - It should not change matchmaking, state modeling, player sync, slots, or canvas gameplay objects.
-- [ ] The real opponent always wins over the placeholder.
+- [x] The real opponent always wins over the placeholder.
     - When an opponent client is present, render the real opponent exactly as today.
     - The placeholder should disappear as soon as an opponent client is present.
-- [ ] If the game is `abandoned`, prefer the abandoned/opponent-left message over the generic looking-for-opponent placeholder.
+- [x] If the game is `abandoned`, prefer the abandoned/opponent-left message over the generic looking-for-opponent placeholder.
+
+## P3.2.6 More tweaks
+
+- [ ] Create a class to make a negative button. Yellow background with black text.
+- [ ] On Mobile, Make Play button the top button of the three to choose from. And make it a negative button.
+- [ ] There are some pointer-event:none missing in the mobile layout (see photo)
+- [ ] When editing name, start with the existing name prefilled (Like it used to be).
 
 ## P3.3 - State model review and future plans
 
 - [ ] We should look into the current state model a come up with an improvement.
 - [ ] We should look into if disconnect and re-connect are handled correct from mobile and desktop.
 - [ ] How do we pair up players who have lost they opponent? Do we use alone players? or wait for their old opponents to reconnect.
-- [ ] more?
+- [ ] Should you be able to be in ready state when you have no opponent?
 
 ## P3.4 - After game users should see the new status
 
@@ -106,13 +113,9 @@ flowchart TD
 
 ## Sensible robust and not confusing and not ugly game
 
-- [ ] When editing name, start with the existing name prefilled (Like it used to be).
-
 - [ ] When both players have marked themselves as ready - I would like a leave-lobby-for-game-sequence. I would like the lobby screen to keep the players in the lobby for a few seconds so you can see the READY status in negative text for 2 seconds and hear the ready sound before switching to the game screen.
 
 - [ ] We should collect all game constants like this leave-lobby-pause-duration above in some central shared place.
-
-- [ ] There are some pointer-event:none missing in the mobile layout (see photo)
 
 - [ ] On Desktop, after a game. 'Game over' should continue to be shown in the main lobby as should the last game result in the top line.
 

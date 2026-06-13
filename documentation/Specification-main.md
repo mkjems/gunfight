@@ -30,6 +30,7 @@ It shows:
 - title `GUNFIGHT 1975`
 - local player avatar, name, and ready state
 - opponent avatar, name, and ready state when an opponent is connected
+- opponent placeholder when no opponent is connected
 - desktop controls
 - prompt to edit name
 - prompt to see high scores
@@ -38,6 +39,8 @@ It shows:
 The lobby does not show the game id or a separate local identity line. The lobby background shows the player's avatar. If an opponent is connected, both avatars are visible. On desktop, the player can move in the lobby to learn the controls, but cannot shoot.
 
 Each avatar shows the player's name and lobby state beneath the character. This text is rendered as HTML overlay text and follows the avatar while it moves. The lobby does not prefix names with `PLAYER 1` or `PLAYER 2`. The status text changes with the player's lobby state; `READY` is shown as negative text. The local player is marked clearly with a small `YOU` marker and is rendered on the left side of the lobby. The opponent is rendered on the right side of the lobby. Lobby-side placement is presentation-only; server player id, gameplay slot, HUD placement, and scoring behavior stay unchanged. Lobby movement is constrained to side areas so avatars and their following labels stay readable and do not overlap the central lobby instructions.
+
+When the local player is alone in a waiting lobby, the right side shows a lobby-only opponent placeholder: a large negative-text `?` marker and the text `LOOKING FOR OPPONENT`. The placeholder is derived only for presentation. It does not add a fake client, player, score, HUD entry, sync state, or gameplay object. If a real opponent client is present, the real opponent is shown instead. If the game is abandoned, the abandoned/opponent-left state takes precedence over the generic placeholder.
 
 The lobby does not rotate automatically to high scores. High scores are opened only by explicit player navigation.
 

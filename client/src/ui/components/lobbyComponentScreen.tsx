@@ -8,6 +8,7 @@ export type LobbyComponentProps = {
     editPrompt?: string;
     highScoresPrompt?: string;
     identityLines?: string[];
+    opponentPlaceholder?: LobbyTextLine[];
     playerLabels?: LobbyTextLine[];
     playPrompt?: string;
     showControls?: boolean;
@@ -19,6 +20,7 @@ export type LobbyTextLine = {
     key: string;
     negative?: boolean;
     text: string;
+    variant?: 'opponent-placeholder-marker' | 'opponent-placeholder-message';
     x: number;
     y: number;
 };
@@ -50,7 +52,12 @@ export function LobbyMain(options: LobbyComponentProps = {}) {
                 </div>
             </div>
             <div id="lobbyPlayerLabels">
-                <LobbyPlayerLabels labels={options.playerLabels || []} />
+                <LobbyPlayerLabels
+                    labels={[
+                        ...(options.playerLabels || []),
+                        ...(options.opponentPlaceholder || [])
+                    ]}
+                />
             </div>
         </>
     );
@@ -82,6 +89,7 @@ function LobbyPlayerLabels(props: { labels: LobbyTextLine[] }) {
                     <div
                         className={
                             'lobby-player-label' +
+                            (label.variant ? ' is-' + label.variant : '') +
                             (label.negative ? ' negative-text' : '')
                         }
                         key={label.key}

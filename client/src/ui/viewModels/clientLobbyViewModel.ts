@@ -37,6 +37,8 @@ const canvasHeight = 640;
 const markerOffsetY = -122;
 const nameOffsetY = 42;
 const statusOffsetY = 74;
+const opponentPlaceholderX = 800;
+const opponentPlaceholderY = 400;
 
 type LobbyPlayerPosition = {
     x: number;
@@ -47,6 +49,7 @@ type LobbyTextLine = {
     key: string;
     negative?: boolean;
     text: string;
+    variant?: 'opponent-placeholder-marker' | 'opponent-placeholder-message';
     x: number;
     y: number;
 };
@@ -100,6 +103,7 @@ export function getLobbyViewModel(options: LobbyViewModelOptions) {
     const isTouch = options.isTouch;
     const localClientWaiting = isLocalClientWaiting(options);
     const showPlayPrompt = shouldShowLobbyPrompt(options) && !isTouch;
+    const opponentPlaceholder = getLobbyOpponentPlaceholder(options);
 
     return {
         identityLines: [],
@@ -107,6 +111,7 @@ export function getLobbyViewModel(options: LobbyViewModelOptions) {
         showControls: !isTouch,
         slots: [],
         playerLabels: getLobbyPlayerLabels(options),
+        ...(opponentPlaceholder.length ? { opponentPlaceholder } : {}),
         showEditPrompt: !isTouch && localClientWaiting,
         editPrompt:
             !isTouch && localClientWaiting ? 'PRESS E TO EDIT NAME' : '',
@@ -166,6 +171,47 @@ function getLobbyPlayerLabels(options: LobbyViewModelOptions): LobbyTextLine[] {
     return labels;
 }
 
+function getLobbyOpponentPlaceholder(
+    options: LobbyViewModelOptions
+): LobbyTextLine[] {
+    const clients = (options.model && options.model.clients) || [];
+    const localClient = getLocalClient(options.model, options.playerId);
+
+    if (
+        !localClient ||
+        !options.model ||
+        options.model.status === 'abandoned' ||
+        clients.length !== 1
+    ) {
+        return [];
+    }
+
+    return [
+        createLobbyTextLineFromPosition(
+            'opponent-placeholder-marker',
+            '?',
+            {
+                x: opponentPlaceholderX,
+                y: opponentPlaceholderY
+            },
+            -80,
+            true,
+            'opponent-placeholder-marker'
+        ),
+        createLobbyTextLineFromPosition(
+            'opponent-placeholder-message',
+            'LOOKING FOR OPPONENT',
+            {
+                x: opponentPlaceholderX,
+                y: opponentPlaceholderY
+            },
+            statusOffsetY,
+            false,
+            'opponent-placeholder-message'
+        )
+    ];
+}
+
 function createLobbyTextLine(
     key: string,
     text: string,
@@ -173,12 +219,30 @@ function createLobbyTextLine(
     offsetY: number,
     negative = false
 ): LobbyTextLine {
+    return createLobbyTextLineFromPosition(
+        key,
+        text,
+        player,
+        offsetY,
+        negative
+    );
+}
+
+function createLobbyTextLineFromPosition(
+    key: string,
+    text: string,
+    position: LobbyPlayerPosition,
+    offsetY: number,
+    negative = false,
+    variant?: LobbyTextLine['variant']
+): LobbyTextLine {
     return {
         key,
         negative,
         text,
-        x: getPercent(player.x, canvasWidth),
-        y: getPercent(player.y + offsetY, canvasHeight)
+        ...(variant ? { variant } : {}),
+        x: getPercent(position.x, canvasWidth),
+        y: getPercent(position.y + offsetY, canvasHeight)
     };
 }
 

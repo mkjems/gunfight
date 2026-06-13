@@ -107,6 +107,78 @@ test('builds lobby view models for keyboard clients', async function () {
     );
 });
 
+test('shows a lobby-only opponent placeholder when the local client is alone', async function () {
+    const lobby = await loadClientLobbyViewModel();
+    const model = {
+        gameId: 'abc',
+        playerLimit: 2,
+        status: 'waiting',
+        clients: [{ id: 'p1', name: 'ACE', ready: false, slot: 0 }]
+    };
+
+    const viewModel = plain(
+        lobby.getLobbyViewModel({
+            isTouch: false,
+            localReadyRequested: false,
+            model,
+            playerId: 'p1',
+            players: {
+                p1: { x: 95, y: 320 }
+            }
+        })
+    );
+
+    assert.deepEqual(viewModel.opponentPlaceholder, [
+        {
+            key: 'opponent-placeholder-marker',
+            negative: true,
+            text: '?',
+            variant: 'opponent-placeholder-marker',
+            x: 84.2105,
+            y: 50
+        },
+        {
+            key: 'opponent-placeholder-message',
+            negative: false,
+            text: 'LOOKING FOR OPPONENT',
+            variant: 'opponent-placeholder-message',
+            x: 84.2105,
+            y: 74.0625
+        }
+    ]);
+});
+
+test('does not show the opponent placeholder when an opponent exists or the lobby is abandoned', async function () {
+    const lobby = await loadClientLobbyViewModel();
+
+    assert.equal(
+        Object.hasOwn(
+            lobby.getLobbyViewModel({
+                model: {
+                    status: 'waiting',
+                    clients: [{ id: 'p1' }, { id: 'p2' }]
+                },
+                playerId: 'p1'
+            }),
+            'opponentPlaceholder'
+        ),
+        false
+    );
+    assert.equal(
+        Object.hasOwn(
+            lobby.getLobbyViewModel({
+                model: {
+                    status: 'abandoned',
+                    clients: [{ id: 'p1' }]
+                },
+                playerId: 'p1'
+            }),
+            'opponentPlaceholder'
+        ),
+        false
+    );
+});
+
 test('omits static lobby slot rows for touch clients', async function () {
     const lobby = await loadClientLobbyViewModel();
     const model = {

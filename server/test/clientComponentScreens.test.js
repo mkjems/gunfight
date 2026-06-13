@@ -302,6 +302,23 @@ test('renders lobby screen sections through the app root', async function () {
             controls: ['MOVE', 'FIRE'],
             editPrompt: 'EDIT NAME',
             highScoresPrompt: 'SCORES',
+            opponentPlaceholder: [
+                {
+                    key: 'opponent-placeholder-marker',
+                    negative: true,
+                    text: '?',
+                    variant: 'opponent-placeholder-marker',
+                    x: 84.2,
+                    y: 50
+                },
+                {
+                    key: 'opponent-placeholder-message',
+                    text: 'LOOKING FOR OPPONENT',
+                    variant: 'opponent-placeholder-message',
+                    x: 84.2,
+                    y: 74
+                }
+            ],
             playPrompt: 'READY?',
             playerLabels: [
                 {
@@ -335,7 +352,12 @@ test('renders lobby screen sections through the app root', async function () {
     assert.equal(controls.hidden, false);
     assert.equal(editPrompt.hidden, false);
     assert.deepEqual(childTexts(controls), ['MOVE', 'FIRE']);
-    assert.deepEqual(childTexts(labels), ['ACE', 'READY']);
+    assert.deepEqual(childTexts(labels), [
+        'ACE',
+        'READY',
+        '?',
+        'LOOKING FOR OPPONENT'
+    ]);
     assert.equal(
         labels.children[0].getAttribute('style'),
         'left: 12.5%; top: 75%;'
@@ -343,6 +365,10 @@ test('renders lobby screen sections through the app root', async function () {
     assert.equal(
         labels.children[1].className,
         'lobby-player-label negative-text'
+    );
+    assert.equal(
+        labels.children[2].className,
+        'lobby-player-label is-opponent-placeholder-marker negative-text'
     );
     assert.equal(editPrompt.textContent, 'EDIT NAME');
     assert.equal(highScoresPrompt.textContent, 'SCORES');
