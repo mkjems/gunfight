@@ -46,10 +46,23 @@ GOAL: Make the lobby experience more clear and not confusing
 
 ## P3.2 - Clean up navigation
 
-- [ ] Navigation in lobby should be like this little diagram on both mobile and desktop:
-      Lobby-main (navigation: edit-name, high-score, set-ready. But NO links, or buttons in state READY )
-      |-- edit-name (navigation: back)
-      `-- high-score (navigation: back)
+- [ ] Navigation in lobby should follow this model on both mobile and desktop:
+
+```mermaid
+flowchart TD
+    Lobby["Lobby-main<br/>WAITING navigation:<br/>edit name, high scores, set ready"]
+    Ready["Lobby-main<br/>READY state<br/>no navigation away"]
+    EditName["Edit-name<br/>navigation: back"]
+    HighScores["High-scores<br/>navigation: back"]
+    Game["Game"]
+
+    Lobby -->|"edit name"| EditName
+    Lobby -->|"high scores"| HighScores
+    Lobby -->|"set ready"| Ready
+    EditName -->|"back"| Lobby
+    HighScores -->|"back"| Lobby
+    Ready -->|"opponent also ready"| Game
+```
 
 - [ ] Once user sets status READY navigation away from lobby-main is removed! (remember mobile)
 - [ ] On mobile the three lobby-main buttons are stacked vertically
