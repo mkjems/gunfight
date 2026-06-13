@@ -103,10 +103,10 @@ flowchart TD
 - [x] On mobile, the ammunition indicator is not visible. Consider making it DOM. Should be down in the bottom row.
 - [x] I would like the name of the players on each side of the screen next to the score in the scoreRow. Symmetrical.
 
-
 ## P3.2.8 Mobile problems with starting new game after finishing one game.
-- [ ] When mobile use completes one game, user is not able to play a second game. This is not a problem on Desktop. 
-After completing the first game and returning to the lobby. The mobile user experiences that the user can not leave waiting state even if user is tapping play game button nothing happens. 
+
+- [x] When mobile use completes one game, user is not able to play a second game. This is not a problem on Desktop.
+      After completing the first game and returning to the lobby. The mobile user experiences that the user can not leave waiting state even if user is tapping play game button nothing happens.
 
 ## P3.3 - State model review and future plans
 

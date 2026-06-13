@@ -4,6 +4,7 @@ type InputLike = {
     press: (key: string) => void;
     ready: () => void;
     release: (key: string) => void;
+    releaseReady?: () => void;
 };
 
 type ClassListLike = {
@@ -157,6 +158,7 @@ export function TouchControls(options: TouchControlsOptions = {}) {
 
     function onPlayTap() {
         input?.ready();
+        input?.releaseReady?.();
     }
 
     function onEditTap() {

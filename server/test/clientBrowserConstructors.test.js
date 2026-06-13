@@ -265,6 +265,9 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
             },
             release(key) {
                 calls.push(['release', key]);
+            },
+            releaseReady() {
+                calls.push(['releaseReady']);
             }
         },
         window: {
@@ -339,6 +342,7 @@ test('touch controls bind buttons, joystick, aim, and visibility state', async f
         ['release', 'a'],
         ['release', ' '],
         ['ready'],
+        ['releaseReady'],
         ['press', 'e'],
         ['release', 'e'],
         ['press', 's'],
