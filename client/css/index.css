@@ -271,7 +271,7 @@ body.install-prompt-visible #touchControls {
     align-items: start;
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     left: 0;
     padding: clamp(12px, 3.4cqh, 24px) clamp(56px, 12.8cqw, 122px) 0;
     position: absolute;
@@ -279,7 +279,27 @@ body.install-prompt-visible #touchControls {
     top: 0;
 }
 
-#scoreLeft {
+.scoreSide {
+    align-items: center;
+    display: flex;
+    gap: clamp(7px, 1.5cqw, 14px);
+    max-width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.scoreName {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.scoreValue {
+    flex: 0 0 auto;
+}
+
+#scoreLeft,
+.scoreSide.is-left {
     justify-self: start;
 }
 
@@ -287,8 +307,58 @@ body.install-prompt-visible #touchControls {
     justify-self: center;
 }
 
-#scoreRight {
+#scoreRight,
+.scoreSide.is-right {
     justify-self: end;
+}
+
+#ammoRow {
+    align-items: end;
+    bottom: max(2px, 0.3cqh);
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    left: 0;
+    padding: 0 clamp(56px, 12.8cqw, 122px);
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+}
+
+#ammoRow[hidden] {
+    display: none;
+}
+
+.ammoDisplay {
+    display: flex;
+    gap: clamp(3px, 0.63cqw, 6px);
+}
+
+.ammoDisplay[hidden] {
+    display: none;
+}
+
+#ammoLeft {
+    justify-self: start;
+}
+
+#ammoRight {
+    flex-direction: row-reverse;
+    justify-self: end;
+}
+
+.ammoRound {
+    display: block;
+    filter: drop-shadow(2px 2px 0 var(--shadow-color));
+    height: clamp(24px, 6.2cqh, 40px);
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    object-fit: fill;
+    width: clamp(11px, 2.31cqw, 18px);
+}
+
+.ammoRound.is-empty {
+    visibility: hidden;
 }
 
 #roundMessage {
@@ -491,6 +561,37 @@ h2 {
     #gameHud {
         inset: 0;
         position: fixed;
+    }
+
+    #scoreRow {
+        padding: max(8px, env(safe-area-inset-top, 0)) clamp(12px, 4vw, 24px) 0;
+    }
+
+    .scoreSide {
+        gap: clamp(5px, 1.8vw, 10px);
+    }
+
+    .scoreName {
+        max-width: 28vw;
+    }
+
+    #ammoRow {
+        bottom: max(8px, env(safe-area-inset-bottom, 0));
+        display: flex;
+        gap: clamp(60px, 18vw, 162px);
+        justify-content: center;
+        left: max(130px, env(safe-area-inset-left, 0));
+        padding: 0;
+        right: max(145px, env(safe-area-inset-right, 0));
+    }
+
+    .ammoDisplay {
+        gap: clamp(3px, 0.9vw, 5px);
+    }
+
+    .ammoRound {
+        height: clamp(25px, 7vh, 34px);
+        width: clamp(11px, 2.8vw, 15px);
     }
 
     #touchControls {

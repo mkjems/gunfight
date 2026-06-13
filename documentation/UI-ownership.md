@@ -16,7 +16,7 @@ high score, and name-editor markup become easier to render and test.
 The component framework must not own:
 
 - The main gameplay canvas.
-- The HUD canvas used for canvas-drawn overlays such as ammo.
+- The reserved HUD canvas used for any future canvas-drawn overlays.
 - The game loop and animation frame scheduling.
 - Player, bullet, scene, obstacle, collision, camera, score, ammo, timer, and
   round simulation objects.
@@ -29,7 +29,7 @@ the game bootstrap and flow modules.
 
 The component-owned area is the DOM overlay rendered around the canvas:
 
-- Game HUD DOM labels and round messages.
+- Game HUD DOM labels, score names, ammo indicators, and round messages.
 - Lobby main screen.
 - High scores screen.
 - Name editor screen.

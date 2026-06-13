@@ -32,22 +32,15 @@ function createImageConstructor(images) {
 test('loads client image assets with expected sources', async function () {
     const ClientAssets = await loadClientAssets();
     const images = [];
-    let ammoLoaded = false;
     const assets = new ClientAssets({
         Image: createImageConstructor(images),
         createRockPattern() {
             return 'pattern';
-        },
-        onAmmoLoaded() {
-            ammoLoaded = true;
         }
     });
 
     assets.load();
-    assets.sprites.ammo.onload();
 
-    assert.equal(ammoLoaded, true);
-    assert.equal(assets.sprites.ammo.src, 'images/bullet.png');
     assert.equal(assets.sprites.wagon.src, 'images/wagon-1-4-37x38.png');
     assert.equal(assets.sprites.cactus.src, 'images/cactus-1-4-17X32.png');
     assert.equal(assets.sprites.saloon.src, 'images/saloon-64x128.png');

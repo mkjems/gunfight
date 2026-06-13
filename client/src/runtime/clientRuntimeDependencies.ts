@@ -1,4 +1,3 @@
-import { AmmoHudRenderer } from '../ui/ammoHudRenderer.js';
 import { Camera } from '../engine/camera.js';
 import { CanvasTools } from '../platform/canvasTools.js';
 import { ClientAmmoFlow } from '../flows/clientAmmoFlow.js';
@@ -87,7 +86,6 @@ export const ClientRuntimeDependencies = {
         Config
     },
     ui: {
-        AmmoHudRenderer,
         ClientHudFlow,
         ClientLobbyHudFlow,
         ClientUi

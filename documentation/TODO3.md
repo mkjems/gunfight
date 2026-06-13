@@ -98,10 +98,10 @@ flowchart TD
 - [x] There are some pointer-event:none missing in the mobile layout (see photo)
 - [x] When editing name, start with the existing name prefilled (Like it used to be).
 
-## P3.2.7 Even more tweaks
+## P3.2.7 Even more tweaks - ammunition indicator, names in game
 
-- [ ] On mobile, the ammunition indicator is not visible. Consider making it DOM. Should be down in the bottom row.
-- [ ] I would like the name of the players on each side of the screen next to the score in the scoreRow. Symmetrical.
+- [x] On mobile, the ammunition indicator is not visible. Consider making it DOM. Should be down in the bottom row.
+- [x] I would like the name of the players on each side of the screen next to the score in the scoreRow. Symmetrical.
 
 ## P3.3 - State model review and future plans
 

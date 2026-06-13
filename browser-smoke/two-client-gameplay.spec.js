@@ -101,6 +101,41 @@ async function captureMobileScreenshot(page, testInfo, fileName) {
     });
 }
 
+async function expectMobileAmmoInViewport(page) {
+    const box = await page.locator('#ammoRow').boundingBox();
+    const viewport = page.viewportSize();
+
+    expect(box).not.toBeNull();
+    expect(viewport).not.toBeNull();
+
+    if (!box || !viewport) {
+        return;
+    }
+
+    expect(box.x).toBeGreaterThanOrEqual(-1);
+    expect(box.y).toBeGreaterThanOrEqual(-1);
+    expect(box.x + box.width).toBeLessThanOrEqual(viewport.width + 1);
+    expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 1);
+}
+
+async function getAmmoBoxPositions(page) {
+    const left = await page.locator('#ammoLeft').boundingBox();
+    const right = await page.locator('#ammoRight').boundingBox();
+
+    expect(left).not.toBeNull();
+    expect(right).not.toBeNull();
+
+    return {
+        leftX: left ? left.x : 0,
+        rightX: right ? right.x : 0
+    };
+}
+
+function expectAmmoBoxesStable(before, after) {
+    expect(Math.abs(after.leftX - before.leftX)).toBeLessThanOrEqual(1);
+    expect(Math.abs(after.rightX - before.rightX)).toBeLessThanOrEqual(1);
+}
+
 async function clickTouchControl(page, locator) {
     const box = await locator.boundingBox();
 
@@ -205,17 +240,28 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
     await Promise.all([
         expect(desktop.locator('#gameHud')).toBeVisible(),
         expect(desktop.locator('#scoreRow')).toBeVisible(),
-        expect(desktop.locator('#scoreLeft')).toHaveText('0'),
-        expect(desktop.locator('#scoreRight')).toHaveText('0'),
+        expect(desktop.locator('#scoreLeft .scoreValue')).toHaveText('0'),
+        expect(desktop.locator('#scoreRight .scoreValue')).toHaveText('0'),
+        expect(desktop.locator('#scoreLeft .scoreName')).not.toHaveText(''),
+        expect(desktop.locator('#scoreRight .scoreName')).not.toHaveText(''),
+        expect(desktop.locator('#ammoLeft .ammoRound')).toHaveCount(6),
+        expect(desktop.locator('#ammoRight .ammoRound')).toHaveCount(6),
         expect(mobile.locator('#gameHud')).toBeVisible(),
         expect(mobile.locator('#scoreRow')).toBeVisible(),
-        expect(mobile.locator('#scoreLeft')).toHaveText('0'),
-        expect(mobile.locator('#scoreRight')).toHaveText('0'),
+        expect(mobile.locator('#scoreLeft .scoreValue')).toHaveText('0'),
+        expect(mobile.locator('#scoreRight .scoreValue')).toHaveText('0'),
+        expect(mobile.locator('#scoreLeft .scoreName')).not.toHaveText(''),
+        expect(mobile.locator('#scoreRight .scoreName')).not.toHaveText(''),
+        expect(mobile.locator('#ammoRow')).toBeVisible(),
+        expect(mobile.locator('#ammoLeft .ammoRound')).toHaveCount(6),
+        expect(mobile.locator('#ammoRight .ammoRound')).toHaveCount(6),
         expect(mobile.locator('#touchJoystick')).toBeVisible(),
         expect(mobile.locator('#touchAimSlider')).toBeVisible(),
         expect(mobile.locator('#touchShootButton')).toBeVisible()
     ]);
+    await expectMobileAmmoInViewport(mobile);
     await captureMobileScreenshot(mobile, testInfo, 'mobile-04-gameplay.png');
+    const mobileAmmoBeforeShots = await getAmmoBoxPositions(mobile);
 
     await desktop.keyboard.down('h');
     await desktop.keyboard.up('h');
@@ -235,6 +281,11 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
             );
         })
         .toBe(true);
+
+    expectAmmoBoxesStable(
+        mobileAmmoBeforeShots,
+        await getAmmoBoxPositions(mobile)
+    );
 
     await expect
         .poll(async function () {

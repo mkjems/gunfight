@@ -81,7 +81,6 @@ export type RuntimeAssets = {
     getRockPattern: () => CanvasPattern | null;
     load: () => void;
     sprites: {
-        ammo: RuntimeSprite;
         cactus: RuntimeSprite;
         saloon: RuntimeSprite;
         wagon: RuntimeSprite;

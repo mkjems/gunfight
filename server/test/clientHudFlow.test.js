@@ -68,11 +68,6 @@ function createOptions(overrides = {}) {
                 return id === 'p1' ? 4 : 2;
             }
         },
-        ammoHudRenderer: {
-            render(ammo, x, y, direction) {
-                calls.push(['ammoHudRenderer.render', ammo, x, y, direction]);
-            }
-        },
         app: {
             render(state) {
                 calls.push(['app.render', state]);
@@ -121,7 +116,10 @@ function createOptions(overrides = {}) {
             }
         },
         model: {
-            clients: [{ id: 'p1' }, { id: 'p2' }]
+            clients: [
+                { id: 'p1', name: 'ACE' },
+                { id: 'p2', name: 'DOC' }
+            ]
         },
         players: {},
         roundData: {},
@@ -184,6 +182,8 @@ test('renders active game HUD and both ammo displays', async function () {
     assert.equal(elements.hudCanvas.hidden, false);
     assert.deepEqual(plain(calls), [
         ['hudContext.clearRect', 0, 0, 300, 200],
+        ['ammo.get', 'p1'],
+        ['ammo.get', 'p2'],
         'getInstallPromptProps',
         'getTouchControlsProps',
         [
@@ -191,7 +191,19 @@ test('renders active game HUD and both ammo displays', async function () {
             {
                 activeScreen: 'game',
                 gameHud: {
+                    ammoDisplays: [
+                        {
+                            count: 4,
+                            side: 'left'
+                        },
+                        {
+                            count: 2,
+                            side: 'right'
+                        }
+                    ],
                     defaultSeconds: 70,
+                    leftName: 'ACE',
+                    rightName: 'DOC',
                     roundState: 'playing'
                 },
                 installPrompt: {
@@ -201,11 +213,7 @@ test('renders active game HUD and both ammo displays', async function () {
                     enabled: true
                 }
             }
-        ],
-        ['ammo.get', 'p1'],
-        ['ammoHudRenderer.render', 4, 122, 606, 1],
-        ['ammo.get', 'p2'],
-        ['ammoHudRenderer.render', 2, 828, 606, -1]
+        ]
     ]);
 });
 
@@ -228,7 +236,10 @@ test('renders active game HUD without ammo when clients are missing', async func
             {
                 activeScreen: 'game',
                 gameHud: {
+                    ammoDisplays: [],
                     defaultSeconds: 70,
+                    leftName: '',
+                    rightName: '',
                     roundState: 'playing'
                 },
                 installPrompt: {

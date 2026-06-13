@@ -30,8 +30,8 @@ rendering rule).
 │            ▼                       ▼                            │
 │  CANVAS ENGINE (imperative)   PREACT APP ROOT                   │
 │  scene, players, bullets,     lobby, high scores, name editor,  │
-│  collision, ammo HUD,         game HUD, touch lobby buttons,    │
-│  joystick/aim pointer math    touch gameplay markup             │
+│  collision, joystick/aim      game HUD including ammo, touch    │
+│  pointer math                 lobby buttons, gameplay markup    │
 │            ▲                       │ action callbacks           │
 │            └───────────────────────┘ (back into flows/input)    │
 └─────────────────────────────────────────────────────────────────┘
@@ -170,8 +170,9 @@ The control rules, in one list:
    callbacks out. `ClientAppMount` skips virtual-DOM work when props are
    value-equal, so Preact does nothing on steady-state frames.
 6. **The canvas engine and touch pointer math stay imperative.** Simulation,
-   drawing, joystick/aim/fire pointer handling, and the ammo HUD never enter
-   the component tree.
+   drawing, and joystick/aim/fire pointer handling stay outside the component
+   tree. The game HUD, including ammo indicators, renders as DOM from plain
+   flow/view-model props.
 
 ## Gameplay Synchronization Model
 

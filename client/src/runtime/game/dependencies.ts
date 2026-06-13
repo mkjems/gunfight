@@ -42,10 +42,8 @@ import type { requestAnimFrame } from '../../platform/requestAnimationFrame.js';
 import type { ScenarioRenderer } from '../../engine/scenarioRenderer.js';
 import type { SoundEffects } from '../../platform/soundEffects.js';
 import type { TouchControls } from '../../input/touchControls.js';
-import type { AmmoHudRenderer } from '../../ui/ammoHudRenderer.js';
 
 export type ClientGameRuntimeModules = {
-    AmmoHudRenderer: typeof AmmoHudRenderer;
     Camera: typeof Camera;
     CanvasTools: typeof CanvasTools;
     ClientAmmoFlow: typeof ClientAmmoFlow;
@@ -134,7 +132,6 @@ export type ClientGameDependencies = {
         Config: ClientGameRuntimeModules['Config'];
     };
     ui: {
-        AmmoHudRenderer: typeof AmmoHudRenderer;
         ClientHudFlow: typeof ClientHudFlow;
         ClientLobbyHudFlow: typeof ClientLobbyHudFlow;
         ClientUi: typeof ClientUi;

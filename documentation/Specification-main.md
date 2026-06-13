@@ -107,10 +107,10 @@ Each match lasts 70 seconds total. The timer starts when the first duel begins a
 
 ### HUD layout
 
-- Player names appear on the bottom HUD line next to the ammo graphics.
-- Each name is placed on the inside edge of its player's ammo display, between that ammo display and the centerline.
-- The left and right name placements are symmetrical.
-- Names face inward toward the centerline, matching the opposing ammo layout.
+- The top score row shows each player's score and name symmetrically.
+- The left side shows score then name. The right side shows name then score.
+- Ammunition is rendered in the DOM on the bottom HUD row using the bullet sprite.
+- On mobile gameplay, the ammunition row stays visible inside the viewport bottom row between the touch controls.
 
 ### Round flow
 

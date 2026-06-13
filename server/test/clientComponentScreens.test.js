@@ -137,12 +137,24 @@ test('renders game HUD scores, timer, round text, and hit messages through the a
     app.render({
         activeScreen: Screen.GAME,
         gameHud: {
+            ammoDisplays: [
+                {
+                    count: 3,
+                    side: 'left'
+                },
+                {
+                    count: 2,
+                    side: 'right'
+                }
+            ],
             hitMessage: {
                 text: 'HIT!',
                 x: 475,
                 y: 320
             },
+            leftName: 'ACE',
             leftScore: 2,
+            rightName: 'DOC',
             rightScore: 1,
             roundMessage: 'DRAW!',
             timerLabel: 67
@@ -151,10 +163,17 @@ test('renders game HUD scores, timer, round text, and hit messages through the a
 
     assert.equal(query(root, '#gameHud').hidden, false);
     assert.equal(query(root, '#lobbyHud').hidden, true);
-    assert.equal(root.querySelector('#scoreLeft').textContent, '2');
-    assert.equal(root.querySelector('#scoreRight').textContent, '1');
+    assert.equal(query(root, '#scoreLeft .scoreValue').textContent, '2');
+    assert.equal(query(root, '#scoreLeft .scoreName').textContent, 'ACE');
+    assert.equal(query(root, '#scoreRight .scoreName').textContent, 'DOC');
+    assert.equal(query(root, '#scoreRight .scoreValue').textContent, '1');
     assert.equal(root.querySelector('#roundTimer').textContent, '67');
     assert.equal(root.querySelector('#roundMessage').textContent, 'DRAW!');
+    assert.equal(query(root, '#ammoRow').hidden, false);
+    assert.equal(query(root, '#ammoLeft').children.length, 6);
+    assert.equal(query(root, '#ammoRight').children.length, 6);
+    assert.equal(root.querySelectorAll('#ammoLeft .is-empty').length, 3);
+    assert.equal(root.querySelectorAll('#ammoRight .is-empty').length, 4);
 
     const hitMessage = query(root, '#hitMessage');
     assert.equal(hitMessage.textContent, 'HIT!');
@@ -171,6 +190,7 @@ test('renders game HUD scores, timer, round text, and hit messages through the a
     assert.equal(root.querySelector('#scoreRight').textContent, '0');
     assert.equal(root.querySelector('#roundTimer').textContent, '');
     assert.equal(root.querySelector('#roundMessage').textContent, '');
+    assert.equal(query(root, '#ammoRow').hidden, true);
     assert.equal(query(root, '#hitMessage').hidden, true);
 });
 

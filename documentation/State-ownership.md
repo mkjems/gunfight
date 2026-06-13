@@ -14,7 +14,7 @@ This is the current state split before the P1 architecture refactor. Keep it upd
 ## Client-owned state
 
 - Active screen and round phase.
-- Canvas rendering and HUD rendering.
+- Canvas rendering and DOM HUD rendering.
 - Local player input state.
 - Local simulation of players, bullets, collision, hits, obstacle damage, ammo, and match timer.
 - In-match scores before they are submitted at game over.

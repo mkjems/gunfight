@@ -175,7 +175,6 @@ function createStartupDependencies(onNetworkStart) {
             }
         },
         ui: {
-            AmmoHudRenderer: function () {},
             ClientHudFlow: {},
             ClientLobbyHudFlow: {},
             ClientUi: {

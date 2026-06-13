@@ -3,17 +3,14 @@ type ImageConstructor = new () => HTMLImageElement;
 type ClientAssetsOptions = {
     Image?: ImageConstructor;
     createRockPattern: (image: HTMLImageElement) => CanvasPattern | null;
-    onAmmoLoaded?: () => void;
     onRockPatternLoaded?: (pattern: CanvasPattern | null) => void;
 };
 
 export function ClientAssets(options: ClientAssetsOptions) {
     const ImageCtor = options.Image || Image;
-    const onAmmoLoaded = options.onAmmoLoaded || function () {};
     const onRockPatternLoaded = options.onRockPatternLoaded || function () {};
     const createRockPattern = options.createRockPattern;
     const sprites = {
-        ammo: new ImageCtor(),
         cactus: new ImageCtor(),
         rockPattern: new ImageCtor(),
         saloon: new ImageCtor(),
@@ -22,8 +19,6 @@ export function ClientAssets(options: ClientAssetsOptions) {
     let rockPattern: CanvasPattern | null = null;
 
     function load() {
-        sprites.ammo.onload = onAmmoLoaded;
-        sprites.ammo.src = 'images/bullet.png';
         sprites.wagon.src = 'images/wagon-1-4-37x38.png';
         sprites.cactus.src = 'images/cactus-1-4-17X32.png';
         sprites.saloon.src = 'images/saloon-64x128.png';

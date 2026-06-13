@@ -19,15 +19,18 @@ type HudContext = {
 type GameModel = {
     clients?: Array<{
         id: ClientId;
+        name?: string;
     }>;
+};
+
+type GameHudAmmoDisplay = {
+    count: number;
+    side: 'left' | 'right';
 };
 
 type ClientHudFlowOptions = {
     ammo: {
         get: (clientId: ClientId) => number;
-    };
-    ammoHudRenderer: {
-        render: (ammo: number, x: number, y: number, direction: number) => void;
     };
     app: {
         render: (state: unknown) => void;
@@ -79,26 +82,6 @@ export function render(options: ClientHudFlowOptions) {
         installPrompt: options.getInstallPromptProps?.(),
         touchControls: options.getTouchControlsProps?.()
     });
-
-    const firstClient = options.model && options.model.clients?.[0];
-    const secondClient = options.model && options.model.clients?.[1];
-
-    if (!firstClient || !secondClient) {
-        return;
-    }
-
-    options.ammoHudRenderer.render(
-        options.ammo.get(firstClient.id),
-        122,
-        606,
-        1
-    );
-    options.ammoHudRenderer.render(
-        options.ammo.get(secondClient.id),
-        828,
-        606,
-        -1
-    );
 }
 
 function renderLobbyApp(options: ClientHudFlowOptions) {
@@ -118,16 +101,56 @@ function renderLobbyApp(options: ClientHudFlowOptions) {
 
 export function getGameHudState(options: ClientHudFlowOptions) {
     const gameHudViewModel = options.gameHudViewModel || { getState };
+    const firstClient = options.model?.clients?.[0];
+    const secondClient = options.model?.clients?.[1];
 
-    return gameHudViewModel.getState({
-        camera: options.camera as never,
-        cameraController: options.cameraController as never,
-        defaultSeconds: options.defaultSeconds,
-        players: options.players as never,
-        roundData: options.roundData as never,
-        roundState: options.roundState,
-        scoreKeeper: options.scoreKeeper as never
-    });
+    return {
+        ...gameHudViewModel.getState({
+            camera: options.camera as never,
+            cameraController: options.cameraController as never,
+            defaultSeconds: options.defaultSeconds,
+            players: options.players as never,
+            roundData: options.roundData as never,
+            roundState: options.roundState,
+            scoreKeeper: options.scoreKeeper as never
+        }),
+        ammoDisplays: getAmmoDisplays(options, firstClient, secondClient),
+        leftName: getClientName(firstClient, 0),
+        rightName: getClientName(secondClient, 1)
+    };
+}
+
+function getAmmoDisplays(
+    options: ClientHudFlowOptions,
+    firstClient?: { id: ClientId },
+    secondClient?: { id: ClientId }
+): GameHudAmmoDisplay[] {
+    if (!firstClient || !secondClient) {
+        return [];
+    }
+
+    return [
+        {
+            count: options.ammo.get(firstClient.id),
+            side: 'left'
+        },
+        {
+            count: options.ammo.get(secondClient.id),
+            side: 'right'
+        }
+    ];
+}
+
+function getClientName(client: { name?: string } | undefined, slot: number) {
+    if (client && client.name) {
+        return client.name;
+    }
+
+    if (client) {
+        return 'PLAYER ' + (slot + 1);
+    }
+
+    return '';
 }
 
 function show(element: ElementLike | null | undefined, visible: boolean) {
@@ -137,6 +160,7 @@ function show(element: ElementLike | null | undefined, visible: boolean) {
 }
 
 export const ClientHudFlow = {
+    getAmmoDisplays,
     getGameHudState,
     render
 };

@@ -66,9 +66,6 @@ export class ClientGameRuntime implements ClientGameController {
     private hudContext!: CanvasRenderingContext2D;
     private app!: RuntimeApp;
     private installPrompt?: RuntimeInstallPrompt;
-    private ammoHudRenderer!: {
-        render: (ammo: number, x: number, y: number, direction: number) => void;
-    };
     private assets!: RuntimeAssets;
     private scenarioRenderer!: RuntimeScenarioRenderer;
     private collisionDebugRenderer!: RuntimeCollisionDebugRenderer;
@@ -158,7 +155,6 @@ export class ClientGameRuntime implements ClientGameController {
         this.hudContext = surfaces.hudContext;
         this.initAssets();
         this.initHudOverlay();
-        this.initAmmoHudRenderer();
         this.initSoundEffects();
         this.initScenarioRenderer();
         this.initCollisionDebugRenderer();
@@ -177,8 +173,7 @@ export class ClientGameRuntime implements ClientGameController {
                     document: this.document,
                     image
                 });
-            },
-            onAmmoLoaded: this.renderHud
+            }
         });
         this.assets.load();
     };
@@ -197,13 +192,6 @@ export class ClientGameRuntime implements ClientGameController {
 
         this.app = ui.app;
         this.installPrompt = ui.installPrompt;
-    };
-
-    private initAmmoHudRenderer = () => {
-        this.ammoHudRenderer = new this.dependencies.AmmoHudRenderer({
-            context: this.hudContext,
-            sprite: this.assets.sprites.ammo
-        });
     };
 
     private initSoundEffects = () => {
@@ -352,7 +340,6 @@ export class ClientGameRuntime implements ClientGameController {
 
         this.dependencies.ClientHudFlow.render({
             ammo: this.ammo,
-            ammoHudRenderer: this.ammoHudRenderer,
             app: this.app,
             camera: this.camera,
             cameraController: this.cameraController,
