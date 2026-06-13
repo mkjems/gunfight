@@ -57,7 +57,8 @@ function createOptions(overrides = {}) {
         hudCanvas: {
             height: 200,
             width: 300
-        }
+        },
+        particleCanvas: {}
     };
     const options = {
         ...elements,
@@ -149,6 +150,7 @@ test('renders waiting HUD through one app render', async function () {
 
     assert.equal(elements.canvas.hidden, false);
     assert.equal(elements.hudCanvas.hidden, false);
+    assert.equal(elements.particleCanvas.hidden, false);
     assert.deepEqual(plain(calls), [
         ['hudContext.clearRect', 0, 0, 300, 200],
         'getLobbyHudState',
@@ -180,6 +182,7 @@ test('renders active game HUD and both ammo displays', async function () {
 
     assert.equal(elements.canvas.hidden, false);
     assert.equal(elements.hudCanvas.hidden, false);
+    assert.equal(elements.particleCanvas.hidden, false);
     assert.deepEqual(plain(calls), [
         ['hudContext.clearRect', 0, 0, 300, 200],
         ['ammo.get', 'p1'],

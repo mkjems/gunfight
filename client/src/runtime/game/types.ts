@@ -56,6 +56,8 @@ export type RuntimeObstacleBody =
 
 export type RuntimeRenderContext = {
     clearRect: (x: number, y: number, width: number, height: number) => void;
+    fillRect?: (x: number, y: number, width: number, height: number) => void;
+    fillStyle?: string;
     restore: () => void;
     save: () => void;
     scale: (x: number, y: number) => void;
@@ -67,6 +69,8 @@ export type RuntimeCanvasSurfaces = {
     context: CanvasRenderingContext2D;
     hudCanvas: HTMLCanvasElement;
     hudContext: CanvasRenderingContext2D;
+    particleCanvas: HTMLCanvasElement;
+    particleContext: CanvasRenderingContext2D;
 };
 
 export type RuntimeApp = {
@@ -175,10 +179,15 @@ export type RuntimePlayers = {
 
 export type RuntimeBullet = {
     deleteMe?: boolean;
+    facing?: number;
     getHitBox: () => RuntimeBox;
     hasRicocheted?: boolean;
     ownerId: ClientId;
+    speedX?: number;
+    speedY?: number;
     toSnapshot?: () => unknown;
+    x?: number;
+    y?: number;
 };
 
 export type RuntimeBullets = {
@@ -231,6 +240,29 @@ export type RuntimeRoundIntro = {
     complete: () => void;
     start: () => void;
     update: () => void;
+};
+
+export type RuntimeParticleLayer = {
+    clear: () => void;
+    count: () => number;
+    render: (context: CanvasRenderingContext2D) => void;
+    spawnGunSmoke: (source: RuntimeParticleSource) => void;
+    spawnMuzzleFlash: (source: RuntimeParticleSource) => void;
+    spawnObstacleHit: (
+        source: RuntimeParticleSource & { obstacleId?: string }
+    ) => void;
+    spawnPlayerHit: (source: RuntimeParticleSource) => void;
+    spawnRicochetSparks: (source: RuntimeParticleSource) => void;
+    spawnRockChips: (source: RuntimeParticleSource) => void;
+    update: (deltaSeconds: number) => void;
+};
+
+export type RuntimeParticleSource = {
+    facing?: number;
+    speedX?: number;
+    speedY?: number;
+    x: number;
+    y: number;
 };
 
 export type RuntimeNamedClient = {
@@ -287,6 +319,7 @@ export type RuntimeSystems = {
     bullets: RuntimeBullets;
     highScores: HighScoreEntry[];
     localReadyRequested: boolean;
+    particleLayer: RuntimeParticleLayer;
     players: RuntimePlayers;
     positionSync: RuntimePositionSync;
     roundData: RuntimeRoundData;

@@ -67,6 +67,9 @@ function createUpdateOptions() {
             syncLocalPlayerPosition() {
                 calls.push('syncLocalPlayerPosition');
             },
+            updateParticles() {
+                calls.push('updateParticles');
+            },
             updateBulletCollisionEnvironment() {
                 calls.push('updateBulletCollisionEnvironment');
             },
@@ -106,8 +109,26 @@ function createRenderOptions(overrides = {}) {
         drawCollisionBodies() {
             calls.push('drawCollisionBodies');
         },
+        drawParticles() {
+            calls.push('drawParticles');
+        },
         drawScenario() {
             calls.push('drawScenario');
+        },
+        particleCanvas: {
+            height: 200,
+            width: 300
+        },
+        particleContext: {
+            clearRect(x, y, width, height) {
+                calls.push(['particleContext.clearRect', x, y, width, height]);
+            },
+            restore() {
+                calls.push('particleContext.restore');
+            },
+            save() {
+                calls.push('particleContext.save');
+            }
         },
         renderHud() {
             calls.push('renderHud');
@@ -148,6 +169,7 @@ test('updates one frame in simulation order', async function () {
     assert.deepEqual(calls, [
         'updateBulletCollisionEnvironment',
         'updateMovementObstacleEnvironment',
+        'updateParticles',
         'scene.moveAll',
         'roundIntro.update',
         'syncLocalPlayerPosition',
@@ -164,12 +186,17 @@ test('renders one gameplay frame with camera and scenario', async function () {
 
     assert.deepEqual(plain(calls), [
         ['context.clearRect', 0, 0, 300, 200],
+        ['particleContext.clearRect', 0, 0, 300, 200],
         'context.save',
         'camera.apply',
         'drawScenario',
         'scene.drawAll',
         'drawCollisionBodies',
         'context.restore',
+        'particleContext.save',
+        'camera.apply',
+        'drawParticles',
+        'particleContext.restore',
         'renderHud',
         'updateTouchControls'
     ]);
@@ -188,6 +215,7 @@ test('renders waiting frame without camera or scenario', async function () {
 
     assert.deepEqual(plain(calls), [
         ['context.clearRect', 0, 0, 300, 200],
+        ['particleContext.clearRect', 0, 0, 300, 200],
         'context.save',
         'scene.drawAll',
         'drawCollisionBodies',

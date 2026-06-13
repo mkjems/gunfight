@@ -14,6 +14,7 @@ import type {
     RuntimeAmmo,
     RuntimeApp,
     RuntimeAssets,
+    RuntimeBullet,
     RuntimeBullets,
     RuntimeCamera,
     RuntimeCameraController,
@@ -30,11 +31,14 @@ import type {
     RuntimeNameEditor,
     RuntimeNamedClient,
     RuntimeObstacleHit,
+    RuntimeParticleLayer,
+    RuntimeParticleSource,
     RuntimePlayerHit,
     RuntimePlayers,
     RuntimePositionSync,
     RuntimeRoundData,
     RuntimeRoundIntro,
+    RuntimeRenderContext,
     RuntimeScenarioRenderer,
     RuntimeScene,
     RuntimeScoreKeeper,
@@ -64,6 +68,8 @@ export class ClientGameRuntime implements ClientGameController {
     private context!: CanvasRenderingContext2D;
     private hudCanvas!: HTMLCanvasElement;
     private hudContext!: CanvasRenderingContext2D;
+    private particleCanvas!: HTMLCanvasElement;
+    private particleContext!: CanvasRenderingContext2D;
     private app!: RuntimeApp;
     private installPrompt?: RuntimeInstallPrompt;
     private assets!: RuntimeAssets;
@@ -81,6 +87,7 @@ export class ClientGameRuntime implements ClientGameController {
     private touchControls?: RuntimeTouchControls;
     private players!: RuntimePlayers;
     private bullets!: RuntimeBullets;
+    private particleLayer!: RuntimeParticleLayer;
     private roundState!: RoundStateValue;
     private latestModel: RuntimeGameModel | null = null;
     private highScores: HighScoreEntry[] = [];
@@ -94,6 +101,7 @@ export class ClientGameRuntime implements ClientGameController {
     private localReadyRequested = false;
     private playerId: ClientId | null = null;
     private hasStarted = false;
+    private lastParticleUpdatedAt: number | null = null;
 
     constructor(options: ClientGameRuntimeOptions) {
         this.dependencies = options.dependencies;
@@ -153,6 +161,8 @@ export class ClientGameRuntime implements ClientGameController {
         this.context = surfaces.context;
         this.hudCanvas = surfaces.hudCanvas;
         this.hudContext = surfaces.hudContext;
+        this.particleCanvas = surfaces.particleCanvas;
+        this.particleContext = surfaces.particleContext;
         this.initAssets();
         this.initHudOverlay();
         this.initSoundEffects();
@@ -257,11 +267,12 @@ export class ClientGameRuntime implements ClientGameController {
     private initGameState = () => {
         const systems = this.dependencies.ClientGameSystems.create({
             initialRoundState: this.RoundState.WAITING,
-            playRicochet: this.gameSounds.playRicochet
+            playRicochet: this.handleRicochet
         }) as RuntimeSystems;
 
         this.scene = systems.scene;
         this.bullets = systems.bullets;
+        this.particleLayer = systems.particleLayer;
         this.players = systems.players;
         this.roundIntro = systems.roundIntro;
         this.roundState = systems.roundState;
@@ -349,6 +360,7 @@ export class ClientGameRuntime implements ClientGameController {
             hudCanvas: this.hudCanvas,
             hudContext: this.hudContext,
             model: this.latestModel,
+            particleCanvas: this.particleCanvas,
             players: this.players,
             getInstallPromptProps: this.getInstallPromptProps,
             getLobbyHudState: this.getLobbyHudState,
@@ -365,6 +377,7 @@ export class ClientGameRuntime implements ClientGameController {
             roundIntro: this.roundIntro,
             scene: this.scene,
             syncLocalPlayerPosition: this.syncLocalPlayerPosition,
+            updateParticles: this.updateParticles,
             updateBulletCollisionEnvironment:
                 this.updateBulletCollisionEnvironment,
             updateCamera: this.updateCamera,
@@ -379,7 +392,10 @@ export class ClientGameRuntime implements ClientGameController {
             canvas: this.canvas,
             context: this.context,
             drawCollisionBodies: this.drawCollisionBodies,
+            drawParticles: this.drawParticles,
             drawScenario: this.drawScenario,
+            particleCanvas: this.particleCanvas,
+            particleContext: this.particleContext,
             renderHud: this.renderHud,
             roundState: this.roundState,
             scene: this.scene,
@@ -449,7 +465,7 @@ export class ClientGameRuntime implements ClientGameController {
             isLocalClientWaiting: this.isLocalClientWaiting,
             keyEvent,
             nameEditor: this.nameEditor,
-            onGunFired: this.gameSounds.playGun,
+            onGunFired: this.handleGunFired,
             onBulletFired: () => {
                 this.reloadIfBothPlayersAreOutOfAmmo();
                 this.renderHud();
@@ -574,6 +590,8 @@ export class ClientGameRuntime implements ClientGameController {
     };
 
     private handleObstacleHit = (hit: RuntimeObstacleHit) => {
+        this.spawnObstacleHitParticles(hit);
+
         if (this.playerId === null) {
             return;
         }
@@ -588,6 +606,8 @@ export class ClientGameRuntime implements ClientGameController {
     };
 
     private handlePlayerHit = (hit: RuntimePlayerHit) => {
+        this.spawnPlayerHitParticles(hit);
+
         if (this.playerId === null) {
             return;
         }
@@ -675,6 +695,8 @@ export class ClientGameRuntime implements ClientGameController {
     };
 
     private resetToStartScreen = () => {
+        this.clearParticles();
+
         this.dependencies.ClientRoundResetFlow.resetToStartScreen({
             bullets: this.bullets,
             players: this.players,
@@ -690,6 +712,8 @@ export class ClientGameRuntime implements ClientGameController {
     };
 
     private enterLobbyState = () => {
+        this.clearParticles();
+
         this.dependencies.ClientLobbyFlow.enter({
             bullets: this.bullets,
             players: this.players,
@@ -757,6 +781,97 @@ export class ClientGameRuntime implements ClientGameController {
             obstacleBodies: this.dependencies.Obstacles.all(),
             players: this.players.all
         });
+    };
+
+    private drawParticles = (context: RuntimeRenderContext) => {
+        this.particleLayer.render(context as CanvasRenderingContext2D);
+    };
+
+    private updateParticles = () => {
+        const now =
+            this.window.performance && this.window.performance.now
+                ? this.window.performance.now()
+                : new Date().getTime();
+
+        if (this.lastParticleUpdatedAt === null) {
+            this.lastParticleUpdatedAt = now;
+            return;
+        }
+
+        this.particleLayer.update((now - this.lastParticleUpdatedAt) / 1000);
+        this.lastParticleUpdatedAt = now;
+    };
+
+    private clearParticles = () => {
+        this.particleLayer.clear();
+        this.lastParticleUpdatedAt = null;
+    };
+
+    private handleGunFired = (bullet: unknown) => {
+        this.gameSounds.playGun();
+        const source = this.getParticleSourceFromBullet(
+            bullet as Partial<RuntimeBullet>
+        );
+
+        if (!source) {
+            return;
+        }
+
+        this.particleLayer.spawnMuzzleFlash(source);
+        this.particleLayer.spawnGunSmoke(source);
+    };
+
+    private handleRicochet = (bullet?: Partial<RuntimeBullet>) => {
+        this.gameSounds.playRicochet();
+        const source = this.getParticleSourceFromBullet(bullet);
+
+        if (!source) {
+            return;
+        }
+
+        this.particleLayer.spawnRicochetSparks(source);
+        this.particleLayer.spawnRockChips(source);
+    };
+
+    private spawnObstacleHitParticles = (hit: RuntimeObstacleHit) => {
+        const source = this.getParticleSourceFromBullet(hit.bullet);
+
+        if (!source) {
+            return;
+        }
+
+        this.particleLayer.spawnObstacleHit({
+            ...source,
+            obstacleId: hit.obstacleId
+        });
+    };
+
+    private spawnPlayerHitParticles = (hit: RuntimePlayerHit) => {
+        const source = this.getParticleSourceFromBullet(hit.bullet);
+
+        if (source) {
+            this.particleLayer.spawnPlayerHit(source);
+        }
+    };
+
+    private getParticleSourceFromBullet = (
+        bullet?: Partial<RuntimeBullet> | null
+    ): RuntimeParticleSource | null => {
+        if (
+            !bullet ||
+            typeof bullet.x !== 'number' ||
+            typeof bullet.y !== 'number'
+        ) {
+            return null;
+        }
+
+        return {
+            facing: bullet.facing,
+            speedX: bullet.speedX,
+            speedY: bullet.speedY,
+            x: bullet.x,
+            y: bullet.y
+        };
     };
 
     private updateTouchControls = () => {

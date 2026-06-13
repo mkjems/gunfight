@@ -55,6 +55,7 @@ type ClientHudFlowOptions = {
     hudCanvas: HudCanvas;
     hudContext: HudContext;
     model?: GameModel | null;
+    particleCanvas?: ElementLike | null;
     players: unknown;
     roundData: unknown;
     roundState: RoundState;
@@ -75,6 +76,7 @@ export function render(options: ClientHudFlowOptions) {
     }
 
     show(options.canvas, true);
+    show(options.particleCanvas, true);
     show(options.hudCanvas, true);
     options.app.render({
         activeScreen: Screen.GAME,
@@ -88,6 +90,7 @@ function renderLobbyApp(options: ClientHudFlowOptions) {
     const lobbyState = options.getLobbyHudState();
 
     show(options.canvas, lobbyState.canvasVisible);
+    show(options.particleCanvas, lobbyState.canvasVisible);
     show(options.hudCanvas, lobbyState.hudCanvasVisible);
     options.app.render({
         activeScreen: lobbyState.activeScreen,

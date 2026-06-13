@@ -2,6 +2,7 @@ import { RoundState } from '../state/clientScreens.js';
 
 type UpdateOptions = {
     checkForHits: () => void;
+    updateParticles: () => void;
     roundIntro: {
         update: () => void;
     };
@@ -32,7 +33,13 @@ type RenderOptions = {
     };
     context: RenderContext;
     drawCollisionBodies: () => void;
+    drawParticles: (context: RenderContext) => void;
     drawScenario: () => void;
+    particleCanvas: {
+        height: number;
+        width: number;
+    };
+    particleContext: RenderContext;
     renderHud: () => void;
     roundState: RoundState;
     scene: {
@@ -45,6 +52,7 @@ type RenderOptions = {
 export function update(options: UpdateOptions) {
     options.updateBulletCollisionEnvironment();
     options.updateMovementObstacleEnvironment();
+    options.updateParticles();
     options.scene.moveAll();
     options.roundIntro.update();
     options.syncLocalPlayerPosition();
@@ -59,6 +67,12 @@ export function render(options: RenderOptions) {
         options.canvas.width,
         options.canvas.height
     );
+    options.particleContext.clearRect(
+        0,
+        0,
+        options.particleCanvas.width,
+        options.particleCanvas.height
+    );
     options.context.save();
 
     if (options.shouldUseCamera()) {
@@ -72,6 +86,18 @@ export function render(options: RenderOptions) {
     options.scene.drawAll(options.context);
     options.drawCollisionBodies();
     options.context.restore();
+
+    if (options.roundState !== RoundState.WAITING) {
+        options.particleContext.save();
+
+        if (options.shouldUseCamera()) {
+            options.camera.apply(options.particleContext);
+        }
+
+        options.drawParticles(options.particleContext);
+        options.particleContext.restore();
+    }
+
     options.renderHud();
     options.updateTouchControls();
 }

@@ -26,6 +26,9 @@ function createDocument() {
         canvas: {
             id: 'canvas-context'
         },
+        particleCanvas: {
+            id: 'particle-context'
+        },
         hudCanvas: {
             id: 'hud-context'
         }
@@ -39,6 +42,11 @@ function createDocument() {
         hudCanvas: {
             getContext() {
                 return contexts.hudCanvas;
+            }
+        },
+        particleCanvas: {
+            getContext() {
+                return contexts.particleCanvas;
             }
         }
     };
@@ -76,9 +84,17 @@ test('creates sized canvas surfaces with image smoothing disabled', async functi
     assert.equal(surfaces.context, contexts.canvas);
     assert.equal(surfaces.hudCanvas, elements.hudCanvas);
     assert.equal(surfaces.hudContext, contexts.hudCanvas);
+    assert.equal(surfaces.particleCanvas, elements.particleCanvas);
+    assert.equal(surfaces.particleContext, contexts.particleCanvas);
     assert.equal(elements.canvas.width, 960);
     assert.equal(elements.canvas.height, 720);
+    assert.equal(elements.particleCanvas.width, 960);
+    assert.equal(elements.particleCanvas.height, 720);
     assert.equal(elements.hudCanvas.width, 960);
     assert.equal(elements.hudCanvas.height, 720);
-    assert.deepEqual(disabled, ['canvas-context', 'hud-context']);
+    assert.deepEqual(disabled, [
+        'canvas-context',
+        'particle-context',
+        'hud-context'
+    ]);
 });

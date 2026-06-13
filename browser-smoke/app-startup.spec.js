@@ -19,6 +19,29 @@ test('built browser app loads and starts', async ({ page }) => {
 
     await expect(page.locator('#hudOverlay')).toBeVisible();
     await expect(page.locator('#lobbyHud')).toBeVisible();
+    await expect(page.locator('#particleCanvas')).toBeVisible();
+    await expect(page.locator('#particleCanvas')).toHaveCSS(
+        'pointer-events',
+        'none'
+    );
+    const particleCanvasIsLayered = await page.evaluate(function () {
+        const canvas = document.getElementById('canvas');
+        const particleCanvas = document.getElementById('particleCanvas');
+        const hudOverlay = document.getElementById('hudOverlay');
+
+        if (!canvas || !particleCanvas || !hudOverlay) {
+            return false;
+        }
+
+        return (
+            Number(getComputedStyle(canvas).zIndex) <
+                Number(getComputedStyle(particleCanvas).zIndex) &&
+            Number(getComputedStyle(particleCanvas).zIndex) <
+                Number(getComputedStyle(hudOverlay).zIndex)
+        );
+    });
+
+    expect(particleCanvasIsLayered).toBe(true);
     await expect(
         page.locator(
             '#lobby-main:not([hidden]), #highScoresScreen:not([hidden])'

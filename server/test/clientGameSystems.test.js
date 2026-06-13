@@ -58,6 +58,13 @@ function createSystemBuilders(calls) {
         createBullets(scene) {
             return new Bullets(scene);
         },
+        createParticleLayer() {
+            calls.push('ParticleLayer');
+
+            return {
+                kind: 'particleLayer'
+            };
+        },
         createPlayers(scene, bullets) {
             return new Players(scene, bullets);
         },
@@ -119,6 +126,7 @@ test('creates game systems with injectable system builders', async function () {
     assert.equal(systems.scene.kind, 'scene');
     assert.equal(systems.bullets.kind, 'bullets');
     assert.equal(systems.players.kind, 'players');
+    assert.equal(systems.particleLayer.kind, 'particleLayer');
     assert.equal(systems.roundIntro.kind, 'roundIntro');
     assert.equal(systems.roundState, 'waiting');
     assert.deepEqual(plain(systems.highScores), []);
@@ -135,6 +143,7 @@ test('creates game systems with injectable system builders', async function () {
         ['Players', 'scene', 'bullets'],
         ['RoundIntro', 'players'],
         'ClientAmmo',
+        'ParticleLayer',
         'PlayerPositionSync',
         'ClientRoundState',
         'ScoreKeeper',

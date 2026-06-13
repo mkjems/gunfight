@@ -16,10 +16,11 @@ high score, and name-editor markup become easier to render and test.
 The component framework must not own:
 
 - The main gameplay canvas.
+- The particle canvas and particle simulation layer.
 - The reserved HUD canvas used for any future canvas-drawn overlays.
 - The game loop and animation frame scheduling.
-- Player, bullet, scene, obstacle, collision, camera, score, ammo, timer, and
-  round simulation objects.
+- Player, bullet, particle, scene, obstacle, collision, camera, score, ammo,
+  timer, and round simulation objects.
 - Socket.IO synchronization and relayed gameplay events.
 
 These systems stay in focused client modules and continue to be coordinated by
@@ -152,6 +153,8 @@ boundary is now:
 - Framework-independent view models own render decisions.
 - `ClientAppMount` owns the single guarded Preact render call.
 - Components own DOM markup and event wiring inside the app root.
+- Pixel particles render through a separate canvas sibling, above the game
+  world canvas and below DOM HUD/touch controls.
 
 ## Renderer Spike Choice
 

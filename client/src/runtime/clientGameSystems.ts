@@ -9,6 +9,7 @@ type ClientGameSystemsOptions<
     TPlayers,
     TRoundIntro,
     TAmmo,
+    TParticleLayer,
     TPositionSync,
     TRoundData,
     TScoreKeeper,
@@ -18,6 +19,7 @@ type ClientGameSystemsOptions<
     Bullet: BulletConstructor<TBullet>;
     createAmmo: () => TAmmo;
     createBullets: (scene: TScene) => TBullets;
+    createParticleLayer: () => TParticleLayer;
     createPlayers: (scene: TScene, bullets: TBullets) => TPlayers;
     createPositionSync: () => TPositionSync;
     createRoundData: () => TRoundData;
@@ -26,7 +28,7 @@ type ClientGameSystemsOptions<
     createScoreKeeper: () => TScoreKeeper;
     createTimers: () => TTimers;
     initialRoundState: TRoundState;
-    playRicochet: () => void;
+    playRicochet: (bullet?: TBullet) => void;
 };
 
 export function create<
@@ -36,6 +38,7 @@ export function create<
     TPlayers,
     TRoundIntro,
     TAmmo,
+    TParticleLayer,
     TPositionSync,
     TRoundData,
     TScoreKeeper,
@@ -49,6 +52,7 @@ export function create<
         TPlayers,
         TRoundIntro,
         TAmmo,
+        TParticleLayer,
         TPositionSync,
         TRoundData,
         TScoreKeeper,
@@ -68,6 +72,7 @@ export function create<
         bullets,
         highScores: [],
         localReadyRequested: false,
+        particleLayer: options.createParticleLayer(),
         players,
         positionSync: options.createPositionSync(),
         roundData: options.createRoundData(),

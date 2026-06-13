@@ -5,6 +5,7 @@ import { ClientGameSystems } from './clientGameSystems.js';
 import { ClientRoundState } from '../state/clientRoundState.js';
 import { ClientTimers } from '../state/clientTimers.js';
 import { PlayerPositionSync } from '../network/playerPositionSync.js';
+import { ParticleLayer } from '../engine/particleLayer.js';
 import { Players } from '../engine/players.js';
 import { RoundIntro } from '../engine/roundIntro.js';
 import { Scene } from '../engine/scene.js';
@@ -12,7 +13,7 @@ import { ScoreKeeper } from '../engine/scoreKeeper.js';
 
 type ClientRuntimeGameSystemsOptions = {
     initialRoundState: unknown;
-    playRicochet: () => void;
+    playRicochet: (bullet?: Bullet) => void;
 };
 
 export function create(options: ClientRuntimeGameSystemsOptions) {
@@ -20,6 +21,7 @@ export function create(options: ClientRuntimeGameSystemsOptions) {
         Bullet,
         createAmmo: () => ClientAmmo(),
         createBullets: (scene: Scene) => new Bullets(scene),
+        createParticleLayer: () => new ParticleLayer(),
         createPlayers: (scene: Scene, bullets: Bullets) =>
             new Players(scene, bullets),
         createPositionSync: () => PlayerPositionSync(),

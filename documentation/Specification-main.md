@@ -123,7 +123,8 @@ Name is stored in the browser (session or local storage ) so you can work on tha
 
 ## Game screen
 
-The game screen contains the battlefield, players, bullets, obstacles, HUD, score, timer, and hit messages.
+The game screen contains the battlefield, players, bullets, obstacles, pixel
+effects, HUD, score, timer, and hit messages.
 
 Each match lasts 70 seconds total. The timer starts when the first duel begins and does not reset between kills, reloads, or later duels. Players may score as many kills as possible before time runs out. The winner is the player with the highest score when the timer reaches zero.
 
@@ -268,6 +269,6 @@ Mobile-specific behavior:
 - arcade fonts
 - western objects such as cacti, wagons, rocks, and saloons
 - particle effects that look like tiny pixel blocks tossed loose from the game
-  world
+  world after gunshots, ricochets, obstacle hits, and player hits
 - short sound effects for ready, gunshot, empty gun, hit, ricochet, and obstacle hits
 - minimal text, written like cabinet-era arcade UI

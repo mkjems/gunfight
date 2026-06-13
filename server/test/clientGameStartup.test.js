@@ -108,7 +108,9 @@ function createStartupDependencies(onNetworkStart) {
                         canvas: {},
                         context: {},
                         hudCanvas: {},
-                        hudContext: {}
+                        hudContext: {},
+                        particleCanvas: {},
+                        particleContext: {}
                     };
                 }
             },
@@ -124,6 +126,7 @@ function createStartupDependencies(onNetworkStart) {
                         bullets: {},
                         highScores: [],
                         localReadyRequested: false,
+                        particleLayer: {},
                         players: {},
                         positionSync: {},
                         roundData: {},
