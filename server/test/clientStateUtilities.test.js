@@ -251,6 +251,31 @@ test('name editor sanitizes, edits, and submits names', async function () {
     ]);
 });
 
+test('name editor opens keyboard editing with the current name prefilled', async function () {
+    const { NameEditor } = await loadStateUtilities();
+    const calls = [];
+    const editor = NameEditor({
+        onChange() {
+            calls.push('change');
+        }
+    });
+
+    editor.setName('sam');
+    editor.handleKeyEvent({
+        action: 'down',
+        key: 'e'
+    });
+
+    assert.deepEqual(editor.getState(), {
+        active: true,
+        cursorCol: 0,
+        cursorRow: 0,
+        grid: editor.getState().grid,
+        name: 'SAM'
+    });
+    assert.deepEqual(calls, ['change', 'change', 'change']);
+});
+
 test('score keeper records scores and deduplicates game results', async function () {
     const { ScoreKeeper } = await loadStateUtilities();
     const scoreKeeper = ScoreKeeper();

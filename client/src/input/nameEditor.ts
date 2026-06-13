@@ -132,7 +132,7 @@ export function NameEditor(options: NameEditorOptions = {}) {
         }
 
         if (!active && keyEvent.key === 'e') {
-            open('');
+            open(name);
             return false;
         }
 

@@ -474,6 +474,7 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
     assert.equal(highScoresButton.hidden, false);
     assert.equal(playButton.hidden, false);
     assert.equal(backButton.hidden, true);
+    assert.equal(playButton.className, 'negative-button');
 
     const pointerDown = new browser.window.PointerEvent('pointerdown', {
         cancelable: true

@@ -91,12 +91,16 @@ flowchart TD
     - The placeholder should disappear as soon as an opponent client is present.
 - [x] If the game is `abandoned`, prefer the abandoned/opponent-left message over the generic looking-for-opponent placeholder.
 
-## P3.2.6 More tweaks
+## P3.2.6 Mobile tweaks and edit name revert
 
-- [ ] Create a class to make a negative button. Yellow background with black text.
-- [ ] On Mobile, Make Play button the top button of the three to choose from. And make it a negative button.
-- [ ] There are some pointer-event:none missing in the mobile layout (see photo)
-- [ ] When editing name, start with the existing name prefilled (Like it used to be).
+- [x] Create a class to make a negative button. Yellow background with black text.
+- [x] On Mobile, Make Play button the top button of the three to choose from. And make it a negative button.
+- [x] There are some pointer-event:none missing in the mobile layout (see photo)
+- [x] When editing name, start with the existing name prefilled (Like it used to be).
+
+## P3.2.7 Even more tweaks
+- [ ] On mobile, the ammunition indicator is not visible. Consider making it DOM. Should be down in the bottom row.
+- [ ] I would like the name of the players on each side of the screen next to the score in the scoreRow. Symmetrical.
 
 ## P3.3 - State model review and future plans
 

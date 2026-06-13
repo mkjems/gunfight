@@ -68,6 +68,7 @@ test('built browser app renders high scores through the app root', async ({
         FixedDate.parse = RealDate.parse;
         globalThis.Date = FixedDate;
         localStorage.setItem('gunfight-install-prompt-dismissed', '1');
+        localStorage.setItem('gunfight-player-name', 'SAM');
     });
 
     await page.goto('/', {
@@ -215,10 +216,16 @@ test('built browser app renders the name editor through the app root', async ({
     });
 
     await expect(page.locator('#lobby-main')).toBeVisible();
+    const currentName = await page
+        .locator('#lobbyPlayerLabels .lobby-player-label')
+        .nth(1)
+        .textContent();
     await page.keyboard.press('e');
 
     await expect(page.locator('#nameEditor')).toBeVisible();
-    await expect(page.locator('#nameEditorValue')).toHaveText('NAME:  ');
+    await expect(page.locator('#nameEditorValue')).toHaveText(
+        'NAME: ' + currentName
+    );
     await expect(page.locator('#nameEditorGrid .name-editor-row')).toHaveCount(
         5
     );

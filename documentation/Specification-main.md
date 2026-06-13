@@ -66,7 +66,7 @@ When the local player has pressed `P` and entered `READY`, the lobby does not sh
 
 ### Mobile lobby
 
-Mobile users do not see keyboard instructions. The lobby uses stacked touch buttons for edit name, high scores, and play. Virtual movement and fire controls stay hidden until gameplay.
+Mobile users do not see keyboard instructions. The lobby uses stacked touch buttons for play, edit name, and high scores. The play button is shown first and uses negative button styling. Virtual movement and fire controls stay hidden until gameplay. Non-interactive mobile HUD text cannot be selected by touch.
 
 Mobile lobby action buttons are centered horizontally and vertically over the lobby screen so they remain visible when the scaled game stage is taller than the browser viewport.
 
@@ -75,6 +75,8 @@ On mobile high scores, only the top 5 score places are shown. A `BACK TO LOBBY` 
 ## Edit name screen
 
 The edit name screen lets a player choose a public name before playing.
+
+When the edit name screen opens, it starts with the player's current name prefilled.
 
 Rules:
 

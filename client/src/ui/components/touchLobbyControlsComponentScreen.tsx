@@ -11,6 +11,7 @@ export type TouchLobbyControlsProps = {
 type TouchLobbyButtonProps = {
     id: string;
     label: string;
+    negative?: boolean;
     onTap?: () => void;
     visible?: boolean;
 };
@@ -18,6 +19,13 @@ type TouchLobbyButtonProps = {
 export function TouchLobbyControls(options: TouchLobbyControlsProps = {}) {
     return (
         <>
+            <TouchLobbyButton
+                id="touchPlayButton"
+                label="PLAY GUNFIGHT"
+                negative={true}
+                onTap={options.onPlay}
+                visible={options.showMainButtons}
+            />
             <TouchLobbyButton
                 id="touchEditButton"
                 label="EDIT NAME"
@@ -28,12 +36,6 @@ export function TouchLobbyControls(options: TouchLobbyControlsProps = {}) {
                 id="touchHighScoresButton"
                 label="HIGH SCORES"
                 onTap={options.onHighScores}
-                visible={options.showMainButtons}
-            />
-            <TouchLobbyButton
-                id="touchPlayButton"
-                label="PLAY GUNFIGHT"
-                onTap={options.onPlay}
                 visible={options.showMainButtons}
             />
             <TouchLobbyButton
@@ -49,6 +51,7 @@ export function TouchLobbyControls(options: TouchLobbyControlsProps = {}) {
 function TouchLobbyButton(props: TouchLobbyButtonProps) {
     return (
         <button
+            className={props.negative ? 'negative-button' : ''}
             hidden={!props.visible}
             id={props.id}
             onPointerDown={function (evt) {

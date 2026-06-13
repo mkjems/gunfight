@@ -113,6 +113,27 @@ body {
     position: relative;
 }
 
+#gameStage,
+#gameHud,
+#lobbyHud,
+#touchControls,
+#touchLobbyControls {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    user-select: none;
+}
+
+#gameStage *,
+#gameHud *,
+#lobbyHud *,
+#touchControls *,
+#touchLobbyControls * {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
 #rotatePrompt {
     display: none;
 }
@@ -230,6 +251,12 @@ body.install-prompt-visible #touchControls {
 #gameHud {
     display: grid;
     grid-template-rows: 1fr auto 1fr;
+    pointer-events: none;
+}
+
+#lobby-main,
+#highScoresScreen {
+    pointer-events: none;
 }
 
 #gameHud[hidden],
@@ -493,6 +520,13 @@ h2 {
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
+}
+
+#touchControls button.negative-button,
+#touchLobbyControls button.negative-button {
+    background: var(--yellow);
+    color: var(--black);
+    text-shadow: none;
 }
 
 #touchLobbyControls {

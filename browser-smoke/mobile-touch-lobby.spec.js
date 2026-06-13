@@ -51,6 +51,7 @@ async function freezeHighScoreRotation(page, isoTime) {
         FixedDate.parse = RealDate.parse;
         globalThis.Date = FixedDate;
         localStorage.setItem('gunfight-install-prompt-dismissed', '1');
+        localStorage.setItem('gunfight-player-name', 'SAM');
     }, isoTime || '2026-01-01T00:00:00.000Z');
 }
 
@@ -99,6 +100,25 @@ test.describe('mobile touch lobby', function () {
         await expect(page.locator('#touchPlayButton')).toHaveText(
             'PLAY GUNFIGHT'
         );
+        await expect(page.locator('#touchPlayButton')).toHaveClass(
+            'negative-button'
+        );
+
+        const touchStyles = await page
+            .locator('#touchLobbyControls')
+            .evaluate(function (element) {
+                const styles = window.getComputedStyle(element);
+
+                return {
+                    touchAction: styles.touchAction,
+                    userSelect: styles.userSelect
+                };
+            });
+
+        expect(touchStyles).toEqual({
+            touchAction: 'none',
+            userSelect: 'none'
+        });
 
         const controlsBox = await page
             .locator('#touchLobbyControls')
@@ -115,6 +135,18 @@ test.describe('mobile touch lobby', function () {
                     page.viewportSize().height / 2
             )
         ).toBeLessThan(2);
+
+        const currentName = await page
+            .locator('#lobbyPlayerLabels .lobby-player-label')
+            .nth(1)
+            .textContent();
+
+        await page.locator('#touchEditButton').click();
+
+        await expect(page.locator('#nameEditor')).toBeVisible();
+        await expect(page.locator('#nameEditorValue')).toHaveText(
+            'NAME: ' + currentName
+        );
 
         expect(browserErrors).toEqual([]);
     });
