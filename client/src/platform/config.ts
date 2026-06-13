@@ -10,7 +10,7 @@ export const Config = {
         showCollisionBodies: false
     },
     game: {
-        seconds: 12
+        seconds: 70
     },
     round: {
         resetDelay: 1800,
