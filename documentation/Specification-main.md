@@ -267,5 +267,7 @@ Mobile-specific behavior:
 - low-resolution pixel art
 - arcade fonts
 - western objects such as cacti, wagons, rocks, and saloons
+- particle effects that look like tiny pixel blocks tossed loose from the game
+  world
 - short sound effects for ready, gunshot, empty gun, hit, ricochet, and obstacle hits
 - minimal text, written like cabinet-era arcade UI

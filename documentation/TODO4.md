@@ -19,9 +19,9 @@
     - [x] Do not pair players out of `playing` games; only pair `waiting` single-player games.
     - [x] Update docs
 
-## Content Authoring Tools
+## P5 Content Authoring Tools
 
-### Add a rock editor page.
+### P5.1 Add a rock editor page.
 
 - [ ] Add a rock editor page.
     - [ ] Provide a WYSIWYG preview for rock dimensions and polygon shape.
@@ -29,7 +29,7 @@
     - [ ] Output rock JSON for copying into project data.
     - [ ] Validate JSON and geometry with readable errors.
 
-### Add a scenario editor page.
+### P5.5 Add a scenario editor page.
 
 - [ ] Add a scenario editor page.
     - [ ] Provide a WYSIWYG preview of the full arena scenario.
@@ -38,9 +38,73 @@
     - [ ] Output scenario JSON for copying into project data.
     - [ ] Validate JSON and scenario geometry with readable errors.
 
-## Improve visual effects
+## P6 Improve visual effects
 
-### Add particle layer for more special effects
+### P6.1 Add particle layer for more special effects
+
+- [ ] Add a separate canvas particle layer.
+    - [ ] Do not add a particle library for the first version. Use a small local
+          particle system so effects stay pixel-art, deterministic enough to
+          test, and consistent with the existing imperative canvas engine.
+    - [ ] Add a `particleCanvas` element as a sibling of `canvas` and
+          `hudCanvas` in `client/index.html`.
+    - [ ] Style `particleCanvas` like the other game canvases: same size,
+          pixelated rendering, absolute positioning, pointer events disabled,
+          and a z-index above the game world but below DOM HUD text and touch
+          controls.
+    - [ ] Extend `ClientCanvasSetup` so it sizes `particleCanvas`, disables
+          image smoothing on its context, and returns the canvas/context with
+          the existing surfaces.
+    - [ ] Extend canvas visibility flow so `particleCanvas` is shown and hidden
+          with the gameplay canvas and cleared when returning to waiting/lobby
+          screens.
+
+- [ ] Add a focused `ParticleLayer` engine module.
+    - [ ] Use the visual language of pixels flying around: the game world is
+          made from tiny pixel blocks, and impacts toss those blocks loose.
+    - [ ] Keep particles as plain data objects with position, velocity,
+          lifetime, age, size, color, and optional gravity/friction.
+    - [ ] Cap total particles with a small fixed limit or reusable pool so
+          effects cannot cause frame spikes.
+    - [ ] Provide a small API for experiments:
+          `spawnMuzzleFlash`, `spawnGunSmoke`, `spawnRicochetSparks`,
+          `spawnRockChips`, `spawnObstacleHit`, and `spawnPlayerHit`.
+    - [ ] Keep the drawing style primitive and arcade-like: small hard-edged
+          rectangles or single pixels that read as tiny building blocks, no
+          blur, no gradients, no alpha-heavy modern effects.
+    - [ ] Add `update(deltaSeconds)`, `render(context)`, `clear()`, and
+          `count()` methods so behavior is easy to unit test.
+
+- [ ] Wire the particle layer into the frame flow.
+    - [ ] Construct `ParticleLayer` in the runtime systems setup.
+    - [ ] Update particles once per frame from `ClientFrameFlow.update`.
+    - [ ] Clear and render `particleCanvas` once per frame from
+          `ClientFrameFlow.render`.
+    - [ ] Apply the same camera transform to `particleCanvas` during gameplay
+          so world-positioned particles follow the mobile camera exactly like
+          players, bullets, and obstacles.
+    - [ ] Render particles after scenario/player/bullet drawing, but before DOM
+          HUD text and touch controls.
+
+- [ ] Add the first effect triggers.
+    - [ ] On local and remote bullet creation, spawn a tiny muzzle flash and a
+          short burst of hot pixels at the bullet muzzle.
+    - [ ] On ricochet, spawn two or three sparks at the bounce point.
+    - [ ] On rock collision, spawn a few yellow/black pixel chips from the rock
+          surface.
+    - [ ] On cactus and wagon damage, spawn a small burst of object-colored
+          pixel blocks.
+    - [ ] On player hit, spawn a brief impact burst while preserving the
+          existing pain sound and death animation timing.
+
+- [ ] Add guardrail tests and docs.
+    - [ ] Unit test particle update, expiry, pool/cap behavior, and clear.
+    - [ ] Update frame-flow tests so particle update/render order is explicit.
+    - [ ] Update canvas-setup and HUD-flow tests for the new canvas surface.
+    - [ ] Add a browser smoke assertion that the particle canvas exists, is
+          stacked correctly, and does not intercept pointer input.
+    - [ ] Update `Specification-main.md` and `UI-ownership.md` once the layer is
+          implemented.
 
 ## Other Ideas
 
