@@ -152,6 +152,38 @@ test('particle layer renders hard square pixels', async function () {
     });
 });
 
+test('ricochet pixels travel across several grid cells', async function () {
+    const ParticleLayer = await loadParticleLayer();
+    const layer = new ParticleLayer({
+        random() {
+            return 0.5;
+        }
+    });
+    const calls = [];
+    const context = {
+        fillStyle: '',
+        fillRect(x, y, width, height) {
+            calls.push([x, y, width, height]);
+        }
+    };
+
+    layer.spawnRicochetSparks({
+        speedX: 100,
+        speedY: 0,
+        x: 50,
+        y: 60
+    });
+    layer.update(0.08);
+    layer.render(context);
+
+    assert.equal(calls.length, 5);
+    calls.forEach(function (call) {
+        assert.equal(call[0] <= 38, true);
+        assert.equal(call[2], 3);
+        assert.equal(call[2], call[3]);
+    });
+});
+
 test('zero-jitter bursts start on the source pixel grid', async function () {
     const ParticleLayer = await loadParticleLayer();
     const layer = new ParticleLayer({
