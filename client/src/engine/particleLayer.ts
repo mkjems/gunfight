@@ -161,7 +161,7 @@ export class ParticleLayer {
         this.spawnBurst({
             count: 6,
             direction: getSourceDirection(source) + Math.PI,
-            friction: 0.9,
+            friction: 0.93,
             gravity: 82,
             gridSize: pixelUnit,
             lifetime: [0.22, 0.46],
