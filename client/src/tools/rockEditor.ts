@@ -36,8 +36,8 @@ const PREVIEW_COLORS = {
     grid: 'rgba(137,156,165,0.18)',
     handle: 'rgb(219,229,234)',
     handleText: 'rgb(11,14,16)',
-    outline: 'rgb(5,8,10)',
-    rock: 'rgb(231,177,79)',
+    outline: 'rgb(200,200,200)',
+    rock: 'rgba(28, 159, 192, 0.6)',
     selectedHandle: 'rgb(86,197,255)',
     shadow: 'rgba(0,0,0,0.55)'
 };

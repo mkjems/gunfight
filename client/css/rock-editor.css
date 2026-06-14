@@ -1,14 +1,5 @@
-html {
-    background: rgb(11, 14, 16);
-    height: auto;
-    min-height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto;
-    overscroll-behavior: auto;
-}
-
-body {
-    --editor-bg: rgb(11, 14, 16);
+:root {
+    --editor-bg: #30353e;
     --editor-panel: rgb(18, 24, 28);
     --editor-panel-subtle: rgb(14, 18, 21);
     --editor-border: rgb(48, 64, 72);
@@ -19,9 +10,19 @@ body {
     --editor-accent-strong: rgb(144, 219, 255);
     --editor-ok: rgb(113, 214, 137);
     --editor-error: rgb(255, 108, 108);
-    background:
-        linear-gradient(180deg, rgba(86, 197, 255, 0.05), transparent 260px),
-        var(--editor-bg);
+}
+
+html {
+    background: rgb(11, 14, 16);
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: auto;
+}
+
+body {
+    background: var(--editor-bg);
     color: var(--editor-text);
     font-family: monospace;
     font-size: 14px;
@@ -56,7 +57,6 @@ input:focus,
 select:focus,
 textarea:focus {
     border-color: var(--editor-accent);
-    box-shadow: 0 0 0 2px rgba(86, 197, 255, 0.18);
 }
 
 button {
@@ -126,16 +126,11 @@ button:disabled {
 
 .rock-editor-panel,
 #rockPreviewPanel {
-    background: rgba(18, 24, 28, 0.95);
-    border: 1px solid var(--editor-border);
-    border-radius: 6px;
     box-sizing: border-box;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
     display: flex;
     flex-direction: column;
     gap: 10px;
     min-height: 0;
-    padding: 12px;
 }
 
 .rock-editor-panel-heading,
@@ -198,6 +193,7 @@ button:disabled {
     padding: 12px;
     resize: vertical;
     white-space: pre;
+    border: 1px solid var(--editor-border-strong);
 }
 
 #rockEditorCanvas {
