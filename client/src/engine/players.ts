@@ -39,20 +39,23 @@ export class Players {
     all: Record<string, Controllable>;
     bullets: BulletsLike;
     scene: SceneLike;
+    slots: PlayerSlot[];
 
     constructor(scene: SceneLike, bullets: BulletsLike) {
         this.scene = scene;
         this.bullets = bullets;
         this.all = {};
+        this.slots = Config.player.slots;
     }
 
     getSlot(index: number, slotSet?: PlayerSlot[]): PlayerSlot {
-        const slots: PlayerSlot[] = slotSet || Config.player.slots;
+        const slots: PlayerSlot[] = slotSet || this.slots;
 
         return slots[index % slots.length];
     }
 
     ensure(client: ClientLike, index: number, options: PlayersOptions = {}) {
+        this.rememberSlots(options.slots);
         const slot = this.getSlot(index, options.slots);
         const id = client.id;
 
@@ -121,12 +124,20 @@ export class Players {
     }
 
     resetAll(options: PlayersOptions = {}) {
+        this.rememberSlots(options.slots);
+
         Object.keys(this.all).forEach((id) => {
             const player = this.all[id];
             const slot = this.getSlot(player.slot || 0, options.slots);
 
             player.resetTo(slot);
         });
+    }
+
+    rememberSlots(slots?: PlayerSlot[]) {
+        if (slots && slots.length > 0) {
+            this.slots = slots;
+        }
     }
 
     clearKeys() {

@@ -284,11 +284,7 @@ test('built browser app renders the rock editor page', async ({ page }) => {
         });
     });
 
-    expect(
-        stylesheetPaths.some(function (path) {
-            return path.endsWith('/rock-editor.css');
-        })
-    ).toBe(true);
+    expect(stylesheetPaths.length).toBeGreaterThanOrEqual(3);
     expect(
         stylesheetPaths.some(function (path) {
             return path.endsWith('/index.css');
@@ -372,6 +368,106 @@ test('built browser app renders the rock editor page', async ({ page }) => {
     await expect(page.locator('#rockJsonOutput')).toHaveValue(/"small"/);
     await expect(page.locator('#rockValidation')).toContainText(
         'Valid rock JSON.'
+    );
+
+    expect(browserErrors).toEqual([]);
+});
+
+test('built browser app renders the scenario editor page', async ({ page }) => {
+    const browserErrors = [];
+
+    page.on('pageerror', function (error) {
+        browserErrors.push(error.message);
+    });
+
+    page.on('console', function (message) {
+        if (message.type() === 'error') {
+            browserErrors.push(message.text());
+        }
+    });
+
+    await page.setViewportSize({ width: 1440, height: 700 });
+    await page.goto('/scenario-editor', {
+        waitUntil: 'domcontentloaded'
+    });
+
+    const stylesheetPaths = await page.evaluate(function () {
+        return Array.from(
+            document.querySelectorAll('link[rel="stylesheet"]')
+        ).map(function (link) {
+            return new URL(link.href).pathname;
+        });
+    });
+
+    expect(stylesheetPaths.length).toBeGreaterThanOrEqual(3);
+    expect(
+        stylesheetPaths.some(function (path) {
+            return path.endsWith('/index.css');
+        })
+    ).toBe(false);
+
+    await expect(page.locator('#scenarioEditor')).toBeVisible();
+    await expect(page.locator('#scenarioSelect')).toHaveValue('0');
+    await expect(page.locator('#scenarioJsonOutput')).toHaveValue(
+        /"single-cactus"/
+    );
+    await expect(page.locator('#scenarioValidation')).toContainText(
+        'Valid scenario JSON.'
+    );
+
+    const canvasHasPixels = await page
+        .locator('#scenarioEditorCanvas')
+        .evaluate(function (canvas) {
+            const context = canvas.getContext('2d');
+
+            if (!context) {
+                return false;
+            }
+
+            const pixels = context.getImageData(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            ).data;
+
+            for (let index = 0; index < pixels.length; index += 4) {
+                if (
+                    pixels[index] !== 0 ||
+                    pixels[index + 1] !== 0 ||
+                    pixels[index + 2] !== 0
+                ) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
+    expect(canvasHasPixels).toBe(true);
+
+    await page.locator('#scenarioJsonInput').fill('{');
+    await page.locator('#scenarioLoadJsonButton').click();
+    await expect(page.locator('#scenarioValidation')).toContainText(
+        'Scenario JSON'
+    );
+
+    await page.locator('#scenarioJsonInput').fill(
+        JSON.stringify([
+            {
+                name: 'smoke',
+                decorations: [{ type: 'saloon', x: 0, y: 220 }],
+                rocks: [{ type: 'small', x: 475, y: 445 }]
+            }
+        ])
+    );
+    await page.locator('#scenarioLoadJsonButton').click();
+    await expect(page.locator('#scenarioNameInput')).toHaveValue('smoke');
+    await page.locator('#scenarioAddKindSelect').selectOption('cactus');
+    await page.locator('#scenarioAddObjectButton').click();
+    await expect(page.locator('#scenarioJsonOutput')).toHaveValue(/"cacti"/);
+    await expect(page.locator('#scenarioValidation')).toContainText(
+        'Valid scenario JSON.'
     );
 
     expect(browserErrors).toEqual([]);

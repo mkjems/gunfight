@@ -228,12 +228,22 @@ The scenario editor is a WYSIWYG page for editing a full game scenario.
 
 Expected behavior:
 
-- The page is reachable separately from normal play.
-- The editor shows a visual preview of the scenario in the game arena.
-- The user can place and adjust scenario elements such as rocks, cacti, wagons, saloons, decorations, and player start positions.
+- The page is reachable at `/scenario-editor` separately from normal play.
+- The editor loads the current scenario list from `server/scenarios.json` and the
+  current rock definitions from `server/rocks.json`.
+- The editor shows a visual preview of the selected scenario in the full
+  950x640 game arena.
+- The user can select and drag rocks, cacti, wagon paths, saloon decorations,
+  and player start positions.
+- Scenario player start positions are stored as optional `playerStarts` entries.
+  If absent, gameplay falls back to the default player slots. The editor adds
+  editable default starts to imported scenarios so exported scenario JSON can
+  fully define player spawn positions.
 - The editor accepts scenario JSON as input.
-- The editor outputs scenario JSON that can be copied into the project data files.
-- Invalid JSON or invalid scenario geometry is shown clearly without crashing the editor.
+- The editor outputs scenario JSON that can be copied into
+  `server/scenarios.json`.
+- Invalid JSON or invalid scenario geometry is shown clearly without crashing
+  the editor.
 
 ## Matchmaking and networking
 

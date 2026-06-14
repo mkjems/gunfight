@@ -1,0 +1,167 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Gunfight Scenario Editor</title>
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+        <meta name="theme-color" content="#1e1e1e" />
+        <link
+            rel="stylesheet"
+            href="/css/tools-css-reset.css"
+            type="text/css"
+            media="screen"
+        />
+        <link
+            rel="stylesheet"
+            href="/css/tool-editor.css"
+            type="text/css"
+            media="screen"
+        />
+        <link
+            rel="stylesheet"
+            href="/css/scenario-editor.css"
+            type="text/css"
+            media="screen"
+        />
+    </head>
+
+    <body>
+        <main id="scenarioEditor" class="tool-editor">
+            <header id="scenarioEditorHeader" class="tool-editor-header">
+                <h1>Scenario editor</h1>
+                <a href="/rock-editor">Rock editor</a>
+            </header>
+
+            <section id="scenarioEditorWorkspace" aria-label="Scenario editor">
+                <section class="tool-editor-panel" aria-label="Input JSON">
+                    <div class="tool-editor-panel-heading">
+                        <h2>Input JSON</h2>
+                        <button id="scenarioLoadJsonButton" type="button">
+                            Import
+                        </button>
+                    </div>
+                    <textarea
+                        id="scenarioJsonInput"
+                        class="tool-editor-json"
+                        spellcheck="false"
+                        aria-label="Scenario JSON input"
+                    ></textarea>
+                    <button id="scenarioUseOutputButton" type="button">
+                        Use output
+                    </button>
+                </section>
+
+                <section
+                    id="scenarioPreviewPanel"
+                    aria-label="Scenario preview"
+                >
+                    <div id="scenarioToolbar">
+                        <label>
+                            Scenario
+                            <select id="scenarioSelect"></select>
+                        </label>
+                        <label>
+                            Name
+                            <input id="scenarioNameInput" type="text" />
+                        </label>
+                        <button id="scenarioNewButton" type="button">
+                            New
+                        </button>
+                        <button id="scenarioDuplicateButton" type="button">
+                            Duplicate
+                        </button>
+                    </div>
+
+                    <canvas
+                        id="scenarioEditorCanvas"
+                        aria-label="Editable full arena scenario preview"
+                    ></canvas>
+
+                    <div id="scenarioObjectToolbar">
+                        <label>
+                            Add
+                            <select id="scenarioAddKindSelect">
+                                <option value="rock">Rock</option>
+                                <option value="cactus">Cactus</option>
+                                <option value="decoration">Saloon</option>
+                                <option value="wagon">Wagon</option>
+                            </select>
+                        </label>
+                        <label id="scenarioRockTypeLabel">
+                            Rock type
+                            <select id="scenarioRockTypeSelect"></select>
+                        </label>
+                        <button id="scenarioAddObjectButton" type="button">
+                            Add object
+                        </button>
+                        <label>
+                            Selected
+                            <select id="scenarioObjectSelect"></select>
+                        </label>
+                        <button id="scenarioRemoveObjectButton" type="button">
+                            Remove
+                        </button>
+                    </div>
+
+                    <div id="scenarioInspector">
+                        <span id="scenarioSelectedObjectLabel">No object</span>
+                        <label id="scenarioObjectTypeControl">
+                            Type
+                            <select id="scenarioObjectTypeSelect"></select>
+                        </label>
+                        <label>
+                            X
+                            <input id="scenarioObjectXInput" type="number" />
+                        </label>
+                        <label id="scenarioObjectYControl">
+                            Y
+                            <input id="scenarioObjectYInput" type="number" />
+                        </label>
+                        <label id="scenarioWagonFromYControl">
+                            From Y
+                            <input id="scenarioWagonFromYInput" type="number" />
+                        </label>
+                        <label id="scenarioWagonToYControl">
+                            To Y
+                            <input id="scenarioWagonToYInput" type="number" />
+                        </label>
+                        <label id="scenarioWagonDurationControl">
+                            Duration
+                            <input
+                                id="scenarioWagonDurationInput"
+                                type="number"
+                                min="1"
+                            />
+                        </label>
+                    </div>
+
+                    <div
+                        id="scenarioValidation"
+                        class="tool-editor-validation"
+                        role="status"
+                    ></div>
+                </section>
+
+                <section class="tool-editor-panel" aria-label="Output JSON">
+                    <div class="tool-editor-panel-heading">
+                        <h2>Output JSON</h2>
+                        <button id="scenarioCopyOutputButton" type="button">
+                            Copy
+                        </button>
+                    </div>
+                    <textarea
+                        id="scenarioJsonOutput"
+                        class="tool-editor-json"
+                        readonly
+                        spellcheck="false"
+                        aria-label="Scenario JSON output"
+                    ></textarea>
+                </section>
+            </section>
+        </main>
+
+        <script type="module" src="/src/tools/scenarioEditor.ts"></script>
+    </body>
+</html>

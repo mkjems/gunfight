@@ -24,6 +24,7 @@ type PlayerLike = {
 type PlayersLike = {
     all: Record<string, PlayerLike>;
     clearKeys: () => void;
+    getSlot?: (index: number) => PlayerSlot;
 };
 
 type RoundIntroOptions = {
@@ -64,10 +65,11 @@ export function RoundIntro(options: RoundIntroOptions) {
 
         Object.keys(players.all).forEach(function (id) {
             const player = players.all[id];
-            const slot =
-                Config.player.slots[
-                    (player.slot || 0) % Config.player.slots.length
-                ];
+            const slot = players.getSlot
+                ? players.getSlot(player.slot || 0)
+                : Config.player.slots[
+                      (player.slot || 0) % Config.player.slots.length
+                  ];
 
             player.resetTo(slot);
             const bounds = player.getBounds();

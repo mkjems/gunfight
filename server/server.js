@@ -20,6 +20,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const clientRoot = path.join(__dirname, '..', 'client');
 const rocksPath = path.join(__dirname, 'rocks.json');
+const scenariosPath = path.join(__dirname, 'scenarios.json');
 const lobby = createLobby();
 const highScores = createHighScores();
 
@@ -48,12 +49,20 @@ app.get('/api/rocks', function (req, res) {
     res.type('application/json').send(readFileSync(rocksPath, 'utf8'));
 });
 
+app.get('/api/scenarios', function (req, res) {
+    res.type('application/json').send(readFileSync(scenariosPath, 'utf8'));
+});
+
 app.get('/', function (req, res) {
     res.sendFile(path.join(clientRoot, 'index.html'));
 });
 
 app.get('/rock-editor', function (req, res) {
     res.sendFile(path.join(clientRoot, 'rock-editor.html'));
+});
+
+app.get('/scenario-editor', function (req, res) {
+    res.sendFile(path.join(clientRoot, 'scenario-editor.html'));
 });
 
 function getSocketGameContext(socket) {

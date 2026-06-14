@@ -220,6 +220,10 @@ test('validates and resolves scenario source content', function () {
         [
             {
                 name: 'test-scenario',
+                playerStarts: [
+                    { x: 120, y: 430, facing: 1, frame: 0 },
+                    { x: 830, y: 430, facing: -1, frame: 2 }
+                ],
                 decorations: [{ type: 'saloon', x: 0, y: 220 }],
                 cacti: [{ x: 475, y: 378 }],
                 rocks: [{ type: 'small', x: 475, y: 445 }],
@@ -238,6 +242,10 @@ test('validates and resolves scenario source content', function () {
     assert.deepEqual(scenarios, [
         {
             name: 'test-scenario',
+            playerStarts: [
+                { x: 120, y: 430, facing: 1, frame: 0 },
+                { x: 830, y: 430, facing: -1, frame: 2 }
+            ],
             decorations: [{ type: 'saloon', x: 0, y: 220 }],
             cacti: [{ x: 475, y: 378 }],
             rocks: [{ type: 'small', x: 475, y: 445 }],
@@ -251,6 +259,10 @@ test('validates and resolves scenario source content', function () {
     ]);
     assert.deepEqual(resolveScenarioSource(scenarios[0], rockDefinitions), {
         name: 'test-scenario',
+        playerStarts: [
+            { x: 120, y: 430, facing: 1, frame: 0 },
+            { x: 830, y: 430, facing: -1, frame: 2 }
+        ],
         decorations: [{ type: 'saloon', x: 0, y: 220 }],
         cacti: [{ x: 475, y: 378 }],
         rocks: [

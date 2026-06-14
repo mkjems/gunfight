@@ -43,12 +43,12 @@ iterated on visually before it becomes game data.
 
 ### P5.5 Add a scenario editor page.
 
-- [ ] Add a scenario editor page.
-    - [ ] Provide a WYSIWYG preview of the full arena scenario.
-    - [ ] Let the user place and adjust rocks, cacti, wagons, saloons, decorations, and player start positions.
-    - [ ] Accept scenario JSON as input.
-    - [ ] Output scenario JSON for copying into project data.
-    - [ ] Validate JSON and scenario geometry with readable errors.
+- [x] Add a scenario editor page.
+    - [x] Provide a WYSIWYG preview of the full arena scenario.
+    - [x] Let the user place and adjust rocks, cacti, wagons, saloons, decorations, and player start positions.
+    - [x] Accept scenario JSON as input.
+    - [x] Output scenario JSON for copying into project data.
+    - [x] Validate JSON and scenario geometry with readable errors.
 
 ## P6 Improve visual effects
 

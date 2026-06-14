@@ -15,6 +15,12 @@
         />
         <link
             rel="stylesheet"
+            href="/css/tool-editor.css"
+            type="text/css"
+            media="screen"
+        />
+        <link
+            rel="stylesheet"
             href="/css/rock-editor.css"
             type="text/css"
             media="screen"
@@ -22,14 +28,14 @@
     </head>
 
     <body>
-        <main id="rockEditor">
-            <header id="rockEditorHeader">
+        <main id="rockEditor" class="tool-editor">
+            <header id="rockEditorHeader" class="tool-editor-header">
                 <h1>Rock editor</h1>
             </header>
 
             <section id="rockEditorWorkspace" aria-label="Rock editor">
-                <section class="rock-editor-panel" aria-label="Input JSON">
-                    <div class="rock-editor-panel-heading">
+                <section class="tool-editor-panel" aria-label="Input JSON">
+                    <div class="tool-editor-panel-heading">
                         <h2>Input JSON</h2>
                         <button id="rockLoadJsonButton" type="button">
                             Import
@@ -37,6 +43,7 @@
                     </div>
                     <textarea
                         id="rockJsonInput"
+                        class="tool-editor-json"
                         spellcheck="false"
                         aria-label="Rock JSON input"
                     ></textarea>
@@ -100,11 +107,15 @@
                         </button>
                     </div>
 
-                    <div id="rockValidation" role="status"></div>
+                    <div
+                        id="rockValidation"
+                        class="tool-editor-validation"
+                        role="status"
+                    ></div>
                 </section>
 
-                <section class="rock-editor-panel" aria-label="Output JSON">
-                    <div class="rock-editor-panel-heading">
+                <section class="tool-editor-panel" aria-label="Output JSON">
+                    <div class="tool-editor-panel-heading">
                         <h2>Output JSON</h2>
                         <button id="rockCopyOutputButton" type="button">
                             Copy
@@ -112,6 +123,7 @@
                     </div>
                     <textarea
                         id="rockJsonOutput"
+                        class="tool-editor-json"
                         readonly
                         spellcheck="false"
                         aria-label="Rock JSON output"

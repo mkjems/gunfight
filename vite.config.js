@@ -13,6 +13,9 @@ export default defineConfig({
                 ),
                 'rock-editor': fileURLToPath(
                     new URL('./client/rock-editor.html', import.meta.url)
+                ),
+                'scenario-editor': fileURLToPath(
+                    new URL('./client/scenario-editor.html', import.meta.url)
                 )
             },
             output: {

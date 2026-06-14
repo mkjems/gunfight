@@ -33,6 +33,7 @@ export interface HighScoreEntry {
 
 export interface ScenarioSource {
     name?: string;
+    playerStarts?: PlayerStart[];
     rocks?: RockPlacement[];
     cacti?: CactusInstance[];
     wagon?: WagonInstance;
@@ -41,6 +42,7 @@ export interface ScenarioSource {
 
 export interface Scenario {
     name?: string;
+    playerStarts?: PlayerStart[];
     rocks?: RockInstance[];
     cacti?: CactusInstance[];
     wagon?: WagonInstance;
@@ -70,6 +72,13 @@ export interface RockDefinition {
 }
 
 export type RockDefinitions = Record<string, RockDefinition>;
+
+export interface PlayerStart {
+    x: number;
+    y: number;
+    facing: number;
+    frame: number;
+}
 
 export interface CactusInstance {
     x: number;
@@ -363,6 +372,17 @@ function parseCactusInstance(
     };
 }
 
+function parsePlayerStart(value: unknown, sourceName: string): PlayerStart {
+    const start = requireRecord(value, sourceName);
+
+    return {
+        x: requireNumber(start, 'x', sourceName),
+        y: requireNumber(start, 'y', sourceName),
+        facing: requireNumber(start, 'facing', sourceName),
+        frame: requireNumber(start, 'frame', sourceName)
+    };
+}
+
 function parseDecoration(value: unknown, sourceName: string): Decoration {
     const decoration = requireRecord(value, sourceName);
 
@@ -463,6 +483,16 @@ export function parseScenarioSources(
 
         return {
             name: name,
+            ...(record.playerStarts === undefined
+                ? {}
+                : {
+                      playerStarts: parseOptionalArray(
+                          record,
+                          'playerStarts',
+                          scenarioLabel,
+                          parsePlayerStart
+                      )
+                  }),
             decorations: parseOptionalArray(
                 record,
                 'decorations',
@@ -494,6 +524,13 @@ export function resolveScenarioSource(
 ): Scenario {
     return {
         name: scenario.name,
+        ...(scenario.playerStarts
+            ? {
+                  playerStarts: scenario.playerStarts.map(function (start) {
+                      return { ...start };
+                  })
+              }
+            : {}),
         decorations: scenario.decorations
             ? scenario.decorations.map(function (decoration) {
                   return { ...decoration };

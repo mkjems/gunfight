@@ -127,6 +127,15 @@ test('resets a round into the next ritual when the model is ready', async functi
             calls.push(['isReadyToStart', model.gameId]);
 
             return true;
+        },
+        model: {
+            gameId: 'game-1',
+            currentScenario: {
+                playerStarts: [
+                    { x: 120, y: 430, facing: 1, frame: 0 },
+                    { x: 830, y: 430, facing: -1, frame: 2 }
+                ]
+            }
         }
     });
 
@@ -137,8 +146,8 @@ test('resets a round into the next ritual when the model is ready', async functi
         [
             'players.resetAll',
             [
-                { x: 150, y: 430, facing: 1, frame: 0 },
-                { x: 800, y: 430, facing: -1, frame: 2 }
+                { x: 120, y: 430, facing: 1, frame: 0 },
+                { x: 830, y: 430, facing: -1, frame: 2 }
             ]
         ],
         'bullets.reset',

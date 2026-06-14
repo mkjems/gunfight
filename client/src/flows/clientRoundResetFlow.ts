@@ -6,6 +6,9 @@ type ReadyModel = {
         id: string | number;
         ready?: boolean;
     }>;
+    currentScenario?: {
+        playerStarts?: typeof Config.player.slots;
+    } | null;
 };
 
 type ClientRoundResetOptions = {
@@ -60,7 +63,9 @@ export function resetRound(options: ClientRoundResetOptions) {
     const readyToStart = options.isReadyToStart(options.model);
 
     options.players.resetAll({
-        slots: readyToStart ? Config.player.slots : Config.player.lobbySlots
+        slots: readyToStart
+            ? getScenarioPlayerStarts(options.model)
+            : Config.player.lobbySlots
     });
     resetSharedRoundState(options);
 
@@ -93,6 +98,13 @@ function showWaitingState(options: WaitingStateOptions) {
     options.setRoundState(RoundState.WAITING);
     options.syncNameEditor();
     options.renderHud();
+}
+
+function getScenarioPlayerStarts(model?: ReadyModel | null) {
+    const starts =
+        model && model.currentScenario && model.currentScenario.playerStarts;
+
+    return starts && starts.length >= 2 ? starts : Config.player.slots;
 }
 
 export const ClientRoundResetFlow = {

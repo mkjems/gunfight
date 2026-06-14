@@ -1,0 +1,107 @@
+#scenarioEditorWorkspace {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: minmax(260px, 0.72fr) minmax(520px, 1.7fr) minmax(
+            260px,
+            0.72fr
+        );
+    min-height: 0;
+}
+
+#scenarioPreviewPanel {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+}
+
+#scenarioToolbar,
+#scenarioObjectToolbar,
+#scenarioInspector {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+#scenarioToolbar label,
+#scenarioObjectToolbar label,
+#scenarioInspector label {
+    align-items: center;
+    color: var(--editor-muted);
+    display: flex;
+    font-size: 12px;
+    gap: 5px;
+}
+
+#scenarioSelect,
+#scenarioNameInput,
+#scenarioObjectSelect {
+    min-height: 32px;
+    min-width: 142px;
+    padding: 0 8px;
+}
+
+#scenarioAddKindSelect,
+#scenarioRockTypeSelect,
+#scenarioObjectTypeSelect {
+    min-height: 32px;
+    min-width: 112px;
+    padding: 0 8px;
+}
+
+#scenarioObjectXInput,
+#scenarioObjectYInput,
+#scenarioWagonFromYInput,
+#scenarioWagonToYInput,
+#scenarioWagonDurationInput {
+    min-height: 32px;
+    padding: 0 8px;
+    width: 86px;
+}
+
+#scenarioJsonInput,
+#scenarioJsonOutput {
+    min-height: 360px;
+}
+
+#scenarioEditorCanvas {
+    aspect-ratio: 950 / 640;
+    background: rgb(8, 11, 13);
+    border: 1px solid var(--editor-border-strong);
+    border-radius: 6px;
+    cursor: crosshair;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    min-height: min(56vw, 420px);
+    touch-action: none;
+    width: 100%;
+}
+
+#scenarioSelectedObjectLabel {
+    color: var(--editor-text);
+    font-size: 12px;
+    min-width: 9em;
+}
+
+#scenarioObjectTypeControl[hidden],
+#scenarioObjectYControl[hidden],
+#scenarioWagonFromYControl[hidden],
+#scenarioWagonToYControl[hidden],
+#scenarioWagonDurationControl[hidden],
+#scenarioRockTypeLabel[hidden] {
+    display: none;
+}
+
+@media (max-width: 1180px) {
+    #scenarioEditorWorkspace {
+        grid-template-columns: 1fr;
+    }
+
+    #scenarioEditorCanvas,
+    #scenarioJsonInput,
+    #scenarioJsonOutput {
+        min-height: 300px;
+    }
+}

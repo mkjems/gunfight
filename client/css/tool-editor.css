@@ -1,0 +1,170 @@
+:root {
+    --editor-bg: #30353e;
+    --editor-panel: rgb(18, 24, 28);
+    --editor-panel-subtle: rgb(14, 18, 21);
+    --editor-border: rgb(48, 64, 72);
+    --editor-border-strong: rgb(82, 108, 120);
+    --editor-text: rgb(219, 229, 234);
+    --editor-muted: rgb(137, 156, 165);
+    --editor-accent: rgb(86, 197, 255);
+    --editor-accent-strong: rgb(144, 219, 255);
+    --editor-ok: rgb(113, 214, 137);
+    --editor-error: rgb(255, 108, 108);
+}
+
+html {
+    background: rgb(11, 14, 16);
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: auto;
+}
+
+body {
+    background: var(--editor-bg);
+    color: var(--editor-text);
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.35;
+    margin: 0;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: auto;
+    padding: 10px;
+}
+
+button,
+input,
+select,
+textarea {
+    border: 1px solid var(--editor-border);
+    border-radius: 4px;
+    box-sizing: border-box;
+    color: var(--editor-text);
+    font: inherit;
+    outline: none;
+}
+
+input,
+select,
+textarea {
+    background: var(--editor-panel-subtle);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--editor-accent);
+}
+
+button {
+    background: rgb(24, 32, 37);
+    min-height: 32px;
+    padding: 0 11px;
+    transition:
+        background-color 120ms ease,
+        border-color 120ms ease,
+        color 120ms ease;
+}
+
+button:hover {
+    background: rgb(31, 42, 48);
+    border-color: var(--editor-accent);
+    color: var(--editor-accent-strong);
+}
+
+button:disabled {
+    background: rgb(18, 22, 25);
+    border-color: rgb(37, 47, 52);
+    color: rgb(88, 101, 108);
+}
+
+.tool-editor {
+    box-sizing: border-box;
+    display: grid;
+    gap: 14px;
+}
+
+.tool-editor-header {
+    align-items: center;
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+}
+
+.tool-editor-header h1 {
+    color: var(--editor-text);
+    font-family: monospace;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.tool-editor-header a {
+    color: var(--editor-muted);
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.tool-editor-header a:hover {
+    color: var(--editor-accent-strong);
+}
+
+.tool-editor-panel {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+}
+
+.tool-editor-panel-heading {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+}
+
+.tool-editor-panel-heading h2 {
+    color: var(--editor-muted);
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.tool-editor-json {
+    border: 1px solid var(--editor-border-strong);
+    flex: 1 1 240px;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.45;
+    min-height: 360px;
+    padding: 12px;
+    resize: vertical;
+    white-space: pre;
+}
+
+.tool-editor-validation {
+    background: rgba(113, 214, 137, 0.08);
+    border: 1px solid rgba(113, 214, 137, 0.4);
+    border-radius: 4px;
+    color: var(--editor-ok);
+    font-size: 12px;
+    line-height: 1.35;
+    min-height: 34px;
+    padding: 8px;
+}
+
+.tool-editor-validation.is-error {
+    background: rgba(255, 108, 108, 0.09);
+    border-color: rgba(255, 108, 108, 0.54);
+    color: var(--editor-error);
+}

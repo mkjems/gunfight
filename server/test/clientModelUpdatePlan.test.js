@@ -74,6 +74,12 @@ test('plans a round start when a waiting game becomes ready', async function () 
             { id: 'p1', ready: true },
             { id: 'p2', ready: true }
         ],
+        currentScenario: {
+            playerStarts: [
+                { x: 120, y: 430, facing: 1, frame: 0 },
+                { x: 830, y: 430, facing: -1, frame: 2 }
+            ]
+        },
         status: 'playing'
     };
 
@@ -100,8 +106,8 @@ test('plans a round start when a waiting game becomes ready', async function () 
                 localPlayerFirst: false,
                 resetChangedSlots: true,
                 slots: [
-                    { x: 150, y: 430, facing: 1, frame: 0 },
-                    { x: 800, y: 430, facing: -1, frame: 2 }
+                    { x: 120, y: 430, facing: 1, frame: 0 },
+                    { x: 830, y: 430, facing: -1, frame: 2 }
                 ]
             }
         }

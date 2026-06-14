@@ -11,6 +11,9 @@ type ModelClient = {
 
 type PublicModel = {
     clients: ModelClient[];
+    currentScenario?: {
+        playerStarts?: typeof Config.player.slots;
+    } | null;
     status?: string;
 };
 
@@ -48,9 +51,16 @@ export function create(options: CreatePlanOptions) {
             resetChangedSlots: options.roundState === RoundState.WAITING,
             slots: syncLobbySlots
                 ? Config.player.lobbySlots
-                : Config.player.slots
+                : getScenarioPlayerStarts(options.model)
         }
     };
+}
+
+function getScenarioPlayerStarts(model: PublicModel | null) {
+    const starts =
+        model && model.currentScenario && model.currentScenario.playerStarts;
+
+    return starts && starts.length >= 2 ? starts : Config.player.slots;
 }
 
 export const ClientModelUpdatePlan = {
