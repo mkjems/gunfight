@@ -175,7 +175,7 @@ test('built browser app renders lobby through the app root', async ({
     await expect(page.locator('#lobbyControlsText')).toContainText(
         'h j k l - left down up right'
     );
-    await expect(page.locator('#lobbyPlayerLabels')).toContainText('YOU');
+    await expect(page.locator('#lobbyPlayerLabels')).toContainText('(YOU)');
     await expect(page.locator('#lobbyPlayerLabels')).toContainText('WAITING');
     await expect(page.locator('#lobbyPlayerLabels')).toContainText('?');
     await expect(page.locator('#lobbyPlayerLabels')).toContainText(
@@ -239,7 +239,7 @@ test('built browser app renders the name editor through the app root', async ({
     await expect(page.locator('#lobby-main')).toBeVisible();
     const currentName = await page
         .locator('#lobbyPlayerLabels .lobby-player-label')
-        .nth(1)
+        .first()
         .textContent();
     await page.keyboard.press('e');
 

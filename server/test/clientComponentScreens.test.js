@@ -351,6 +351,7 @@ test('renders lobby screen sections through the app root', async function () {
                     key: 'p1-status',
                     negative: true,
                     text: 'READY',
+                    variant: 'player-status',
                     x: 12.5,
                     y: 80
                 }
@@ -384,7 +385,7 @@ test('renders lobby screen sections through the app root', async function () {
     );
     assert.equal(
         labels.children[1].className,
-        'lobby-player-label negative-text'
+        'lobby-player-label is-player-status negative-text'
     );
     assert.equal(
         labels.children[2].className,

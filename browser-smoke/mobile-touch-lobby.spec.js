@@ -132,7 +132,7 @@ test.describe('mobile touch lobby', function () {
 
         const currentName = await page
             .locator('#lobbyPlayerLabels .lobby-player-label')
-            .nth(1)
+            .first()
             .textContent();
 
         await page.locator('#touchEditButton').click();

@@ -144,7 +144,7 @@ async function getYouLabelBox(page) {
     const box = await page
         .locator('#lobbyPlayerLabels .lobby-player-label')
         .filter({
-            hasText: 'YOU'
+            hasText: '(YOU)'
         })
         .first()
         .boundingBox();
@@ -233,7 +233,7 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
     ]);
 
     await Promise.all([
-        expect(desktop.locator('#lobbyPlayerLabels')).toContainText('YOU'),
+        expect(desktop.locator('#lobbyPlayerLabels')).toContainText('(YOU)'),
         expect(desktop.locator('#lobbyPlayerLabels')).not.toContainText(
             'PLAYER 2 -'
         ),

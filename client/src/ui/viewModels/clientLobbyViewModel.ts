@@ -34,9 +34,10 @@ const controls = [
 ];
 const canvasWidth = 950;
 const canvasHeight = 640;
-const markerOffsetY = -122;
-const nameOffsetY = 42;
-const statusOffsetY = 74;
+const nameOffsetY = -160;
+const localMarkerOffsetY = -132;
+const statusOffsetY = 24;
+const opponentPlaceholderMessageOffsetY = 74;
 const opponentPlaceholderX = 800;
 const opponentPlaceholderY = 400;
 
@@ -49,7 +50,10 @@ type LobbyTextLine = {
     key: string;
     negative?: boolean;
     text: string;
-    variant?: 'opponent-placeholder-marker' | 'opponent-placeholder-message';
+    variant?:
+        | 'opponent-placeholder-marker'
+        | 'opponent-placeholder-message'
+        | 'player-status';
     x: number;
     y: number;
 };
@@ -153,17 +157,6 @@ function getLobbyPlayerLabels(options: LobbyViewModelOptions): LobbyTextLine[] {
             return;
         }
 
-        if (client.id === options.playerId) {
-            labels.push(
-                createLobbyTextLine(
-                    String(client.id) + '-you',
-                    'YOU',
-                    player,
-                    markerOffsetY
-                )
-            );
-        }
-
         labels.push(
             createLobbyTextLine(
                 String(client.id) + '-name',
@@ -172,13 +165,26 @@ function getLobbyPlayerLabels(options: LobbyViewModelOptions): LobbyTextLine[] {
                 nameOffsetY
             )
         );
+
+        if (client.id === options.playerId) {
+            labels.push(
+                createLobbyTextLine(
+                    String(client.id) + '-you',
+                    '(YOU)',
+                    player,
+                    localMarkerOffsetY
+                )
+            );
+        }
+
         labels.push(
             createLobbyTextLine(
                 String(client.id) + '-status',
                 state,
                 player,
                 statusOffsetY,
-                state === 'READY'
+                state === 'READY',
+                'player-status'
             )
         );
     });
@@ -220,7 +226,7 @@ function getLobbyOpponentPlaceholder(
                 x: opponentPlaceholderX,
                 y: opponentPlaceholderY
             },
-            statusOffsetY,
+            opponentPlaceholderMessageOffsetY,
             false,
             'opponent-placeholder-message'
         )
@@ -232,14 +238,16 @@ function createLobbyTextLine(
     text: string,
     player: LobbyPlayerPosition,
     offsetY: number,
-    negative = false
+    negative = false,
+    variant?: LobbyTextLine['variant']
 ): LobbyTextLine {
     return createLobbyTextLineFromPosition(
         key,
         text,
         player,
         offsetY,
-        negative
+        negative,
+        variant
     );
 }
 

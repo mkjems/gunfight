@@ -20,7 +20,10 @@ export type LobbyTextLine = {
     key: string;
     negative?: boolean;
     text: string;
-    variant?: 'opponent-placeholder-marker' | 'opponent-placeholder-message';
+    variant?:
+        | 'opponent-placeholder-marker'
+        | 'opponent-placeholder-message'
+        | 'player-status';
     x: number;
     y: number;
 };

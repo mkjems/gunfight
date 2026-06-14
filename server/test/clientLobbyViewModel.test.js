@@ -65,39 +65,41 @@ test('builds lobby view models for keyboard clients', async function () {
             highScoresPrompt: 'S - HIGH SCORES',
             playerLabels: [
                 {
-                    key: 'p1-you',
-                    negative: false,
-                    text: 'YOU',
-                    x: 10,
-                    y: 30.9375
-                },
-                {
                     key: 'p1-name',
                     negative: false,
                     text: 'ACE',
                     x: 10,
-                    y: 56.5625
+                    y: 25
+                },
+                {
+                    key: 'p1-you',
+                    negative: false,
+                    text: '(YOU)',
+                    x: 10,
+                    y: 29.375
                 },
                 {
                     key: 'p1-status',
                     negative: false,
                     text: 'WAITING',
+                    variant: 'player-status',
                     x: 10,
-                    y: 61.5625
+                    y: 53.75
                 },
                 {
                     key: 'p2-name',
                     negative: false,
                     text: 'CAL',
                     x: 90,
-                    y: 56.5625
+                    y: 25
                 },
                 {
                     key: 'p2-status',
                     negative: true,
                     text: 'READY',
+                    variant: 'player-status',
                     x: 90,
-                    y: 61.5625
+                    y: 53.75
                 }
             ],
             showEditPrompt: true,
