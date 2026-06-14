@@ -129,10 +129,9 @@ export function getLobbyViewModel(options: LobbyViewModelOptions) {
         playerLabels: getLobbyPlayerLabels(options),
         ...(opponentPlaceholder.length ? { opponentPlaceholder } : {}),
         showEditPrompt: !isTouch && localClientWaiting,
-        editPrompt:
-            !isTouch && localClientWaiting ? 'PRESS E TO EDIT NAME' : '',
+        editPrompt: !isTouch && localClientWaiting ? 'E - EDIT NAME' : '',
         highScoresPrompt:
-            !isTouch && localClientWaiting ? 'PRESS S TO SEE HIGH SCORES' : '',
+            !isTouch && localClientWaiting ? 'S - HIGH SCORES' : '',
         playPrompt: showPlayPrompt ? 'PRESS P TO PLAY' : ''
     };
 }

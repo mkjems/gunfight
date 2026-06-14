@@ -62,7 +62,7 @@ test('builds lobby view models for keyboard clients', async function () {
             ],
             showControls: true,
             slots: [],
-            highScoresPrompt: 'PRESS S TO SEE HIGH SCORES',
+            highScoresPrompt: 'S - HIGH SCORES',
             playerLabels: [
                 {
                     key: 'p1-you',
@@ -101,7 +101,7 @@ test('builds lobby view models for keyboard clients', async function () {
                 }
             ],
             showEditPrompt: true,
-            editPrompt: 'PRESS E TO EDIT NAME',
+            editPrompt: 'E - EDIT NAME',
             playPrompt: 'PRESS P TO PLAY'
         }
     );
