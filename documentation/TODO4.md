@@ -35,11 +35,11 @@ iterated on visually before it becomes game data.
 
 ### P5.1 Add a rock editor page.
 
-- [ ] Add a rock editor page.
-    - [ ] Provide a WYSIWYG preview for rock dimensions and polygon shape.
-    - [ ] Accept rock JSON as input.
-    - [ ] Output rock JSON for copying into project data.
-    - [ ] Validate JSON and geometry with readable errors.
+- [x] Add a rock editor page.
+    - [x] Provide a WYSIWYG preview for rock dimensions and polygon shape.
+    - [x] Accept rock JSON as input.
+    - [x] Output rock JSON for copying into project data.
+    - [x] Validate JSON and geometry with readable errors.
 
 ### P5.5 Add a scenario editor page.
 

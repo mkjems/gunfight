@@ -1,4 +1,5 @@
 import express from 'express';
+import { readFileSync } from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -18,6 +19,7 @@ const portNumber = process.env.PORT || 8080;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const clientRoot = path.join(__dirname, '..', 'client');
+const rocksPath = path.join(__dirname, 'rocks.json');
 const lobby = createLobby();
 const highScores = createHighScores();
 
@@ -42,8 +44,16 @@ app.get('/api', function (req, res) {
     res.send('Hello World, Api here');
 });
 
+app.get('/api/rocks', function (req, res) {
+    res.type('application/json').send(readFileSync(rocksPath, 'utf8'));
+});
+
 app.get('/', function (req, res) {
     res.sendFile(path.join(clientRoot, 'index.html'));
+});
+
+app.get('/rock-editor', function (req, res) {
+    res.sendFile(path.join(clientRoot, 'rock-editor.html'));
 });
 
 function getSocketGameContext(socket) {

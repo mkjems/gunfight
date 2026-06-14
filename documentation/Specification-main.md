@@ -200,11 +200,16 @@ The rock editor is a WYSIWYG page for editing the dimensions and polygon shape o
 
 Expected behavior:
 
-- The page is reachable separately from normal play.
-- The editor shows a visual preview of the rock.
-- The user can edit rock dimensions and shape directly in the preview.
-- The editor accepts rock JSON as input.
-- The editor outputs rock JSON that can be copied into the project data files.
+- The page is reachable at `/rock-editor` separately from normal play.
+- The editor loads the current rock definitions from `server/rocks.json`.
+- The editor shows a visual preview of the selected rock.
+- The user can drag polygon points, edit point coordinates, add/remove points,
+  rename or duplicate rock definitions, and scale the selected rock by width and
+  height.
+- The editor accepts either the full `server/rocks.json` object or one rock
+  definition with `lines` as input.
+- The editor outputs full rock-definition JSON that can be copied into
+  `server/rocks.json`.
 - Invalid JSON or invalid rock geometry is shown clearly without crashing the editor.
 
 ### Scenario editor

@@ -257,3 +257,120 @@ test('built browser app renders the name editor through the app root', async ({
 
     expect(browserErrors).toEqual([]);
 });
+
+test('built browser app renders the rock editor page', async ({ page }) => {
+    const browserErrors = [];
+
+    page.on('pageerror', function (error) {
+        browserErrors.push(error.message);
+    });
+
+    page.on('console', function (message) {
+        if (message.type() === 'error') {
+            browserErrors.push(message.text());
+        }
+    });
+
+    await page.setViewportSize({ width: 1440, height: 700 });
+    await page.goto('/rock-editor', {
+        waitUntil: 'domcontentloaded'
+    });
+
+    const stylesheetPaths = await page.evaluate(function () {
+        return Array.from(
+            document.querySelectorAll('link[rel="stylesheet"]')
+        ).map(function (link) {
+            return new URL(link.href).pathname;
+        });
+    });
+
+    expect(
+        stylesheetPaths.some(function (path) {
+            return path.endsWith('/rock-editor.css');
+        })
+    ).toBe(true);
+    expect(
+        stylesheetPaths.some(function (path) {
+            return path.endsWith('/index.css');
+        })
+    ).toBe(false);
+
+    await expect(page.locator('#rockEditor')).toBeVisible();
+    await expect(page.locator('#rockTypeSelect')).toHaveValue('small');
+    await expect(page.locator('#rockValidation')).toContainText(
+        'Valid rock JSON.'
+    );
+    await expect(page.locator('#rockJsonOutput')).toHaveValue(/"small"/);
+    await expect(page.locator('#rockJsonOutput')).toHaveValue(/"tall"/);
+
+    const canvasHasPixels = await page
+        .locator('#rockEditorCanvas')
+        .evaluate(function (canvas) {
+            const context = canvas.getContext('2d');
+
+            if (!context) {
+                return false;
+            }
+
+            const pixels = context.getImageData(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            ).data;
+
+            for (let index = 0; index < pixels.length; index += 4) {
+                if (
+                    pixels[index] !== 0 ||
+                    pixels[index + 1] !== 0 ||
+                    pixels[index + 2] !== 0
+                ) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
+    expect(canvasHasPixels).toBe(true);
+
+    const editorPageScrolls = await page.evaluate(function () {
+        const scroller = document.scrollingElement;
+
+        if (!scroller || scroller.scrollHeight <= scroller.clientHeight) {
+            return false;
+        }
+
+        window.scrollTo(0, scroller.scrollHeight);
+        const scrolled = window.scrollY > 0;
+
+        window.scrollTo(0, 0);
+
+        return scrolled;
+    });
+
+    expect(editorPageScrolls).toBe(true);
+
+    await page.locator('#rockJsonInput').fill('{');
+    await page.locator('#rockLoadJsonButton').click();
+    await expect(page.locator('#rockValidation')).toContainText('Input JSON');
+
+    await page.locator('#rockJsonInput').fill(
+        JSON.stringify({
+            lines: [
+                { from: [0, 0], to: [20, 0] },
+                { from: [20, 0], to: [20, 20] },
+                { from: [20, 20], to: [0, 20] },
+                { from: [0, 20], to: [0, 0] }
+            ]
+        })
+    );
+    await page.locator('#rockLoadJsonButton').click();
+    await expect(page.locator('#rockTypeSelect')).toHaveValue('small');
+    await expect(page.locator('#rockJsonOutput')).toHaveValue(/"small"/);
+    await expect(page.locator('#rockValidation')).toContainText(
+        'Valid rock JSON.'
+    );
+
+    expect(browserErrors).toEqual([]);
+});

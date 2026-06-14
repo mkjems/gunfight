@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Gunfight Rock Editor</title>
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover"
+        />
+        <meta name="theme-color" content="#1e1e1e" />
+        <link
+            rel="stylesheet"
+            href="/css/tools-css-reset.css"
+            type="text/css"
+            media="screen"
+        />
+        <link
+            rel="stylesheet"
+            href="/css/rock-editor.css"
+            type="text/css"
+            media="screen"
+        />
+    </head>
+
+    <body>
+        <main id="rockEditor">
+            <header id="rockEditorHeader">
+                <h1>Rock editor</h1>
+            </header>
+
+            <section id="rockEditorWorkspace" aria-label="Rock editor">
+                <section class="rock-editor-panel" aria-label="Input JSON">
+                    <div class="rock-editor-panel-heading">
+                        <h2>Input JSON</h2>
+                        <button id="rockLoadJsonButton" type="button">
+                            Import
+                        </button>
+                    </div>
+                    <textarea
+                        id="rockJsonInput"
+                        spellcheck="false"
+                        aria-label="Rock JSON input"
+                    ></textarea>
+                    <button id="rockUseOutputButton" type="button">
+                        Use output
+                    </button>
+                </section>
+
+                <section id="rockPreviewPanel" aria-label="Rock preview">
+                    <div id="rockPreviewToolbar">
+                        <label>
+                            Type
+                            <select id="rockTypeSelect"></select>
+                        </label>
+                        <label>
+                            Name
+                            <input id="rockTypeInput" type="text" />
+                        </label>
+                        <button id="rockRenameButton" type="button">
+                            Rename
+                        </button>
+                        <button id="rockDuplicateButton" type="button">
+                            Duplicate
+                        </button>
+                    </div>
+
+                    <canvas
+                        id="rockEditorCanvas"
+                        aria-label="Editable rock polygon preview"
+                    ></canvas>
+
+                    <div id="rockPointToolbar">
+                        <span id="rockSelectedPointLabel">Point 1</span>
+                        <label>
+                            X
+                            <input id="rockPointXInput" type="number" />
+                        </label>
+                        <label>
+                            Y
+                            <input id="rockPointYInput" type="number" />
+                        </label>
+                        <button id="rockAddPointButton" type="button">
+                            Add point
+                        </button>
+                        <button id="rockRemovePointButton" type="button">
+                            Remove point
+                        </button>
+                    </div>
+
+                    <div id="rockSizeToolbar">
+                        <label>
+                            Width
+                            <input id="rockWidthInput" type="number" min="1" />
+                        </label>
+                        <label>
+                            Height
+                            <input id="rockHeightInput" type="number" min="1" />
+                        </label>
+                        <button id="rockApplySizeButton" type="button">
+                            Apply size
+                        </button>
+                    </div>
+
+                    <div id="rockValidation" role="status"></div>
+                </section>
+
+                <section class="rock-editor-panel" aria-label="Output JSON">
+                    <div class="rock-editor-panel-heading">
+                        <h2>Output JSON</h2>
+                        <button id="rockCopyOutputButton" type="button">
+                            Copy
+                        </button>
+                    </div>
+                    <textarea
+                        id="rockJsonOutput"
+                        readonly
+                        spellcheck="false"
+                        aria-label="Rock JSON output"
+                    ></textarea>
+                </section>
+            </section>
+        </main>
+
+        <script type="module" src="/src/tools/rockEditor.ts"></script>
+    </body>
+</html>
