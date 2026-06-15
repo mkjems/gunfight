@@ -83,8 +83,8 @@
         - `ClientModelUpdateFlow`/`ClientModelUpdatePlan`: client follower of
           authoritative phase updates.
         - `ClientRoundRitual`: presentation for `roundIntro`; modern
-          server-phase models wait for server expiry; legacy no-phase local
-          expiry fallback remains.
+          server-phase timers check the latest server phase before changing
+          visible state; legacy no-phase local expiry fallback remains.
         - `ClientPlayerHitFlow`: hit presentation plus `roundResult` report; no
           local round advance when server phases are present.
         - `ClientRoundResetFlow`: presentation reset; `resetToStartScreen`
@@ -197,7 +197,7 @@
 - [ ] Add focused client coverage.
     - [ ] Test that ready flags alone never start gameplay.
     - [ ] Test that only server `roundIntro` starts the round ritual.
-    - [ ] Test that local presentation timers cannot advance lifecycle after
+    - [x] Test that local presentation timers cannot advance lifecycle after
           the server phase changed.
     - [ ] Test that game over and return-to-lobby follow server model updates.
     - [ ] Test that stale model versions are ignored and fresh same-phase

@@ -304,3 +304,47 @@ test('players can assign the local client to the first lobby slot', async functi
     assert.equal(players.all.remote.slot, 1);
     assert.equal(players.all.remote.x, 200);
 });
+
+test('players can force existing clients back to lobby slots', async function () {
+    const { Players } = await loadGameplayConstructors();
+    const players = new Players(
+        {
+            addFigure() {}
+        },
+        {
+            remove() {}
+        }
+    );
+
+    players.sync(
+        {
+            clients: [{ id: 'local' }, { id: 'remote' }]
+        },
+        {
+            slots: [
+                { x: 150, y: 430, facing: 1, frame: 0 },
+                { x: 800, y: 430, facing: -1, frame: 2 }
+            ]
+        }
+    );
+    players.all.local.x = 330;
+    players.all.remote.x = 650;
+
+    players.sync(
+        {
+            clients: [{ id: 'local' }, { id: 'remote' }]
+        },
+        {
+            resetExisting: true,
+            slots: [
+                { x: 150, y: 400, facing: 1, frame: 0 },
+                { x: 800, y: 400, facing: -1, frame: 2 }
+            ]
+        }
+    );
+
+    assert.equal(players.all.local.x, 150);
+    assert.equal(players.all.local.y, 400);
+    assert.equal(players.all.remote.x, 800);
+    assert.equal(players.all.remote.y, 400);
+});

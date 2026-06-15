@@ -159,3 +159,64 @@ test('moves from draw to playing after ritual timers', async function () {
         'renderHud'
     ]);
 });
+
+test('skips stale get-ready timer after server phase leaves round intro', async function () {
+    const ritual = await loadClientRoundRitual();
+    const { calls, options, scheduled } = createOptions();
+    let serverPhase = 'roundIntro';
+
+    options.getServerPhase = function () {
+        return serverPhase;
+    };
+
+    ritual.start(options);
+    serverPhase = 'gameOver';
+    scheduled[0].callback();
+
+    assert.deepEqual(calls.slice(10), []);
+});
+
+test('enters playing when a late get-ready timer sees server playing', async function () {
+    const ritual = await loadClientRoundRitual();
+    const { calls, options, scheduled } = createOptions();
+    let serverPhase = 'roundIntro';
+
+    options.getServerPhase = function () {
+        return serverPhase;
+    };
+
+    ritual.start(options);
+    serverPhase = 'playing';
+    scheduled[0].callback();
+
+    assert.deepEqual(calls.slice(10), [
+        ['setRoundMessage', ''],
+        ['roundData.setRoundEndsAt', 'number'],
+        'scheduleMatchEnd',
+        'resetAmmo',
+        ['setRoundState', 'playing'],
+        'renderHud'
+    ]);
+    assert.equal(scheduled.length, 1);
+});
+
+test('skips stale draw timer after server phase leaves round intro or playing', async function () {
+    const ritual = await loadClientRoundRitual();
+    const { calls, options, scheduled } = createOptions();
+    let serverPhase = 'roundIntro';
+
+    options.getServerPhase = function () {
+        return serverPhase;
+    };
+
+    ritual.start(options);
+    scheduled[0].callback();
+    serverPhase = 'hitPause';
+    scheduled[1].callback();
+
+    assert.deepEqual(calls.slice(10), [
+        'roundIntro.complete',
+        ['setRoundMessage', 'DRAW!'],
+        ['timer.set', 'ritual', 700]
+    ]);
+});

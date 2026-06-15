@@ -32,6 +32,7 @@ type PlayersOptions = {
     localPlayerFirst?: boolean;
     localPlayerId?: ClientId | null;
     resetChangedSlots?: boolean;
+    resetExisting?: boolean;
     slots?: PlayerSlot[];
 };
 
@@ -67,7 +68,10 @@ export class Players {
             this.all[id].idleFrame = slot.frame;
             this.all[id].setMovementBounds(slot.movementBounds);
 
-            if (slotChanged && options.resetChangedSlots) {
+            if (
+                options.resetExisting ||
+                (slotChanged && options.resetChangedSlots)
+            ) {
                 this.all[id].resetTo(slot);
             }
 

@@ -306,6 +306,7 @@ test('plans lobby recovery when the server returns from game over', async functi
                 localPlayerFirst: true,
                 localPlayerId: 'p1',
                 resetChangedSlots: false,
+                resetExisting: true,
                 slots: [
                     {
                         x: 150,

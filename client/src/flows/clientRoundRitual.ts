@@ -7,6 +7,7 @@ type ClientRoundRitualOptions = {
     };
     closeNameEditor: () => void;
     endGame: () => void;
+    getServerPhase?: () => string | undefined;
     hasMatchTimeExpired: () => boolean;
     renderHud: () => void;
     resetAmmo: () => void;
@@ -47,6 +48,13 @@ export function start(options: ClientRoundRitualOptions) {
     options.timers.set(
         'ritual',
         function () {
+            if (!canShowRoundIntroPresentation(options)) {
+                if (canEnterPlayingPresentation(options)) {
+                    enterPlayingPresentation(options);
+                }
+                return;
+            }
+
             if (options.hasMatchTimeExpired()) {
                 options.endGame();
                 return;
@@ -58,27 +66,51 @@ export function start(options: ClientRoundRitualOptions) {
             options.timers.set(
                 'ritual',
                 function () {
+                    if (!canEnterPlayingPresentation(options)) {
+                        return;
+                    }
+
                     if (options.hasMatchTimeExpired()) {
                         options.endGame();
                         return;
                     }
 
-                    options.setRoundMessage('');
-                    if (!options.roundData.getRoundEndsAt()) {
-                        options.roundData.setRoundEndsAt(
-                            new Date().getTime() + Config.game.seconds * 1000
-                        );
-                        options.scheduleMatchEnd();
-                    }
-                    options.resetAmmo();
-                    options.setRoundState(RoundState.PLAYING);
-                    options.renderHud();
+                    enterPlayingPresentation(options);
                 },
                 Config.round.drawDelay
             );
         },
         getReadyDelay
     );
+}
+
+function canShowRoundIntroPresentation(
+    options: ClientRoundRitualOptions
+): boolean {
+    const phase = options.getServerPhase?.();
+
+    return !phase || phase === 'roundIntro';
+}
+
+function canEnterPlayingPresentation(
+    options: ClientRoundRitualOptions
+): boolean {
+    const phase = options.getServerPhase?.();
+
+    return !phase || phase === 'roundIntro' || phase === 'playing';
+}
+
+function enterPlayingPresentation(options: ClientRoundRitualOptions) {
+    options.setRoundMessage('');
+    if (!options.roundData.getRoundEndsAt()) {
+        options.roundData.setRoundEndsAt(
+            new Date().getTime() + Config.game.seconds * 1000
+        );
+        options.scheduleMatchEnd();
+    }
+    options.resetAmmo();
+    options.setRoundState(RoundState.PLAYING);
+    options.renderHud();
 }
 
 export const ClientRoundRitual = {

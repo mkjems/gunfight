@@ -554,6 +554,7 @@ export class ClientGameRuntime implements ClientGameController {
             bullets: this.bullets,
             closeNameEditor: this.closeNameEditor,
             endGame: this.endGame,
+            getServerPhase: () => this.latestModel?.phase,
             hasMatchTimeExpired: this.shouldUseLocalMatchExpiry,
             renderHud: this.renderHud,
             resetAmmo: this.resetAmmo,

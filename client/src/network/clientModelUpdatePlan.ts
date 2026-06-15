@@ -59,6 +59,7 @@ export function create(options: CreatePlanOptions) {
             localPlayerFirst: syncLobbySlots,
             localPlayerId: syncLobbySlots ? options.playerId : undefined,
             resetChangedSlots: options.roundState === RoundState.WAITING,
+            resetExisting: serverReturnedToLobby || undefined,
             slots: syncLobbySlots
                 ? Config.player.lobbySlots
                 : getScenarioPlayerStarts(options.model)
