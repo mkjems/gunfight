@@ -138,9 +138,6 @@ function createRuntime(ClientGameRuntime, dependencyOverrides = {}) {
     };
     runtime.roundData = {
         clearHitMessage() {},
-        hasMatchTimeExpired() {
-            return false;
-        },
         setRoundEndsAt() {
             return undefined;
         }
@@ -181,7 +178,7 @@ test('keeps the active scenario visible until the next round ritual starts', asy
     assert.equal(runtime.getCurrentScenario(), nextScenario);
 });
 
-test('does not use local match expiry during server-owned round ritual', async function () {
+test('starts the round ritual without local match-expiry authority', async function () {
     const ClientGameRuntime = await loadClientGameRuntime();
     let ritualOptions = null;
     const runtime = createRuntime(ClientGameRuntime, {
@@ -192,9 +189,6 @@ test('does not use local match expiry during server-owned round ritual', async f
         }
     });
 
-    runtime.roundData.hasMatchTimeExpired = function () {
-        return true;
-    };
     runtime.latestModel = {
         clients: [],
         currentScenario: {},
@@ -209,7 +203,7 @@ test('does not use local match expiry during server-owned round ritual', async f
         throw new Error('Expected round ritual options to be captured');
     }
 
-    assert.equal(capturedRitualOptions.hasMatchTimeExpired(), false);
+    assert.equal(capturedRitualOptions.getServerPhase(), 'roundIntro');
 });
 
 test('does not notify match expiry from server-owned lifecycle models', async function () {

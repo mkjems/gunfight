@@ -225,7 +225,6 @@ export type RuntimeRoundData = {
     getRoundMessage: () => string;
     getScenarioStartedAt: () => number | null;
     getSecondsLeft: (defaultSeconds: number) => number;
-    hasMatchTimeExpired: () => boolean;
     resetRoundFlags: () => void;
     setHitMessage: (message: { targetId: ClientId; text: string }) => void;
     setRoundEndsAt: (value: number | null) => void;
@@ -450,7 +449,7 @@ export type RuntimePlayerHit = {
 
 export type RuntimeHitDetectionResult =
     | {
-          type: 'matchExpired' | 'none';
+          type: 'none';
       }
     | {
           hit: RuntimeObstacleHit;

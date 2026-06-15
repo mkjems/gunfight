@@ -50,22 +50,6 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('reports match expiry during hit pause', async function () {
-    const hitDetection = await loadClientHitDetection();
-
-    assert.deepEqual(
-        plain(
-            hitDetection.check({
-                matchTimeExpired: true,
-                roundState: 'hitPause'
-            })
-        ),
-        {
-            type: 'matchExpired'
-        }
-    );
-});
-
 test('marks obstacle bullets for deletion before returning obstacle hits', async function () {
     const hitDetection = await loadClientHitDetection();
     const bullet = {
@@ -80,7 +64,6 @@ test('marks obstacle bullets for deletion before returning obstacle hits', async
         findBulletObstacleHit() {
             return hit;
         },
-        matchTimeExpired: false,
         players: { all: {} },
         roundState: 'playing'
     });
@@ -110,7 +93,6 @@ test('marks player hit bullets for deletion before returning player hits', async
         findBulletObstacleHit() {
             return null;
         },
-        matchTimeExpired: false,
         players: { all: {} },
         roundState: 'playing'
     });
@@ -120,7 +102,7 @@ test('marks player hit bullets for deletion before returning player hits', async
     assert.equal(bullet.deleteMe, true);
 });
 
-test('reports match expiry after hit checks during active play', async function () {
+test('returns none when no hits are found during active play', async function () {
     const hitDetection = await loadClientHitDetection();
 
     assert.deepEqual(
@@ -130,13 +112,12 @@ test('reports match expiry after hit checks during active play', async function 
                 findBulletObstacleHit() {
                     return null;
                 },
-                matchTimeExpired: true,
                 players: { all: {} },
                 roundState: 'playing'
             })
         ),
         {
-            type: 'matchExpired'
+            type: 'none'
         }
     );
 });

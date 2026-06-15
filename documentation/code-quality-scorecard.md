@@ -21,7 +21,7 @@ Status labels:
 | Formatting            | Good   | Prettier covers package/config files, scripts, server, shared, client, docs.    |
 | Linting               | Good   | ESLint catches accidental globals and unsafe equality in JS/client code.        |
 | Type checking         | Good   | Shared and client TypeScript are strict; server JS is checked less strictly.    |
-| Node tests            | Good   | 230 Node tests cover core behavior and pure modules.                            |
+| Node tests            | Good   | 225 Node tests cover core behavior and pure modules.                            |
 | Browser smoke tests   | Good   | 10 Playwright smoke tests cover app startup, mobile lobby, and two-client play. |
 | Source escape hatches | Good   | No `any`, `@ts-ignore`, `@ts-expect-error`, `TODO`, or `FIXME` in source.       |
 
@@ -50,7 +50,7 @@ These files are not automatically bad, but they deserve care before adding more
 responsibility:
 
 - `client/src/tools/scenarioEditor.ts` - 1100 lines. DOM-heavy authoring tool.
-- `client/src/runtime/game/runtime.ts` - 1122 lines. Main runtime wiring and
+- `client/src/runtime/game/runtime.ts` - 1085 lines. Main runtime wiring and
   orchestration.
 - `client/src/tools/scenarioEditorCore.ts` - 826 lines. Scenario editor domain
   logic.
@@ -58,7 +58,7 @@ responsibility:
 - `client/src/tools/rockEditor.ts` - 622 lines. DOM-heavy authoring tool.
 - `client/src/tools/rockEditorCore.ts` - 520 lines. Rock editor domain logic.
 - `client/src/engine/scenarioRenderer.ts` - 493 lines. Scenario rendering.
-- `client/src/runtime/game/types.ts` - 472 lines. Runtime type surface.
+- `client/src/runtime/game/types.ts` - 471 lines. Runtime type surface.
 - `client/src/input/touchControls.ts` - 447 lines. Imperative touch pointer
   handling.
 - `server/gameModules/lobby.ts` - 503 lines. Server matchmaking rules.
@@ -109,9 +109,9 @@ shared, defines a product rule, or prevents two modules from silently drifting.
 
 Current test shape:
 
-- 57 Node test files.
+- 59 Node test files.
 - 3 Playwright browser smoke spec files.
-- 230 Node tests passing.
+- 225 Node tests passing.
 - 10 browser smoke tests passing.
 
 Behavior areas with good coverage:

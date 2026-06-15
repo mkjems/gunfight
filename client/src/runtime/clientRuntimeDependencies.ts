@@ -17,7 +17,6 @@ import { ClientKeyEventFlow } from '../flows/clientKeyEventFlow.js';
 import { ClientLobbyFlow } from '../flows/clientLobbyFlow.js';
 import { ClientLobbyHudFlow } from '../flows/clientLobbyHudFlow.js';
 import { ClientLobbyViewModel } from '../ui/viewModels/clientLobbyViewModel.js';
-import { ClientMatchTimer } from '../flows/clientMatchTimer.js';
 import { ClientModelSync } from '../network/clientModelSync.js';
 import { ClientModelUpdateFlow } from '../network/clientModelUpdateFlow.js';
 import { ClientNameEditorFlow } from '../flows/clientNameEditorFlow.js';
@@ -66,7 +65,6 @@ export const ClientRuntimeDependencies = {
         ClientHitDetection,
         ClientKeyEventFlow,
         ClientLobbyFlow,
-        ClientMatchTimer,
         ClientModelUpdateFlow,
         ClientNameEditorFlow,
         ClientObstacleSync,

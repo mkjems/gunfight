@@ -6,22 +6,17 @@ type ClientRoundRitualOptions = {
         reset: () => void;
     };
     closeNameEditor: () => void;
-    endGame: () => void;
-    getServerPhase?: () => string | undefined;
-    hasMatchTimeExpired: () => boolean;
+    getServerPhase: () => string | undefined;
     renderHud: () => void;
     resetAmmo: () => void;
     roundData: {
         clearObstacleDamage: () => void;
-        getRoundEndsAt: () => number | null | undefined;
-        setRoundEndsAt: (value: number) => void;
         startScenario: () => void;
     };
     roundIntro: {
         complete: () => void;
         start: () => void;
     };
-    scheduleMatchEnd: () => void;
     setRoundMessage: (message: string) => void;
     setRoundState: (roundState: RoundState) => void;
     timers: {
@@ -55,11 +50,6 @@ export function start(options: ClientRoundRitualOptions) {
                 return;
             }
 
-            if (options.hasMatchTimeExpired()) {
-                options.endGame();
-                return;
-            }
-
             options.roundIntro.complete();
             options.setRoundMessage('DRAW!');
 
@@ -67,11 +57,6 @@ export function start(options: ClientRoundRitualOptions) {
                 'ritual',
                 function () {
                     if (!canEnterPlayingPresentation(options)) {
-                        return;
-                    }
-
-                    if (options.hasMatchTimeExpired()) {
-                        options.endGame();
                         return;
                     }
 
@@ -87,27 +72,21 @@ export function start(options: ClientRoundRitualOptions) {
 function canShowRoundIntroPresentation(
     options: ClientRoundRitualOptions
 ): boolean {
-    const phase = options.getServerPhase?.();
+    const phase = options.getServerPhase();
 
-    return !phase || phase === 'roundIntro';
+    return phase === 'roundIntro';
 }
 
 function canEnterPlayingPresentation(
     options: ClientRoundRitualOptions
 ): boolean {
-    const phase = options.getServerPhase?.();
+    const phase = options.getServerPhase();
 
-    return !phase || phase === 'roundIntro' || phase === 'playing';
+    return phase === 'roundIntro' || phase === 'playing';
 }
 
 function enterPlayingPresentation(options: ClientRoundRitualOptions) {
     options.setRoundMessage('');
-    if (!options.roundData.getRoundEndsAt()) {
-        options.roundData.setRoundEndsAt(
-            new Date().getTime() + Config.game.seconds * 1000
-        );
-        options.scheduleMatchEnd();
-    }
     options.resetAmmo();
     options.setRoundState(RoundState.PLAYING);
     options.renderHud();

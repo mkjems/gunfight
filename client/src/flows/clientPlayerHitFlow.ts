@@ -54,11 +54,6 @@ type ResetAfterHitOptions = {
     bullets: {
         reset: () => void;
     };
-    endGame: () => void;
-    hasMatchTimeExpired: () => boolean;
-    model?: {
-        phase?: string;
-    } | null;
     players: {
         all: Record<string, Player>;
     };
@@ -66,7 +61,6 @@ type ResetAfterHitOptions = {
     roundData: {
         clearHitMessage: () => void;
     };
-    startRoundRitual: () => void;
 };
 
 export function handleHit(options: HandleHitOptions) {
@@ -101,20 +95,8 @@ export function resetAfterHit(options: ResetAfterHitOptions) {
     options.roundData.clearHitMessage();
     clearPlayerDeathAnimations(options.players);
 
-    if (options.model?.phase) {
-        options.bullets.reset();
-        options.resetAmmo();
-        return;
-    }
-
-    if (options.hasMatchTimeExpired()) {
-        options.endGame();
-        return;
-    }
-
     options.bullets.reset();
     options.resetAmmo();
-    options.startRoundRitual();
 }
 
 export function clearPlayerDeathAnimations(players: {

@@ -64,11 +64,8 @@ function createOptions() {
         closeNameEditor() {
             calls.push('closeNameEditor');
         },
-        endGame() {
-            calls.push('endGame');
-        },
-        hasMatchTimeExpired() {
-            return false;
+        getServerPhase() {
+            return 'roundIntro';
         },
         renderHud() {
             calls.push('renderHud');
@@ -79,12 +76,6 @@ function createOptions() {
         roundData: {
             clearObstacleDamage() {
                 calls.push('roundData.clearObstacleDamage');
-            },
-            getRoundEndsAt() {
-                return null;
-            },
-            setRoundEndsAt(value) {
-                calls.push(['roundData.setRoundEndsAt', typeof value]);
             },
             startScenario() {
                 calls.push('roundData.startScenario');
@@ -97,9 +88,6 @@ function createOptions() {
             start() {
                 calls.push('roundIntro.start');
             }
-        },
-        scheduleMatchEnd() {
-            calls.push('scheduleMatchEnd');
         },
         setRoundMessage(message) {
             calls.push(['setRoundMessage', message]);
@@ -152,8 +140,6 @@ test('moves from draw to playing after ritual timers', async function () {
         ['setRoundMessage', 'DRAW!'],
         ['timer.set', 'ritual', 700],
         ['setRoundMessage', ''],
-        ['roundData.setRoundEndsAt', 'number'],
-        'scheduleMatchEnd',
         'resetAmmo',
         ['setRoundState', 'playing'],
         'renderHud'
@@ -191,8 +177,6 @@ test('enters playing when a late get-ready timer sees server playing', async fun
 
     assert.deepEqual(calls.slice(10), [
         ['setRoundMessage', ''],
-        ['roundData.setRoundEndsAt', 'number'],
-        'scheduleMatchEnd',
         'resetAmmo',
         ['setRoundState', 'playing'],
         'renderHud'

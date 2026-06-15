@@ -37,7 +37,6 @@ type ClientHitDetectionOptions = {
         ) => Hit | null;
     };
     findBulletObstacleHit?: () => Hit | null;
-    matchTimeExpired?: boolean;
     players?: {
         all: Record<string, Player>;
     };
@@ -46,15 +45,6 @@ type ClientHitDetectionOptions = {
 
 export function check(options: ClientHitDetectionOptions) {
     if (options.roundState !== RoundState.PLAYING) {
-        if (
-            options.roundState === RoundState.HIT_PAUSE &&
-            options.matchTimeExpired
-        ) {
-            return {
-                type: 'matchExpired'
-            };
-        }
-
         return {
             type: 'none'
         };
@@ -86,12 +76,6 @@ export function check(options: ClientHitDetectionOptions) {
         return {
             hit: playerHit,
             type: 'playerHit'
-        };
-    }
-
-    if (options.matchTimeExpired) {
-        return {
-            type: 'matchExpired'
         };
     }
 

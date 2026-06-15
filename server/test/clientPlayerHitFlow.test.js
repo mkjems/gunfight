@@ -137,7 +137,7 @@ test('handles player hits by entering hit pause and scheduling reset', async fun
     ]);
 });
 
-test('resets after hit and starts the next ritual', async function () {
+test('resets hit presentation after the server-owned hit pause', async function () {
     const flow = await loadClientPlayerHitFlow();
     const calls = [];
 
@@ -146,12 +146,6 @@ test('resets after hit and starts the next ritual', async function () {
             reset() {
                 calls.push('bullets.reset');
             }
-        },
-        endGame() {
-            calls.push('endGame');
-        },
-        hasMatchTimeExpired() {
-            return false;
         },
         players: {
             all: {
@@ -169,9 +163,6 @@ test('resets after hit and starts the next ritual', async function () {
             clearHitMessage() {
                 calls.push('roundData.clearHitMessage');
             }
-        },
-        startRoundRitual() {
-            calls.push('startRoundRitual');
         }
     });
 
@@ -179,12 +170,11 @@ test('resets after hit and starts the next ritual', async function () {
         'roundData.clearHitMessage',
         'p1.clearDeathAnimation',
         'bullets.reset',
-        'resetAmmo',
-        'startRoundRitual'
+        'resetAmmo'
     ]);
 });
 
-test('resets after remote hit without advancing the round locally', async function () {
+test('resets remote hit presentation without advancing the round locally', async function () {
     const flow = await loadClientPlayerHitFlow();
     const calls = [];
 
@@ -193,12 +183,6 @@ test('resets after remote hit without advancing the round locally', async functi
             reset() {
                 calls.push('bullets.reset');
             }
-        },
-        endGame() {
-            calls.push('endGame');
-        },
-        hasMatchTimeExpired() {
-            return false;
         },
         players: {
             all: {
@@ -221,14 +205,6 @@ test('resets after remote hit without advancing the round locally', async functi
             clearHitMessage() {
                 calls.push('roundData.clearHitMessage');
             }
-        },
-        socket: {
-            emit(event) {
-                calls.push(['socket.emit', event]);
-            }
-        },
-        startRoundRitual() {
-            calls.push('startRoundRitual');
         }
     });
 
@@ -237,12 +213,11 @@ test('resets after remote hit without advancing the round locally', async functi
         'p1.clearDeathAnimation',
         'p2.clearDeathAnimation',
         'bullets.reset',
-        'resetAmmo',
-        'startRoundRitual'
+        'resetAmmo'
     ]);
 });
 
-test('resets hit presentation without local round advance when server phases are active', async function () {
+test('does not inspect local match expiry after hit pause', async function () {
     const flow = await loadClientPlayerHitFlow();
     const calls = [];
 
@@ -251,15 +226,6 @@ test('resets hit presentation without local round advance when server phases are
             reset() {
                 calls.push('bullets.reset');
             }
-        },
-        endGame() {
-            calls.push('endGame');
-        },
-        hasMatchTimeExpired() {
-            return true;
-        },
-        model: {
-            phase: 'hitPause'
         },
         players: {
             all: {
@@ -277,9 +243,6 @@ test('resets hit presentation without local round advance when server phases are
             clearHitMessage() {
                 calls.push('roundData.clearHitMessage');
             }
-        },
-        startRoundRitual() {
-            calls.push('startRoundRitual');
         }
     });
 
@@ -289,44 +252,4 @@ test('resets hit presentation without local round advance when server phases are
         'bullets.reset',
         'resetAmmo'
     ]);
-});
-
-test('ends the game after hit pause if match time expired', async function () {
-    const flow = await loadClientPlayerHitFlow();
-    const calls = [];
-
-    flow.resetAfterHit({
-        bullets: {
-            reset() {
-                calls.push('bullets.reset');
-            }
-        },
-        endGame() {
-            calls.push('endGame');
-        },
-        hasMatchTimeExpired() {
-            return true;
-        },
-        players: {
-            all: {}
-        },
-        resetAmmo() {
-            calls.push('resetAmmo');
-        },
-        roundData: {
-            clearHitMessage() {
-                calls.push('roundData.clearHitMessage');
-            }
-        },
-        socket: {
-            emit() {
-                calls.push('socket.emit');
-            }
-        },
-        startRoundRitual() {
-            calls.push('startRoundRitual');
-        }
-    });
-
-    assert.deepEqual(calls, ['roundData.clearHitMessage', 'endGame']);
 });

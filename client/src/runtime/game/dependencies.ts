@@ -15,7 +15,6 @@ import type { ClientKeyEventFlow } from '../../flows/clientKeyEventFlow.js';
 import type { ClientLobbyFlow } from '../../flows/clientLobbyFlow.js';
 import type { ClientLobbyHudFlow } from '../../flows/clientLobbyHudFlow.js';
 import type { ClientLobbyViewModel } from '../../ui/viewModels/clientLobbyViewModel.js';
-import type { ClientMatchTimer } from '../../flows/clientMatchTimer.js';
 import type { ClientModelSync } from '../../network/clientModelSync.js';
 import type { ClientModelUpdateFlow } from '../../network/clientModelUpdateFlow.js';
 import type { ClientNameEditorFlow } from '../../flows/clientNameEditorFlow.js';
@@ -63,7 +62,6 @@ export type ClientGameRuntimeModules = {
     ClientLobbyFlow: typeof ClientLobbyFlow;
     ClientLobbyHudFlow: typeof ClientLobbyHudFlow;
     ClientLobbyViewModel: typeof ClientLobbyViewModel;
-    ClientMatchTimer: typeof ClientMatchTimer;
     ClientModelSync: typeof ClientModelSync;
     ClientModelUpdateFlow: typeof ClientModelUpdateFlow;
     ClientNameEditorFlow: typeof ClientNameEditorFlow;
@@ -112,7 +110,6 @@ export type ClientGameDependencies = {
         ClientHitDetection: typeof ClientHitDetection;
         ClientKeyEventFlow: typeof ClientKeyEventFlow;
         ClientLobbyFlow: typeof ClientLobbyFlow;
-        ClientMatchTimer: typeof ClientMatchTimer;
         ClientModelUpdateFlow: typeof ClientModelUpdateFlow;
         ClientNameEditorFlow: typeof ClientNameEditorFlow;
         ClientObstacleSync: typeof ClientObstacleSync;

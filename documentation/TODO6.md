@@ -79,24 +79,23 @@
     - [x] List every client place that starts, ends, resets, or advances a game
           phase: `ClientModelUpdateFlow`, `ClientRoundRitual`,
           `ClientPlayerHitFlow`, `ClientRoundResetFlow`, `ClientRoundEndFlow`,
-          `ClientMatchTimer`, `ClientScreens`, and runtime helpers.
+          `ClientScreens`, and runtime helpers.
         - `ClientModelUpdateFlow`/`ClientModelUpdatePlan`: client follower of
           authoritative phase updates.
-        - `ClientRoundRitual`: presentation for `roundIntro`; modern
-          server-phase timers check the latest server phase before changing
-          visible state; legacy no-phase local expiry fallback remains.
+        - `ClientRoundRitual`: presentation for `roundIntro`; timers check the
+          latest server phase before changing visible state.
         - `ClientPlayerHitFlow`: hit presentation plus `roundResult` report; no
-          local round advance when server phases are present.
+          local round advance.
         - `ClientRoundResetFlow`: presentation reset only; it no longer emits
           lifecycle reset requests.
         - `ClientRoundEndFlow`: game-over presentation only; it no longer emits
           match-expiry requests.
-        - `ClientMatchTimer` and `ClientHitDetection`: local match-expiry
-          fallback only when no authoritative server phase exists.
+        - `ClientHitDetection`: local hit/obstacle detection only; match expiry
+          is not a client result.
         - `ClientScreens`: presentation screen and legal local round-state
           transitions.
         - Runtime helpers: stale model guard by `version`, server timing sync,
-          server `gameOver` follower, and legacy no-phase fallbacks.
+          and server `gameOver` follower.
     - [x] Classify each decision as server-control, client-presentation, or
           real-time gameplay.
         - Server-control: `clientReady`, accepted `roundResult`, match expiry,
@@ -112,8 +111,8 @@
           and `updateName`.
     - [x] Identify compatibility paths that still exist only for the old client
           lifecycle model.
-        - Compatibility paths: no-phase local match timer and no-phase local
-          round reset.
+        - Compatibility paths removed: public `status`, legacy lifecycle socket
+          events, no-phase local match timer, and no-phase local round advance.
 - [x] Harden `gfmodel` as the one lifecycle state machine.
     - [x] Write the legal transition table for `waiting`, `readying`,
           `readyCountdown`, `roundIntro`, `playing`, `hitPause`, `gameOver`,
@@ -146,7 +145,7 @@
           `phase`.
     - [x] Document which model fields are authoritative and which are
           presentation hints.
-- [ ] Convert the client into a lifecycle follower.
+- [x] Convert the client into a lifecycle follower.
     - [x] Make `ClientModelUpdateFlow` the only client entry point that reacts
           to authoritative phase changes.
     - [x] Remove any client path that starts a round from ready flags, local
@@ -154,20 +153,20 @@
     - [x] Remove client-owned `matchExpired` authority and socket event.
     - [x] Remove client-owned `resetReady`/return-to-lobby authority once the
           server owns `gameOver` expiry and lobby reset.
-    - [ ] Keep client timers only for presentation inside the current server
+    - [x] Keep client timers only for presentation inside the current server
           phase: animation beats, text timing, effects, sounds, and local HUD
           refresh.
     - [x] Make duplicate or stale model updates no-ops by `version`.
     - [x] Make out-of-order presentation timers check the latest server phase
           before applying visible state.
-- [ ] Preserve responsive real-time gameplay on the client.
-    - [ ] Keep movement, aiming, shooting, bullets, collision, obstacle damage,
+- [x] Preserve responsive real-time gameplay on the client.
+    - [x] Keep movement, aiming, shooting, bullets, collision, obstacle damage,
           hit detection, ammo presentation, particles, camera, and sound local.
-    - [ ] Keep `roundResult` as a client-originated hit report for now.
-    - [ ] Keep server validation limited to current phase, current round,
+    - [x] Keep `roundResult` as a client-originated hit report for now.
+    - [x] Keep server validation limited to current phase, current round,
           connected clients, reporting socket ownership, and duplicate
           prevention.
-    - [ ] Do not add server-side bullet simulation, rollback, or authoritative
+    - [x] Do not add server-side bullet simulation, rollback, or authoritative
           movement in P8.
 - [x] Simplify socket event contracts.
     - [x] Separate client intent/report events from authoritative server
@@ -222,6 +221,7 @@
 - [ ] When both players have marked themselves as ready - I would like a leave-lobby-for-game-sequence. I would like the lobby screen to keep the players in the lobby for a few seconds so you can see the READY status in negative text for 2 seconds and hear the ready sound before switching to the game screen.
 - I would like to reproduce a feature of the original arcade game:
   [ ] If there is a last played game, the top line containing 'Game over' and the player names and score, should show in the main lobby after the game.
+  [ ] Add a an option for a rain effect on the scenario. It should just look like it was raining. it usually is i dramatic movie scenes. we cant do collision detection for all drops so we must cheat.
 
 ## Other Ideas
 

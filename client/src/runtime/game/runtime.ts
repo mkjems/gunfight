@@ -546,28 +546,13 @@ export class ClientGameRuntime implements ClientGameController {
         this.dependencies.ClientRoundRitual.start({
             bullets: this.bullets,
             closeNameEditor: this.closeNameEditor,
-            endGame: this.endGame,
             getServerPhase: () => this.latestModel?.phase,
-            hasMatchTimeExpired: this.shouldUseLocalMatchExpiry,
             renderHud: this.renderHud,
             resetAmmo: this.resetAmmo,
             roundData: this.roundData,
             roundIntro: this.roundIntro,
-            scheduleMatchEnd: this.scheduleMatchEnd,
             setRoundMessage: this.setRoundMessage,
             setRoundState: this.setRoundState,
-            timers: this.timers
-        });
-    };
-
-    private scheduleMatchEnd = () => {
-        if (this.latestModel?.phase) {
-            return;
-        }
-
-        this.dependencies.ClientMatchTimer.scheduleEnd({
-            endGame: this.endGame,
-            roundData: this.roundData,
             timers: this.timers
         });
     };
@@ -577,15 +562,9 @@ export class ClientGameRuntime implements ClientGameController {
             bullets: this.bullets,
             collision: this.dependencies.Collision,
             findBulletObstacleHit: this.findBulletObstacleHit,
-            matchTimeExpired: this.shouldUseLocalMatchExpiry(),
             players: this.players,
             roundState: this.roundState
         }) as RuntimeHitDetectionResult;
-
-        if (result.type === 'matchExpired') {
-            this.endGame();
-            return;
-        }
 
         if (result.type === 'obstacleHit') {
             this.handleObstacleHit(result.hit);
@@ -639,13 +618,9 @@ export class ClientGameRuntime implements ClientGameController {
     private resetAfterHit = () => {
         this.dependencies.ClientPlayerHitFlow.resetAfterHit({
             bullets: this.bullets,
-            endGame: this.endGame,
-            hasMatchTimeExpired: this.roundData.hasMatchTimeExpired,
-            model: this.latestModel,
             players: this.players,
             resetAmmo: this.resetAmmo,
-            roundData: this.roundData,
-            startRoundRitual: this.startRoundRitual
+            roundData: this.roundData
         });
     };
 
@@ -668,8 +643,6 @@ export class ClientGameRuntime implements ClientGameController {
     };
 
     private endGame = () => {
-        const serverOwnsLifecycle = !!this.latestModel?.phase;
-
         this.dependencies.ClientRoundEndFlow.endGame({
             bullets: this.bullets,
             closeNameEditor: this.closeNameEditor,
@@ -677,9 +650,7 @@ export class ClientGameRuntime implements ClientGameController {
             model: this.latestModel,
             players: this.players,
             renderHud: this.renderHud,
-            resetToStartScreen: serverOwnsLifecycle
-                ? undefined
-                : this.resetToStartScreen,
+            resetToStartScreen: undefined,
             roundData: this.roundData,
             roundIntro: this.roundIntro,
             scoreKeeper: this.scoreKeeper,
@@ -956,14 +927,6 @@ export class ClientGameRuntime implements ClientGameController {
         if (model.phase) {
             this.roundData.setRoundEndsAt(null);
         }
-    };
-
-    private shouldUseLocalMatchExpiry = () => {
-        if (this.latestModel?.phase) {
-            return false;
-        }
-
-        return this.roundData.hasMatchTimeExpired();
     };
 
     private clearHitPausePresentation = () => {

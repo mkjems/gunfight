@@ -33,11 +33,9 @@ test('tracks round clock and messages', async function () {
     assert.equal(state.getSecondsLeft(70), 70);
     state.setRoundEndsAt(3500);
     assert.equal(state.getSecondsLeft(70), 3);
-    assert.equal(state.hasMatchTimeExpired(), false);
 
     now = 3500;
     assert.equal(state.getSecondsLeft(70), 0);
-    assert.equal(state.hasMatchTimeExpired(), true);
 
     state.setRoundMessage('DRAW!');
     assert.equal(state.getRoundMessage(), 'DRAW!');

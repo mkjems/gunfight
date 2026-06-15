@@ -40,10 +40,6 @@ export function ClientRoundState(options: ClientRoundStateOptions = {}) {
         return Math.max(0, Math.ceil((roundEndsAt - getTime()) / 1000));
     }
 
-    function hasMatchTimeExpired(): boolean {
-        return !!(roundEndsAt && getTime() >= roundEndsAt);
-    }
-
     function setRoundEndsAt(value: number | null): void {
         roundEndsAt = value;
     }
@@ -108,7 +104,6 @@ export function ClientRoundState(options: ClientRoundStateOptions = {}) {
         getRoundMessage,
         getScenarioStartedAt,
         getSecondsLeft,
-        hasMatchTimeExpired,
         resetRoundFlags,
         setHitMessage,
         setRoundEndsAt,
