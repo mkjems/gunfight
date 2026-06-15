@@ -160,7 +160,7 @@
     - [ ] Keep client timers only for presentation inside the current server
           phase: animation beats, text timing, effects, sounds, and local HUD
           refresh.
-    - [ ] Make duplicate or stale model updates no-ops by `version`.
+    - [x] Make duplicate or stale model updates no-ops by `version`.
     - [ ] Make out-of-order presentation timers check the latest server phase
           before applying visible state.
 - [ ] Preserve responsive real-time gameplay on the client.
@@ -200,7 +200,7 @@
     - [x] Test that local presentation timers cannot advance lifecycle after
           the server phase changed.
     - [ ] Test that game over and return-to-lobby follow server model updates.
-    - [ ] Test that stale model versions are ignored and fresh same-phase
+    - [x] Test that stale model versions are ignored and fresh same-phase
           versions update names, scores, and public metadata.
 - [ ] Add browser smoke coverage.
     - [ ] Two clients can join, edit names, ready up, see ready countdown, and

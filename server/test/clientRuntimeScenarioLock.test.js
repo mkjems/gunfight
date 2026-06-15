@@ -50,6 +50,9 @@ function createRuntime(ClientGameRuntime, dependencyOverrides = {}) {
         ClientLobbyFlow: {
             enter() {}
         },
+        ClientModelUpdateFlow: {
+            sync() {}
+        },
         ClientRoundEndFlow: {
             endGame() {}
         },
@@ -80,11 +83,19 @@ function createRuntime(ClientGameRuntime, dependencyOverrides = {}) {
         clearHitMessage() {},
         hasMatchTimeExpired() {
             return false;
+        },
+        setRoundEndsAt() {
+            return undefined;
         }
     };
     runtime.roundIntro = {};
-    runtime.scoreKeeper = {};
+    runtime.scoreKeeper = {
+        setScores() {}
+    };
     runtime.timers = {};
+    runtime.gameSounds = {
+        playReady() {}
+    };
 
     return runtime;
 }
@@ -170,4 +181,86 @@ test('does not notify match expiry from server-owned lifecycle models', async fu
 
     assert.equal(capturedEndGameOptions.notifyServer, false);
     assert.equal(capturedEndGameOptions.resetToStartScreen, undefined);
+});
+
+test('ignores stale model updates by server version', async function () {
+    const ClientGameRuntime = await loadClientGameRuntime();
+    const syncCalls = [];
+    const scoreCalls = [];
+    const runtime = createRuntime(ClientGameRuntime, {
+        ClientModelUpdateFlow: {
+            sync(options) {
+                syncCalls.push(options.model.version);
+            }
+        }
+    });
+
+    runtime.scoreKeeper.setScores = function (scores) {
+        scoreCalls.push(scores);
+    };
+    runtime.latestModel = {
+        clients: [{ id: 'p1', name: 'ACE', slot: 0 }],
+        gameId: 'G0001',
+        phase: 'readying',
+        scores: [0, 0],
+        version: 7
+    };
+
+    runtime.onModelUpdate({
+        clients: [{ id: 'p1', name: 'STALE', slot: 0 }],
+        gameId: 'G0001',
+        phase: 'readying',
+        scores: [9, 9],
+        version: 7
+    });
+
+    assert.deepEqual(syncCalls, []);
+    assert.deepEqual(scoreCalls, []);
+    assert.equal(runtime.latestModel.clients[0].name, 'ACE');
+    assert.deepEqual(runtime.latestModel.scores, [0, 0]);
+});
+
+test('applies fresh same-phase model updates', async function () {
+    const ClientGameRuntime = await loadClientGameRuntime();
+    const syncCalls = [];
+    const scoreCalls = [];
+    const runtime = createRuntime(ClientGameRuntime, {
+        ClientModelUpdateFlow: {
+            sync(options) {
+                syncCalls.push({
+                    previousVersion: options.previousModel.version,
+                    version: options.model.version
+                });
+            }
+        }
+    });
+
+    runtime.scoreKeeper.setScores = function (scores) {
+        scoreCalls.push(scores);
+    };
+    runtime.latestModel = {
+        clients: [{ id: 'p1', name: 'ACE', slot: 0 }],
+        gameId: 'G0001',
+        phase: 'readying',
+        scores: [0, 0],
+        version: 7
+    };
+
+    runtime.onModelUpdate({
+        clients: [{ id: 'p1', name: 'FRESH', ready: true, slot: 0 }],
+        gameId: 'G0001',
+        matchState: 'idle',
+        phase: 'readying',
+        phaseStartedAt: 1000,
+        roundNumber: 0,
+        scores: [1, 0],
+        version: 8
+    });
+
+    assert.deepEqual(syncCalls, [{ previousVersion: 7, version: 8 }]);
+    assert.deepEqual(scoreCalls, [[1, 0]]);
+    assert.equal(runtime.latestModel.clients[0].name, 'FRESH');
+    assert.equal(runtime.latestModel.clients[0].ready, true);
+    assert.deepEqual(runtime.latestModel.scores, [1, 0]);
+    assert.equal(runtime.latestModel.version, 8);
 });
