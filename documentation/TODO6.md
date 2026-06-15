@@ -223,7 +223,7 @@
 - [ ] In lobby screen desktop - avoid H1 title and keyboard instructions jump on screen when entering into ready state.
 - [ ] When both players have marked themselves as ready - I would like a leave-lobby-for-game-sequence. I would like the lobby screen to keep the players in the lobby for a few seconds so you can see the READY status in negative text for 2 seconds and hear the ready sound before switching to the game screen.
 - I would like to reproduce a feature of the original arcade game:
-  [] If there is a last played game, the top line containing 'Game over' and the player names and score, should show in the main lobby after the game.
+  [ ] If there is a last played game, the top line containing 'Game over' and the player names and score, should show in the main lobby after the game.
 
 ## Other Ideas
 

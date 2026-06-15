@@ -163,6 +163,20 @@ client receives an abandoned model.
 `closed` means the last client left. Closed games are removed from the lobby
 map.
 
+Legal server phase transitions are:
+
+| From             | To                                              |
+| ---------------- | ----------------------------------------------- |
+| `waiting`        | `readying`, `closed`                            |
+| `readying`       | `waiting`, `readyCountdown`, `closed`           |
+| `readyCountdown` | `roundIntro`, `abandoned`, `closed`             |
+| `roundIntro`     | `playing`, `gameOver`, `abandoned`, `closed`    |
+| `playing`        | `hitPause`, `gameOver`, `abandoned`, `closed`   |
+| `hitPause`       | `roundIntro`, `gameOver`, `abandoned`, `closed` |
+| `gameOver`       | `waiting`, `readying`, `abandoned`, `closed`    |
+| `abandoned`      | `closed`                                        |
+| `closed`         | none                                            |
+
 When a disconnect leaves fewer than two clients, `gfmodel` clears the remaining
 client's `ready` flag. If the disconnect happens during an active match phase,
 the phase becomes `abandoned`; otherwise the remaining game returns to

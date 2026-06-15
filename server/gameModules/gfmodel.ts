@@ -19,6 +19,18 @@ export const GAME_MODEL_TIMINGS = {
     matchMs: 70000
 };
 
+export const LEGAL_PHASE_TRANSITIONS: Record<GamePhase, GamePhase[]> = {
+    waiting: ['readying', 'closed'],
+    readying: ['waiting', 'readyCountdown', 'closed'],
+    readyCountdown: ['roundIntro', 'abandoned', 'closed'],
+    roundIntro: ['playing', 'gameOver', 'abandoned', 'closed'],
+    playing: ['hitPause', 'gameOver', 'abandoned', 'closed'],
+    hitPause: ['roundIntro', 'gameOver', 'abandoned', 'closed'],
+    gameOver: ['waiting', 'readying', 'abandoned', 'closed'],
+    abandoned: ['closed'],
+    closed: []
+};
+
 interface GameModelOptions {
     now?: () => number;
 }
@@ -47,6 +59,13 @@ function isActivePhase(phase: GamePhase): boolean {
         phase === 'hitPause' ||
         phase === 'gameOver'
     );
+}
+
+export function canTransitionPhase(
+    currentPhase: GamePhase,
+    nextPhase: GamePhase
+): boolean {
+    return LEGAL_PHASE_TRANSITIONS[currentPhase].indexOf(nextPhase) >= 0;
 }
 
 export function createGameModel(options: GameModelOptions = {}) {
@@ -106,22 +125,33 @@ export function createGameModel(options: GameModelOptions = {}) {
 
     function setPhase(
         nextPhase: GamePhase,
-        options: { endsAt?: number | null } = {}
-    ): void {
+        options: { allowSamePhase?: boolean; endsAt?: number | null } = {}
+    ): boolean {
+        if (phase === nextPhase && options.allowSamePhase !== true) {
+            return false;
+        }
+
+        if (phase !== nextPhase && !canTransitionPhase(phase, nextPhase)) {
+            return false;
+        }
+
         phase = nextPhase;
         phaseStartedAt = now();
         phaseEndsAt =
             typeof options.endsAt === 'number' ? options.endsAt : null;
         bumpVersion();
+
+        return true;
     }
 
-    function setWaitingPhase(): void {
+    function setWaitingPhase(): boolean {
         if (clients.length === 0) {
-            setPhase('closed');
-            return;
+            return setPhase('closed');
         }
 
-        setPhase(clients.length >= 2 ? 'readying' : 'waiting');
+        return setPhase(clients.length >= 2 ? 'readying' : 'waiting', {
+            allowSamePhase: true
+        });
     }
 
     function resetMatch(): void {
@@ -131,12 +161,12 @@ export function createGameModel(options: GameModelOptions = {}) {
         scores = [0, 0];
     }
 
-    function startMatch(): void {
+    function startMatch(): boolean {
         resetMatch();
         matchState = 'playing';
         matchEndsAt = now() + GAME_MODEL_TIMINGS.matchMs;
         advanceRound();
-        setPhase('roundIntro', {
+        return setPhase('roundIntro', {
             endsAt: now() + GAME_MODEL_TIMINGS.roundIntroMs
         });
     }
@@ -146,17 +176,18 @@ export function createGameModel(options: GameModelOptions = {}) {
             return false;
         }
 
-        if (matchState !== 'playing') {
+        if (
+            matchState !== 'playing' ||
+            !canTransitionPhase(phase, 'gameOver')
+        ) {
             return false;
         }
 
         matchResultId = resultId;
         matchState = 'gameOver';
-        setPhase('gameOver', {
+        return setPhase('gameOver', {
             endsAt: now() + GAME_MODEL_TIMINGS.gameOverMs
         });
-
-        return true;
     }
 
     function returnToLobbyAfterGameOver(): boolean {
@@ -172,9 +203,7 @@ export function createGameModel(options: GameModelOptions = {}) {
             client.ready = false;
         });
         resetMatch();
-        setWaitingPhase();
-
-        return true;
+        return setWaitingPhase();
     }
 
     return {
@@ -253,32 +282,25 @@ export function createGameModel(options: GameModelOptions = {}) {
                 return item.id === client.id;
             });
 
-            if (
-                clients.length < 2 ||
-                phase === 'readyCountdown' ||
-                phase === 'roundIntro' ||
-                phase === 'playing' ||
-                phase === 'hitPause' ||
-                phase === 'gameOver' ||
-                phase === 'abandoned' ||
-                phase === 'closed'
-            ) {
+            if (!existingClient || existingClient.ready) {
                 return false;
             }
 
-            if (existingClient) {
-                existingClient.ready = true;
-                bumpVersion();
+            if (clients.length < 2 || phase !== 'readying') {
+                return false;
             }
 
-            if (existingClient && areAllReady()) {
+            existingClient.ready = true;
+            bumpVersion();
+
+            if (areAllReady()) {
                 resetMatch();
-                setPhase('readyCountdown', {
+                return setPhase('readyCountdown', {
                     endsAt: now() + GAME_MODEL_TIMINGS.readyCountdownMs
                 });
             }
 
-            return !!existingClient;
+            return true;
         },
 
         resetReady: function (): boolean {
@@ -290,9 +312,7 @@ export function createGameModel(options: GameModelOptions = {}) {
                 return false;
             }
 
-            startMatch();
-
-            return true;
+            return startMatch();
         },
 
         enterPlaying: function (resultId: string): boolean {
@@ -304,11 +324,9 @@ export function createGameModel(options: GameModelOptions = {}) {
                 return finishMatch(resultId);
             }
 
-            setPhase('playing', {
+            return setPhase('playing', {
                 endsAt: matchEndsAt
             });
-
-            return true;
         },
 
         recordRoundResult: function (result: RoundResultPayload): boolean {
@@ -329,11 +347,9 @@ export function createGameModel(options: GameModelOptions = {}) {
             }
 
             scores[winnerSlot]++;
-            setPhase('hitPause', {
+            return setPhase('hitPause', {
                 endsAt: now() + GAME_MODEL_TIMINGS.hitPauseMs
             });
-
-            return true;
         },
 
         finishHitPause: function (resultId: string): boolean {
@@ -346,11 +362,9 @@ export function createGameModel(options: GameModelOptions = {}) {
             }
 
             advanceRound();
-            setPhase('roundIntro', {
+            return setPhase('roundIntro', {
                 endsAt: now() + GAME_MODEL_TIMINGS.roundIntroMs
             });
-
-            return true;
         },
 
         finishMatch: function (resultId: string): boolean {
