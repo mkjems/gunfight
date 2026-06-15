@@ -76,13 +76,9 @@ function createOptions() {
         resetAmmo() {
             calls.push('resetAmmo');
         },
-        resetScores: true,
         roundData: {
             clearObstacleDamage() {
                 calls.push('roundData.clearObstacleDamage');
-            },
-            clearRoundEnd() {
-                calls.push('roundData.clearRoundEnd');
             },
             getRoundEndsAt() {
                 return null;
@@ -104,11 +100,6 @@ function createOptions() {
         },
         scheduleMatchEnd() {
             calls.push('scheduleMatchEnd');
-        },
-        scoreKeeper: {
-            resetScores() {
-                calls.push('scoreKeeper.resetScores');
-            }
         },
         setRoundMessage(message) {
             calls.push(['setRoundMessage', message]);
@@ -134,8 +125,6 @@ test('starts the get-ready ritual and schedules draw', async function () {
     ritual.start(options);
 
     assert.deepEqual(calls, [
-        'scoreKeeper.resetScores',
-        'roundData.clearRoundEnd',
         ['setRoundState', 'ritual'],
         'closeNameEditor',
         'roundData.startScenario',
@@ -158,7 +147,7 @@ test('moves from draw to playing after ritual timers', async function () {
     scheduled[0].callback();
     scheduled[1].callback();
 
-    assert.deepEqual(calls.slice(12), [
+    assert.deepEqual(calls.slice(10), [
         'roundIntro.complete',
         ['setRoundMessage', 'DRAW!'],
         ['timer.set', 'ritual', 700],

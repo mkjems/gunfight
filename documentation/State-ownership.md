@@ -7,8 +7,9 @@ This is the current state split before the P1 architecture refactor. Keep it upd
 - Socket.IO connections and room membership.
 - Game ids and room ids.
 - Player ids, names, slots, and ready flags.
-- Game status: `waiting`, `readying`, `playing`, `abandoned`, or `closed`.
-- Current scenario selection, `roundNumber`, match state, and match score.
+- Game lifecycle phase, projected status, phase timestamps, and model version.
+- Current scenario selection, `roundNumber`, match state, match clock, and match
+  score.
 - Accepted round results and final game-result records for high scores.
 - High score table in server memory.
 
@@ -40,12 +41,13 @@ side effects stay in flow modules.
 - Round results are reported by the client that detected the winning hit. The
   server accepts only current, non-duplicate, winner-owned results and updates
   score.
-- Match expiry is reported by the client timer. The server finalizes the match
-  once and records high scores from the server-owned score.
+- Match expiry is owned by the server clock. Clients display the server
+  `matchEndsAt` value.
 
 ## Current risk
 
 Gameplay is mostly client-authoritative. This is acceptable for a small public
 arcade toy, but it means two clients can diverge if timing, collision, hit
-detection, or network delivery differs. The server owns scoring now, but it does
-not yet validate bullet physics or run the authoritative match clock.
+detection, or network delivery differs. The server owns the slow lifecycle,
+score, scenario changes, and match clock now, but it does not yet validate
+bullet physics.

@@ -27,6 +27,7 @@ const highScores = createHighScores();
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
+const gameTimers = new Map();
 
 app.use(
     express.static(clientRoot, {
@@ -80,16 +81,70 @@ function getSocketGameContext(socket) {
 }
 
 function emitGameModel(game, eventName) {
+    scheduleGameTimers(game);
     io.to(game.room).emit(eventName || 'modelUpdate', lobby.getModel(game));
 }
 
-function isReadyToStart(model) {
-    return (
-        model.clients.length >= 2 &&
-        model.clients.every(function (client) {
-            return client.ready;
-        })
-    );
+function clearGameTimers(gameId) {
+    const timers = gameTimers.get(gameId);
+
+    if (!timers) {
+        return;
+    }
+
+    if (timers.phase) {
+        clearTimeout(timers.phase);
+    }
+
+    gameTimers.delete(gameId);
+}
+
+function scheduleGameTimers(game) {
+    const model = lobby.getModel(game);
+
+    clearGameTimers(game.id);
+
+    if (!model.phaseEndsAt) {
+        return;
+    }
+
+    gameTimers.set(game.id, {
+        phase: setTimeout(
+            function () {
+                advanceTimedGamePhase(game.id, model.version, model.phase);
+            },
+            Math.max(0, model.phaseEndsAt - Date.now())
+        )
+    });
+}
+
+function recordResult(result) {
+    if (result) {
+        io.emit('highScores', highScores.recordGame(result));
+    }
+}
+
+function advanceTimedGamePhase(gameId, version, phase) {
+    const game = lobby.getGame(gameId);
+    const model = game && lobby.getModel(game);
+    let result = null;
+
+    if (!game || !model || model.version !== version || model.phase !== phase) {
+        return;
+    }
+
+    if (phase === 'readyCountdown') {
+        lobby.startMatch(game);
+    } else if (phase === 'roundIntro') {
+        result = lobby.enterPlaying(game);
+    } else if (phase === 'playing') {
+        result = lobby.finishMatch(game);
+    } else if (phase === 'hitPause') {
+        result = lobby.finishHitPause(game);
+    }
+
+    recordResult(result);
+    emitGameModel(game);
 }
 
 function joinSocketGame(socket, options) {
@@ -127,6 +182,8 @@ function leaveSocketGame(socket) {
 
     if (left && left.model) {
         emitGameModel(left.game);
+    } else if (left) {
+        clearGameTimers(left.game.id);
     }
 
     return left;
@@ -141,7 +198,7 @@ function autoPairWaitingPlayer(game) {
 
     if (
         !game ||
-        game.status !== 'waiting' ||
+        lobby.getStatus(game) !== 'waiting' ||
         !targetGame ||
         !waitingClient ||
         !waitingSocket
@@ -300,21 +357,14 @@ io.on('connection', function (socket) {
 
     socket.on('clientReady', function () {
         const context = getSocketGameContext(socket);
-        let model;
 
         if (!context) {
             return;
         }
 
-        if (!context.game.model.readyClient(context.client)) {
+        if (!lobby.readyClient(context.game, context.client)) {
             emitGameModel(context.game);
             return;
-        }
-
-        model = lobby.getModel(context.game);
-
-        if (isReadyToStart(model)) {
-            lobby.markPlaying(context.game);
         }
 
         emitGameModel(context.game);
@@ -327,8 +377,7 @@ io.on('connection', function (socket) {
             return;
         }
 
-        context.game.model.resetReady();
-        lobby.refreshStatus(context.game);
+        lobby.resetReady(context.game);
         emitGameModel(context.game);
     });
 
@@ -360,11 +409,7 @@ io.on('connection', function (socket) {
         }
 
         result = lobby.finishMatch(context.game);
-
-        if (result) {
-            io.emit('highScores', highScores.recordGame(result));
-        }
-
+        recordResult(result);
         emitGameModel(context.game);
     });
 });

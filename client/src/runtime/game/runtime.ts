@@ -428,7 +428,7 @@ export class ClientGameRuntime implements ClientGameController {
     private onModelUpdate = (data: unknown) => {
         const model = parseGameModel(data);
 
-        if (model) {
+        if (model && !this.isStaleModel(model)) {
             this.syncPlayers(model);
         }
     };
@@ -442,6 +442,7 @@ export class ClientGameRuntime implements ClientGameController {
 
         this.latestModel = model;
         this.scoreKeeper.setScores(model.scores);
+        this.syncServerTiming(model);
 
         this.dependencies.ClientModelUpdateFlow.sync({
             clearAbandonedRequeue: this.clearAbandonedRequeue,
@@ -544,10 +545,10 @@ export class ClientGameRuntime implements ClientGameController {
         this.renderHud();
     };
 
-    private startRoundRitual = (options?: { resetScores?: boolean }) => {
-        options = options || {};
+    private startRoundRitual = () => {
         this.highScoresVisible = false;
         this.activeScenario = this.latestModel?.currentScenario ?? null;
+        this.clearHitPausePresentation();
 
         this.dependencies.ClientRoundRitual.start({
             bullets: this.bullets,
@@ -556,11 +557,9 @@ export class ClientGameRuntime implements ClientGameController {
             hasMatchTimeExpired: this.roundData.hasMatchTimeExpired,
             renderHud: this.renderHud,
             resetAmmo: this.resetAmmo,
-            resetScores: options.resetScores,
             roundData: this.roundData,
             roundIntro: this.roundIntro,
             scheduleMatchEnd: this.scheduleMatchEnd,
-            scoreKeeper: this.scoreKeeper,
             setRoundMessage: this.setRoundMessage,
             setRoundState: this.setRoundState,
             timers: this.timers
@@ -568,6 +567,10 @@ export class ClientGameRuntime implements ClientGameController {
     };
 
     private scheduleMatchEnd = () => {
+        if (this.latestModel?.phase) {
+            return;
+        }
+
         this.dependencies.ClientMatchTimer.scheduleEnd({
             endGame: this.endGame,
             roundData: this.roundData,
@@ -580,7 +583,7 @@ export class ClientGameRuntime implements ClientGameController {
             bullets: this.bullets,
             collision: this.dependencies.Collision,
             findBulletObstacleHit: this.findBulletObstacleHit,
-            matchTimeExpired: this.roundData.hasMatchTimeExpired(),
+            matchTimeExpired: this.shouldUseLocalMatchExpiry(),
             players: this.players,
             roundState: this.roundState
         }) as RuntimeHitDetectionResult;
@@ -644,6 +647,7 @@ export class ClientGameRuntime implements ClientGameController {
             bullets: this.bullets,
             endGame: this.endGame,
             hasMatchTimeExpired: this.roundData.hasMatchTimeExpired,
+            model: this.latestModel,
             players: this.players,
             resetAmmo: this.resetAmmo,
             roundData: this.roundData,
@@ -692,14 +696,11 @@ export class ClientGameRuntime implements ClientGameController {
     private resetRound = () => {
         this.dependencies.ClientRoundResetFlow.resetRound({
             bullets: this.bullets,
-            isReadyToStart: this.dependencies.ClientModelSync.isReadyToStart,
-            model: this.latestModel,
             players: this.players,
             renderHud: this.renderHud,
             roundData: this.roundData,
             setRoundMessage: this.setRoundMessage,
             setRoundState: this.setRoundState,
-            startRoundRitual: this.startRoundRitual,
             syncNameEditor: this.syncNameEditor,
             timers: this.timers
         });
@@ -935,6 +936,47 @@ export class ClientGameRuntime implements ClientGameController {
             this.bullets.all(),
             this.getCurrentScenario()
         );
+    };
+
+    private isStaleModel = (model: RuntimeGameModel) => {
+        if (
+            !this.latestModel ||
+            !model.gameId ||
+            model.gameId !== this.latestModel.gameId ||
+            typeof model.version !== 'number' ||
+            typeof this.latestModel.version !== 'number'
+        ) {
+            return false;
+        }
+
+        return model.version <= this.latestModel.version;
+    };
+
+    private syncServerTiming = (model: RuntimeGameModel) => {
+        if (typeof model.matchEndsAt === 'number') {
+            this.roundData.setRoundEndsAt(model.matchEndsAt);
+            return;
+        }
+
+        if (model.phase) {
+            this.roundData.setRoundEndsAt(null);
+        }
+    };
+
+    private shouldUseLocalMatchExpiry = () => {
+        if (this.latestModel?.phase) {
+            return false;
+        }
+
+        return this.roundData.hasMatchTimeExpired();
+    };
+
+    private clearHitPausePresentation = () => {
+        this.roundData.clearHitMessage();
+
+        Object.keys(this.players.all).forEach((id) => {
+            this.players.all[id]?.clearDeathAnimation();
+        });
     };
 
     private getObstacleDamage = (id: string) => {

@@ -59,14 +59,6 @@ function createResetOptions(overrides = {}) {
                 calls.push('bullets.reset');
             }
         },
-        isReadyToStart(model) {
-            calls.push(['isReadyToStart', model && model.gameId]);
-
-            return false;
-        },
-        model: {
-            gameId: 'game-1'
-        },
         players: {
             resetAll(options) {
                 calls.push(['players.resetAll', options.slots]);
@@ -94,9 +86,6 @@ function createResetOptions(overrides = {}) {
                 calls.push(['socket.emit', event]);
             }
         },
-        startRoundRitual(options) {
-            calls.push(['startRoundRitual', options.resetScores]);
-        },
         syncNameEditor() {
             calls.push('syncNameEditor');
         },
@@ -120,52 +109,13 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('resets a round into the next ritual when the model is ready', async function () {
-    const flow = await loadClientRoundResetFlow();
-    const { calls, options } = createResetOptions({
-        isReadyToStart(model) {
-            calls.push(['isReadyToStart', model.gameId]);
-
-            return true;
-        },
-        model: {
-            gameId: 'game-1',
-            currentScenario: {
-                playerStarts: [
-                    { x: 120, y: 430, facing: 1, frame: 0 },
-                    { x: 830, y: 430, facing: -1, frame: 2 }
-                ]
-            }
-        }
-    });
-
-    flow.resetRound(options);
-
-    assert.deepEqual(plain(calls), [
-        ['isReadyToStart', 'game-1'],
-        [
-            'players.resetAll',
-            [
-                { x: 120, y: 430, facing: 1, frame: 0 },
-                { x: 830, y: 430, facing: -1, frame: 2 }
-            ]
-        ],
-        'bullets.reset',
-        ['setRoundMessage', ''],
-        'roundData.resetRoundFlags',
-        ['timers.clearMany', ['reset', 'matchEnd']],
-        ['startRoundRitual', false]
-    ]);
-});
-
-test('resets a round back to waiting when the model is not ready', async function () {
+test('resets a round back to waiting', async function () {
     const flow = await loadClientRoundResetFlow();
     const { calls, options } = createResetOptions();
 
     flow.resetRound(options);
 
     assert.deepEqual(plain(calls), [
-        ['isReadyToStart', 'game-1'],
         [
             'players.resetAll',
             [

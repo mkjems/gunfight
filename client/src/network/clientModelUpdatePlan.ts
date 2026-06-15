@@ -14,6 +14,7 @@ type PublicModel = {
     currentScenario?: {
         playerStarts?: typeof Config.player.slots;
     } | null;
+    phase?: string;
     status?: string;
 };
 
@@ -30,8 +31,11 @@ export function create(options: CreatePlanOptions) {
         options.model,
         options.playerId
     );
+    const serverStartedRound =
+        options.model?.phase === 'roundIntro' &&
+        options.previousModel?.phase !== 'roundIntro';
     const shouldStartRound =
-        options.roundState === RoundState.WAITING && syncState.readyToStart;
+        canStartRoundFromState(options.roundState) && serverStartedRound;
     const syncLobbySlots =
         options.roundState === RoundState.WAITING && !shouldStartRound;
 
@@ -54,6 +58,14 @@ export function create(options: CreatePlanOptions) {
                 : getScenarioPlayerStarts(options.model)
         }
     };
+}
+
+function canStartRoundFromState(roundState: RoundState): boolean {
+    return (
+        roundState === RoundState.WAITING ||
+        roundState === RoundState.HIT_PAUSE ||
+        roundState === RoundState.ROUND_OVER
+    );
 }
 
 function getScenarioPlayerStarts(model: PublicModel | null) {

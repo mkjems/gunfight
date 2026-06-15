@@ -10,10 +10,8 @@ type ClientRoundRitualOptions = {
     hasMatchTimeExpired: () => boolean;
     renderHud: () => void;
     resetAmmo: () => void;
-    resetScores?: boolean;
     roundData: {
         clearObstacleDamage: () => void;
-        clearRoundEnd: () => void;
         getRoundEndsAt: () => number | null | undefined;
         setRoundEndsAt: (value: number) => void;
         startScenario: () => void;
@@ -23,9 +21,6 @@ type ClientRoundRitualOptions = {
         start: () => void;
     };
     scheduleMatchEnd: () => void;
-    scoreKeeper: {
-        resetScores: () => void;
-    };
     setRoundMessage: (message: string) => void;
     setRoundState: (roundState: RoundState) => void;
     timers: {
@@ -38,11 +33,6 @@ export function start(options: ClientRoundRitualOptions) {
         Config.round.getReadyDelay,
         Config.round.introWalkDelay
     );
-
-    if (options.resetScores) {
-        options.scoreKeeper.resetScores();
-        options.roundData.clearRoundEnd();
-    }
 
     options.setRoundState(RoundState.RITUAL);
     options.closeNameEditor();

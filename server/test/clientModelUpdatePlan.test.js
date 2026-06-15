@@ -61,7 +61,7 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('plans a round start when a waiting game becomes ready', async function () {
+test('does not start a round from ready flags without server round intro', async function () {
     const plan = await loadClientModelUpdatePlan();
     const previousModel = {
         clients: [
@@ -83,20 +83,55 @@ test('plans a round start when a waiting game becomes ready', async function () 
         status: 'playing'
     };
 
+    const result = plan.create({
+        model,
+        playerId: 'p1',
+        previousModel,
+        roundState: 'waiting'
+    });
+
+    assert.equal(result.startRoundRitual, false);
+    assert.equal(result.renderHud, true);
+});
+
+test('plans a round start when the server enters round intro', async function () {
+    const plan = await loadClientModelUpdatePlan();
+    const previousModel = {
+        clients: [
+            { id: 'p1', ready: true },
+            { id: 'p2', ready: true }
+        ],
+        phase: 'hitPause'
+    };
+    const model = {
+        clients: [
+            { id: 'p1', ready: true },
+            { id: 'p2', ready: true }
+        ],
+        currentScenario: {
+            playerStarts: [
+                { x: 120, y: 430, facing: 1, frame: 0 },
+                { x: 830, y: 430, facing: -1, frame: 2 }
+            ]
+        },
+        phase: 'roundIntro',
+        status: 'playing'
+    };
+
     assert.deepEqual(
         plain(
             plan.create({
                 model,
                 playerId: 'p1',
                 previousModel,
-                roundState: 'waiting'
+                roundState: 'hitPause'
             })
         ),
         {
             clearAbandonedRequeue: true,
             clearLocalReadyRequest: false,
             enterLobbyState: false,
-            playReadySound: true,
+            playReadySound: false,
             renderHud: false,
             scheduleAbandonedRequeue: false,
             startRoundRitual: true,
@@ -104,13 +139,40 @@ test('plans a round start when a waiting game becomes ready', async function () 
             syncStoredPlayerName: true,
             syncPlayers: {
                 localPlayerFirst: false,
-                resetChangedSlots: true,
+                resetChangedSlots: false,
                 slots: [
                     { x: 120, y: 430, facing: 1, frame: 0 },
                     { x: 830, y: 430, facing: -1, frame: 2 }
                 ]
             }
         }
+    );
+});
+
+test('does not start gameplay while the server is in ready countdown', async function () {
+    const plan = await loadClientModelUpdatePlan();
+
+    assert.equal(
+        plan.create({
+            model: {
+                clients: [
+                    { id: 'p1', ready: true },
+                    { id: 'p2', ready: true }
+                ],
+                phase: 'readyCountdown',
+                status: 'readying'
+            },
+            playerId: 'p1',
+            previousModel: {
+                clients: [
+                    { id: 'p1', ready: true },
+                    { id: 'p2', ready: false }
+                ],
+                phase: 'readying'
+            },
+            roundState: 'waiting'
+        }).startRoundRitual,
+        false
     );
 });
 

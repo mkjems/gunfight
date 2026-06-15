@@ -96,8 +96,8 @@ function createFlowOptions(overrides = {}) {
         scheduleAbandonedRequeue() {
             calls.push('scheduleAbandonedRequeue');
         },
-        startRoundRitual(options) {
-            calls.push(['startRoundRitual', options.resetScores]);
+        startRoundRitual() {
+            calls.push('startRoundRitual');
         },
         syncNameEditor() {
             calls.push('syncNameEditor');
@@ -193,7 +193,7 @@ test('starts the round ritual instead of rendering the hud', async function () {
         'playReadySound',
         ['players.sync', 'next', ['left', 'right']],
         'syncNameEditor',
-        ['startRoundRitual', true]
+        'startRoundRitual'
     ]);
 });
 

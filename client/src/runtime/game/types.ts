@@ -228,7 +228,7 @@ export type RuntimeRoundData = {
     hasMatchTimeExpired: () => boolean;
     resetRoundFlags: () => void;
     setHitMessage: (message: { targetId: ClientId; text: string }) => void;
-    setRoundEndsAt: (value: number) => void;
+    setRoundEndsAt: (value: number | null) => void;
     setRoundMessage: (message?: string) => void;
     startScenario: () => void;
 };
@@ -398,12 +398,17 @@ export type RuntimeGameModel = {
     currentScenario?: Scenario | null;
     gameId?: string;
     matchResultId?: string;
+    matchEndsAt?: number;
     matchState?: string;
     message?: string;
+    phase?: string;
+    phaseEndsAt?: number;
+    phaseStartedAt?: number;
     playerLimit?: number;
     roundNumber?: number;
     scores?: number[];
     status?: string;
+    version?: number;
 };
 
 export type RuntimeJoinedGamePayload = {

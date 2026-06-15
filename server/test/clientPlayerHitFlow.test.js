@@ -170,8 +170,8 @@ test('resets after hit and starts the next ritual', async function () {
                 calls.push('roundData.clearHitMessage');
             }
         },
-        startRoundRitual(options) {
-            calls.push(['startRoundRitual', options.resetScores]);
+        startRoundRitual() {
+            calls.push('startRoundRitual');
         }
     });
 
@@ -180,7 +180,7 @@ test('resets after hit and starts the next ritual', async function () {
         'p1.clearDeathAnimation',
         'bullets.reset',
         'resetAmmo',
-        ['startRoundRitual', false]
+        'startRoundRitual'
     ]);
 });
 
@@ -227,8 +227,8 @@ test('resets after remote hit without advancing the round locally', async functi
                 calls.push(['socket.emit', event]);
             }
         },
-        startRoundRitual(options) {
-            calls.push(['startRoundRitual', options.resetScores]);
+        startRoundRitual() {
+            calls.push('startRoundRitual');
         }
     });
 
@@ -238,7 +238,56 @@ test('resets after remote hit without advancing the round locally', async functi
         'p2.clearDeathAnimation',
         'bullets.reset',
         'resetAmmo',
-        ['startRoundRitual', false]
+        'startRoundRitual'
+    ]);
+});
+
+test('resets hit presentation without local round advance when server phases are active', async function () {
+    const flow = await loadClientPlayerHitFlow();
+    const calls = [];
+
+    flow.resetAfterHit({
+        bullets: {
+            reset() {
+                calls.push('bullets.reset');
+            }
+        },
+        endGame() {
+            calls.push('endGame');
+        },
+        hasMatchTimeExpired() {
+            return true;
+        },
+        model: {
+            phase: 'hitPause'
+        },
+        players: {
+            all: {
+                p1: {
+                    clearDeathAnimation() {
+                        calls.push('p1.clearDeathAnimation');
+                    }
+                }
+            }
+        },
+        resetAmmo() {
+            calls.push('resetAmmo');
+        },
+        roundData: {
+            clearHitMessage() {
+                calls.push('roundData.clearHitMessage');
+            }
+        },
+        startRoundRitual() {
+            calls.push('startRoundRitual');
+        }
+    });
+
+    assert.deepEqual(calls, [
+        'roundData.clearHitMessage',
+        'p1.clearDeathAnimation',
+        'bullets.reset',
+        'resetAmmo'
     ]);
 });
 

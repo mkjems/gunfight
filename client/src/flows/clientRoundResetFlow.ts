@@ -1,22 +1,10 @@
 import { Config } from '../platform/config.js';
 import { RoundState } from '../state/clientScreens.js';
 
-type ReadyModel = {
-    clients: Array<{
-        id: string | number;
-        ready?: boolean;
-    }>;
-    currentScenario?: {
-        playerStarts?: typeof Config.player.slots;
-    } | null;
-};
-
 type ClientRoundResetOptions = {
     bullets: {
         reset: () => void;
     };
-    isReadyToStart: (model?: ReadyModel | null) => boolean;
-    model?: ReadyModel | null;
     players: {
         resetAll: (options: { slots: typeof Config.player.slots }) => void;
     };
@@ -30,7 +18,6 @@ type ClientRoundResetOptions = {
     socket?: {
         emit: (event: 'resetReady') => void;
     };
-    startRoundRitual: (options: { resetScores: boolean }) => void;
     syncNameEditor: () => void;
     timers: {
         clearMany: (names: string[]) => void;
@@ -39,7 +26,7 @@ type ClientRoundResetOptions = {
 
 type ResetToStartScreenOptions = Omit<
     ClientRoundResetOptions,
-    'isReadyToStart' | 'model' | 'startRoundRitual'
+    'socket' | 'resetAmmo'
 > & {
     resetAmmo: () => void;
     socket: {
@@ -60,20 +47,10 @@ type WaitingStateOptions = Pick<
 const RESET_TIMERS = ['reset', 'matchEnd'];
 
 export function resetRound(options: ClientRoundResetOptions) {
-    const readyToStart = options.isReadyToStart(options.model);
-
     options.players.resetAll({
-        slots: readyToStart
-            ? getScenarioPlayerStarts(options.model)
-            : Config.player.lobbySlots
+        slots: Config.player.lobbySlots
     });
     resetSharedRoundState(options);
-
-    if (readyToStart) {
-        options.startRoundRitual({ resetScores: false });
-        return;
-    }
-
     showWaitingState(options);
 }
 
@@ -98,13 +75,6 @@ function showWaitingState(options: WaitingStateOptions) {
     options.setRoundState(RoundState.WAITING);
     options.syncNameEditor();
     options.renderHud();
-}
-
-function getScenarioPlayerStarts(model?: ReadyModel | null) {
-    const starts =
-        model && model.currentScenario && model.currentScenario.playerStarts;
-
-    return starts && starts.length >= 2 ? starts : Config.player.slots;
 }
 
 export const ClientRoundResetFlow = {

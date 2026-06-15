@@ -3,12 +3,24 @@ import {
     parseRockDefinitions,
     parseScenarioSources,
     resolveScenarioSource,
+    type GamePhase,
     type GameModelClient,
     type GameModelSnapshot,
     type MatchState,
     type RoundResultPayload,
     type Scenario
 } from '../../shared/contracts.js';
+
+export const GAME_MODEL_TIMINGS = {
+    readyCountdownMs: 2000,
+    roundIntroMs: 2200,
+    hitPauseMs: 1800,
+    matchMs: 70000
+};
+
+interface GameModelOptions {
+    now?: () => number;
+}
 
 const rockDefinitions = parseRockDefinitions(
     JSON.parse(readFileSync(new URL('../rocks.json', import.meta.url), 'utf8')),
@@ -22,14 +34,34 @@ const scenarios = parseScenarioSources(
     'server/scenarios.json'
 );
 
-export function createGameModel() {
+function defaultNow(): number {
+    return Date.now();
+}
+
+function isActivePhase(phase: GamePhase): boolean {
+    return (
+        phase === 'readyCountdown' ||
+        phase === 'roundIntro' ||
+        phase === 'playing' ||
+        phase === 'hitPause' ||
+        phase === 'gameOver'
+    );
+}
+
+export function createGameModel(options: GameModelOptions = {}) {
+    const now = options.now || defaultNow;
     let counter = 0;
     const clients: GameModelClient[] = [];
     let currentScenarioIndex = -1;
     let matchResultId: string | null = null;
     let matchState: MatchState = 'idle';
+    let matchEndsAt: number | null = null;
+    let phase: GamePhase = 'waiting';
+    let phaseEndsAt: number | null = null;
+    let phaseStartedAt = now();
     let roundNumber = 0;
     let scores = [0, 0];
+    let version = 0;
 
     function getCurrentScenario(): Scenario | null {
         if (currentScenarioIndex < 0 || scenarios.length === 0) {
@@ -67,16 +99,61 @@ export function createGameModel() {
         });
     }
 
+    function bumpVersion(): void {
+        version++;
+    }
+
+    function setPhase(
+        nextPhase: GamePhase,
+        options: { endsAt?: number | null } = {}
+    ): void {
+        phase = nextPhase;
+        phaseStartedAt = now();
+        phaseEndsAt =
+            typeof options.endsAt === 'number' ? options.endsAt : null;
+        bumpVersion();
+    }
+
+    function setWaitingPhase(): void {
+        if (clients.length === 0) {
+            setPhase('closed');
+            return;
+        }
+
+        setPhase(clients.length >= 2 ? 'readying' : 'waiting');
+    }
+
     function resetMatch(): void {
         matchResultId = null;
         matchState = 'idle';
+        matchEndsAt = null;
         scores = [0, 0];
     }
 
     function startMatch(): void {
         resetMatch();
         matchState = 'playing';
+        matchEndsAt = now() + GAME_MODEL_TIMINGS.matchMs;
         advanceRound();
+        setPhase('roundIntro', {
+            endsAt: now() + GAME_MODEL_TIMINGS.roundIntroMs
+        });
+    }
+
+    function finishMatch(resultId: string): boolean {
+        if (matchState === 'gameOver') {
+            return false;
+        }
+
+        if (matchState !== 'playing') {
+            return false;
+        }
+
+        matchResultId = resultId;
+        matchState = 'gameOver';
+        setPhase('gameOver');
+
+        return true;
     }
 
     return {
@@ -89,11 +166,13 @@ export function createGameModel() {
             };
 
             clients.push(newClient);
+            setWaitingPhase();
             return newClient;
         },
 
         disconnect: function (client: GameModelClient): void {
             let i;
+            const wasActive = isActivePhase(phase) || matchState === 'playing';
 
             for (i = clients.length - 1; i >= 0; i--) {
                 if (clients[i].id === client.id) {
@@ -107,6 +186,14 @@ export function createGameModel() {
                 });
                 resetMatch();
             }
+
+            if (clients.length === 0) {
+                setPhase('closed');
+            } else if (wasActive) {
+                setPhase('abandoned');
+            } else {
+                setWaitingPhase();
+            }
         },
 
         getModel: function (): GameModelSnapshot {
@@ -114,33 +201,60 @@ export function createGameModel() {
                 clients: clients.slice(),
                 currentScenario: getCurrentScenario(),
                 matchState: matchState,
+                phase: phase,
+                phaseStartedAt: phaseStartedAt,
                 roundNumber: roundNumber,
-                scores: scores.slice()
+                scores: scores.slice(),
+                version: version
             };
 
             if (matchResultId) {
                 snapshot.matchResultId = matchResultId;
             }
 
+            if (matchEndsAt) {
+                snapshot.matchEndsAt = matchEndsAt;
+            }
+
+            if (phaseEndsAt) {
+                snapshot.phaseEndsAt = phaseEndsAt;
+            }
+
             return snapshot;
         },
 
+        touch: function (): void {
+            bumpVersion();
+        },
+
         readyClient: function (client: GameModelClient): boolean {
-            const wasReadyToStart = areAllReady();
             const existingClient = clients.find(function (item) {
                 return item.id === client.id;
             });
 
-            if (clients.length < 2) {
+            if (
+                clients.length < 2 ||
+                phase === 'readyCountdown' ||
+                phase === 'roundIntro' ||
+                phase === 'playing' ||
+                phase === 'hitPause' ||
+                phase === 'gameOver' ||
+                phase === 'abandoned' ||
+                phase === 'closed'
+            ) {
                 return false;
             }
 
             if (existingClient) {
                 existingClient.ready = true;
+                bumpVersion();
             }
 
-            if (!wasReadyToStart && areAllReady()) {
-                startMatch();
+            if (existingClient && areAllReady()) {
+                resetMatch();
+                setPhase('readyCountdown', {
+                    endsAt: now() + GAME_MODEL_TIMINGS.readyCountdownMs
+                });
             }
 
             return !!existingClient;
@@ -151,6 +265,33 @@ export function createGameModel() {
                 client.ready = false;
             });
             resetMatch();
+            setWaitingPhase();
+        },
+
+        startMatch: function (): boolean {
+            if (phase !== 'readyCountdown' || !areAllReady()) {
+                return false;
+            }
+
+            startMatch();
+
+            return true;
+        },
+
+        enterPlaying: function (resultId: string): boolean {
+            if (phase !== 'roundIntro' || matchState !== 'playing') {
+                return false;
+            }
+
+            if (matchEndsAt && now() >= matchEndsAt) {
+                return finishMatch(resultId);
+            }
+
+            setPhase('playing', {
+                endsAt: matchEndsAt
+            });
+
+            return true;
         },
 
         recordRoundResult: function (result: RoundResultPayload): boolean {
@@ -158,35 +299,49 @@ export function createGameModel() {
             const targetSlot = getClientSlot(result.targetId);
 
             if (
+                phase !== 'playing' ||
                 matchState !== 'playing' ||
                 clients.length < 2 ||
                 result.roundNumber !== roundNumber ||
                 winnerSlot < 0 ||
                 targetSlot < 0 ||
-                winnerSlot === targetSlot
+                winnerSlot === targetSlot ||
+                (matchEndsAt !== null && now() >= matchEndsAt)
             ) {
                 return false;
             }
 
             scores[winnerSlot]++;
+            setPhase('hitPause', {
+                endsAt: now() + GAME_MODEL_TIMINGS.hitPauseMs
+            });
+
+            return true;
+        },
+
+        finishHitPause: function (resultId: string): boolean {
+            if (phase !== 'hitPause' || matchState !== 'playing') {
+                return false;
+            }
+
+            if (matchEndsAt && now() >= matchEndsAt) {
+                return finishMatch(resultId);
+            }
+
             advanceRound();
+            setPhase('roundIntro', {
+                endsAt: now() + GAME_MODEL_TIMINGS.roundIntroMs
+            });
 
             return true;
         },
 
         finishMatch: function (resultId: string): boolean {
-            if (matchState === 'gameOver') {
+            if (matchEndsAt && now() < matchEndsAt) {
                 return false;
             }
 
-            if (matchState !== 'playing') {
-                return false;
-            }
-
-            matchResultId = resultId;
-            matchState = 'gameOver';
-
-            return true;
+            return finishMatch(resultId);
         }
     };
 }

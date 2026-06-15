@@ -68,7 +68,11 @@ function createRuntime(ClientGameRuntime) {
     });
 
     runtime.bullets = {};
+    runtime.players = {
+        all: {}
+    };
     runtime.roundData = {
+        clearHitMessage() {},
         hasMatchTimeExpired() {
             return false;
         }
@@ -90,7 +94,7 @@ test('keeps the active scenario visible until the next round ritual starts', asy
         clients: [],
         currentScenario: firstScenario
     };
-    runtime.startRoundRitual({ resetScores: false });
+    runtime.startRoundRitual();
 
     runtime.latestModel = {
         clients: [],
@@ -99,7 +103,7 @@ test('keeps the active scenario visible until the next round ritual starts', asy
 
     assert.equal(runtime.getCurrentScenario(), firstScenario);
 
-    runtime.startRoundRitual({ resetScores: false });
+    runtime.startRoundRitual();
 
     assert.equal(runtime.getCurrentScenario(), nextScenario);
 });

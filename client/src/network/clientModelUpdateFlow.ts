@@ -19,7 +19,7 @@ type SyncOptions = {
     renderHud: () => void;
     roundState: CreatePlanOptions['roundState'];
     scheduleAbandonedRequeue: () => void;
-    startRoundRitual: (options: { resetScores: boolean }) => void;
+    startRoundRitual: () => void;
     syncNameEditor: () => void;
     syncStoredPlayerName: () => void;
 };
@@ -63,7 +63,7 @@ export function sync(options: SyncOptions, createPlan: CreatePlan = create) {
     }
 
     if (plan.startRoundRitual) {
-        options.startRoundRitual({ resetScores: true });
+        options.startRoundRitual();
         return plan;
     }
 

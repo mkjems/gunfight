@@ -81,6 +81,22 @@ export function parseGameModel(data: unknown): RuntimeGameModel | null {
         model.matchState = data.matchState;
     }
 
+    if (isFiniteNumber(data.matchEndsAt)) {
+        model.matchEndsAt = data.matchEndsAt;
+    }
+
+    if (typeof data.phase === 'string') {
+        model.phase = data.phase;
+    }
+
+    if (isFiniteNumber(data.phaseEndsAt)) {
+        model.phaseEndsAt = data.phaseEndsAt;
+    }
+
+    if (isFiniteNumber(data.phaseStartedAt)) {
+        model.phaseStartedAt = data.phaseStartedAt;
+    }
+
     if (isFiniteNumber(data.playerLimit)) {
         model.playerLimit = data.playerLimit;
     }
@@ -100,6 +116,10 @@ export function parseGameModel(data: unknown): RuntimeGameModel | null {
 
     if (typeof data.status === 'string') {
         model.status = data.status;
+    }
+
+    if (isFiniteNumber(data.version)) {
+        model.version = data.version;
     }
 
     if (data.currentScenario === null) {

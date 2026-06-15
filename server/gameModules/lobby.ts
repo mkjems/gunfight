@@ -33,7 +33,6 @@ interface LobbyClient extends GameModelClient {
 interface GameSession {
     id: string;
     room: string;
-    status: GameStatus;
     model: ReturnType<typeof createGameModel>;
     clients: LobbyClient[];
     createdAt: number;
@@ -115,11 +114,14 @@ function toPublicClient(client: LobbyClient, index: number): PublicClient {
 }
 
 function getGameMessage(game: GameSession): string {
-    if (game.status === 'abandoned') {
+    const model = game.model.getModel();
+    const status = getGameStatus(game);
+
+    if (status === 'abandoned') {
         return 'OPPONENT LEFT';
     }
 
-    if (game.status === 'playing') {
+    if (status === 'playing') {
         return '';
     }
 
@@ -127,33 +129,38 @@ function getGameMessage(game: GameSession): string {
         return 'LOOKING FOR CHALLENGER';
     }
 
-    if (
-        game.clients.every(function (client) {
-            return client.ready;
-        })
-    ) {
+    if (model.phase === 'readyCountdown') {
         return '';
     }
 
     return 'PRESS P TO PLAY';
 }
 
-function updateGameStatus(game: GameSession): void {
-    if (game.clients.length === 0) {
-        game.status = 'closed';
-        return;
+function getGameStatus(game: GameSession): GameStatus {
+    const phase = game.model.getModel().phase;
+
+    if (phase === 'closed') {
+        return 'closed';
     }
 
-    if (game.status === 'abandoned') {
-        return;
+    if (phase === 'abandoned') {
+        return 'abandoned';
     }
 
-    if (game.clients.length >= MAX_PLAYERS_PER_GAME) {
-        game.status = 'readying';
-        return;
+    if (
+        phase === 'roundIntro' ||
+        phase === 'playing' ||
+        phase === 'hitPause' ||
+        phase === 'gameOver'
+    ) {
+        return 'playing';
     }
 
-    game.status = 'waiting';
+    if (phase === 'readying' || phase === 'readyCountdown') {
+        return 'readying';
+    }
+
+    return 'waiting';
 }
 
 function createLobbyClient(
@@ -180,8 +187,7 @@ export function createLobby(options: LobbyOptions = {}) {
         const game: GameSession = {
             id: gameId,
             room: createRoomName(gameId),
-            status: 'waiting',
-            model: createGameModel(),
+            model: createGameModel({ now }),
             clients: [],
             createdAt: now(),
             updatedAt: now()
@@ -201,7 +207,7 @@ export function createLobby(options: LobbyOptions = {}) {
             }
 
             if (
-                game.status === 'waiting' &&
+                getGameStatus(game) === 'waiting' &&
                 game.clients.length < MAX_PLAYERS_PER_GAME
             ) {
                 waitingGame = game;
@@ -221,7 +227,7 @@ export function createLobby(options: LobbyOptions = {}) {
 
             if (
                 game.id !== sourceGameId &&
-                game.status === 'waiting' &&
+                getGameStatus(game) === 'waiting' &&
                 game.clients.length === 1
             ) {
                 waitingGame = game;
@@ -270,7 +276,6 @@ export function createLobby(options: LobbyOptions = {}) {
         game.clients.push(client);
         game.updatedAt = now();
         clientsBySocketId.set(socketId, client);
-        updateGameStatus(game);
 
         return {
             client: client,
@@ -295,12 +300,7 @@ export function createLobby(options: LobbyOptions = {}) {
         game.updatedAt = now();
 
         if (game.clients.length === 0) {
-            game.status = 'closed';
             games.delete(game.id);
-        } else if (game.status === 'playing') {
-            game.status = 'abandoned';
-        } else {
-            updateGameStatus(game);
         }
 
         return {
@@ -334,6 +334,7 @@ export function createLobby(options: LobbyOptions = {}) {
                 return item.socketId !== socketId;
             })
         });
+        game.model.touch();
         game.updatedAt = now();
 
         return {
@@ -341,16 +342,6 @@ export function createLobby(options: LobbyOptions = {}) {
             game: game,
             model: getModel(game)
         };
-    }
-
-    function markPlaying(game: GameSession): void {
-        game.status = 'playing';
-        game.updatedAt = now();
-    }
-
-    function refreshStatus(game: GameSession): void {
-        updateGameStatus(game);
-        game.updatedAt = now();
     }
 
     function recordRoundResult(
@@ -364,6 +355,69 @@ export function createLobby(options: LobbyOptions = {}) {
         }
 
         return accepted;
+    }
+
+    function readyClient(game: GameSession, client: LobbyClient): boolean {
+        const accepted = game.model.readyClient(client);
+
+        if (accepted) {
+            game.updatedAt = now();
+        }
+
+        return accepted;
+    }
+
+    function resetReady(game: GameSession): void {
+        game.model.resetReady();
+        game.updatedAt = now();
+    }
+
+    function startMatch(game: GameSession): boolean {
+        const accepted = game.model.startMatch();
+
+        if (accepted) {
+            game.updatedAt = now();
+        }
+
+        return accepted;
+    }
+
+    function createResultId(game: GameSession): string {
+        return game.id + ':' + game.model.getModel().roundNumber;
+    }
+
+    function enterPlaying(game: GameSession): GameResultPayload | null {
+        const resultId = createResultId(game);
+        const accepted = game.model.enterPlaying(resultId);
+
+        if (!accepted) {
+            return null;
+        }
+
+        game.updatedAt = now();
+
+        if (game.model.getModel().matchState === 'gameOver') {
+            return createGameResult(game, resultId);
+        }
+
+        return null;
+    }
+
+    function finishHitPause(game: GameSession): GameResultPayload | null {
+        const resultId = createResultId(game);
+        const accepted = game.model.finishHitPause(resultId);
+
+        if (!accepted) {
+            return null;
+        }
+
+        game.updatedAt = now();
+
+        if (game.model.getModel().matchState === 'gameOver') {
+            return createGameResult(game, resultId);
+        }
+
+        return null;
     }
 
     function createGameResult(
@@ -387,7 +441,7 @@ export function createLobby(options: LobbyOptions = {}) {
     }
 
     function finishMatch(game: GameSession): GameResultPayload | null {
-        const resultId = game.id + ':' + game.model.getModel().roundNumber;
+        const resultId = createResultId(game);
 
         if (!game.model.finishMatch(resultId)) {
             return null;
@@ -404,7 +458,7 @@ export function createLobby(options: LobbyOptions = {}) {
         return {
             ...model,
             gameId: game.id,
-            status: game.status,
+            status: getGameStatus(game),
             message: getGameMessage(game),
             playerLimit: MAX_PLAYERS_PER_GAME,
             clients: game.clients.map(toPublicClient)
@@ -422,13 +476,17 @@ export function createLobby(options: LobbyOptions = {}) {
         getGameForSocket: getGameForSocket,
         getGames: getGames,
         getModel: getModel,
+        getStatus: getGameStatus,
         join: join,
         leave: leave,
-        markPlaying: markPlaying,
+        enterPlaying: enterPlaying,
         finishMatch: finishMatch,
+        finishHitPause: finishHitPause,
+        readyClient: readyClient,
         recordRoundResult: recordRoundResult,
-        refreshStatus: refreshStatus,
         requeue: requeue,
+        resetReady: resetReady,
+        startMatch: startMatch,
         updateName: updateName
     };
 }

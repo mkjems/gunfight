@@ -138,7 +138,10 @@ Name is stored in the browser (session or local storage ) so you can work on tha
 The game screen contains the battlefield, players, bullets, obstacles, pixel
 effects, HUD, score, timer, and hit messages.
 
-Each match lasts 70 seconds total. The timer starts when the first duel begins and does not reset between kills, reloads, or later duels. Players may score as many kills as possible before time runs out. The winner is the player with the highest score when the timer reaches zero.
+Each match lasts 70 seconds total. The server starts the match clock when the
+first duel begins and does not reset it between kills, reloads, or later duels.
+Players may score as many kills as possible before time runs out. The winner is
+the player with the highest score when the timer reaches zero.
 
 ### HUD layout
 
@@ -150,13 +153,19 @@ Each match lasts 70 seconds total. The timer starts when the first duel begins a
 ### Round flow
 
 1. Both players enter ready state.
-2. Players walk into position.
-3. The screen shows `GET READY` at the center of the screen.
-4. The screen shows `DRAW !` at the center of the screen.
-5. The duel begins.
-6. A hit pauses the game. The winning client reports the hit, the server awards
-   one point, both players reload, and the next duel starts.
-7. When the match timer ends, the game shows `GAME OVER` with the winning player name or `TIE` and the final score, keeps it visible briefly, and returns to the lobby.
+2. The server enters a short ready countdown so both players can see the ready
+   state before gameplay starts.
+3. The server starts the match and publishes the first round intro.
+4. Players walk into position.
+5. The screen shows `GET READY` at the center of the screen.
+6. The screen shows `DRAW !` at the center of the screen.
+7. The duel begins.
+8. A hit pauses the game. The winning client reports the hit, the server awards
+   one point and enters a timed hit-pause phase. The next scenario and round
+   number are published only after that hit pause ends.
+9. When the server match timer ends, the game shows `GAME OVER` with the
+   winning player name or `TIE` and the final score, keeps it visible briefly,
+   and returns to the lobby.
 
 ### Gameplay rules
 

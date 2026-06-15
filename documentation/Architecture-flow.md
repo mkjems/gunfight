@@ -10,10 +10,10 @@ rendering rule).
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ SERVER (authoritative for sessions)                             │
+│ SERVER (authoritative for sessions and slow lifecycle)          │
 │ server.js → lobby.ts, gfmodel.ts, highScores.ts                 │
-│ owns: matchmaking, names, slots, ready flags, game status,      │
-│       scenario selection, round number, match score, high scores │
+│ owns: matchmaking, names, slots, ready flags, phase, match      │
+│       clock, scenario selection, round number, score, high scores│
 └───────────────────────────┬─────────────────────────────────────┘
                             │ Socket.IO events (both directions)
 ┌───────────────────────────┴─────────────────────────────────────┐
@@ -65,13 +65,16 @@ Client modules are grouped by the architecture boundary they belong to:
 `server/server.js` constructs Express, Socket.IO, and the three game modules,
 and validates `scenarios.json` / `rocks.json` at startup.
 
-- `lobby.ts` — pairs sockets into games, sanitizes names, assigns slots.
-- `gfmodel.ts` — the public game model: clients, ready flags, scenario, round
-  number, match state, and scores.
+- `lobby.ts` — pairs sockets into games, sanitizes names, assigns slots, and
+  projects compatibility status/message values from the game model.
+- `gfmodel.ts` — the public game model: clients, ready flags, lifecycle phase,
+  model version, phase timing, match clock, scenario, round number, match
+  state, and scores.
 - `highScores.ts` — in-memory high score table.
 
-The server is authoritative for session state and is a relay for gameplay
-events. It never simulates gameplay.
+The server is authoritative for session state and low-frequency lifecycle
+state. It is still a relay for high-frequency gameplay events and never
+simulates movement or bullets.
 
 | Direction       | Events                                                                                                                                                      |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -155,9 +158,10 @@ flowchart TD
 The control rules, in one list:
 
 1. **The server controls sessions.** Clients never decide who is in a game,
-   what anyone is named, what the score is, or what the round number is. They
-   request (`clientReady`, `roundResult`, `matchExpired`) and the server
-   broadcasts the result via `modelUpdate`.
+   what anyone is named, what lifecycle phase is active, what the score is, or
+   what the round number is. They request (`clientReady`, `roundResult`,
+   legacy `matchExpired`) and the server broadcasts the result via
+   `modelUpdate`.
 2. **The game loop controls time.** `ClientGameLoop` fires
    `ClientFrameFlow.update` then `.render` every animation frame. Everything
    that happens per frame is reachable only from there.
@@ -180,7 +184,8 @@ Gameplay movement and hit detection are client-authoritative and peer-relayed.
 Each client simulates locally; key events, periodic positions, and obstacle
 damage are relayed through the server to the opponent. The winning client
 reports `roundResult`; the server accepts only current, non-duplicate,
-winner-owned results and updates the authoritative score. At game over the
-client reports `matchExpired`; the server records high scores from its own final
-score. The remaining divergence risk is documented in
+winner-owned results during the server `playing` phase and updates the
+authoritative score. The server owns the match clock, hit-pause expiry,
+next-round scenario switch, game-over transition, and high-score result source.
+The remaining divergence risk is documented in
 `documentation/State-ownership.md`.

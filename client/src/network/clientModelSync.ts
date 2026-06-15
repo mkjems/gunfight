@@ -55,16 +55,6 @@ function didAnyClientBecomeReady(
     });
 }
 
-export function isReadyToStart(model?: PublicModel | null): boolean {
-    return (
-        !!model &&
-        model.clients.length >= 2 &&
-        model.clients.every(function (client) {
-            return client.ready;
-        })
-    );
-}
-
 export function analyze(
     previousModel: PublicModel | null,
     model: PublicModel | null,
@@ -73,13 +63,11 @@ export function analyze(
     return {
         abandoned: model && model.status === 'abandoned',
         clearLocalReadyRequest: shouldClearLocalReadyRequest(model, playerId),
-        clientBecameReady: didAnyClientBecomeReady(previousModel, model),
-        readyToStart: isReadyToStart(model)
+        clientBecameReady: didAnyClientBecomeReady(previousModel, model)
     };
 }
 
 export const ClientModelSync = {
     analyze,
-    getLocalClient,
-    isReadyToStart
+    getLocalClient
 };

@@ -56,7 +56,6 @@ test('analyzes model changes for client synchronization', async function () {
     assert.equal(result.abandoned, false);
     assert.equal(result.clearLocalReadyRequest, false);
     assert.equal(result.clientBecameReady, true);
-    assert.equal(result.readyToStart, true);
 });
 
 test('detects abandoned games and cleared local ready state', async function () {
@@ -71,5 +70,4 @@ test('detects abandoned games and cleared local ready state', async function () 
     assert.equal(result.abandoned, true);
     assert.equal(result.clearLocalReadyRequest, true);
     assert.equal(result.clientBecameReady, false);
-    assert.equal(result.readyToStart, false);
 });

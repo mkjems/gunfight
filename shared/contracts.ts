@@ -9,6 +9,17 @@ export type GameStatus =
 
 export type MatchState = 'idle' | 'playing' | 'gameOver';
 
+export type GamePhase =
+    | 'waiting'
+    | 'readying'
+    | 'readyCountdown'
+    | 'roundIntro'
+    | 'playing'
+    | 'hitPause'
+    | 'gameOver'
+    | 'abandoned'
+    | 'closed';
+
 export interface PublicClient {
     id: number;
     name: string;
@@ -25,8 +36,13 @@ export interface PublicGameModel {
     currentScenario: Scenario | null;
     matchResultId?: string;
     matchState: MatchState;
+    matchEndsAt?: number;
+    phase: GamePhase;
+    phaseEndsAt?: number;
+    phaseStartedAt: number;
     roundNumber: number;
     scores: number[];
+    version: number;
 }
 
 export interface HighScoreEntry {
@@ -123,8 +139,13 @@ export interface GameModelSnapshot {
     currentScenario: Scenario | null;
     matchResultId?: string;
     matchState: MatchState;
+    matchEndsAt?: number;
+    phase: GamePhase;
+    phaseEndsAt?: number;
+    phaseStartedAt: number;
     roundNumber: number;
     scores: number[];
+    version: number;
 }
 
 export interface BulletSnapshot {

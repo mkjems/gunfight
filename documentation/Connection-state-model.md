@@ -8,11 +8,12 @@ This document aims to describe this, in the simplest clearest way by describing 
 
 ## AS IS
 
-The server owns connection, pairing, names, ready flags, game status, scenario
-selection, round number, match state, accepted round results, match score, and
-the final high-score result source. The browser owns the active screen, local
-round phase, input state, player movement, bullets, hit detection, obstacle
-damage, ammo, and match timer presentation.
+The server owns connection, pairing, names, ready flags, lifecycle phase,
+projected game status, phase timing, match clock, scenario selection, round
+number, match state, accepted round results, match score, and the final
+high-score result source. The browser owns the active screen, local
+presentation round phase, input state, player movement, bullets, hit detection,
+obstacle damage, ammo, and match timer presentation.
 
 The server does not simulate gameplay. It creates sessions, publishes the
 public model, and relays gameplay events inside one game room.
@@ -24,9 +25,9 @@ flowchart TD
     Socket["Socket.IO socket"] --> Join["joinSocketGame"]
     Join --> Lobby["lobby.ts<br/>games map<br/>clientsBySocketId"]
 
-    Lobby --> Session["GameSession<br/>id, room, status<br/>clients, timestamps"]
-    Session --> Gfmodel["gfmodel<br/>client id + ready<br/>scenario, roundNumber<br/>matchState, scores"]
-    Session --> PublicModel["PublicGameModel<br/>gameId, status, message<br/>clients, scenario, roundNumber<br/>matchState, scores"]
+    Lobby --> Session["GameSession<br/>id, room<br/>clients, timestamps"]
+    Session --> Gfmodel["gfmodel<br/>client id + ready<br/>phase, version, timing<br/>scenario, roundNumber<br/>matchState, scores"]
+    Session --> PublicModel["PublicGameModel<br/>gameId, status, message<br/>clients, phase, timing<br/>scenario, roundNumber<br/>matchState, scores"]
     Gfmodel --> PublicModel
 
     PublicModel --> LatestModel["Client latestModel<br/>server-owned session copy"]
@@ -41,7 +42,7 @@ flowchart TD
     Relay --> Opponent["Opponent client"]
 
     Gameplay -->|"roundResult"| Gfmodel
-    RoundState -->|"matchExpired"| Gfmodel
+    Gfmodel -->|"server phase timers"| Gfmodel
     Gfmodel -->|"server-owned final result"| Scores["highScores.ts<br/>server memory"]
     Scores -->|"highScores"| ClientHighScores["Client highScores<br/>local render state"]
 
@@ -54,13 +55,20 @@ flowchart TD
 flowchart LR
     NoGame["no game"] -->|"first socket connects"| Waiting["waiting<br/>one client"]
     Waiting -->|"second socket connects"| Readying["readying<br/>two clients"]
-    Readying -->|"both ready"| Playing["playing<br/>clients simulate match"]
+    Readying -->|"both ready"| ReadyCountdown["readyCountdown<br/>server timed pause"]
+    ReadyCountdown -->|"server timer"| RoundIntro["roundIntro<br/>scenario published"]
+    RoundIntro -->|"server timer"| Playing["playing<br/>clients simulate match"]
+    Playing -->|"hit"| HitPause["hitPause<br/>server timed pause"]
+    HitPause -->|"server timer"| RoundIntro
+    Playing -->|"server match clock"| GameOver["gameOver<br/>high scores recorded"]
     Playing -->|"client leaves"| Abandoned["abandoned<br/>remaining client requeues"]
+    RoundIntro -->|"client leaves"| Abandoned
+    HitPause -->|"client leaves"| Abandoned
     Abandoned -->|"requeue"| Waiting
     Waiting -->|"last client leaves"| Closed["closed<br/>deleted"]
     Readying -->|"one client leaves"| Waiting
     Waiting -->|"another one-player waiting game exists"| Readying
-    Playing -->|"game over + resetReady"| Readying
+    GameOver -->|"resetReady"| Readying
     Closed --> NoGame
 ```
 
@@ -72,7 +80,6 @@ Each `GameSession` has:
 
 - `id`: public game id such as `G0001`.
 - `room`: Socket.IO room name such as `game:G0001`.
-- `status`: `waiting`, `readying`, `playing`, `abandoned`, or `closed`.
 - `model`: one `gfmodel` instance for this session.
 - `clients`: the sockets currently in this session.
 - `createdAt` and `updatedAt`.
@@ -89,56 +96,77 @@ Each lobby client has:
 session:
 
 - list of model clients: `id` and `ready`
+- lifecycle `phase`: `waiting`, `readying`, `readyCountdown`, `roundIntro`,
+  `playing`, `hitPause`, `gameOver`, `abandoned`, or `closed`
+- monotonically increasing `version`
+- `phaseStartedAt` and optional `phaseEndsAt`
+- optional authoritative `matchEndsAt`
 - current scenario
 - `roundNumber`
 - `matchState`: `idle`, `playing`, or `gameOver`
 - current match `scores`
 - optional `matchResultId` after the server finishes a match
 
-The public model sent to clients is built by merging `GameSession` state with
-the `gfmodel` snapshot:
+The public model sent to clients is built from the `gfmodel` snapshot plus
+lobby-owned socket metadata:
 
 - `gameId`
 - `status`
 - `message`
 - `playerLimit`
 - `clients`: `id`, `name`, `ready`, `slot`
+- `phase`, `version`, `phaseStartedAt`, and optional `phaseEndsAt`
+- `matchEndsAt` while a match is active
 - `currentScenario`
 - `matchState`
 - `matchResultId` when a match has been finalized
 - `roundNumber`
 - `scores`
 
-### Server status rules
+### Server phase and status rules
+
+`gfmodel` owns lifecycle `phase`. `lobby.ts` projects the older `status` field
+for UI compatibility:
+
+- `waiting` phase maps to `waiting` status.
+- `readying` and `readyCountdown` phases map to `readying` status.
+- `roundIntro`, `playing`, `hitPause`, and `gameOver` phases map to `playing`
+  status.
+- `abandoned` and `closed` phases map to matching statuses.
 
 `waiting` means a game exists with one connected client and room for another.
 
-`readying` means two clients are paired. The clients may both be unready, one
-ready, or both ready briefly before the server marks the game as `playing`.
+`readying` means two clients are paired. The clients may both be unready or one
+ready.
 
 `ready` is only valid while two clients are connected. A lone waiting client
 cannot become ready.
 
-`playing` means both clients reached ready at least once and the server has
-broadcast the model that starts the match on the clients.
+`readyCountdown` means both clients are ready and the server is holding the
+lobby screen briefly before starting the match.
 
-`abandoned` means a client left while the game was `playing`. The remaining
+`roundIntro` means the server has selected the scenario and round number; the
+clients present `GET READY`, intro walking, and `DRAW!`.
+
+`playing` means the duel is active and the server accepts current-round hit
+results.
+
+`hitPause` means an accepted hit is being shown. The server has already awarded
+the point, but it has not yet advanced the scenario or round number.
+
+`gameOver` means the server match clock has expired and the server-owned final
+score has been recorded.
+
+`abandoned` means a client left during an active match phase. The remaining
 client receives an abandoned model.
 
 `closed` means the last client left. Closed games are removed from the lobby
 map.
 
-Status is derived from connection count except for `playing`, `abandoned`, and
-`closed`:
-
-- zero clients: `closed`
-- one client: `waiting`
-- two clients: `readying`
-- leave during `playing`: `abandoned`
-- both clients ready: server calls `markPlaying`
-
 When a disconnect leaves fewer than two clients, `gfmodel` clears the remaining
-client's `ready` flag.
+client's `ready` flag. If the disconnect happens during an active match phase,
+the phase becomes `abandoned`; otherwise the remaining game returns to
+`waiting`.
 
 There should not be two separate one-player `waiting` games. After a leave or
 disconnect creates a one-player `waiting` game, the server looks for another
@@ -148,7 +176,7 @@ paired model to the target room. The moved client receives a new game id/player
 id just as it would during a normal requeue. Both clients remain unready.
 
 Only single-client `waiting` games are eligible for automatic pairing. The
-server does not move clients out of `playing` or `abandoned` games.
+server does not move clients out of active match or `abandoned` games.
 
 ### Connection and pairing lifecycle
 
@@ -168,8 +196,8 @@ On disconnect or explicit leave:
 1. The lobby removes the socket client from its game and from `gfmodel`.
 2. `gfmodel` clears remaining ready flags if fewer than two clients remain.
 3. If no clients remain, the game becomes `closed` and is deleted.
-4. If the game was `playing`, it becomes `abandoned`.
-5. Otherwise the status is refreshed from the remaining client count.
+4. If the game was in an active match phase, it becomes `abandoned`.
+5. Otherwise the phase returns to the connection-count state.
 6. If a model still exists, the server emits `modelUpdate` to the remaining
    room.
 7. If the remaining game is a one-player `waiting` game and another one-player
@@ -190,45 +218,47 @@ offers this action when a connected opponent exists.
 The server handles `clientReady` by asking `gfmodel` to set that client's
 `ready` flag. `gfmodel` rejects the request when fewer than two clients are
 connected. When the second client becomes ready, `gfmodel` resets the match
-score, marks its match state as `playing`, advances the scenario, and increments
-`roundNumber`. The server then marks the session `playing` and emits
-`modelUpdate`.
+score and enters `readyCountdown` with a server `phaseEndsAt`. A server timer
+then starts the match, sets `matchEndsAt`, advances the scenario, increments
+`roundNumber`, enters `roundIntro`, and emits `modelUpdate`.
 
-The browser starts gameplay when it receives a model with at least two ready
-clients while its local round state is `waiting`. This starts the local round
-ritual: `GET READY`, `DRAW!`, then `playing`.
+The browser starts the local round ritual when it receives a server model whose
+phase enters `roundIntro`. The client still presents `GET READY`, `DRAW!`, intro
+walking, sounds, and animation locally.
 
 The client emits `resetReady` after game over when it returns to the lobby. The
-server clears every client's `ready` flag in `gfmodel`, refreshes session
-status, and emits `modelUpdate`.
+server clears every client's `ready` flag in `gfmodel`, resets match state,
+returns the phase to `readying` or `waiting`, and emits `modelUpdate`.
 
 After a hit, only the winning client emits `roundResult`. The server accepts the
 result only when the reporting socket is the winner, the game is `playing`, the
 reported round is current, both players are still connected, and the result has
-not already been accepted. The server increments the winner's score, advances
-the scenario and `roundNumber`, and emits `modelUpdate`. The browser still owns
-the actual hit pause, reset, animation, sound, and next-ritual timing.
+not already been accepted. The server increments the winner's score, enters
+`hitPause`, and emits `modelUpdate`. The server does not
+advance the scenario or `roundNumber` until the hit-pause timer expires. The
+browser still owns the animation, sound, hit text, and responsive presentation.
 
-When the local match timer expires, the client emits `matchExpired`. The server
-finishes the match once, sets `matchState` to `gameOver`, records high scores
-from the server-owned final score, and emits the updated model and high-score
-table.
+When the server match clock expires, the server finishes the match once, sets
+`matchState` to `gameOver`, records high scores from the server-owned final
+score, and emits the updated model and high-score table. The legacy
+`matchExpired` client event is accepted only as a request; the server clock
+decides whether the match may actually end.
 
 ### Mutating socket events
 
-| Event            | Direction                | Server action                                                                            |
-| ---------------- | ------------------------ | ---------------------------------------------------------------------------------------- |
-| `joinLobby`      | client to server         | Join this socket to a waiting or new game.                                               |
-| `updateName`     | client to server         | Sanitize and store the client's name; emit `modelUpdate`.                                |
-| `leaveGame`      | client to server         | Remove the socket from the game; optionally rejoin.                                      |
-| `requeue`        | client to server         | Leave the current game and join a waiting or new game.                                   |
-| `clientReady`    | client to server         | Mark the client ready only when paired; start server-side `playing` when both are ready. |
-| `resetReady`     | client to server         | Clear ready flags for all clients in the game.                                           |
-| `roundResult`    | client to server         | Accept one current-round result, score it, and advance scenario/round number.            |
-| `matchExpired`   | client to server         | Finalize the match once and record high scores from server-owned scores.                 |
-| `clientKeyEvent` | client to server to peer | Relay keyboard/input event to the opponent.                                              |
-| `playerPosition` | client to server to peer | Relay local player position to the opponent.                                             |
-| `obstacleDamage` | client to server to peer | Relay validated obstacle damage to the opponent.                                         |
+| Event            | Direction                | Server action                                                                       |
+| ---------------- | ------------------------ | ----------------------------------------------------------------------------------- |
+| `joinLobby`      | client to server         | Join this socket to a waiting or new game.                                          |
+| `updateName`     | client to server         | Sanitize and store the client's name; emit `modelUpdate`.                           |
+| `leaveGame`      | client to server         | Remove the socket from the game; optionally rejoin.                                 |
+| `requeue`        | client to server         | Leave the current game and join a waiting or new game.                              |
+| `clientReady`    | client to server         | Mark the client ready only when paired; enter `readyCountdown` when both are ready. |
+| `resetReady`     | client to server         | Clear ready flags for all clients in the game.                                      |
+| `roundResult`    | client to server         | Accept one current-round result during `playing`, score it, and enter `hitPause`.   |
+| `matchExpired`   | client to server         | Legacy expiry request; server finalizes only when its own match clock has expired.  |
+| `clientKeyEvent` | client to server to peer | Relay keyboard/input event to the opponent.                                         |
+| `playerPosition` | client to server to peer | Relay local player position to the opponent.                                        |
+| `obstacleDamage` | client to server to peer | Relay validated obstacle damage to the opponent.                                    |
 
 ### Client state
 
@@ -239,7 +269,8 @@ That model gives the client:
 - the current client list, names, slots, and ready flags
 - game status and lobby message
 - current scenario
-- match state and score
+- lifecycle phase, model version, phase timing, match clock, match state, and
+  score
 - round number
 
 The browser also has local state that is not in the public server model:
@@ -253,7 +284,7 @@ The browser also has local state that is not in the public server model:
 - bullets and ammo
 - obstacle damage
 - local display copy of the server-owned score
-- match timer and round timers
+- match timer presentation and presentation timers
 - high scores received from the server
 
 `localReadyRequested` is set immediately after the local player presses play.
@@ -270,7 +301,8 @@ The active screen is derived locally:
 - otherwise `Lobby-main`
 
 Legal local round transitions live in `client/src/state/clientScreens.ts`.
-Server `status` is not the same as client `roundState`.
+Server `phase` is not the same as client `roundState`. The client `roundState`
+is presentation state that follows server phase updates.
 
 ### Gameplay synchronization
 
@@ -287,38 +319,34 @@ The server does not decide:
 - bullet simulation
 - hit detection
 - ammo use
-- match timer expiry
 - obstacle collision
 
 The server does decide whether to accept a reported round result, how the match
-score changes, and which final score is recorded for high scores. At game over
-the client emits `matchExpired`; the server records the server-owned final score
-in the in-memory high score table and broadcasts the new table to all sockets.
+score changes, when hit pause ends, when the next scenario starts, when the
+match clock expires, and which final score is recorded for high scores.
 
 ### Abandoned games
 
-If a player leaves during `playing`, the server marks the game `abandoned` and
-sends a model update to the remaining player. The remaining client enters local
-lobby state, shows the abandoned/opponent-left state, and schedules a `requeue`
-after the configured delay.
+If a player leaves during an active match phase, the server marks the game
+`abandoned` and sends a model update to the remaining player. The remaining
+client enters local lobby state, shows the abandoned/opponent-left state, and
+schedules a `requeue` after the configured delay.
 
 If a player leaves before `playing`, the remaining game returns to `waiting` and
 the remaining player is no longer ready.
 
 ### Known weaknesses
 
-- Session state and public model state are split between `lobby.ts` and
-  `gfmodel.ts`. This works, but readiness lives inside `gfmodel` while status
-  lives in `GameSession`.
-- Server `status` and client `roundState` are related but separate state
-  machines.
+- `status` is still present as a compatibility projection for existing UI
+  logic. The authoritative lifecycle field is now server `phase`.
+- Server `phase` and client `roundState` are related but separate state
+  machines. The client follows server phase, but still owns presentation
+  animation details.
 - The game is mostly client-authoritative, so clients can diverge if timing,
   delivery, collision, or hit detection differs.
 - `roundResult` is still based on client-side hit detection. The server rejects
   stale, duplicate, cross-game, and non-winner reports, but it does not validate
   bullet physics.
-- Match timer expiry is still reported by the client. The server finalizes only
-  once, but it does not yet run the authoritative match clock.
 - There is no durable session store. Games and high scores live in server
   memory only.
 
