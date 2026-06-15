@@ -303,10 +303,6 @@ export function createGameModel(options: GameModelOptions = {}) {
             return true;
         },
 
-        resetReady: function (): boolean {
-            return returnToLobbyAfterGameOver();
-        },
-
         startMatch: function (): boolean {
             if (phase !== 'readyCountdown' || !areAllReady()) {
                 return false;

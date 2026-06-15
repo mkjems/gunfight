@@ -373,16 +373,6 @@ export function createLobby(options: LobbyOptions = {}) {
         return accepted;
     }
 
-    function resetReady(game: GameSession): boolean {
-        const accepted = game.model.resetReady();
-
-        if (accepted) {
-            game.updatedAt = now();
-        }
-
-        return accepted;
-    }
-
     function returnToLobbyAfterGameOver(game: GameSession): boolean {
         const accepted = game.model.returnToLobbyAfterGameOver();
 
@@ -506,7 +496,6 @@ export function createLobby(options: LobbyOptions = {}) {
         readyClient: readyClient,
         recordRoundResult: recordRoundResult,
         requeue: requeue,
-        resetReady: resetReady,
         returnToLobbyAfterGameOver: returnToLobbyAfterGameOver,
         startMatch: startMatch,
         updateName: updateName

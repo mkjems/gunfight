@@ -278,9 +278,7 @@ walking, sounds, and animation locally.
 After game over, the server keeps the `gameOver` phase visible until its
 `phaseEndsAt`, then clears every client's `ready` flag in `gfmodel`, resets
 match state, returns the phase to `readying` or `waiting`, and emits
-`modelUpdate`. The legacy client `resetReady` event is only a compatibility
-request; it cannot reset the match before the server-owned game-over phase has
-expired.
+`modelUpdate`. The client does not send a lifecycle reset request.
 
 After a hit, only the winning client emits `roundResult`. The server accepts the
 result only when the reporting socket is the winner, the game is `playing`, the
@@ -292,18 +290,15 @@ browser still owns the animation, sound, hit text, and responsive presentation.
 
 When the server match clock expires, the server finishes the match once, sets
 `matchState` to `gameOver`, records high scores from the server-owned final
-score, and emits the updated model and high-score table. The legacy
-`matchExpired` client event is accepted only as a request; the server clock
-decides whether the match may actually end.
+score, and emits the updated model and high-score table.
 
 ### Mutating socket events
 
 Client-to-server lifecycle events are intents or reports. The server decides
 whether each event is accepted, mutates the public model only on accepted state
 changes, and sends authoritative `joinedGame`, `modelUpdate`, or `highScores`
-events back to clients. Rejected compatibility requests may resend the unchanged
-public model so the client can resynchronize, but they do not increment
-`version`.
+events back to clients. Rejected intents may resend the unchanged public model
+so the client can resynchronize, but they do not increment `version`.
 
 | Event            | Direction                | Server action                                                                       |
 | ---------------- | ------------------------ | ----------------------------------------------------------------------------------- |
@@ -312,9 +307,7 @@ public model so the client can resynchronize, but they do not increment
 | `leaveGame`      | client to server         | Remove the socket from the game; optionally rejoin.                                 |
 | `requeue`        | client to server         | Leave the current game and join a waiting or new game.                              |
 | `clientReady`    | client to server         | Mark the client ready only when paired; enter `readyCountdown` when both are ready. |
-| `resetReady`     | client to server         | Legacy compatibility request; accepted only after the server game-over timer ends.  |
 | `roundResult`    | client to server         | Accept one current-round result during `playing`, score it, and enter `hitPause`.   |
-| `matchExpired`   | client to server         | Legacy expiry request; server finalizes only when its own match clock has expired.  |
 | `clientKeyEvent` | client to server to peer | Relay keyboard/input event to the opponent.                                         |
 | `playerPosition` | client to server to peer | Relay local player position to the opponent.                                        |
 | `obstacleDamage` | client to server to peer | Relay validated obstacle damage to the opponent.                                    |

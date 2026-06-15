@@ -15,23 +15,14 @@ type ClientRoundResetOptions = {
     };
     setRoundMessage: (message: string) => void;
     setRoundState: (roundState: RoundState) => void;
-    socket?: {
-        emit: (event: 'resetReady') => void;
-    };
     syncNameEditor: () => void;
     timers: {
         clearMany: (names: string[]) => void;
     };
 };
 
-type ResetToStartScreenOptions = Omit<
-    ClientRoundResetOptions,
-    'socket' | 'resetAmmo'
-> & {
+type ResetToStartScreenOptions = Omit<ClientRoundResetOptions, 'resetAmmo'> & {
     resetAmmo: () => void;
-    socket: {
-        emit: (event: 'resetReady') => void;
-    };
 };
 
 type SharedRoundResetOptions = Pick<
@@ -61,7 +52,6 @@ export function resetToStartScreen(options: ResetToStartScreenOptions) {
     resetSharedRoundState(options);
     options.resetAmmo();
     showWaitingState(options);
-    options.socket.emit('resetReady');
 }
 
 function resetSharedRoundState(options: SharedRoundResetOptions) {

@@ -364,18 +364,6 @@ io.on('connection', function (socket) {
         emitGameModel(context.game);
     });
 
-    socket.on('resetReady', function () {
-        const context = getSocketGameContext(socket);
-
-        if (!context) {
-            return;
-        }
-
-        if (lobby.resetReady(context.game)) {
-            emitGameModel(context.game);
-        }
-    });
-
     socket.on(
         'roundResult',
         /** @param {unknown} data */
@@ -394,19 +382,6 @@ io.on('connection', function (socket) {
             emitGameModel(context.game);
         }
     );
-
-    socket.on('matchExpired', function () {
-        const context = getSocketGameContext(socket);
-        let result;
-
-        if (!context) {
-            return;
-        }
-
-        result = lobby.finishMatch(context.game);
-        recordResult(result);
-        emitGameModel(context.game);
-    });
 });
 
 server.listen(portNumber, function () {

@@ -44,14 +44,10 @@ type RoundEndOptions = {
     };
     setRoundMessage: (message: string) => void;
     setRoundState: (roundState: RoundState) => void;
-    socket?: {
-        emit: (event: 'matchExpired') => void;
-    } | null;
     timers: {
         clearMany: (names: string[]) => void;
         set: (name: 'reset', callback: () => void, delay: number) => void;
     };
-    notifyServer?: boolean;
     winnerId?: ClientId | null;
 };
 
@@ -86,7 +82,6 @@ export function endRound(options: RoundEndOptions) {
 export function endGame(options: RoundEndOptions) {
     options.setRoundState(RoundState.GAME_OVER);
     options.closeNameEditor();
-    notifyMatchExpired(options);
     options.roundData.resetRoundFlags();
     options.setRoundMessage(
         options.scoreKeeper.getGameOverMessage(
@@ -104,16 +99,6 @@ export function endGame(options: RoundEndOptions) {
     }
 }
 
-export function notifyMatchExpired(options: RoundEndOptions) {
-    if (options.notifyServer === false || !options.socket) {
-        return false;
-    }
-
-    options.socket.emit('matchExpired');
-
-    return true;
-}
-
 function clearRoundActivity(options: RoundEndOptions) {
     options.renderHud();
     options.players.clearKeys();
@@ -124,6 +109,5 @@ function clearRoundActivity(options: RoundEndOptions) {
 
 export const ClientRoundEndFlow = {
     endGame,
-    endRound,
-    notifyMatchExpired
+    endRound
 };

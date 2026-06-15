@@ -236,7 +236,6 @@ test('does not notify match expiry from server-owned lifecycle models', async fu
         throw new Error('Expected end-game options to be captured');
     }
 
-    assert.equal(capturedEndGameOptions.notifyServer, false);
     assert.equal(capturedEndGameOptions.resetToStartScreen, undefined);
 });
 
@@ -342,7 +341,7 @@ test('follows server game-over and return-to-lobby model updates', async functio
         ClientModelUpdateFlow,
         ClientRoundEndFlow: {
             endGame(options) {
-                calls.push(['endGame', options.notifyServer]);
+                calls.push('endGame');
                 options.setRoundState('gameOver');
             }
         },
@@ -427,7 +426,7 @@ test('follows server game-over and return-to-lobby model updates', async functio
         ['players.sync', 'gameOver', false, undefined],
         'syncNameEditor',
         'renderHud',
-        ['endGame', false],
+        'endGame',
         ['roundState', 'playing', 'gameOver'],
         ['setScores', [0, 0]],
         ['setRoundEndsAt', null],

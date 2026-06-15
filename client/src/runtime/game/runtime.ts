@@ -445,9 +445,7 @@ export class ClientGameRuntime implements ClientGameController {
             clearLocalReadyRequest: () => {
                 this.localReadyRequested = false;
             },
-            enterGameOverState: () => {
-                this.endGame({ notifyServer: false });
-            },
+            enterGameOverState: this.endGame,
             enterLobbyState: this.enterLobbyState,
             model,
             playerId: this.playerId,
@@ -669,7 +667,7 @@ export class ClientGameRuntime implements ClientGameController {
         });
     };
 
-    private endGame = (options?: { notifyServer?: boolean }) => {
+    private endGame = () => {
         const serverOwnsLifecycle = !!this.latestModel?.phase;
 
         this.dependencies.ClientRoundEndFlow.endGame({
@@ -687,9 +685,7 @@ export class ClientGameRuntime implements ClientGameController {
             scoreKeeper: this.scoreKeeper,
             setRoundMessage: this.setRoundMessage,
             setRoundState: this.setRoundState,
-            socket: this.socket,
-            timers: this.timers,
-            notifyServer: serverOwnsLifecycle ? false : options?.notifyServer
+            timers: this.timers
         });
     };
 
@@ -718,7 +714,6 @@ export class ClientGameRuntime implements ClientGameController {
             roundData: this.roundData,
             setRoundMessage: this.setRoundMessage,
             setRoundState: this.setRoundState,
-            socket: this.socket,
             syncNameEditor: this.syncNameEditor,
             timers: this.timers
         });

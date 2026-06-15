@@ -307,14 +307,13 @@ test('waits for the server-owned game-over phase before returning to lobby', fun
 
     manual.setTime(gameOverModel.phaseEndsAt - 1);
 
-    assert.equal(lobby.resetReady(first.game), false);
     assert.equal(lobby.returnToLobbyAfterGameOver(first.game), false);
     assert.equal(lobby.getModel(first.game).phase, 'gameOver');
     assert.equal(lobby.getModel(first.game).version, gameOverModel.version);
 
     manual.setTime(gameOverModel.phaseEndsAt);
 
-    assert.equal(lobby.resetReady(first.game), true);
+    assert.equal(lobby.returnToLobbyAfterGameOver(first.game), true);
 
     const returnedModel = lobby.getModel(first.game);
 
@@ -538,7 +537,7 @@ test('leaves rejected slow-state intents as public model no-ops', function () {
 
     assert.equal(
         assertModelUnchanged(lobby, first.game, function () {
-            return lobby.resetReady(first.game);
+            return lobby.returnToLobbyAfterGameOver(first.game);
         }),
         false
     );

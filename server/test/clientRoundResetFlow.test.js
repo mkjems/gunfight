@@ -81,11 +81,6 @@ function createResetOptions(overrides = {}) {
         setRoundState(state) {
             calls.push(['setRoundState', state]);
         },
-        socket: {
-            emit(event) {
-                calls.push(['socket.emit', event]);
-            }
-        },
         syncNameEditor() {
             calls.push('syncNameEditor');
         },
@@ -198,7 +193,6 @@ test('resets the game over screen back to the lobby start screen', async functio
         'resetAmmo',
         ['setRoundState', 'waiting'],
         'syncNameEditor',
-        'renderHud',
-        ['socket.emit', 'resetReady']
+        'renderHud'
     ]);
 });

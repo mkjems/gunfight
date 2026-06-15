@@ -87,11 +87,10 @@
           visible state; legacy no-phase local expiry fallback remains.
         - `ClientPlayerHitFlow`: hit presentation plus `roundResult` report; no
           local round advance when server phases are present.
-        - `ClientRoundResetFlow`: presentation reset; `resetToStartScreen`
-          keeps legacy `resetReady` fallback for no-phase models.
-        - `ClientRoundEndFlow`: game-over presentation; legacy `matchExpired`
-          request remains, but authoritative phase models no longer schedule a
-          client-owned lobby reset.
+        - `ClientRoundResetFlow`: presentation reset only; it no longer emits
+          lifecycle reset requests.
+        - `ClientRoundEndFlow`: game-over presentation only; it no longer emits
+          match-expiry requests.
         - `ClientMatchTimer` and `ClientHitDetection`: local match-expiry
           fallback only when no authoritative server phase exists.
         - `ClientScreens`: presentation screen and legal local round-state
@@ -109,13 +108,12 @@
           local hit detection, obstacle damage, camera, particles, sounds, and
           touch controls.
     - [x] List every server socket event that mutates lifecycle state:
-          `clientReady`, `roundResult`, `matchExpired`, `resetReady`, `requeue`,
-          `leaveGame`, `joinLobby`, and `updateName`.
+          `clientReady`, `roundResult`, `requeue`, `leaveGame`, `joinLobby`,
+          and `updateName`.
     - [x] Identify compatibility paths that still exist only for the old client
           lifecycle model.
-        - Compatibility paths: projected public `status`, client
-          `matchExpired`, client `resetReady`, no-phase local match timer, and
-          no-phase local round reset.
+        - Compatibility paths: projected public `status`, no-phase local match
+          timer, and no-phase local round reset.
 - [x] Harden `gfmodel` as the one lifecycle state machine.
     - [x] Write the legal transition table for `waiting`, `readying`,
           `readyCountdown`, `roundIntro`, `playing`, `hitPause`, `gameOver`,
@@ -153,8 +151,7 @@
           to authoritative phase changes.
     - [x] Remove any client path that starts a round from ready flags, local
           timeout, local score state, or local match expiry.
-    - [x] Remove client-owned `matchExpired` authority; keep any remaining event
-          only as a temporary compatibility request until deleted.
+    - [x] Remove client-owned `matchExpired` authority and socket event.
     - [x] Remove client-owned `resetReady`/return-to-lobby authority once the
           server owns `gameOver` expiry and lobby reset.
     - [ ] Keep client timers only for presentation inside the current server
@@ -178,7 +175,7 @@
     - [x] Ensure each accepted intent emits exactly one fresh public model or a
           clearly documented no-op.
     - [x] Ensure rejected or stale intents do not mutate the public model.
-    - [ ] Remove legacy socket events once no client code depends on them.
+    - [x] Remove legacy socket events once no client code depends on them.
 - [x] Strengthen disconnect, requeue, and reconnect behavior.
     - [x] Define server behavior for disconnect in every phase.
     - [x] Ensure automatic pairing only uses safe one-player `waiting` games.

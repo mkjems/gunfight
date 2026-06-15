@@ -121,11 +121,6 @@ function createRoundOptions(overrides = {}) {
         setRoundState(state) {
             calls.push(['setRoundState', state]);
         },
-        socket: {
-            emit(event) {
-                calls.push(['socket.emit', event]);
-            }
-        },
         timers: {
             clearMany(names) {
                 calls.push(['timers.clearMany', names]);
@@ -192,7 +187,7 @@ test('ends a round on time without adding a point', async function () {
     ]);
 });
 
-test('ends the game by notifying match expiry and scheduling the start reset', async function () {
+test('ends the game and schedules the start reset without notifying the server', async function () {
     const flow = await loadClientRoundEndFlow();
     const { calls, options } = createRoundOptions();
 
@@ -201,7 +196,6 @@ test('ends the game by notifying match expiry and scheduling the start reset', a
     assert.deepEqual(plain(calls), [
         ['setRoundState', 'gameOver'],
         'closeNameEditor',
-        ['socket.emit', 'matchExpired'],
         'roundData.resetRoundFlags',
         ['scoreKeeper.getGameOverMessage', 2],
         ['setRoundMessage', 'Ada WINS 3-1'],
@@ -250,19 +244,4 @@ test('does not schedule a game-over reset without a reset callback', async funct
         }),
         false
     );
-});
-
-test('does not notify match expiry without a socket or when disabled', async function () {
-    const flow = await loadClientRoundEndFlow();
-    const withoutSocket = createRoundOptions({
-        socket: null
-    });
-    const withoutResult = createRoundOptions({
-        notifyServer: false
-    });
-
-    assert.equal(flow.notifyMatchExpired(withoutSocket.options), false);
-    assert.equal(flow.notifyMatchExpired(withoutResult.options), false);
-    assert.deepEqual(withoutSocket.calls, []);
-    assert.deepEqual(withoutResult.calls, []);
 });
