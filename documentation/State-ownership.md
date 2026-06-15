@@ -1,6 +1,6 @@
 # State Ownership
 
-This is the current state split before the P1 architecture refactor. Keep it updated when ownership changes.
+This is the current state split. Keep it updated when ownership changes.
 
 ## Server-owned state
 

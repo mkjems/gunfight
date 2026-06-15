@@ -116,7 +116,7 @@
         - Compatibility paths: projected public `status`, client
           `matchExpired`, client `resetReady`, no-phase local match timer, and
           no-phase local round reset.
-- [ ] Harden `gfmodel` as the one lifecycle state machine.
+- [x] Harden `gfmodel` as the one lifecycle state machine.
     - [x] Write the legal transition table for `waiting`, `readying`,
           `readyCountdown`, `roundIntro`, `playing`, `hitPause`, `gameOver`,
           `abandoned`, and `closed`.
@@ -130,7 +130,7 @@
     - [x] Make name changes, ready changes, disconnects, requeues, accepted hit
           reports, match expiry, and high-score recording all produce versioned
           model updates when they affect public state.
-- [ ] Centralize server timers.
+- [x] Centralize server timers.
     - [x] Keep one server scheduler responsible for `phaseEndsAt`.
     - [x] Schedule and validate timed transitions for `readyCountdown`,
           `roundIntro`, `playing`, `hitPause`, and `gameOver`.
@@ -138,20 +138,20 @@
           version has replaced them.
     - [x] Clear timers when a game becomes `abandoned` or `closed`.
 - [ ] Make the public model sufficient for clients to follow without deciding.
-    - [ ] Confirm the client can render every non-gameplay phase from
+    - [x] Confirm the client can render every non-gameplay phase from
           `phase`, `version`, `phaseStartedAt`, `phaseEndsAt`, `matchEndsAt`,
           `roundNumber`, `scores`, `clients`, and `currentScenario`.
-    - [ ] Add any missing neutral timing/state fields needed for presentation;
+    - [x] Add any missing neutral timing/state fields needed for presentation;
           avoid adding UI text decisions to the server unless they are true game
           state.
     - [ ] Remove the compatibility `status` field after all client code follows
           `phase`.
-    - [ ] Document which model fields are authoritative and which are
+    - [x] Document which model fields are authoritative and which are
           presentation hints.
 - [ ] Convert the client into a lifecycle follower.
-    - [ ] Make `ClientModelUpdateFlow` the only client entry point that reacts
+    - [x] Make `ClientModelUpdateFlow` the only client entry point that reacts
           to authoritative phase changes.
-    - [ ] Remove any client path that starts a round from ready flags, local
+    - [x] Remove any client path that starts a round from ready flags, local
           timeout, local score state, or local match expiry.
     - [x] Remove client-owned `matchExpired` authority; keep any remaining event
           only as a temporary compatibility request until deleted.
@@ -161,7 +161,7 @@
           phase: animation beats, text timing, effects, sounds, and local HUD
           refresh.
     - [x] Make duplicate or stale model updates no-ops by `version`.
-    - [ ] Make out-of-order presentation timers check the latest server phase
+    - [x] Make out-of-order presentation timers check the latest server phase
           before applying visible state.
 - [ ] Preserve responsive real-time gameplay on the client.
     - [ ] Keep movement, aiming, shooting, bullets, collision, obstacle damage,
@@ -195,11 +195,11 @@
     - [ ] Test disconnect, abandon, requeue, and auto-pairing in each relevant
           phase.
 - [ ] Add focused client coverage.
-    - [ ] Test that ready flags alone never start gameplay.
-    - [ ] Test that only server `roundIntro` starts the round ritual.
+    - [x] Test that ready flags alone never start gameplay.
+    - [x] Test that only server `roundIntro` starts the round ritual.
     - [x] Test that local presentation timers cannot advance lifecycle after
           the server phase changed.
-    - [ ] Test that game over and return-to-lobby follow server model updates.
+    - [x] Test that game over and return-to-lobby follow server model updates.
     - [x] Test that stale model versions are ignored and fresh same-phase
           versions update names, scores, and public metadata.
 - [ ] Add browser smoke coverage.

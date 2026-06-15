@@ -45,6 +45,60 @@ async function loadClientGameRuntime() {
     return module.ClientGameRuntime;
 }
 
+async function loadClientRuntimeWithModelUpdateFlow() {
+    const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
+
+    compileClientModule(
+        'platform/config.ts',
+        'platform/config.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'state/clientScreens.ts',
+        'state/clientScreens.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'network/clientModelSync.ts',
+        'network/clientModelSync.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'network/clientModelUpdatePlan.ts',
+        'network/clientModelUpdatePlan.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'network/clientModelUpdateFlow.ts',
+        'network/clientModelUpdateFlow.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'runtime/game/payloadGuards.ts',
+        'runtime/game/payloadGuards.js',
+        tempDirectory
+    );
+    compileClientModule(
+        'runtime/game/runtime.ts',
+        'runtime/game/runtime.js',
+        tempDirectory
+    );
+
+    const runtimeModule = await import(
+        pathToFileURL(path.join(tempDirectory, 'runtime/game/runtime.js')).href
+    );
+    const flowModule = await import(
+        pathToFileURL(
+            path.join(tempDirectory, 'network/clientModelUpdateFlow.js')
+        ).href
+    );
+
+    return {
+        ClientGameRuntime: runtimeModule.ClientGameRuntime,
+        ClientModelUpdateFlow: flowModule.ClientModelUpdateFlow
+    };
+}
+
 function createRuntime(ClientGameRuntime, dependencyOverrides = {}) {
     const dependencies = {
         ClientLobbyFlow: {
@@ -78,6 +132,9 @@ function createRuntime(ClientGameRuntime, dependencyOverrides = {}) {
     runtime.bullets = {};
     runtime.players = {
         all: {}
+    };
+    runtime.particleLayer = {
+        clear() {}
     };
     runtime.roundData = {
         clearHitMessage() {},
@@ -263,4 +320,126 @@ test('applies fresh same-phase model updates', async function () {
     assert.equal(runtime.latestModel.clients[0].ready, true);
     assert.deepEqual(runtime.latestModel.scores, [1, 0]);
     assert.equal(runtime.latestModel.version, 8);
+});
+
+test('follows server game-over and return-to-lobby model updates', async function () {
+    const { ClientGameRuntime, ClientModelUpdateFlow } =
+        await loadClientRuntimeWithModelUpdateFlow();
+    const calls = [];
+    const runtime = createRuntime(ClientGameRuntime, {
+        ClientLobbyFlow: {
+            clearAbandonedRequeue() {
+                calls.push('clearAbandonedRequeue');
+            },
+            enter(options) {
+                calls.push('enterLobbyState');
+                options.setRoundState('waiting');
+            },
+            scheduleAbandonedRequeue() {
+                calls.push('scheduleAbandonedRequeue');
+            }
+        },
+        ClientModelUpdateFlow,
+        ClientRoundEndFlow: {
+            endGame(options) {
+                calls.push(['endGame', options.notifyServer]);
+                options.setRoundState('gameOver');
+            }
+        },
+        ClientRoundTransition: {
+            resolve(options) {
+                calls.push([
+                    'roundState',
+                    options.currentState,
+                    options.nextState
+                ]);
+                return options.nextState;
+            }
+        }
+    });
+
+    runtime.playerId = 'p1';
+    runtime.roundState = 'playing';
+    runtime.latestModel = {
+        clients: [
+            { id: 'p1', name: 'ACE', ready: true, slot: 0 },
+            { id: 'p2', name: 'KID', ready: true, slot: 1 }
+        ],
+        gameId: 'G0001',
+        matchState: 'playing',
+        phase: 'playing',
+        scores: [1, 0],
+        version: 7
+    };
+    runtime.players.sync = function (model, options) {
+        calls.push([
+            'players.sync',
+            model.phase,
+            options.localPlayerFirst,
+            options.resetExisting
+        ]);
+    };
+    runtime.renderHud = function () {
+        calls.push('renderHud');
+    };
+    runtime.syncNameEditor = function () {
+        calls.push('syncNameEditor');
+    };
+    runtime.syncStoredPlayerName = function () {
+        calls.push('syncStoredPlayerName');
+    };
+    runtime.roundData.setRoundEndsAt = function (endsAt) {
+        calls.push(['setRoundEndsAt', endsAt]);
+    };
+    runtime.scoreKeeper.setScores = function (scores) {
+        calls.push(['setScores', scores]);
+    };
+
+    runtime.onModelUpdate({
+        clients: [
+            { id: 'p1', name: 'ACE', ready: true, slot: 0 },
+            { id: 'p2', name: 'KID', ready: true, slot: 1 }
+        ],
+        gameId: 'G0001',
+        matchState: 'gameOver',
+        phase: 'gameOver',
+        scores: [1, 0],
+        version: 8
+    });
+
+    runtime.onModelUpdate({
+        clients: [
+            { id: 'p1', name: 'ACE', ready: false, slot: 0 },
+            { id: 'p2', name: 'KID', ready: false, slot: 1 }
+        ],
+        gameId: 'G0001',
+        matchState: 'idle',
+        phase: 'readying',
+        scores: [0, 0],
+        version: 9
+    });
+
+    assert.deepEqual(calls, [
+        ['setScores', [1, 0]],
+        ['setRoundEndsAt', null],
+        'syncStoredPlayerName',
+        'clearAbandonedRequeue',
+        ['players.sync', 'gameOver', false, undefined],
+        'syncNameEditor',
+        'renderHud',
+        ['endGame', false],
+        ['roundState', 'playing', 'gameOver'],
+        ['setScores', [0, 0]],
+        ['setRoundEndsAt', null],
+        'syncStoredPlayerName',
+        'enterLobbyState',
+        ['roundState', 'gameOver', 'waiting'],
+        'clearAbandonedRequeue',
+        ['players.sync', 'readying', true, true],
+        'syncNameEditor',
+        'renderHud'
+    ]);
+    assert.equal(runtime.roundState, 'waiting');
+    assert.equal(runtime.latestModel.phase, 'readying');
+    assert.deepEqual(runtime.latestModel.scores, [0, 0]);
 });

@@ -14,6 +14,7 @@ type PublicModel = {
     currentScenario?: {
         playerStarts?: typeof Config.player.slots;
     } | null;
+    matchState?: string;
     phase?: string;
     status?: string;
 };
@@ -41,6 +42,10 @@ export function create(options: CreatePlanOptions) {
         options.roundState !== RoundState.WAITING;
     const shouldEnterLobbyState =
         !!syncState.abandoned || serverReturnedToLobby;
+    const shouldEnterGameOverState =
+        options.model?.matchState === 'gameOver' &&
+        options.roundState !== RoundState.WAITING &&
+        options.roundState !== RoundState.GAME_OVER;
     const syncLobbySlots =
         (options.roundState === RoundState.WAITING || serverReturnedToLobby) &&
         !shouldStartRound;
@@ -48,6 +53,7 @@ export function create(options: CreatePlanOptions) {
     return {
         clearAbandonedRequeue: !syncState.abandoned,
         clearLocalReadyRequest: syncState.clearLocalReadyRequest,
+        enterGameOverState: shouldEnterGameOverState,
         enterLobbyState: shouldEnterLobbyState,
         playReadySound: syncState.clientBecameReady,
         renderHud: !shouldStartRound,

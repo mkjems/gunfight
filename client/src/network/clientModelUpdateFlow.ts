@@ -8,6 +8,7 @@ type PublicModel = CreatePlanOptions['model'];
 type SyncOptions = {
     clearAbandonedRequeue: () => void;
     clearLocalReadyRequest: () => void;
+    enterGameOverState: () => void;
     enterLobbyState: () => void;
     model: PublicModel;
     playerId?: CreatePlanOptions['playerId'];
@@ -69,6 +70,10 @@ export function sync(options: SyncOptions, createPlan: CreatePlan = create) {
 
     if (plan.renderHud) {
         options.renderHud();
+    }
+
+    if (plan.enterGameOverState) {
+        options.enterGameOverState();
     }
 
     return plan;

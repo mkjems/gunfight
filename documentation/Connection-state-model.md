@@ -123,6 +123,22 @@ lobby-owned socket metadata:
 - `roundNumber`
 - `scores`
 
+Authoritative public model fields:
+
+| Field                                                                                         | Owner  | Meaning                                                                                |
+| --------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------- |
+| `gameId`, `playerLimit`, `clients`                                                            | Server | Pairing, player identity, display names, slots, and ready flags.                       |
+| `phase`, `version`, `phaseStartedAt`, `phaseEndsAt`, `matchEndsAt`                            | Server | Lifecycle, stale-update guard, phase timing, and match clock.                          |
+| `currentScenario`, `roundNumber`, `matchState`, `matchResultId`, `scores`                     | Server | Scenario choice, duel number, match state, final result id, and authoritative scoring. |
+| `status`, `message`                                                                           | Server | Compatibility/UI projection derived from authoritative server state.                   |
+| Client `roundState`, timers, text beats, effects, sounds, animation, bullets, positions, ammo | Client | Presentation and real-time gameplay details that follow the public model.              |
+
+The current public model is sufficient for every non-gameplay phase. The client
+renders lobby, ready countdown, round intro, hit pause, game over, abandonment,
+and return-to-lobby from `phase`, `version`, timing fields, `roundNumber`,
+`scores`, `clients`, and `currentScenario`. No additional neutral presentation
+fields are needed in P8.
+
 ### Server phase and status rules
 
 `gfmodel` owns lifecycle `phase`. `lobby.ts` projects the older `status` field

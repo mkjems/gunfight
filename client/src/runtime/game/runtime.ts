@@ -435,10 +435,6 @@ export class ClientGameRuntime implements ClientGameController {
 
     private syncPlayers = (model: RuntimeGameModel) => {
         const previousModel = this.latestModel;
-        const shouldEnterServerGameOver =
-            model.matchState === 'gameOver' &&
-            this.roundState !== this.RoundState.WAITING &&
-            this.roundState !== this.RoundState.GAME_OVER;
 
         this.latestModel = model;
         this.scoreKeeper.setScores(model.scores);
@@ -448,6 +444,9 @@ export class ClientGameRuntime implements ClientGameController {
             clearAbandonedRequeue: this.clearAbandonedRequeue,
             clearLocalReadyRequest: () => {
                 this.localReadyRequested = false;
+            },
+            enterGameOverState: () => {
+                this.endGame({ notifyServer: false });
             },
             enterLobbyState: this.enterLobbyState,
             model,
@@ -462,10 +461,6 @@ export class ClientGameRuntime implements ClientGameController {
             syncNameEditor: this.syncNameEditor,
             syncStoredPlayerName: this.syncStoredPlayerName
         });
-
-        if (shouldEnterServerGameOver) {
-            this.endGame({ notifyServer: false });
-        }
     };
 
     private handleKeyEvent = (keyEvent: RuntimeKeyEvent) => {

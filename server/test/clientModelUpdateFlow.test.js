@@ -71,6 +71,9 @@ function createFlowOptions(overrides = {}) {
         clearLocalReadyRequest() {
             calls.push('clearLocalReadyRequest');
         },
+        enterGameOverState() {
+            calls.push('enterGameOverState');
+        },
         enterLobbyState() {
             calls.push('enterLobbyState');
         },
@@ -121,6 +124,7 @@ function createPlan(overrides = {}) {
         value: {
             clearAbandonedRequeue: true,
             clearLocalReadyRequest: true,
+            enterGameOverState: false,
             enterLobbyState: false,
             playReadySound: true,
             renderHud: true,
@@ -217,5 +221,26 @@ test('applies abandoned lobby recovery effects', async function () {
         ['players.sync', 'next', ['left', 'right']],
         'syncNameEditor',
         'renderHud'
+    ]);
+});
+
+test('applies server game-over presentation after model sync', async function () {
+    const plan = createPlan({
+        enterGameOverState: true,
+        playReadySound: false
+    });
+    const flow = await loadClientModelUpdateFlow();
+    const { calls, options } = createFlowOptions();
+
+    flow.sync(options, plan.create);
+
+    assert.deepEqual(plain(calls), [
+        'clearLocalReadyRequest',
+        'syncStoredPlayerName',
+        'clearAbandonedRequeue',
+        ['players.sync', 'next', ['left', 'right']],
+        'syncNameEditor',
+        'renderHud',
+        'enterGameOverState'
     ]);
 });

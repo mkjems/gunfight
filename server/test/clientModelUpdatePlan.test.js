@@ -130,6 +130,7 @@ test('plans a round start when the server enters round intro', async function ()
         {
             clearAbandonedRequeue: true,
             clearLocalReadyRequest: false,
+            enterGameOverState: false,
             enterLobbyState: false,
             playReadySound: false,
             renderHud: false,
@@ -247,6 +248,7 @@ test('plans abandoned-game recovery', async function () {
         {
             clearAbandonedRequeue: false,
             clearLocalReadyRequest: true,
+            enterGameOverState: false,
             enterLobbyState: true,
             playReadySound: false,
             renderHud: true,
@@ -295,6 +297,7 @@ test('plans lobby recovery when the server returns from game over', async functi
         {
             clearAbandonedRequeue: true,
             clearLocalReadyRequest: true,
+            enterGameOverState: false,
             enterLobbyState: true,
             playReadySound: false,
             renderHud: true,
@@ -336,4 +339,35 @@ test('plans lobby recovery when the server returns from game over', async functi
             }
         }
     );
+});
+
+test('plans game-over presentation when the server ends an active match', async function () {
+    const plan = await loadClientModelUpdatePlan();
+
+    const result = plan.create({
+        model: {
+            clients: [
+                { id: 'p1', ready: true },
+                { id: 'p2', ready: true }
+            ],
+            matchState: 'gameOver',
+            phase: 'gameOver',
+            status: 'playing'
+        },
+        playerId: 'p1',
+        previousModel: {
+            clients: [
+                { id: 'p1', ready: true },
+                { id: 'p2', ready: true }
+            ],
+            matchState: 'playing',
+            phase: 'playing',
+            status: 'playing'
+        },
+        roundState: 'playing'
+    });
+
+    assert.equal(result.enterGameOverState, true);
+    assert.equal(result.enterLobbyState, false);
+    assert.equal(result.startRoundRitual, false);
 });
