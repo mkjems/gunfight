@@ -1,3 +1,9 @@
+import type { SocketEvent } from '../../../shared/contracts.js';
+
+const SOCKET_EVENT = {
+    ObstacleDamage: 'obstacleDamage'
+} as const satisfies Record<string, SocketEvent>;
+
 type ClientId = number | string;
 
 type ObstacleDamagePayload = {
@@ -23,7 +29,10 @@ type HandleLocalHitOptions = {
     model?: RoundModel | null;
     playerId: ClientId;
     socket: {
-        emit: (event: 'obstacleDamage', payload: ObstacleDamagePayload) => void;
+        emit: (
+            event: typeof SOCKET_EVENT.ObstacleDamage,
+            payload: ObstacleDamagePayload
+        ) => void;
     };
 };
 
@@ -52,7 +61,7 @@ export function handleLocalHit(options: HandleLocalHitOptions) {
     };
 
     options.applyDamage(payload);
-    options.socket.emit('obstacleDamage', payload);
+    options.socket.emit(SOCKET_EVENT.ObstacleDamage, payload);
 
     return true;
 }

@@ -38,6 +38,11 @@ async function loadClientPlayerHitFlow() {
         tempDirectory
     );
     compileClientModule(
+        'state/clientTimers.ts',
+        'state/clientTimers.js',
+        tempDirectory
+    );
+    compileClientModule(
         'flows/clientPlayerHitFlow.ts',
         'flows/clientPlayerHitFlow.js',
         tempDirectory

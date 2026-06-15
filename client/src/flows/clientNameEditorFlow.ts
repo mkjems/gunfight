@@ -1,5 +1,14 @@
+import type { SocketEvent } from '../../../shared/contracts.js';
+
+const SOCKET_EVENT = {
+    UpdateName: 'updateName'
+} as const satisfies Record<string, SocketEvent>;
+
 type UpdateNameSocket = {
-    emit: (event: 'updateName', payload: { name: string }) => void;
+    emit: (
+        event: typeof SOCKET_EVENT.UpdateName,
+        payload: { name: string }
+    ) => void;
 };
 
 type SubmitNameChangeOptions = {
@@ -38,7 +47,7 @@ export function submitNameChange(options: SubmitNameChangeOptions) {
         return false;
     }
 
-    options.socket.emit('updateName', {
+    options.socket.emit(SOCKET_EVENT.UpdateName, {
         name: options.name || ''
     });
 

@@ -1,4 +1,8 @@
-import type { GamePhase, Scenario } from '../../../../shared/contracts.js';
+import type {
+    GamePhase,
+    MatchState,
+    Scenario
+} from '../../../../shared/contracts.js';
 import type {
     ClientId,
     RuntimeClient,
@@ -10,6 +14,28 @@ import type {
 } from './types.js';
 
 type RuntimeDataRecord = Record<string, unknown>;
+
+const GAME_PHASE = {
+    Waiting: 'waiting',
+    Readying: 'readying',
+    ReadyCountdown: 'readyCountdown',
+    RoundIntro: 'roundIntro',
+    Playing: 'playing',
+    HitPause: 'hitPause',
+    GameOver: 'gameOver',
+    Abandoned: 'abandoned',
+    Closed: 'closed'
+} as const satisfies Record<string, GamePhase>;
+
+const GAME_PHASE_VALUES: readonly GamePhase[] = Object.values(GAME_PHASE);
+
+const MATCH_STATE = {
+    Idle: 'idle',
+    Playing: 'playing',
+    GameOver: 'gameOver'
+} as const satisfies Record<string, MatchState>;
+
+const MATCH_STATE_VALUES: readonly MatchState[] = Object.values(MATCH_STATE);
 
 function isRecord(value: unknown): value is RuntimeDataRecord {
     return !!value && typeof value === 'object' && !Array.isArray(value);
@@ -24,17 +50,11 @@ function isFiniteNumber(value: unknown): value is number {
 }
 
 function isRuntimeGamePhase(value: unknown): value is GamePhase {
-    return (
-        value === 'waiting' ||
-        value === 'readying' ||
-        value === 'readyCountdown' ||
-        value === 'roundIntro' ||
-        value === 'playing' ||
-        value === 'hitPause' ||
-        value === 'gameOver' ||
-        value === 'abandoned' ||
-        value === 'closed'
-    );
+    return GAME_PHASE_VALUES.includes(value as GamePhase);
+}
+
+function isRuntimeMatchState(value: unknown): value is MatchState {
+    return MATCH_STATE_VALUES.includes(value as MatchState);
 }
 
 function parseClient(data: unknown): RuntimeClient | null {
@@ -91,7 +111,7 @@ export function parseGameModel(data: unknown): RuntimeGameModel | null {
         model.matchResultId = data.matchResultId;
     }
 
-    if (typeof data.matchState === 'string') {
+    if (isRuntimeMatchState(data.matchState)) {
         model.matchState = data.matchState;
     }
 

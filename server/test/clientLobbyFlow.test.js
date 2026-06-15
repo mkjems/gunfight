@@ -38,6 +38,11 @@ async function loadClientLobbyFlow() {
         tempDirectory
     );
     compileClientModule(
+        'state/clientTimers.ts',
+        'state/clientTimers.js',
+        tempDirectory
+    );
+    compileClientModule(
         'flows/clientLobbyFlow.ts',
         'flows/clientLobbyFlow.js',
         tempDirectory

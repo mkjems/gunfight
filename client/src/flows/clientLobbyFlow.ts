@@ -1,5 +1,11 @@
+import type { SocketEvent } from '../../../shared/contracts.js';
 import { Config } from '../platform/config.js';
 import { RoundState } from '../state/clientScreens.js';
+import { CLIENT_TIMER, type ClientTimerName } from '../state/clientTimers.js';
+
+const SOCKET_EVENT = {
+    Requeue: 'requeue'
+} as const satisfies Record<string, SocketEvent>;
 
 type ClientLobbyFlowOptions = {
     bullets: {
@@ -16,15 +22,15 @@ type ClientLobbyFlowOptions = {
     };
     setRoundState: (roundState: RoundState) => void;
     socket?: {
-        emit: (event: 'requeue') => void;
+        emit: (event: typeof SOCKET_EVENT.Requeue) => void;
     } | null;
     syncNameEditor: () => void;
     timers: {
-        clear: (name: 'abandonedRequeue') => void;
+        clear: (name: typeof CLIENT_TIMER.AbandonedRequeue) => void;
         clearMany: (names: string[]) => void;
-        has: (name: 'abandonedRequeue') => boolean;
+        has: (name: typeof CLIENT_TIMER.AbandonedRequeue) => boolean;
         set: (
-            name: 'abandonedRequeue',
+            name: typeof CLIENT_TIMER.AbandonedRequeue,
             callback: () => void,
             delay: number
         ) => void;
@@ -38,7 +44,12 @@ type AbandonedRequeueOptions = Pick<
 
 type ClearAbandonedRequeueOptions = Pick<ClientLobbyFlowOptions, 'timers'>;
 
-const LOBBY_ENTRY_TIMERS = ['ritual', 'hit', 'reset', 'abandonedRequeue'];
+const LOBBY_ENTRY_TIMERS: ClientTimerName[] = [
+    CLIENT_TIMER.Ritual,
+    CLIENT_TIMER.Hit,
+    CLIENT_TIMER.Reset,
+    CLIENT_TIMER.AbandonedRequeue
+];
 
 export function enter(options: ClientLobbyFlowOptions) {
     options.timers.clearMany(LOBBY_ENTRY_TIMERS);
@@ -51,14 +62,14 @@ export function enter(options: ClientLobbyFlowOptions) {
 }
 
 export function scheduleAbandonedRequeue(options: AbandonedRequeueOptions) {
-    if (options.timers.has('abandonedRequeue') || !options.socket) {
+    if (options.timers.has(CLIENT_TIMER.AbandonedRequeue) || !options.socket) {
         return false;
     }
 
     options.timers.set(
-        'abandonedRequeue',
+        CLIENT_TIMER.AbandonedRequeue,
         function () {
-            options.socket?.emit('requeue');
+            options.socket?.emit(SOCKET_EVENT.Requeue);
         },
         Config.round.abandonedRequeueDelay
     );
@@ -67,7 +78,7 @@ export function scheduleAbandonedRequeue(options: AbandonedRequeueOptions) {
 }
 
 export function clearAbandonedRequeue(options: ClearAbandonedRequeueOptions) {
-    options.timers.clear('abandonedRequeue');
+    options.timers.clear(CLIENT_TIMER.AbandonedRequeue);
 }
 
 export const ClientLobbyFlow = {

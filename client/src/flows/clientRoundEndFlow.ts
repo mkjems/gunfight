@@ -1,5 +1,6 @@
 import { Config } from '../platform/config.js';
 import { RoundState } from '../state/clientScreens.js';
+import { CLIENT_TIMER, type ClientTimerName } from '../state/clientTimers.js';
 
 type ClientId = number | string;
 
@@ -46,12 +47,21 @@ type RoundEndOptions = {
     setRoundState: (roundState: RoundState) => void;
     timers: {
         clearMany: (names: string[]) => void;
-        set: (name: 'reset', callback: () => void, delay: number) => void;
+        set: (
+            name: typeof CLIENT_TIMER.Reset,
+            callback: () => void,
+            delay: number
+        ) => void;
     };
     winnerId?: ClientId | null;
 };
 
-const ROUND_END_TIMERS = ['reset', 'matchEnd', 'ritual', 'hit'];
+const ROUND_END_TIMERS: ClientTimerName[] = [
+    CLIENT_TIMER.Reset,
+    CLIENT_TIMER.MatchEnd,
+    CLIENT_TIMER.Ritual,
+    CLIENT_TIMER.Hit
+];
 
 export function endRound(options: RoundEndOptions) {
     const winnerSlot = options.getPlayerSlot
@@ -76,7 +86,11 @@ export function endRound(options: RoundEndOptions) {
         return;
     }
 
-    options.timers.set('reset', options.resetRound, Config.round.resetDelay);
+    options.timers.set(
+        CLIENT_TIMER.Reset,
+        options.resetRound,
+        Config.round.resetDelay
+    );
 }
 
 export function endGame(options: RoundEndOptions) {
@@ -95,7 +109,11 @@ export function endGame(options: RoundEndOptions) {
     const reset = options.resetToStartScreen || options.resetRound;
 
     if (reset) {
-        options.timers.set('reset', reset, Config.round.gameOverDelay);
+        options.timers.set(
+            CLIENT_TIMER.Reset,
+            reset,
+            Config.round.gameOverDelay
+        );
     }
 }
 

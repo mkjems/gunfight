@@ -1,6 +1,19 @@
 // Shared data contracts and runtime guards for the TypeScript migration.
 
-export type MatchState = 'idle' | 'playing' | 'gameOver';
+export const MATCH_STATE = {
+    Idle: 'idle',
+    Playing: 'playing',
+    GameOver: 'gameOver'
+} as const;
+
+export type MatchState = (typeof MATCH_STATE)[keyof typeof MATCH_STATE];
+
+export const MATCH_STATE_VALUES: readonly MatchState[] =
+    Object.values(MATCH_STATE);
+
+export function isMatchState(value: unknown): value is MatchState {
+    return MATCH_STATE_VALUES.includes(value as MatchState);
+}
 
 export const GAME_PHASE = {
     Waiting: 'waiting',
@@ -21,6 +34,34 @@ export const GAME_PHASE_VALUES: readonly GamePhase[] =
 
 export function isGamePhase(value: unknown): value is GamePhase {
     return GAME_PHASE_VALUES.includes(value as GamePhase);
+}
+
+export const SOCKET_EVENT = {
+    ClientReady: 'clientReady',
+    RoundResult: 'roundResult',
+    Requeue: 'requeue',
+    LeaveGame: 'leaveGame',
+    LeftGame: 'leftGame',
+    JoinLobby: 'joinLobby',
+    UpdateName: 'updateName',
+    ClientKeyEvent: 'clientKeyEvent',
+    KeyEvent: 'keyEvent',
+    PlayerPosition: 'playerPosition',
+    ObstacleDamage: 'obstacleDamage',
+    JoinedGame: 'joinedGame',
+    NewClient: 'newClient',
+    ModelUpdate: 'modelUpdate',
+    HighScores: 'highScores',
+    GameResult: 'gameResult'
+} as const;
+
+export type SocketEvent = (typeof SOCKET_EVENT)[keyof typeof SOCKET_EVENT];
+
+export const SOCKET_EVENT_VALUES: readonly SocketEvent[] =
+    Object.values(SOCKET_EVENT);
+
+export function isSocketEvent(value: unknown): value is SocketEvent {
+    return SOCKET_EVENT_VALUES.includes(value as SocketEvent);
 }
 
 export interface PublicClient {

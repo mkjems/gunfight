@@ -1,6 +1,12 @@
 import type { GamePhase } from '../../../shared/contracts.js';
 import { Config } from '../platform/config.js';
 import { RoundState } from '../state/clientScreens.js';
+import { CLIENT_TIMER } from '../state/clientTimers.js';
+
+const GAME_PHASE = {
+    RoundIntro: 'roundIntro',
+    Playing: 'playing'
+} as const satisfies Record<string, GamePhase>;
 
 type ClientRoundRitualOptions = {
     bullets: {
@@ -21,7 +27,11 @@ type ClientRoundRitualOptions = {
     setRoundMessage: (message: string) => void;
     setRoundState: (roundState: RoundState) => void;
     timers: {
-        set: (name: 'ritual', callback: () => void, delay: number) => void;
+        set: (
+            name: typeof CLIENT_TIMER.Ritual,
+            callback: () => void,
+            delay: number
+        ) => void;
     };
 };
 
@@ -42,7 +52,7 @@ export function start(options: ClientRoundRitualOptions) {
     options.renderHud();
 
     options.timers.set(
-        'ritual',
+        CLIENT_TIMER.Ritual,
         function () {
             if (!canShowRoundIntroPresentation(options)) {
                 if (canEnterPlayingPresentation(options)) {
@@ -55,7 +65,7 @@ export function start(options: ClientRoundRitualOptions) {
             options.setRoundMessage('DRAW!');
 
             options.timers.set(
-                'ritual',
+                CLIENT_TIMER.Ritual,
                 function () {
                     if (!canEnterPlayingPresentation(options)) {
                         return;
@@ -75,7 +85,7 @@ function canShowRoundIntroPresentation(
 ): boolean {
     const phase = options.getServerPhase();
 
-    return phase === 'roundIntro';
+    return phase === GAME_PHASE.RoundIntro;
 }
 
 function canEnterPlayingPresentation(
@@ -83,7 +93,7 @@ function canEnterPlayingPresentation(
 ): boolean {
     const phase = options.getServerPhase();
 
-    return phase === 'roundIntro' || phase === 'playing';
+    return phase === GAME_PHASE.RoundIntro || phase === GAME_PHASE.Playing;
 }
 
 function enterPlayingPresentation(options: ClientRoundRitualOptions) {

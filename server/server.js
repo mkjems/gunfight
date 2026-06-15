@@ -7,6 +7,7 @@ import { Server } from 'socket.io';
 import { createLobby } from './gameModules/lobby.js';
 import { createHighScores } from './gameModules/highScores.js';
 import {
+    SOCKET_EVENT,
     createKeyEventPayload,
     createPlayerPositionPayload,
     getNameFromPayload,
@@ -83,7 +84,10 @@ function getSocketGameContext(socket) {
 
 function emitGameModel(game, eventName) {
     scheduleGameTimers(game);
-    io.to(game.room).emit(eventName || 'modelUpdate', lobby.getModel(game));
+    io.to(game.room).emit(
+        eventName || SOCKET_EVENT.ModelUpdate,
+        lobby.getModel(game)
+    );
 }
 
 function clearGameTimers(gameId) {
@@ -121,7 +125,7 @@ function scheduleGameTimers(game) {
 
 function recordResult(result) {
     if (result) {
-        io.emit('highScores', highScores.recordGame(result));
+        io.emit(SOCKET_EVENT.HighScores, highScores.recordGame(result));
     }
 }
 
@@ -147,7 +151,7 @@ function joinSocketGame(socket, options) {
     const joinedModel = lobby.getModel(joined.game);
 
     socket.join(joined.game.room);
-    socket.emit('joinedGame', {
+    socket.emit(SOCKET_EVENT.JoinedGame, {
         gameId: joined.game.id,
         name: joined.client.name,
         playerId: joined.client.id,
@@ -160,7 +164,7 @@ function joinSocketGame(socket, options) {
     if (existingGame) {
         emitGameModel(joined.game);
     } else {
-        socket.to(joined.game.room).emit('newClient', joinedModel);
+        socket.to(joined.game.room).emit(SOCKET_EVENT.NewClient, joinedModel);
     }
 
     return joined;
@@ -192,7 +196,7 @@ function autoPairWaitingPlayer(game) {
 
     if (
         !game ||
-        lobby.getStatus(game) !== 'waiting' ||
+        !lobby.isWaiting(game) ||
         !targetGame ||
         !waitingClient ||
         !waitingSocket
@@ -227,7 +231,7 @@ io.on('connection', function (socket) {
     });
     const client = joined.client;
 
-    socket.emit('highScores', highScores.getTable());
+    socket.emit(SOCKET_EVENT.HighScores, highScores.getTable());
 
     socket.on('disconnect', function (reason) {
         autoPairAfterLeave(leaveSocketGame(socket));
@@ -236,7 +240,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on(
-        'joinLobby',
+        SOCKET_EVENT.JoinLobby,
         /** @param {unknown} data */
         function (data) {
             joinSocketGame(socket, {
@@ -246,7 +250,7 @@ io.on('connection', function (socket) {
     );
 
     socket.on(
-        'updateName',
+        SOCKET_EVENT.UpdateName,
         /** @param {unknown} data */
         function (data) {
             const updated = lobby.updateName(
@@ -263,14 +267,14 @@ io.on('connection', function (socket) {
     );
 
     socket.on(
-        'leaveGame',
+        SOCKET_EVENT.LeaveGame,
         /** @param {unknown} data */
         function (data) {
             const left = leaveSocketGame(socket);
 
             autoPairAfterLeave(left);
 
-            socket.emit('leftGame', {
+            socket.emit(SOCKET_EVENT.LeftGame, {
                 gameId: left && left.game.id
             });
 
@@ -282,7 +286,7 @@ io.on('connection', function (socket) {
         }
     );
 
-    socket.on('requeue', function () {
+    socket.on(SOCKET_EVENT.Requeue, function () {
         const context = getSocketGameContext(socket);
         const name = context && context.client.name;
 
@@ -293,7 +297,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on(
-        'clientKeyEvent',
+        SOCKET_EVENT.ClientKeyEvent,
         /** @param {unknown} data */
         function (data) {
             const context = getSocketGameContext(socket);
@@ -309,12 +313,12 @@ io.on('connection', function (socket) {
                 return;
             }
 
-            socket.to(context.game.room).emit('keyEvent', keyEvent);
+            socket.to(context.game.room).emit(SOCKET_EVENT.KeyEvent, keyEvent);
         }
     );
 
     socket.on(
-        'playerPosition',
+        SOCKET_EVENT.PlayerPosition,
         /** @param {unknown} data */
         function (data) {
             const context = getSocketGameContext(socket);
@@ -330,12 +334,14 @@ io.on('connection', function (socket) {
                 return;
             }
 
-            socket.to(context.game.room).emit('playerPosition', position);
+            socket
+                .to(context.game.room)
+                .emit(SOCKET_EVENT.PlayerPosition, position);
         }
     );
 
     socket.on(
-        'obstacleDamage',
+        SOCKET_EVENT.ObstacleDamage,
         /** @param {unknown} data */
         function (data) {
             const context = getSocketGameContext(socket);
@@ -345,11 +351,13 @@ io.on('connection', function (socket) {
                 return;
             }
 
-            socket.to(context.game.room).emit('obstacleDamage', payload);
+            socket
+                .to(context.game.room)
+                .emit(SOCKET_EVENT.ObstacleDamage, payload);
         }
     );
 
-    socket.on('clientReady', function () {
+    socket.on(SOCKET_EVENT.ClientReady, function () {
         const context = getSocketGameContext(socket);
 
         if (!context) {
@@ -365,7 +373,7 @@ io.on('connection', function (socket) {
     });
 
     socket.on(
-        'roundResult',
+        SOCKET_EVENT.RoundResult,
         /** @param {unknown} data */
         function (data) {
             const context = getSocketGameContext(socket);

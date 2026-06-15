@@ -1,5 +1,15 @@
 type TimerHandle = ReturnType<typeof setTimeout>;
 
+export const CLIENT_TIMER = {
+    Ritual: 'ritual',
+    Hit: 'hit',
+    Reset: 'reset',
+    MatchEnd: 'matchEnd',
+    AbandonedRequeue: 'abandonedRequeue'
+} as const;
+
+export type ClientTimerName = (typeof CLIENT_TIMER)[keyof typeof CLIENT_TIMER];
+
 export function ClientTimers() {
     const timers: Record<string, TimerHandle | null> = {};
 

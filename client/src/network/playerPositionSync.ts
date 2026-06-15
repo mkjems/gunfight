@@ -1,3 +1,9 @@
+import type { SocketEvent } from '../../../shared/contracts.js';
+
+const SOCKET_EVENT = {
+    PlayerPosition: 'playerPosition'
+} as const satisfies Record<string, SocketEvent>;
+
 type PlayerId = number | string;
 
 type PositionPlayer = {
@@ -10,7 +16,7 @@ type PositionPlayer = {
 
 type PositionSocket = {
     emit: (
-        event: 'playerPosition',
+        event: typeof SOCKET_EVENT.PlayerPosition,
         payload: {
             aim: unknown;
             facing: unknown;
@@ -74,7 +80,7 @@ export function PlayerPositionSync(options: PlayerPositionSyncOptions = {}) {
         }
 
         lastPositionSyncAt = now;
-        socket.emit('playerPosition', {
+        socket.emit(SOCKET_EVENT.PlayerPosition, {
             x: player.x,
             y: player.y,
             frame: player.frame,

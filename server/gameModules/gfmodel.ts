@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import {
     GAME_PHASE,
+    MATCH_STATE,
     parseRockDefinitions,
     parseScenarioSources,
     resolveScenarioSource,
@@ -109,7 +110,7 @@ export function createGameModel(options: GameModelOptions = {}) {
     const clients: GameModelClient[] = [];
     let currentScenarioIndex = -1;
     let matchResultId: string | null = null;
-    let matchState: MatchState = 'idle';
+    let matchState: MatchState = MATCH_STATE.Idle;
     let matchEndsAt: number | null = null;
     let phase: GamePhase = GAME_PHASE.Waiting;
     let phaseEndsAt: number | null = null;
@@ -194,14 +195,14 @@ export function createGameModel(options: GameModelOptions = {}) {
 
     function resetMatch(): void {
         matchResultId = null;
-        matchState = 'idle';
+        matchState = MATCH_STATE.Idle;
         matchEndsAt = null;
         scores = [0, 0];
     }
 
     function startMatch(): boolean {
         resetMatch();
-        matchState = 'playing';
+        matchState = MATCH_STATE.Playing;
         matchEndsAt = now() + GAME_MODEL_TIMINGS.matchMs;
         advanceRound();
         return setPhase(GAME_PHASE.RoundIntro, {
@@ -210,19 +211,19 @@ export function createGameModel(options: GameModelOptions = {}) {
     }
 
     function finishMatch(resultId: string): boolean {
-        if (matchState === 'gameOver') {
+        if (matchState === MATCH_STATE.GameOver) {
             return false;
         }
 
         if (
-            matchState !== 'playing' ||
+            matchState !== MATCH_STATE.Playing ||
             !canTransitionPhase(phase, GAME_PHASE.GameOver)
         ) {
             return false;
         }
 
         matchResultId = resultId;
-        matchState = 'gameOver';
+        matchState = MATCH_STATE.GameOver;
         return setPhase(GAME_PHASE.GameOver, {
             endsAt: now() + GAME_MODEL_TIMINGS.gameOverMs
         });
@@ -231,7 +232,7 @@ export function createGameModel(options: GameModelOptions = {}) {
     function returnToLobbyAfterGameOver(): boolean {
         if (
             phase !== GAME_PHASE.GameOver ||
-            matchState !== 'gameOver' ||
+            matchState !== MATCH_STATE.GameOver ||
             (phaseEndsAt !== null && now() < phaseEndsAt)
         ) {
             return false;
@@ -260,7 +261,8 @@ export function createGameModel(options: GameModelOptions = {}) {
 
         disconnect: function (client: GameModelClient): void {
             let i;
-            const wasActive = isActivePhase(phase) || matchState === 'playing';
+            const wasActive =
+                isActivePhase(phase) || matchState === MATCH_STATE.Playing;
 
             for (i = clients.length - 1; i >= 0; i--) {
                 if (clients[i].id === client.id) {
@@ -350,7 +352,10 @@ export function createGameModel(options: GameModelOptions = {}) {
         },
 
         enterPlaying: function (resultId: string): boolean {
-            if (phase !== GAME_PHASE.RoundIntro || matchState !== 'playing') {
+            if (
+                phase !== GAME_PHASE.RoundIntro ||
+                matchState !== MATCH_STATE.Playing
+            ) {
                 return false;
             }
 
@@ -369,7 +374,7 @@ export function createGameModel(options: GameModelOptions = {}) {
 
             if (
                 phase !== GAME_PHASE.Playing ||
-                matchState !== 'playing' ||
+                matchState !== MATCH_STATE.Playing ||
                 clients.length < 2 ||
                 result.roundNumber !== roundNumber ||
                 winnerSlot < 0 ||
@@ -387,7 +392,10 @@ export function createGameModel(options: GameModelOptions = {}) {
         },
 
         finishHitPause: function (resultId: string): boolean {
-            if (phase !== GAME_PHASE.HitPause || matchState !== 'playing') {
+            if (
+                phase !== GAME_PHASE.HitPause ||
+                matchState !== MATCH_STATE.Playing
+            ) {
                 return false;
             }
 

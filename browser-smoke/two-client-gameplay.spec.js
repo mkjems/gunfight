@@ -1,5 +1,15 @@
 import { devices, expect, test } from '@playwright/test';
 
+const SOCKET_EVENT = {
+    ClientKeyEvent: 'clientKeyEvent',
+    ClientReady: 'clientReady',
+    JoinedGame: 'joinedGame',
+    ModelUpdate: 'modelUpdate',
+    NewClient: 'newClient',
+    Requeue: 'requeue',
+    RoundResult: 'roundResult'
+};
+
 function captureBrowserErrors(page, label, browserErrors) {
     page.on('pageerror', function (error) {
         browserErrors.push(label + ': ' + error.message);
@@ -13,104 +23,111 @@ function captureBrowserErrors(page, label, browserErrors) {
 }
 
 async function preparePage(page, options = {}) {
-    await page.addInitScript(function (setupOptions) {
-        window.__gunfightSocketEmits = [];
-        window.__gunfightSocketEvents = [];
-        window.__gunfightSockets = [];
-        window.__gunfightWrapIo = function (ioFactory) {
-            if (ioFactory.__gunfightWrapped) {
-                return ioFactory;
-            }
+    await page.addInitScript(
+        function (setupOptions) {
+            window.__gunfightSocketEmits = [];
+            window.__gunfightSocketEvents = [];
+            window.__gunfightSockets = [];
+            window.__gunfightWrapIo = function (ioFactory) {
+                if (ioFactory.__gunfightWrapped) {
+                    return ioFactory;
+                }
 
-            function wrappedIo(...args) {
-                const socket = ioFactory(...args);
-                const originalEmit = socket.emit.bind(socket);
-                const originalOn = socket.on.bind(socket);
+                function wrappedIo(...args) {
+                    const socket = ioFactory(...args);
+                    const originalEmit = socket.emit.bind(socket);
+                    const originalOn = socket.on.bind(socket);
 
-                socket.emit = function (eventName, payload) {
-                    window.__gunfightSocketEmits.push({
-                        eventName,
-                        payload
-                    });
-
-                    return originalEmit(eventName, payload);
-                };
-
-                socket.on = function (eventName, handler) {
-                    return originalOn(eventName, function (...eventArgs) {
-                        const payload = eventArgs[0];
-
-                        window.__gunfightSocketEvents.push({
+                    socket.emit = function (eventName, payload) {
+                        window.__gunfightSocketEmits.push({
                             eventName,
                             payload
                         });
 
-                        if (eventName === 'joinedGame') {
-                            window.__gunfightJoinedGame = payload;
-                            window.__gunfightLatestModel = payload.model;
-                        } else if (
-                            eventName === 'modelUpdate' ||
-                            eventName === 'newClient'
-                        ) {
-                            window.__gunfightLatestModel = payload;
+                        return originalEmit(eventName, payload);
+                    };
+
+                    socket.on = function (eventName, handler) {
+                        return originalOn(eventName, function (...eventArgs) {
+                            const payload = eventArgs[0];
+
+                            window.__gunfightSocketEvents.push({
+                                eventName,
+                                payload
+                            });
+
+                            if (
+                                eventName ===
+                                setupOptions.socketEvent.JoinedGame
+                            ) {
+                                window.__gunfightJoinedGame = payload;
+                                window.__gunfightLatestModel = payload.model;
+                            } else if (
+                                eventName ===
+                                    setupOptions.socketEvent.ModelUpdate ||
+                                eventName === setupOptions.socketEvent.NewClient
+                            ) {
+                                window.__gunfightLatestModel = payload;
+                            }
+
+                            return handler(...eventArgs);
+                        });
+                    };
+
+                    window.__gunfightSockets.push(socket);
+
+                    return socket;
+                }
+
+                Object.assign(wrappedIo, ioFactory);
+                wrappedIo.__gunfightWrapped = true;
+
+                return wrappedIo;
+            };
+
+            Object.defineProperty(window, 'io', {
+                configurable: true,
+                get() {
+                    return this.__gunfightIo;
+                },
+                set(value) {
+                    this.__gunfightIo =
+                        typeof value === 'function'
+                            ? this.__gunfightWrapIo(value)
+                            : value;
+                }
+            });
+
+            if (setupOptions.freezeDate !== false) {
+                const RealDate = Date;
+                const fixedTime = new RealDate(
+                    '2026-01-01T00:00:00.000Z'
+                ).getTime();
+
+                class FixedDate extends RealDate {
+                    constructor(...args) {
+                        if (args.length) {
+                            super(...args);
+                            return;
                         }
 
-                        return handler(...eventArgs);
-                    });
-                };
-
-                window.__gunfightSockets.push(socket);
-
-                return socket;
-            }
-
-            Object.assign(wrappedIo, ioFactory);
-            wrappedIo.__gunfightWrapped = true;
-
-            return wrappedIo;
-        };
-
-        Object.defineProperty(window, 'io', {
-            configurable: true,
-            get() {
-                return this.__gunfightIo;
-            },
-            set(value) {
-                this.__gunfightIo =
-                    typeof value === 'function'
-                        ? this.__gunfightWrapIo(value)
-                        : value;
-            }
-        });
-
-        if (setupOptions.freezeDate !== false) {
-            const RealDate = Date;
-            const fixedTime = new RealDate(
-                '2026-01-01T00:00:00.000Z'
-            ).getTime();
-
-            class FixedDate extends RealDate {
-                constructor(...args) {
-                    if (args.length) {
-                        super(...args);
-                        return;
+                        super(fixedTime);
                     }
 
-                    super(fixedTime);
+                    static now() {
+                        return fixedTime;
+                    }
                 }
 
-                static now() {
-                    return fixedTime;
-                }
+                FixedDate.UTC = RealDate.UTC;
+                FixedDate.parse = RealDate.parse;
+                globalThis.Date = FixedDate;
             }
 
-            FixedDate.UTC = RealDate.UTC;
-            FixedDate.parse = RealDate.parse;
-            globalThis.Date = FixedDate;
-        }
-
-        localStorage.setItem('gunfight-install-prompt-dismissed', '1');
-    }, options);
+            localStorage.setItem('gunfight-install-prompt-dismissed', '1');
+        },
+        { ...options, socketEvent: SOCKET_EVENT }
+    );
 }
 
 async function gotoPreparedLobby(page, url, options) {
@@ -217,9 +234,15 @@ async function createRoundResultPayload(page) {
 }
 
 async function emitRoundResult(page, payload) {
-    await page.evaluate(function (resultPayload) {
-        window.__gunfightSockets[0].emit('roundResult', resultPayload);
-    }, payload);
+    await page.evaluate(
+        function ({ eventName, resultPayload }) {
+            window.__gunfightSockets[0].emit(eventName, resultPayload);
+        },
+        {
+            eventName: SOCKET_EVENT.RoundResult,
+            resultPayload: payload
+        }
+    );
 }
 
 async function captureMobileScreenshot(page, testInfo, fileName) {
@@ -367,7 +390,7 @@ async function dragTouchControl(page, locator, offsetX, offsetY) {
 function hasKeyEmit(emits, key, action) {
     return emits.some(function (entry) {
         return (
-            entry.eventName === 'clientKeyEvent' &&
+            entry.eventName === SOCKET_EVENT.ClientKeyEvent &&
             entry.payload &&
             entry.payload.key === key &&
             entry.payload.action === action
@@ -511,7 +534,7 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
 
             return (
                 emits.some(function (entry) {
-                    return entry.eventName === 'clientReady';
+                    return entry.eventName === SOCKET_EVENT.ClientReady;
                 }) &&
                 hasKeyEmit(emits, 'l', 'down') &&
                 hasKeyEmit(emits, 'l', 'up') &&
@@ -704,7 +727,7 @@ test('abandoned games requeue safely and reject late round reports', async ({
 
     expect(
         emits.some(function (entry) {
-            return entry.eventName === 'requeue';
+            return entry.eventName === SOCKET_EVENT.Requeue;
         })
     ).toBe(true);
     expect(browserErrors).toEqual([]);

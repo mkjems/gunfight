@@ -1,4 +1,4 @@
-import type { GamePhase } from '../../../shared/contracts.js';
+import type { GamePhase, MatchState } from '../../../shared/contracts.js';
 import { Config } from '../platform/config.js';
 import { analyze } from './clientModelSync.js';
 import { RoundState } from '../state/clientScreens.js';
@@ -15,7 +15,7 @@ type PublicModel = {
     currentScenario?: {
         playerStarts?: typeof Config.player.slots;
     } | null;
-    matchState?: string;
+    matchState?: MatchState;
     phase?: GamePhase;
 };
 
@@ -26,6 +26,16 @@ type CreatePlanOptions = {
     roundState: RoundState;
 };
 
+const MATCH_STATE = {
+    GameOver: 'gameOver'
+} as const satisfies Record<string, MatchState>;
+
+const GAME_PHASE = {
+    Waiting: 'waiting',
+    Readying: 'readying',
+    RoundIntro: 'roundIntro'
+} as const satisfies Record<string, GamePhase>;
+
 export function create(options: CreatePlanOptions) {
     const syncState = analyze(
         options.previousModel,
@@ -33,8 +43,8 @@ export function create(options: CreatePlanOptions) {
         options.playerId
     );
     const serverStartedRound =
-        options.model?.phase === 'roundIntro' &&
-        options.previousModel?.phase !== 'roundIntro';
+        options.model?.phase === GAME_PHASE.RoundIntro &&
+        options.previousModel?.phase !== GAME_PHASE.RoundIntro;
     const shouldStartRound =
         canStartRoundFromState(options.roundState) && serverStartedRound;
     const serverReturnedToLobby =
@@ -43,7 +53,7 @@ export function create(options: CreatePlanOptions) {
     const shouldEnterLobbyState =
         !!syncState.abandoned || serverReturnedToLobby;
     const shouldEnterGameOverState =
-        options.model?.matchState === 'gameOver' &&
+        options.model?.matchState === MATCH_STATE.GameOver &&
         options.roundState !== RoundState.WAITING &&
         options.roundState !== RoundState.GAME_OVER;
     const syncLobbySlots =
@@ -82,7 +92,7 @@ function canStartRoundFromState(roundState: RoundState): boolean {
 }
 
 function isServerLobbyPhase(phase?: GamePhase): boolean {
-    return phase === 'waiting' || phase === 'readying';
+    return phase === GAME_PHASE.Waiting || phase === GAME_PHASE.Readying;
 }
 
 function getScenarioPlayerStarts(model: PublicModel | null) {

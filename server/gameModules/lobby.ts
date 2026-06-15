@@ -1,5 +1,5 @@
 import { createGameModel } from './gfmodel.js';
-import { GAME_PHASE } from '../../shared/contracts.js';
+import { GAME_PHASE, MATCH_STATE } from '../../shared/contracts.js';
 import type {
     GameModelClient,
     GameResultPayload,
@@ -39,7 +39,15 @@ interface GameSession {
     updatedAt: number;
 }
 
-type GameStatus = 'waiting' | 'readying' | 'playing' | 'abandoned' | 'closed';
+const LOBBY_STATUS = {
+    Waiting: 'waiting',
+    Readying: 'readying',
+    Playing: 'playing',
+    Abandoned: 'abandoned',
+    Closed: 'closed'
+} as const;
+
+type GameStatus = (typeof LOBBY_STATUS)[keyof typeof LOBBY_STATUS];
 
 interface LobbyOptions {
     now?: () => number;
@@ -119,11 +127,11 @@ function getGameMessage(game: GameSession): string {
     const model = game.model.getModel();
     const status = getGameStatus(game);
 
-    if (status === 'abandoned') {
+    if (status === LOBBY_STATUS.Abandoned) {
         return 'OPPONENT LEFT';
     }
 
-    if (status === 'playing') {
+    if (status === LOBBY_STATUS.Playing) {
         return '';
     }
 
@@ -142,11 +150,11 @@ function getGameStatus(game: GameSession): GameStatus {
     const phase = game.model.getModel().phase;
 
     if (phase === GAME_PHASE.Closed) {
-        return 'closed';
+        return LOBBY_STATUS.Closed;
     }
 
     if (phase === GAME_PHASE.Abandoned) {
-        return 'abandoned';
+        return LOBBY_STATUS.Abandoned;
     }
 
     if (
@@ -155,14 +163,14 @@ function getGameStatus(game: GameSession): GameStatus {
         phase === GAME_PHASE.HitPause ||
         phase === GAME_PHASE.GameOver
     ) {
-        return 'playing';
+        return LOBBY_STATUS.Playing;
     }
 
     if (phase === GAME_PHASE.Readying || phase === GAME_PHASE.ReadyCountdown) {
-        return 'readying';
+        return LOBBY_STATUS.Readying;
     }
 
-    return 'waiting';
+    return LOBBY_STATUS.Waiting;
 }
 
 function createLobbyClient(
@@ -209,7 +217,7 @@ export function createLobby(options: LobbyOptions = {}) {
             }
 
             if (
-                getGameStatus(game) === 'waiting' &&
+                getGameStatus(game) === LOBBY_STATUS.Waiting &&
                 game.clients.length < MAX_PLAYERS_PER_GAME
             ) {
                 waitingGame = game;
@@ -229,7 +237,7 @@ export function createLobby(options: LobbyOptions = {}) {
 
             if (
                 game.id !== sourceGameId &&
-                getGameStatus(game) === 'waiting' &&
+                getGameStatus(game) === LOBBY_STATUS.Waiting &&
                 game.clients.length === 1
             ) {
                 waitingGame = game;
@@ -409,7 +417,7 @@ export function createLobby(options: LobbyOptions = {}) {
 
         game.updatedAt = now();
 
-        if (game.model.getModel().matchState === 'gameOver') {
+        if (game.model.getModel().matchState === MATCH_STATE.GameOver) {
             return createGameResult(game, resultId);
         }
 
@@ -426,7 +434,7 @@ export function createLobby(options: LobbyOptions = {}) {
 
         game.updatedAt = now();
 
-        if (game.model.getModel().matchState === 'gameOver') {
+        if (game.model.getModel().matchState === MATCH_STATE.GameOver) {
             return createGameResult(game, resultId);
         }
 
@@ -481,6 +489,10 @@ export function createLobby(options: LobbyOptions = {}) {
         return Array.from(games.values());
     }
 
+    function isWaiting(game: GameSession): boolean {
+        return getGameStatus(game) === LOBBY_STATUS.Waiting;
+    }
+
     return {
         findAutoPairTarget: findAutoPairTarget,
         getClientForSocket: getClientForSocket,
@@ -489,6 +501,7 @@ export function createLobby(options: LobbyOptions = {}) {
         getGames: getGames,
         getModel: getModel,
         getStatus: getGameStatus,
+        isWaiting: isWaiting,
         join: join,
         leave: leave,
         enterPlaying: enterPlaying,

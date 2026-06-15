@@ -1,3 +1,10 @@
+import type { SocketEvent } from '../../../shared/contracts.js';
+
+const SOCKET_EVENT = {
+    ClientKeyEvent: 'clientKeyEvent',
+    ClientReady: 'clientReady'
+} as const satisfies Record<string, SocketEvent>;
+
 type KeyAction = 'down' | 'up';
 
 type KeyEventPayload = {
@@ -55,7 +62,7 @@ export function KeysModel(
             return;
         }
 
-        socket.emit('clientKeyEvent', keyEvent);
+        socket.emit(SOCKET_EVENT.ClientKeyEvent, keyEvent);
     }
 
     function press(key: string) {
@@ -89,7 +96,7 @@ export function KeysModel(
             return;
         }
 
-        socket.emit('clientReady');
+        socket.emit(SOCKET_EVENT.ClientReady);
         internalKeyStatus.p = true;
 
         if (options.onReady) {

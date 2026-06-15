@@ -1,5 +1,11 @@
+import type { SocketEvent } from '../../../shared/contracts.js';
 import { Config } from '../platform/config.js';
 import { RoundState } from '../state/clientScreens.js';
+import { CLIENT_TIMER } from '../state/clientTimers.js';
+
+const SOCKET_EVENT = {
+    RoundResult: 'roundResult'
+} as const satisfies Record<string, SocketEvent>;
 
 type ClientId = number | string;
 
@@ -37,7 +43,7 @@ type HandleHitOptions = {
     setRoundState: (roundState: RoundState) => void;
     socket: {
         emit: (
-            event: 'roundResult',
+            event: typeof SOCKET_EVENT.RoundResult,
             payload: {
                 roundNumber: number | undefined;
                 targetId: ClientId;
@@ -46,7 +52,11 @@ type HandleHitOptions = {
         ) => void;
     };
     timers: {
-        set: (name: 'hit', callback: () => void, delay: number) => void;
+        set: (
+            name: typeof CLIENT_TIMER.Hit,
+            callback: () => void,
+            delay: number
+        ) => void;
     };
 };
 
@@ -78,7 +88,7 @@ export function handleHit(options: HandleHitOptions) {
     }
 
     if (options.hit.winnerId === options.playerId) {
-        options.socket.emit('roundResult', {
+        options.socket.emit(SOCKET_EVENT.RoundResult, {
             roundNumber: options.model?.roundNumber,
             targetId: options.hit.targetId,
             winnerId: options.hit.winnerId
@@ -88,7 +98,11 @@ export function handleHit(options: HandleHitOptions) {
     options.renderHud();
     options.players.clearKeys();
     options.bullets.clear();
-    options.timers.set('hit', options.resetAfterHit, Config.round.resetDelay);
+    options.timers.set(
+        CLIENT_TIMER.Hit,
+        options.resetAfterHit,
+        Config.round.resetDelay
+    );
 }
 
 export function resetAfterHit(options: ResetAfterHitOptions) {

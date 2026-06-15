@@ -38,6 +38,11 @@ async function loadClientRoundRitual() {
         tempDirectory
     );
     compileClientModule(
+        'state/clientTimers.ts',
+        'state/clientTimers.js',
+        tempDirectory
+    );
+    compileClientModule(
         'flows/clientRoundRitual.ts',
         'flows/clientRoundRitual.js',
         tempDirectory

@@ -38,6 +38,11 @@ async function loadClientRoundEndFlow() {
         tempDirectory
     );
     compileClientModule(
+        'state/clientTimers.ts',
+        'state/clientTimers.js',
+        tempDirectory
+    );
+    compileClientModule(
         'flows/clientRoundEndFlow.ts',
         'flows/clientRoundEndFlow.js',
         tempDirectory

@@ -38,6 +38,11 @@ async function loadClientRoundResetFlow() {
         tempDirectory
     );
     compileClientModule(
+        'state/clientTimers.ts',
+        'state/clientTimers.js',
+        tempDirectory
+    );
+    compileClientModule(
         'flows/clientRoundResetFlow.ts',
         'flows/clientRoundResetFlow.js',
         tempDirectory

@@ -3,10 +3,16 @@ import test from 'node:test';
 import {
     GAME_PHASE,
     GAME_PHASE_VALUES,
+    MATCH_STATE,
+    MATCH_STATE_VALUES,
+    SOCKET_EVENT,
+    SOCKET_EVENT_VALUES,
     createKeyEventPayload,
     createPlayerPositionPayload,
     getNameFromPayload,
     isGamePhase,
+    isMatchState,
+    isSocketEvent,
     normalizeBulletSnapshot,
     normalizeGameResultPayload,
     normalizeObstacleDamagePayload,
@@ -34,6 +40,22 @@ test('exports lifecycle phase constants and guard', function () {
     assert.ok(GAME_PHASE_VALUES.includes(GAME_PHASE.HitPause));
     assert.equal(isGamePhase('roundIntro'), true);
     assert.equal(isGamePhase('not-a-phase'), false);
+});
+
+test('exports match state constants and guard', function () {
+    assert.equal(MATCH_STATE.Playing, 'playing');
+    assert.ok(MATCH_STATE_VALUES.includes(MATCH_STATE.GameOver));
+    assert.equal(isMatchState('idle'), true);
+    assert.equal(isMatchState('not-a-match-state'), false);
+});
+
+test('exports socket event constants and guard', function () {
+    assert.equal(SOCKET_EVENT.ClientReady, 'clientReady');
+    assert.equal(SOCKET_EVENT.ModelUpdate, 'modelUpdate');
+    assert.equal(SOCKET_EVENT.KeyEvent, 'keyEvent');
+    assert.ok(SOCKET_EVENT_VALUES.includes(SOCKET_EVENT.RoundResult));
+    assert.equal(isSocketEvent('obstacleDamage'), true);
+    assert.equal(isSocketEvent('not-an-event'), false);
 });
 
 test('extracts player names from string and object payloads', function () {

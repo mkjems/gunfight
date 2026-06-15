@@ -1,5 +1,6 @@
 import { Config } from '../platform/config.js';
 import { RoundState } from '../state/clientScreens.js';
+import { CLIENT_TIMER, type ClientTimerName } from '../state/clientTimers.js';
 
 type ClientRoundResetOptions = {
     bullets: {
@@ -35,7 +36,10 @@ type WaitingStateOptions = Pick<
     'renderHud' | 'setRoundState' | 'syncNameEditor'
 >;
 
-const RESET_TIMERS = ['reset', 'matchEnd'];
+const RESET_TIMERS: ClientTimerName[] = [
+    CLIENT_TIMER.Reset,
+    CLIENT_TIMER.MatchEnd
+];
 
 export function resetRound(options: ClientRoundResetOptions) {
     options.players.resetAll({

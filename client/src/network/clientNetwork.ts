@@ -1,3 +1,15 @@
+import type { SocketEvent } from '../../../shared/contracts.js';
+
+const SOCKET_EVENT = {
+    HighScores: 'highScores',
+    JoinedGame: 'joinedGame',
+    KeyEvent: 'keyEvent',
+    PlayerPosition: 'playerPosition',
+    ObstacleDamage: 'obstacleDamage',
+    NewClient: 'newClient',
+    ModelUpdate: 'modelUpdate'
+} as const satisfies Record<string, SocketEvent>;
+
 type Socket = {
     emit: (event: string, payload?: unknown) => void;
     on: (event: string, callback: (data: unknown) => void) => void;
@@ -38,43 +50,43 @@ export function ClientNetwork(options: ClientNetworkOptions = {}) {
             : {}
     });
 
-    socket.on('highScores', function (nextHighScores) {
+    socket.on(SOCKET_EVENT.HighScores, function (nextHighScores) {
         if (options.onHighScores) {
             options.onHighScores(nextHighScores);
         }
     });
 
-    socket.on('joinedGame', function (data) {
+    socket.on(SOCKET_EVENT.JoinedGame, function (data) {
         if (options.onJoinedGame) {
             options.onJoinedGame(data);
         }
     });
 
-    socket.on('keyEvent', function (keyEvent) {
+    socket.on(SOCKET_EVENT.KeyEvent, function (keyEvent) {
         if (options.onKeyEvent) {
             options.onKeyEvent(keyEvent);
         }
     });
 
-    socket.on('playerPosition', function (data) {
+    socket.on(SOCKET_EVENT.PlayerPosition, function (data) {
         if (options.onPlayerPosition) {
             options.onPlayerPosition(data);
         }
     });
 
-    socket.on('obstacleDamage', function (data) {
+    socket.on(SOCKET_EVENT.ObstacleDamage, function (data) {
         if (options.onObstacleDamage) {
             options.onObstacleDamage(data);
         }
     });
 
-    socket.on('newClient', function (model) {
+    socket.on(SOCKET_EVENT.NewClient, function (model) {
         if (options.onModelUpdate) {
             options.onModelUpdate(model);
         }
     });
 
-    socket.on('modelUpdate', function (model) {
+    socket.on(SOCKET_EVENT.ModelUpdate, function (model) {
         if (options.onModelUpdate) {
             options.onModelUpdate(model);
         }
