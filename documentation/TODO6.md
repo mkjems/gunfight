@@ -173,26 +173,26 @@
     - [ ] Do not add server-side bullet simulation, rollback, or authoritative
           movement in P8.
 - [ ] Simplify socket event contracts.
-    - [ ] Separate client intent/report events from authoritative server
+    - [x] Separate client intent/report events from authoritative server
           `modelUpdate` events in documentation and tests.
-    - [ ] Ensure each accepted intent emits exactly one fresh public model or a
+    - [x] Ensure each accepted intent emits exactly one fresh public model or a
           clearly documented no-op.
     - [x] Ensure rejected or stale intents do not mutate the public model.
     - [ ] Remove legacy socket events once no client code depends on them.
-- [ ] Strengthen disconnect, requeue, and reconnect behavior.
-    - [ ] Define server behavior for disconnect in every phase.
-    - [ ] Ensure automatic pairing only uses safe one-player `waiting` games.
-    - [ ] Ensure abandoned games publish one final model and do not accept late
+- [x] Strengthen disconnect, requeue, and reconnect behavior.
+    - [x] Define server behavior for disconnect in every phase.
+    - [x] Ensure automatic pairing only uses safe one-player `waiting` games.
+    - [x] Ensure abandoned games publish one final model and do not accept late
           gameplay reports.
-    - [ ] Decide whether reconnect should restore a player to an active game or
+    - [x] Decide whether reconnect should restore a player to an active game or
           always create a new lobby session; document the rule before coding it.
 - [ ] Add focused server coverage.
     - [ ] Test legal and illegal transitions for every phase.
     - [x] Test stale timer protection by version and phase.
     - [x] Test every accepted slow-state event increments `version`.
     - [x] Test rejected stale events leave `version` and public state unchanged.
-    - [ ] Test game-over expiry resets ready/lobby state from the server.
-    - [ ] Test disconnect, abandon, requeue, and auto-pairing in each relevant
+    - [x] Test game-over expiry resets ready/lobby state from the server.
+    - [x] Test disconnect, abandon, requeue, and auto-pairing in each relevant
           phase.
 - [ ] Add focused client coverage.
     - [x] Test that ready flags alone never start gameplay.

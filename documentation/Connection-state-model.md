@@ -237,6 +237,24 @@ On `requeue`, or `leaveGame` with rejoin requested, the server removes the
 socket from its current game and immediately joins it to a waiting or new game
 using the same resolved name.
 
+Disconnect behavior by phase:
+
+| Phase                                                 | Remaining game behavior                                                                       |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `waiting`                                             | Last leave closes and deletes the game.                                                       |
+| `readying`                                            | Remaining client returns to one-player `waiting`; ready is cleared and auto-pairing may run.  |
+| `readyCountdown`, `roundIntro`, `playing`, `hitPause` | Remaining client receives one `abandoned` model; ready, match state, timers, and score clear. |
+| `gameOver`                                            | Remaining client receives `abandoned`; the old match cannot return to play or lobby-reset.    |
+| `abandoned`                                           | Requeue or leave removes the client from the abandoned game; it is not auto-pair eligible.    |
+| `closed`                                              | Closed games are deleted and do not accept further lifecycle reports.                         |
+
+Automatic pairing only uses one-player `waiting` games. Active, game-over,
+abandoned, and closed games are never pairing targets.
+
+There is no reconnect restoration in P8. A browser reconnects as a fresh socket,
+using its stored display name if available. If the old socket disconnects from
+an active game, that old game follows the normal abandonment path.
+
 On `updateName`, the server sanitizes the requested name, makes it unique inside
 the current game, stores it on the lobby client, and emits `modelUpdate` only
 when the public name changes. A same-name request is a no-op.
@@ -279,6 +297,13 @@ score, and emits the updated model and high-score table. The legacy
 decides whether the match may actually end.
 
 ### Mutating socket events
+
+Client-to-server lifecycle events are intents or reports. The server decides
+whether each event is accepted, mutates the public model only on accepted state
+changes, and sends authoritative `joinedGame`, `modelUpdate`, or `highScores`
+events back to clients. Rejected compatibility requests may resend the unchanged
+public model so the client can resynchronize, but they do not increment
+`version`.
 
 | Event            | Direction                | Server action                                                                       |
 | ---------------- | ------------------------ | ----------------------------------------------------------------------------------- |

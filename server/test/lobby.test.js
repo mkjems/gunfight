@@ -66,6 +66,18 @@ function assertModelUnchanged(lobby, game, action) {
     return result;
 }
 
+function assertAbandonedModel(model) {
+    assert.equal(model.status, 'abandoned');
+    assert.equal(model.phase, 'abandoned');
+    assert.equal(model.message, 'OPPONENT LEFT');
+    assert.deepEqual(
+        model.clients.map(function (client) {
+            return client.ready;
+        }),
+        [false]
+    );
+}
+
 test('pairs the first two clients into the same game', function () {
     const lobby = createTestLobby();
     const first = lobby.join('socket-1', { name: 'red' });
@@ -629,18 +641,117 @@ test('disconnect during play abandons the game and avoids pairing new clients in
     const third = lobby.join('socket-3', { name: 'three' });
 
     assert.equal(left.game.id, second.game.id);
-    assert.equal(left.model.status, 'abandoned');
-    assert.equal(left.model.message, 'OPPONENT LEFT');
-    assert.deepEqual(
-        left.model.clients.map(function (client) {
-            return client.ready;
-        }),
-        [false]
-    );
+    assertAbandonedModel(left.model);
     assert.equal(lobby.getModel(second.game).clients.length, 1);
     assert.notEqual(third.game.id, second.game.id);
     assert.equal(third.game.id, 'G0002');
     assert.equal(lobby.getModel(third.game).status, 'waiting');
+});
+
+test('disconnect during timed active phases abandons the game and rejects late reports', function () {
+    [
+        {
+            phase: 'readyCountdown',
+            prepare(lobby, first, second) {
+                assert.equal(lobby.readyClient(first.game, first.client), true);
+                assert.equal(
+                    lobby.readyClient(first.game, second.client),
+                    true
+                );
+            },
+            assertLateEvents(lobby, game, first, second) {
+                assert.equal(lobby.startMatch(game), false);
+                assert.equal(
+                    lobby.recordRoundResult(game, {
+                        roundNumber: 1,
+                        targetId: second.client.id,
+                        winnerId: first.client.id
+                    }),
+                    false
+                );
+            }
+        },
+        {
+            phase: 'roundIntro',
+            prepare(lobby, first, second) {
+                assert.equal(lobby.readyClient(first.game, first.client), true);
+                assert.equal(
+                    lobby.readyClient(first.game, second.client),
+                    true
+                );
+                assert.equal(lobby.startMatch(first.game), true);
+            },
+            assertLateEvents(lobby, game, first, second) {
+                assert.equal(lobby.enterPlaying(game), null);
+                assert.equal(
+                    lobby.recordRoundResult(game, {
+                        roundNumber: 1,
+                        targetId: second.client.id,
+                        winnerId: first.client.id
+                    }),
+                    false
+                );
+            }
+        },
+        {
+            phase: 'hitPause',
+            prepare(lobby, first, second) {
+                startPlayingGame(lobby, first, second);
+                assert.equal(
+                    lobby.recordRoundResult(first.game, {
+                        roundNumber: 1,
+                        targetId: second.client.id,
+                        winnerId: first.client.id
+                    }),
+                    true
+                );
+            },
+            assertLateEvents(lobby, game, first, second) {
+                assert.equal(lobby.finishHitPause(game), null);
+                assert.equal(
+                    lobby.recordRoundResult(game, {
+                        roundNumber: 1,
+                        targetId: second.client.id,
+                        winnerId: first.client.id
+                    }),
+                    false
+                );
+            }
+        }
+    ].forEach(function (example) {
+        const lobby = createTestLobby();
+        const first = lobby.join('socket-1', { name: 'one' });
+        const second = lobby.join('socket-2', { name: 'two' });
+
+        example.prepare(lobby, first, second);
+        assert.equal(lobby.getModel(first.game).phase, example.phase);
+
+        const left = lobby.leave('socket-2');
+
+        assert.equal(left.game.id, first.game.id);
+        assertAbandonedModel(left.model);
+        assert.equal(lobby.findAutoPairTarget(first.game.id), null);
+        example.assertLateEvents(lobby, first.game, first, second);
+    });
+});
+
+test('disconnect during game over abandons the remaining game without restoring stale play', function () {
+    const manual = createManualLobby();
+    const lobby = manual.lobby;
+    const first = lobby.join('socket-1', { name: 'one' });
+    const second = lobby.join('socket-2', { name: 'two' });
+
+    startPlayingGame(lobby, first, second);
+    manual.setTime(lobby.getModel(first.game).matchEndsAt);
+    assert.notEqual(lobby.finishMatch(first.game), null);
+    assert.equal(lobby.getModel(first.game).phase, 'gameOver');
+
+    const left = lobby.leave('socket-2');
+
+    assert.equal(left.game.id, first.game.id);
+    assertAbandonedModel(left.model);
+    assert.equal(lobby.returnToLobbyAfterGameOver(first.game), false);
+    assert.equal(lobby.finishMatch(first.game), null);
 });
 
 test('requeue moves the remaining abandoned player into a fresh waiting game', function () {
