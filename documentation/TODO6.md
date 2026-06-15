@@ -60,33 +60,61 @@
 
 ### P8 - Concentrate all control-logic, outside off gameplay itself, on the server side. Make client about presentation-logic and real time game play.
 
-- [ ] Define the target ownership boundary.
-    - [ ] Server owns all slow/control state: connection, pairing, names, ready
+- [x] Define the target ownership boundary.
+    - [x] Server owns all slow/control state: connection, pairing, names, ready
           flags, ready countdown, lobby-to-game transition, scenario selection,
           round number, phase changes, score, match clock, hit pause, game over,
           high-score recording, abandonment, requeue, and return-to-lobby timing.
-    - [ ] Client owns fast real-time gameplay: input feel, movement, aiming,
+    - [x] Client owns fast real-time gameplay: input feel, movement, aiming,
           bullets, collision, local hit detection, camera, particles, sounds,
           touch controls, and rendering.
-    - [ ] Client owns presentation of server phases: lobby UI, `GET READY`,
+    - [x] Client owns presentation of server phases: lobby UI, `GET READY`,
           `DRAW!`, intro walking, hit text, death animation, game-over display,
           and HUD rendering.
-    - [ ] Client events that mutate slow state are intent/report events only;
+    - [x] Client events that mutate slow state are intent/report events only;
           the server decides whether the intent is accepted and what the next
           public model is.
-    - [ ] Every accepted server-side public model change increments `version`.
-- [ ] Audit all current lifecycle/control decisions.
-    - [ ] List every client place that starts, ends, resets, or advances a game
+    - [x] Every accepted server-side public model change increments `version`.
+- [x] Audit all current lifecycle/control decisions.
+    - [x] List every client place that starts, ends, resets, or advances a game
           phase: `ClientModelUpdateFlow`, `ClientRoundRitual`,
           `ClientPlayerHitFlow`, `ClientRoundResetFlow`, `ClientRoundEndFlow`,
           `ClientMatchTimer`, `ClientScreens`, and runtime helpers.
-    - [ ] Classify each decision as server-control, client-presentation, or
+        - `ClientModelUpdateFlow`/`ClientModelUpdatePlan`: client follower of
+          authoritative phase updates.
+        - `ClientRoundRitual`: presentation for `roundIntro`; legacy no-phase
+          local expiry fallback remains.
+        - `ClientPlayerHitFlow`: hit presentation plus `roundResult` report; no
+          local round advance when server phases are present.
+        - `ClientRoundResetFlow`: presentation reset; `resetToStartScreen`
+          keeps legacy `resetReady` fallback for no-phase models.
+        - `ClientRoundEndFlow`: game-over presentation; legacy `matchExpired`
+          request remains, but authoritative phase models no longer schedule a
+          client-owned lobby reset.
+        - `ClientMatchTimer` and `ClientHitDetection`: local match-expiry
+          fallback only when no authoritative server phase exists.
+        - `ClientScreens`: presentation screen and legal local round-state
+          transitions.
+        - Runtime helpers: stale model guard by `version`, server timing sync,
+          server `gameOver` follower, and legacy no-phase fallbacks.
+    - [x] Classify each decision as server-control, client-presentation, or
           real-time gameplay.
-    - [ ] List every server socket event that mutates lifecycle state:
+        - Server-control: `clientReady`, accepted `roundResult`, match expiry,
+          hit-pause expiry, ready countdown expiry, game-over lobby return,
+          disconnect, requeue, leave, join, and name changes.
+        - Client-presentation: lobby UI, round ritual text and walking, hit
+          text, death animation, game-over display, HUD, local screen state.
+        - Real-time gameplay: input, movement, aiming, bullets, collision,
+          local hit detection, obstacle damage, camera, particles, sounds, and
+          touch controls.
+    - [x] List every server socket event that mutates lifecycle state:
           `clientReady`, `roundResult`, `matchExpired`, `resetReady`, `requeue`,
           `leaveGame`, `joinLobby`, and `updateName`.
-    - [ ] Identify compatibility paths that still exist only for the old client
+    - [x] Identify compatibility paths that still exist only for the old client
           lifecycle model.
+        - Compatibility paths: projected public `status`, client
+          `matchExpired`, client `resetReady`, no-phase local match timer, and
+          no-phase local round reset.
 - [ ] Harden `gfmodel` as the one lifecycle state machine.
     - [ ] Write the legal transition table for `waiting`, `readying`,
           `readyCountdown`, `roundIntro`, `playing`, `hitPause`, `gameOver`,
@@ -95,19 +123,19 @@
           transition guards.
     - [ ] Keep `phaseStartedAt`, optional `phaseEndsAt`, optional `matchEndsAt`,
           and `version` updated by the same transition path.
-    - [ ] Add a clear server-owned return path from `gameOver` back to
+    - [x] Add a clear server-owned return path from `gameOver` back to
           `readying` or `waiting`; do not require the client to decide when the
           match is reset.
     - [ ] Make name changes, ready changes, disconnects, requeues, accepted hit
           reports, match expiry, and high-score recording all produce versioned
           model updates when they affect public state.
 - [ ] Centralize server timers.
-    - [ ] Keep one server scheduler responsible for `phaseEndsAt`.
-    - [ ] Schedule and validate timed transitions for `readyCountdown`,
+    - [x] Keep one server scheduler responsible for `phaseEndsAt`.
+    - [x] Schedule and validate timed transitions for `readyCountdown`,
           `roundIntro`, `playing`, `hitPause`, and `gameOver`.
-    - [ ] Ensure stale timers cannot advance a game after a newer phase or
+    - [x] Ensure stale timers cannot advance a game after a newer phase or
           version has replaced them.
-    - [ ] Clear timers when a game becomes `abandoned` or `closed`.
+    - [x] Clear timers when a game becomes `abandoned` or `closed`.
 - [ ] Make the public model sufficient for clients to follow without deciding.
     - [ ] Confirm the client can render every non-gameplay phase from
           `phase`, `version`, `phaseStartedAt`, `phaseEndsAt`, `matchEndsAt`,
@@ -126,7 +154,7 @@
           timeout, local score state, or local match expiry.
     - [ ] Remove client-owned `matchExpired` authority; keep any remaining event
           only as a temporary compatibility request until deleted.
-    - [ ] Remove client-owned `resetReady`/return-to-lobby authority once the
+    - [x] Remove client-owned `resetReady`/return-to-lobby authority once the
           server owns `gameOver` expiry and lobby reset.
     - [ ] Keep client timers only for presentation inside the current server
           phase: animation beats, text timing, effects, sounds, and local HUD
@@ -194,6 +222,8 @@
 - [ ] In lobby screen add particle burst to gun, but fire no bullet.
 - [ ] In lobby screen desktop - avoid H1 title and keyboard instructions jump on screen when entering into ready state.
 - [ ] When both players have marked themselves as ready - I would like a leave-lobby-for-game-sequence. I would like the lobby screen to keep the players in the lobby for a few seconds so you can see the READY status in negative text for 2 seconds and hear the ready sound before switching to the game screen.
+- I would like to reproduce a feature of the original arcade game: 
+      [] If there is a last played game, the top line containing 'Game over' and the player names and score, should show in the main lobby after the game.
 
 ## Other Ideas
 
@@ -204,8 +234,3 @@
 - [ ] Add a small original story or Stranger Things-style twist.
 - [ ] Add more sounds, animations, and scenario themes.
 - [ ] Add the number of wins/kills after the name in the lobby: LUKE 5/10
-
-## Maybe bad Ideas
-
-- [ ] After the game. Players should see the high score page for a period of time, before returning to main lobby.
-- [ ] On Desktop, after a game. 'Game over' should continue to be shown in the main lobby as should the last game result in the top line.

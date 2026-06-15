@@ -367,9 +367,24 @@ export function createLobby(options: LobbyOptions = {}) {
         return accepted;
     }
 
-    function resetReady(game: GameSession): void {
-        game.model.resetReady();
-        game.updatedAt = now();
+    function resetReady(game: GameSession): boolean {
+        const accepted = game.model.resetReady();
+
+        if (accepted) {
+            game.updatedAt = now();
+        }
+
+        return accepted;
+    }
+
+    function returnToLobbyAfterGameOver(game: GameSession): boolean {
+        const accepted = game.model.returnToLobbyAfterGameOver();
+
+        if (accepted) {
+            game.updatedAt = now();
+        }
+
+        return accepted;
     }
 
     function startMatch(game: GameSession): boolean {
@@ -486,6 +501,7 @@ export function createLobby(options: LobbyOptions = {}) {
         recordRoundResult: recordRoundResult,
         requeue: requeue,
         resetReady: resetReady,
+        returnToLobbyAfterGameOver: returnToLobbyAfterGameOver,
         startMatch: startMatch,
         updateName: updateName
     };

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { GAME_MODEL_TIMINGS } from '../gameModules/gfmodel.js';
 import { createLobby } from '../gameModules/lobby.js';
 
 function createTestLobby() {
@@ -244,12 +245,58 @@ test('finishes matches from server-owned scores for high scores', function () {
     });
     assert.equal(model.matchState, 'gameOver');
     assert.equal(model.matchResultId, 'G0001:2');
+    assert.equal(
+        model.phaseEndsAt,
+        model.phaseStartedAt + GAME_MODEL_TIMINGS.gameOverMs
+    );
     assert.equal(lobby.finishMatch(first.game), null);
 
-    lobby.resetReady(first.game);
+    manual.setTime(model.phaseEndsAt);
+
+    assert.equal(lobby.returnToLobbyAfterGameOver(first.game), true);
 
     assert.equal(lobby.getModel(first.game).matchState, 'idle');
     assert.deepEqual(lobby.getModel(first.game).scores, [0, 0]);
+});
+
+test('waits for the server-owned game-over phase before returning to lobby', function () {
+    const manual = createManualLobby();
+    const lobby = manual.lobby;
+    const first = lobby.join('socket-1', { name: 'one' });
+    const second = lobby.join('socket-2', { name: 'two' });
+
+    startPlayingGame(lobby, first, second);
+    manual.setTime(lobby.getModel(first.game).matchEndsAt);
+    assert.notEqual(lobby.finishMatch(first.game), null);
+
+    const gameOverModel = lobby.getModel(first.game);
+
+    manual.setTime(gameOverModel.phaseEndsAt - 1);
+
+    assert.equal(lobby.resetReady(first.game), false);
+    assert.equal(lobby.returnToLobbyAfterGameOver(first.game), false);
+    assert.equal(lobby.getModel(first.game).phase, 'gameOver');
+    assert.equal(lobby.getModel(first.game).version, gameOverModel.version);
+
+    manual.setTime(gameOverModel.phaseEndsAt);
+
+    assert.equal(lobby.resetReady(first.game), true);
+
+    const returnedModel = lobby.getModel(first.game);
+
+    assert.equal(returnedModel.phase, 'readying');
+    assert.equal(returnedModel.status, 'readying');
+    assert.equal(returnedModel.matchState, 'idle');
+    assert.equal(returnedModel.matchEndsAt, undefined);
+    assert.equal(returnedModel.phaseEndsAt, undefined);
+    assert.deepEqual(returnedModel.scores, [0, 0]);
+    assert.deepEqual(
+        returnedModel.clients.map(function (client) {
+            return client.ready;
+        }),
+        [false, false]
+    );
+    assert.equal(returnedModel.version, gameOverModel.version + 1);
 });
 
 test('keeps game rooms and models isolated', function () {

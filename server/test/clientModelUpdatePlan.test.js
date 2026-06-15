@@ -265,3 +265,74 @@ test('plans abandoned-game recovery', async function () {
         }
     );
 });
+
+test('plans lobby recovery when the server returns from game over', async function () {
+    const plan = await loadClientModelUpdatePlan();
+
+    assert.deepEqual(
+        plain(
+            plan.create({
+                model: {
+                    clients: [
+                        { id: 'p1', ready: false },
+                        { id: 'p2', ready: false }
+                    ],
+                    phase: 'readying',
+                    status: 'readying'
+                },
+                playerId: 'p1',
+                previousModel: {
+                    clients: [
+                        { id: 'p1', ready: true },
+                        { id: 'p2', ready: true }
+                    ],
+                    phase: 'gameOver',
+                    status: 'playing'
+                },
+                roundState: 'gameOver'
+            })
+        ),
+        {
+            clearAbandonedRequeue: true,
+            clearLocalReadyRequest: true,
+            enterLobbyState: true,
+            playReadySound: false,
+            renderHud: true,
+            scheduleAbandonedRequeue: false,
+            startRoundRitual: false,
+            syncNameEditor: true,
+            syncStoredPlayerName: true,
+            syncPlayers: {
+                localPlayerFirst: true,
+                localPlayerId: 'p1',
+                resetChangedSlots: false,
+                slots: [
+                    {
+                        x: 150,
+                        y: 400,
+                        facing: 1,
+                        frame: 0,
+                        movementBounds: {
+                            minX: 106,
+                            maxX: 310,
+                            minY: 320,
+                            maxY: 440
+                        }
+                    },
+                    {
+                        x: 800,
+                        y: 400,
+                        facing: -1,
+                        frame: 2,
+                        movementBounds: {
+                            minX: 640,
+                            maxX: 844,
+                            minY: 320,
+                            maxY: 440
+                        }
+                    }
+                ]
+            }
+        }
+    );
+});

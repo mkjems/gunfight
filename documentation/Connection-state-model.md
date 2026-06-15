@@ -46,7 +46,7 @@ flowchart TD
     Gfmodel -->|"server-owned final result"| Scores["highScores.ts<br/>server memory"]
     Scores -->|"highScores"| ClientHighScores["Client highScores<br/>local render state"]
 
-    RoundState -->|"gameOver then resetReady"| Gfmodel
+    Gfmodel -->|"server gameOver timer"| RoundState
     LatestModel -->|"status = abandoned"| Abandoned["ClientLobbyFlow<br/>enter lobby<br/>schedule requeue"]
     Abandoned -->|"requeue"| Join
 ```
@@ -68,7 +68,7 @@ flowchart LR
     Waiting -->|"last client leaves"| Closed["closed<br/>deleted"]
     Readying -->|"one client leaves"| Waiting
     Waiting -->|"another one-player waiting game exists"| Readying
-    GameOver -->|"resetReady"| Readying
+    GameOver -->|"server game-over timer"| Readying
     Closed --> NoGame
 ```
 
@@ -226,9 +226,12 @@ The browser starts the local round ritual when it receives a server model whose
 phase enters `roundIntro`. The client still presents `GET READY`, `DRAW!`, intro
 walking, sounds, and animation locally.
 
-The client emits `resetReady` after game over when it returns to the lobby. The
-server clears every client's `ready` flag in `gfmodel`, resets match state,
-returns the phase to `readying` or `waiting`, and emits `modelUpdate`.
+After game over, the server keeps the `gameOver` phase visible until its
+`phaseEndsAt`, then clears every client's `ready` flag in `gfmodel`, resets
+match state, returns the phase to `readying` or `waiting`, and emits
+`modelUpdate`. The legacy client `resetReady` event is only a compatibility
+request; it cannot reset the match before the server-owned game-over phase has
+expired.
 
 After a hit, only the winning client emits `roundResult`. The server accepts the
 result only when the reporting socket is the winner, the game is `playing`, the
@@ -253,7 +256,7 @@ decides whether the match may actually end.
 | `leaveGame`      | client to server         | Remove the socket from the game; optionally rejoin.                                 |
 | `requeue`        | client to server         | Leave the current game and join a waiting or new game.                              |
 | `clientReady`    | client to server         | Mark the client ready only when paired; enter `readyCountdown` when both are ready. |
-| `resetReady`     | client to server         | Clear ready flags for all clients in the game.                                      |
+| `resetReady`     | client to server         | Legacy compatibility request; accepted only after the server game-over timer ends.  |
 | `roundResult`    | client to server         | Accept one current-round result during `playing`, score it, and enter `hitPause`.   |
 | `matchExpired`   | client to server         | Legacy expiry request; server finalizes only when its own match clock has expired.  |
 | `clientKeyEvent` | client to server to peer | Relay keyboard/input event to the opponent.                                         |

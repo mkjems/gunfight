@@ -235,6 +235,23 @@ test('ends the game with the start-screen reset callback when available', async 
     assert.deepEqual(resetCallbacks, [['reset', resetToStartScreen]]);
 });
 
+test('does not schedule a game-over reset without a reset callback', async function () {
+    const flow = await loadClientRoundEndFlow();
+    const { calls, options } = createRoundOptions({
+        resetRound: undefined,
+        resetToStartScreen: undefined
+    });
+
+    flow.endGame(options);
+
+    assert.equal(
+        calls.some(function (call) {
+            return Array.isArray(call) && call[0] === 'timers.set';
+        }),
+        false
+    );
+});
+
 test('does not notify match expiry without a socket or when disabled', async function () {
     const flow = await loadClientRoundEndFlow();
     const withoutSocket = createRoundOptions({

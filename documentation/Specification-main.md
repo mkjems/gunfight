@@ -164,8 +164,8 @@ the player with the highest score when the timer reaches zero.
    one point and enters a timed hit-pause phase. The next scenario and round
    number are published only after that hit pause ends.
 9. When the server match timer ends, the game shows `GAME OVER` with the
-   winning player name or `TIE` and the final score, keeps it visible briefly,
-   and returns to the lobby.
+   winning player name or `TIE` and the final score. The server keeps it
+   visible briefly, then returns both players to the lobby.
 
 ### Gameplay rules
 

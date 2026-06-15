@@ -674,6 +674,8 @@ export class ClientGameRuntime implements ClientGameController {
     };
 
     private endGame = (options?: { notifyServer?: boolean }) => {
+        const serverOwnsLifecycle = !!this.latestModel?.phase;
+
         this.dependencies.ClientRoundEndFlow.endGame({
             bullets: this.bullets,
             closeNameEditor: this.closeNameEditor,
@@ -681,7 +683,9 @@ export class ClientGameRuntime implements ClientGameController {
             model: this.latestModel,
             players: this.players,
             renderHud: this.renderHud,
-            resetToStartScreen: this.resetToStartScreen,
+            resetToStartScreen: serverOwnsLifecycle
+                ? undefined
+                : this.resetToStartScreen,
             roundData: this.roundData,
             roundIntro: this.roundIntro,
             scoreKeeper: this.scoreKeeper,

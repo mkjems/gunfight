@@ -36,13 +36,19 @@ export function create(options: CreatePlanOptions) {
         options.previousModel?.phase !== 'roundIntro';
     const shouldStartRound =
         canStartRoundFromState(options.roundState) && serverStartedRound;
+    const serverReturnedToLobby =
+        isServerLobbyPhase(options.model?.phase) &&
+        options.roundState !== RoundState.WAITING;
+    const shouldEnterLobbyState =
+        !!syncState.abandoned || serverReturnedToLobby;
     const syncLobbySlots =
-        options.roundState === RoundState.WAITING && !shouldStartRound;
+        (options.roundState === RoundState.WAITING || serverReturnedToLobby) &&
+        !shouldStartRound;
 
     return {
         clearAbandonedRequeue: !syncState.abandoned,
         clearLocalReadyRequest: syncState.clearLocalReadyRequest,
-        enterLobbyState: !!syncState.abandoned,
+        enterLobbyState: shouldEnterLobbyState,
         playReadySound: syncState.clientBecameReady,
         renderHud: !shouldStartRound,
         scheduleAbandonedRequeue: !!syncState.abandoned,
@@ -66,6 +72,10 @@ function canStartRoundFromState(roundState: RoundState): boolean {
         roundState === RoundState.HIT_PAUSE ||
         roundState === RoundState.ROUND_OVER
     );
+}
+
+function isServerLobbyPhase(phase?: string): boolean {
+    return phase === 'waiting' || phase === 'readying';
 }
 
 function getScenarioPlayerStarts(model: PublicModel | null) {

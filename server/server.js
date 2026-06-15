@@ -141,6 +141,8 @@ function advanceTimedGamePhase(gameId, version, phase) {
         result = lobby.finishMatch(game);
     } else if (phase === 'hitPause') {
         result = lobby.finishHitPause(game);
+    } else if (phase === 'gameOver') {
+        lobby.returnToLobbyAfterGameOver(game);
     }
 
     recordResult(result);
@@ -377,8 +379,9 @@ io.on('connection', function (socket) {
             return;
         }
 
-        lobby.resetReady(context.game);
-        emitGameModel(context.game);
+        if (lobby.resetReady(context.game)) {
+            emitGameModel(context.game);
+        }
     });
 
     socket.on(

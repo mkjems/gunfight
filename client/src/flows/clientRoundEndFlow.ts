@@ -97,11 +97,11 @@ export function endGame(options: RoundEndOptions) {
 
     clearRoundActivity(options);
 
-    options.timers.set(
-        'reset',
-        options.resetToStartScreen || options.resetRound || function () {},
-        Config.round.gameOverDelay
-    );
+    const reset = options.resetToStartScreen || options.resetRound;
+
+    if (reset) {
+        options.timers.set('reset', reset, Config.round.gameOverDelay);
+    }
 }
 
 export function notifyMatchExpired(options: RoundEndOptions) {

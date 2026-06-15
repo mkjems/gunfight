@@ -15,6 +15,7 @@ export const GAME_MODEL_TIMINGS = {
     readyCountdownMs: 2000,
     roundIntroMs: 2200,
     hitPauseMs: 1800,
+    gameOverMs: 5000,
     matchMs: 70000
 };
 
@@ -151,7 +152,27 @@ export function createGameModel(options: GameModelOptions = {}) {
 
         matchResultId = resultId;
         matchState = 'gameOver';
-        setPhase('gameOver');
+        setPhase('gameOver', {
+            endsAt: now() + GAME_MODEL_TIMINGS.gameOverMs
+        });
+
+        return true;
+    }
+
+    function returnToLobbyAfterGameOver(): boolean {
+        if (
+            phase !== 'gameOver' ||
+            matchState !== 'gameOver' ||
+            (phaseEndsAt !== null && now() < phaseEndsAt)
+        ) {
+            return false;
+        }
+
+        clients.forEach(function (client) {
+            client.ready = false;
+        });
+        resetMatch();
+        setWaitingPhase();
 
         return true;
     }
@@ -260,12 +281,8 @@ export function createGameModel(options: GameModelOptions = {}) {
             return !!existingClient;
         },
 
-        resetReady: function (): void {
-            clients.forEach(function (client) {
-                client.ready = false;
-            });
-            resetMatch();
-            setWaitingPhase();
+        resetReady: function (): boolean {
+            return returnToLobbyAfterGameOver();
         },
 
         startMatch: function (): boolean {
@@ -342,6 +359,10 @@ export function createGameModel(options: GameModelOptions = {}) {
             }
 
             return finishMatch(resultId);
+        },
+
+        returnToLobbyAfterGameOver: function (): boolean {
+            return returnToLobbyAfterGameOver();
         }
     };
 }

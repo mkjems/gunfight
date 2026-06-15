@@ -76,10 +76,10 @@ The server is authoritative for session state and low-frequency lifecycle
 state. It is still a relay for high-frequency gameplay events and never
 simulates movement or bullets.
 
-| Direction       | Events                                                                                                                                                      |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Server → client | `joinedGame`, `newClient`, `leftGame`, `modelUpdate`, `highScores`, relayed `keyEvent` / `playerPosition` / `obstacleDamage`                                |
-| Client → server | `updateName`, `leaveGame`, `requeue`, `clientReady`, `resetReady`, `roundResult`, `matchExpired`, outgoing `keyEvent` / `playerPosition` / `obstacleDamage` |
+| Direction       | Events                                                                                                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Server → client | `joinedGame`, `newClient`, `leftGame`, `modelUpdate`, `highScores`, relayed `keyEvent` / `playerPosition` / `obstacleDamage`                                              |
+| Client → server | `updateName`, `leaveGame`, `requeue`, `clientReady`, legacy `resetReady`, `roundResult`, legacy `matchExpired`, outgoing `keyEvent` / `playerPosition` / `obstacleDamage` |
 
 ## Client Construction: Who Creates Whom
 
@@ -161,7 +161,9 @@ The control rules, in one list:
    what anyone is named, what lifecycle phase is active, what the score is, or
    what the round number is. They request (`clientReady`, `roundResult`,
    legacy `matchExpired`) and the server broadcasts the result via
-   `modelUpdate`.
+   `modelUpdate`. Legacy `matchExpired` and `resetReady` events are guarded
+   compatibility requests; the server clock and phase timer decide whether
+   they change the model.
 2. **The game loop controls time.** `ClientGameLoop` fires
    `ClientFrameFlow.update` then `.render` every animation frame. Everything
    that happens per frame is reachable only from there.
