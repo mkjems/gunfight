@@ -33,19 +33,19 @@
     - [x] Do not create a broad global constants file; keep constants near their
           owning module unless they are shared protocol values.
 
-
 ## P10 - Lobby screen improvements
+
 - [ ] In lobby screen add particle burst to gun when it is activated, but fire no bullet. Bursts should be same style as in the game.
 - [ ] In lobby screen desktop - avoid title and keyboard instructions jump on screen when entering into ready state (possibly because of display none).
 - [ ] If there is a previous game between the two players, the top line containing 'Game over' and the player names and score, should show in the main lobby.
 
-## P11 Mobile lobby screen improvements  
+## P11 Mobile lobby screen improvements
+
 - [ ] on mobile, in the lobby. Ad some vertical space between the 'Play gunfight' button and the other two buttons.
 
-## P12 Improve visual impact of game 
+## P12 Improve visual impact of game
+
 - [ ] Add a an option for a rain effect on the scenario. It should just look like it is raining. I would like to see raindrops falling at an 7 degrees angle and hitting the ground. We cant do collision detection for all drops so we must cheat.
-
-
 
 ## Other Ideas
 
