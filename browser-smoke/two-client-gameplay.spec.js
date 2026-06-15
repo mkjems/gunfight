@@ -15,6 +15,8 @@ function captureBrowserErrors(page, label, browserErrors) {
 async function preparePage(page, options = {}) {
     await page.addInitScript(function (setupOptions) {
         window.__gunfightSocketEmits = [];
+        window.__gunfightSocketEvents = [];
+        window.__gunfightSockets = [];
         window.__gunfightWrapIo = function (ioFactory) {
             if (ioFactory.__gunfightWrapped) {
                 return ioFactory;
@@ -23,6 +25,7 @@ async function preparePage(page, options = {}) {
             function wrappedIo(...args) {
                 const socket = ioFactory(...args);
                 const originalEmit = socket.emit.bind(socket);
+                const originalOn = socket.on.bind(socket);
 
                 socket.emit = function (eventName, payload) {
                     window.__gunfightSocketEmits.push({
@@ -32,6 +35,31 @@ async function preparePage(page, options = {}) {
 
                     return originalEmit(eventName, payload);
                 };
+
+                socket.on = function (eventName, handler) {
+                    return originalOn(eventName, function (...eventArgs) {
+                        const payload = eventArgs[0];
+
+                        window.__gunfightSocketEvents.push({
+                            eventName,
+                            payload
+                        });
+
+                        if (eventName === 'joinedGame') {
+                            window.__gunfightJoinedGame = payload;
+                            window.__gunfightLatestModel = payload.model;
+                        } else if (
+                            eventName === 'modelUpdate' ||
+                            eventName === 'newClient'
+                        ) {
+                            window.__gunfightLatestModel = payload;
+                        }
+
+                        return handler(...eventArgs);
+                    });
+                };
+
+                window.__gunfightSockets.push(socket);
 
                 return socket;
             }
@@ -98,11 +126,101 @@ async function getSocketEmits(page) {
     });
 }
 
+async function getSocketEvents(page) {
+    return page.evaluate(function () {
+        return window.__gunfightSocketEvents || [];
+    });
+}
+
+async function getLatestModel(page) {
+    return page.evaluate(function () {
+        return window.__gunfightLatestModel || null;
+    });
+}
+
+async function waitForPhase(page, phase) {
+    await page.waitForFunction(function (expectedPhase) {
+        return window.__gunfightLatestModel?.phase === expectedPhase;
+    }, phase);
+
+    return getLatestModel(page);
+}
+
+async function waitForScore(page, scoreLabel) {
+    await expect
+        .poll(async function () {
+            const model = await getLatestModel(page);
+
+            return model?.scores?.join('-') || '';
+        })
+        .toBe(scoreLabel);
+}
+
+async function getExpectedScoreForWinner(page, winnerId) {
+    return page.evaluate(function (id) {
+        const model = window.__gunfightLatestModel;
+
+        return model.clients
+            .map(function (client) {
+                return client.id === id ? 1 : 0;
+            })
+            .join('-');
+    }, winnerId);
+}
+
+function getWinningScoreSelector(scoreLabel) {
+    return scoreLabel.indexOf('1-') === 0
+        ? '#scoreLeft .scoreValue'
+        : '#scoreRight .scoreValue';
+}
+
+async function createRoundResultPayload(page) {
+    return page.evaluate(function () {
+        const joined = window.__gunfightJoinedGame;
+        const model = window.__gunfightLatestModel;
+        const target = model.clients.find(function (client) {
+            return client.id !== joined.playerId;
+        });
+
+        return {
+            roundNumber: model.roundNumber,
+            targetId: target.id,
+            winnerId: joined.playerId
+        };
+    });
+}
+
+async function emitRoundResult(page, payload) {
+    await page.evaluate(function (resultPayload) {
+        window.__gunfightSockets[0].emit('roundResult', resultPayload);
+    }, payload);
+}
+
 async function captureMobileScreenshot(page, testInfo, fileName) {
     await page.screenshot({
         fullPage: false,
         path: testInfo.outputPath(fileName)
     });
+}
+
+async function focusPageForKeyboard(page) {
+    await page.bringToFront();
+    await page.locator('body').click({
+        position: {
+            x: 20,
+            y: 20
+        }
+    });
+}
+
+async function openNameEditorWithKeyboard(page) {
+    await focusPageForKeyboard(page);
+    await page.keyboard.press('e');
+}
+
+async function readyWithKeyboard(page) {
+    await focusPageForKeyboard(page);
+    await page.keyboard.press('p');
 }
 
 async function selectNameEditorKey(page, value) {
@@ -253,8 +371,12 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
     captureBrowserErrors(mobile, 'mobile', browserErrors);
 
     await Promise.all([
-        gotoPreparedLobby(desktop, '/'),
-        gotoPreparedLobby(mobile, '/?touch=1')
+        gotoPreparedLobby(desktop, '/', {
+            freezeDate: false
+        }),
+        gotoPreparedLobby(mobile, '/?touch=1', {
+            freezeDate: false
+        })
     ]);
 
     await Promise.all([
@@ -267,7 +389,7 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
     ]);
     await captureMobileScreenshot(mobile, testInfo, 'mobile-01-lobby.png');
 
-    await desktop.keyboard.press('e');
+    await openNameEditorWithKeyboard(desktop);
     await replaceName(desktop, 'ACE');
     await mobile.locator('#touchEditButton').click();
     await replaceName(mobile, 'REX');
@@ -279,7 +401,7 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
         expect(mobile.locator('#lobbyPlayerLabels')).toContainText('REX')
     ]);
 
-    await desktop.keyboard.press('p');
+    await readyWithKeyboard(desktop);
     await mobile.locator('#touchPlayButton').click();
 
     await Promise.all([
@@ -369,6 +491,188 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
 
     await desktopContext.close();
     await mobileContext.close();
+});
+
+test('server hit pause holds score until next round and server game over returns to lobby', async ({
+    browser
+}) => {
+    test.setTimeout(60000);
+
+    const browserErrors = [];
+    const contextA = await browser.newContext({
+        viewport: {
+            height: 720,
+            width: 1100
+        }
+    });
+    const contextB = await browser.newContext({
+        viewport: {
+            height: 720,
+            width: 1100
+        }
+    });
+    const playerA = await contextA.newPage();
+    const playerB = await contextB.newPage();
+
+    captureBrowserErrors(playerA, 'playerA', browserErrors);
+    captureBrowserErrors(playerB, 'playerB', browserErrors);
+
+    await Promise.all([
+        gotoPreparedLobby(playerA, '/', {
+            freezeDate: false
+        }),
+        gotoPreparedLobby(playerB, '/', {
+            freezeDate: false
+        })
+    ]);
+
+    await openNameEditorWithKeyboard(playerA);
+    await replaceName(playerA, 'ACE');
+    await openNameEditorWithKeyboard(playerB);
+    await replaceName(playerB, 'REX');
+
+    await readyWithKeyboard(playerA);
+    await readyWithKeyboard(playerB);
+    await Promise.all([
+        waitForPhase(playerA, 'playing'),
+        waitForPhase(playerB, 'playing')
+    ]);
+
+    const roundResult = await createRoundResultPayload(playerA);
+    const expectedScore = await getExpectedScoreForWinner(
+        playerA,
+        roundResult.winnerId
+    );
+    const winningScoreSelector = getWinningScoreSelector(expectedScore);
+
+    await emitRoundResult(playerA, roundResult);
+    await Promise.all([
+        waitForPhase(playerA, 'hitPause'),
+        waitForPhase(playerB, 'hitPause'),
+        waitForScore(playerA, expectedScore),
+        waitForScore(playerB, expectedScore),
+        expect(playerA.locator(winningScoreSelector)).toHaveText('1'),
+        expect(playerB.locator(winningScoreSelector)).toHaveText('1')
+    ]);
+
+    const [roundIntroModelA, roundIntroModelB] = await Promise.all([
+        waitForPhase(playerA, 'roundIntro'),
+        waitForPhase(playerB, 'roundIntro')
+    ]);
+
+    expect(roundIntroModelA.roundNumber).toBe(roundResult.roundNumber + 1);
+    expect(roundIntroModelB.roundNumber).toBe(roundResult.roundNumber + 1);
+    expect(roundIntroModelA.scores.join('-')).toBe(expectedScore);
+    expect(roundIntroModelB.scores.join('-')).toBe(expectedScore);
+
+    await Promise.all([
+        expect(playerA.locator(winningScoreSelector)).toHaveText('1'),
+        expect(playerB.locator(winningScoreSelector)).toHaveText('1')
+    ]);
+
+    await Promise.all([
+        waitForPhase(playerA, 'gameOver'),
+        waitForPhase(playerB, 'gameOver')
+    ]);
+    await Promise.all([
+        expect(playerA.locator('#roundMessage')).toContainText(
+            'WINS ' + expectedScore
+        ),
+        expect(playerB.locator('#roundMessage')).toContainText(
+            'WINS ' + expectedScore
+        )
+    ]);
+
+    await Promise.all([
+        waitForPhase(playerA, 'readying'),
+        waitForPhase(playerB, 'readying')
+    ]);
+    await Promise.all([
+        expect(playerA.locator('#lobby-main')).toBeVisible(),
+        expect(playerB.locator('#lobby-main')).toBeVisible(),
+        expect(playerA.locator('#lobbyPlayPrompt')).toHaveText(
+            'PRESS P TO PLAY'
+        ),
+        expect(playerB.locator('#lobbyPlayPrompt')).toHaveText(
+            'PRESS P TO PLAY'
+        )
+    ]);
+
+    expect(browserErrors).toEqual([]);
+
+    await contextA.close();
+    await contextB.close();
+});
+
+test('abandoned games requeue safely and reject late round reports', async ({
+    browser
+}) => {
+    test.setTimeout(45000);
+
+    const browserErrors = [];
+    const contextA = await browser.newContext({
+        viewport: {
+            height: 720,
+            width: 1100
+        }
+    });
+    const contextB = await browser.newContext({
+        viewport: {
+            height: 720,
+            width: 1100
+        }
+    });
+    const playerA = await contextA.newPage();
+    const playerB = await contextB.newPage();
+
+    captureBrowserErrors(playerA, 'playerA', browserErrors);
+    captureBrowserErrors(playerB, 'playerB', browserErrors);
+
+    await Promise.all([
+        gotoPreparedLobby(playerA, '/', {
+            freezeDate: false
+        }),
+        gotoPreparedLobby(playerB, '/', {
+            freezeDate: false
+        })
+    ]);
+
+    await readyWithKeyboard(playerA);
+    await readyWithKeyboard(playerB);
+    await waitForPhase(playerA, 'playing');
+
+    const staleRoundResult = await createRoundResultPayload(playerA);
+
+    await playerB.close();
+    const abandonedModel = await waitForPhase(playerA, 'abandoned');
+
+    expect(abandonedModel.message).toBe('OPPONENT LEFT');
+
+    const eventsBeforeLateReport = (await getSocketEvents(playerA)).length;
+
+    await emitRoundResult(playerA, staleRoundResult);
+    await playerA.waitForTimeout(300);
+
+    expect((await getSocketEvents(playerA)).length).toBe(
+        eventsBeforeLateReport
+    );
+
+    await waitForPhase(playerA, 'waiting');
+    await expect(playerA.locator('#lobbyPlayerLabels')).toContainText(
+        'LOOKING FOR OPPONENT'
+    );
+
+    const emits = await getSocketEmits(playerA);
+
+    expect(
+        emits.some(function (entry) {
+            return entry.eventName === 'requeue';
+        })
+    ).toBe(true);
+    expect(browserErrors).toEqual([]);
+
+    await contextA.close();
+    await contextB.close();
 });
 
 test('alone waiting clients are auto paired after opponents leave', async ({
@@ -466,8 +770,8 @@ test('alone waiting clients are auto paired after opponents leave', async ({
 
     expect(playerCAfterMove.x).toBeLessThan(playerCBeforeMove.x - 1);
 
-    await playerA.keyboard.press('p');
-    await playerC.keyboard.press('p');
+    await readyWithKeyboard(playerA);
+    await readyWithKeyboard(playerC);
 
     await Promise.all([
         expect(playerA.locator('#roundMessage')).toHaveText('GET READY'),

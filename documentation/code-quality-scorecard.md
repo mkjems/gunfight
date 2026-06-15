@@ -15,15 +15,15 @@ Status labels:
 
 ## Current Verification
 
-| Area                  | Status | Current result                                                                  |
-| --------------------- | ------ | ------------------------------------------------------------------------------- |
-| Full check            | Good   | `npm run check` passes after formatting.                                        |
-| Formatting            | Good   | Prettier covers package/config files, scripts, server, shared, client, docs.    |
-| Linting               | Good   | ESLint catches accidental globals and unsafe equality in JS/client code.        |
-| Type checking         | Good   | Shared and client TypeScript are strict; server JS is checked less strictly.    |
-| Node tests            | Good   | 226 Node tests cover core behavior and pure modules.                            |
-| Browser smoke tests   | Good   | 10 Playwright smoke tests cover app startup, mobile lobby, and two-client play. |
-| Source escape hatches | Good   | No `any`, `@ts-ignore`, `@ts-expect-error`, `TODO`, or `FIXME` in source.       |
+| Area                  | Status | Current result                                                                        |
+| --------------------- | ------ | ------------------------------------------------------------------------------------- |
+| Full check            | Good   | `npm run check` passes after formatting.                                              |
+| Formatting            | Good   | Prettier covers package/config files, scripts, server, shared, client, docs.          |
+| Linting               | Good   | ESLint catches accidental globals and unsafe equality in JS/client code.              |
+| Type checking         | Good   | Shared and client TypeScript are strict; server JS is checked less strictly.          |
+| Node tests            | Good   | 226 Node tests cover core behavior and pure modules.                                  |
+| Browser smoke tests   | Good   | 12 Playwright smoke tests cover app startup, mobile lobby, and server lifecycle play. |
+| Source escape hatches | Good   | No `any`, `@ts-ignore`, `@ts-expect-error`, `TODO`, or `FIXME` in source.             |
 
 The browser smoke tests start a local server. In the Codex sandbox they may need
 an escalated run because the server listens on port `18080`.
@@ -112,7 +112,7 @@ Current test shape:
 - 59 Node test files.
 - 3 Playwright browser smoke spec files.
 - 226 Node tests passing.
-- 10 browser smoke tests passing.
+- 12 browser smoke tests passing.
 
 Behavior areas with good coverage:
 
@@ -124,7 +124,8 @@ Behavior areas with good coverage:
   events.
 - Component render props, lobby view model, game HUD view model, and app-root
   rendering.
-- Touch controls, mobile lobby behavior, and two-client browser gameplay smoke.
+- Touch controls, mobile lobby behavior, two-client gameplay smoke, server
+  hit-pause/game-over flow, and abandoned requeue behavior.
 - Rock and scenario editor core validation.
 
 Watch areas:

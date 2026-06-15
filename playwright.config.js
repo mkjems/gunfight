@@ -4,6 +4,8 @@ const smokePort = process.env.PLAYWRIGHT_PORT || '18080';
 const baseURL =
     process.env.PLAYWRIGHT_BASE_URL || `http://127.0.0.1:${smokePort}`;
 const screenshotMode = process.env.PLAYWRIGHT_SCREENSHOTS ? 'on' : 'off';
+const smokeMatchMs = process.env.GUNFIGHT_MATCH_MS || '20000';
+const smokeGameOverMs = process.env.GUNFIGHT_GAME_OVER_MS || '2500';
 
 export default defineConfig({
     expect: {
@@ -27,7 +29,10 @@ export default defineConfig({
     webServer: process.env.PLAYWRIGHT_BASE_URL
         ? undefined
         : {
-              command: `PORT=${smokePort} npm start`,
+              command:
+                  `GUNFIGHT_MATCH_MS=${smokeMatchMs} ` +
+                  `GUNFIGHT_GAME_OVER_MS=${smokeGameOverMs} ` +
+                  `PORT=${smokePort} npm start`,
               reuseExistingServer: false,
               timeout: 30000,
               url: `${baseURL}/api`

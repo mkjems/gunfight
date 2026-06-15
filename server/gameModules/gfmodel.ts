@@ -11,12 +11,18 @@ import {
     type Scenario
 } from '../../shared/contracts.js';
 
+function getTimingOverride(name: string, fallback: number): number {
+    const value = Number(process.env[name]);
+
+    return Number.isFinite(value) && value >= 0 ? value : fallback;
+}
+
 export const GAME_MODEL_TIMINGS = {
     readyCountdownMs: 2000,
     roundIntroMs: 2200,
     hitPauseMs: 1800,
-    gameOverMs: 5000,
-    matchMs: 70000
+    gameOverMs: getTimingOverride('GUNFIGHT_GAME_OVER_MS', 5000),
+    matchMs: getTimingOverride('GUNFIGHT_MATCH_MS', 70000)
 };
 
 export const LEGAL_PHASE_TRANSITIONS: Record<GamePhase, GamePhase[]> = {
