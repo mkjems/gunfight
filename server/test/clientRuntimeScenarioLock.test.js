@@ -45,23 +45,28 @@ async function loadClientGameRuntime() {
     return module.ClientGameRuntime;
 }
 
-function createRuntime(ClientGameRuntime) {
-    const runtime = new ClientGameRuntime({
-        dependencies: {
-            ClientLobbyFlow: {
-                enter() {}
-            },
-            ClientRoundRitual: {
-                start() {}
-            },
-            ClientScreens: {
-                RoundState: {
-                    GAME_OVER: 'gameOver',
-                    PLAYING: 'playing',
-                    WAITING: 'waiting'
-                }
+function createRuntime(ClientGameRuntime, dependencyOverrides = {}) {
+    const dependencies = {
+        ClientLobbyFlow: {
+            enter() {}
+        },
+        ClientRoundEndFlow: {
+            endGame() {}
+        },
+        ClientRoundRitual: {
+            start() {}
+        },
+        ClientScreens: {
+            RoundState: {
+                GAME_OVER: 'gameOver',
+                PLAYING: 'playing',
+                WAITING: 'waiting'
             }
         },
+        ...dependencyOverrides
+    };
+    const runtime = new ClientGameRuntime({
+        dependencies,
         document: {},
         ImageCtor: function ImageCtor() {},
         window: {}
@@ -106,4 +111,63 @@ test('keeps the active scenario visible until the next round ritual starts', asy
     runtime.startRoundRitual();
 
     assert.equal(runtime.getCurrentScenario(), nextScenario);
+});
+
+test('does not use local match expiry during server-owned round ritual', async function () {
+    const ClientGameRuntime = await loadClientGameRuntime();
+    let ritualOptions = null;
+    const runtime = createRuntime(ClientGameRuntime, {
+        ClientRoundRitual: {
+            start(options) {
+                ritualOptions = options;
+            }
+        }
+    });
+
+    runtime.roundData.hasMatchTimeExpired = function () {
+        return true;
+    };
+    runtime.latestModel = {
+        clients: [],
+        currentScenario: {},
+        phase: 'roundIntro'
+    };
+
+    runtime.startRoundRitual();
+
+    const capturedRitualOptions = ritualOptions;
+
+    if (capturedRitualOptions === null) {
+        throw new Error('Expected round ritual options to be captured');
+    }
+
+    assert.equal(capturedRitualOptions.hasMatchTimeExpired(), false);
+});
+
+test('does not notify match expiry from server-owned lifecycle models', async function () {
+    const ClientGameRuntime = await loadClientGameRuntime();
+    let endGameOptions = null;
+    const runtime = createRuntime(ClientGameRuntime, {
+        ClientRoundEndFlow: {
+            endGame(options) {
+                endGameOptions = options;
+            }
+        }
+    });
+
+    runtime.latestModel = {
+        clients: [],
+        phase: 'playing'
+    };
+
+    runtime.endGame();
+
+    const capturedEndGameOptions = endGameOptions;
+
+    if (capturedEndGameOptions === null) {
+        throw new Error('Expected end-game options to be captured');
+    }
+
+    assert.equal(capturedEndGameOptions.notifyServer, false);
+    assert.equal(capturedEndGameOptions.resetToStartScreen, undefined);
 });

@@ -82,8 +82,9 @@
           `ClientMatchTimer`, `ClientScreens`, and runtime helpers.
         - `ClientModelUpdateFlow`/`ClientModelUpdatePlan`: client follower of
           authoritative phase updates.
-        - `ClientRoundRitual`: presentation for `roundIntro`; legacy no-phase
-          local expiry fallback remains.
+        - `ClientRoundRitual`: presentation for `roundIntro`; modern
+          server-phase models wait for server expiry; legacy no-phase local
+          expiry fallback remains.
         - `ClientPlayerHitFlow`: hit presentation plus `roundResult` report; no
           local round advance when server phases are present.
         - `ClientRoundResetFlow`: presentation reset; `resetToStartScreen`
@@ -152,7 +153,7 @@
           to authoritative phase changes.
     - [ ] Remove any client path that starts a round from ready flags, local
           timeout, local score state, or local match expiry.
-    - [ ] Remove client-owned `matchExpired` authority; keep any remaining event
+    - [x] Remove client-owned `matchExpired` authority; keep any remaining event
           only as a temporary compatibility request until deleted.
     - [x] Remove client-owned `resetReady`/return-to-lobby authority once the
           server owns `gameOver` expiry and lobby reset.

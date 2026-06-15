@@ -554,7 +554,7 @@ export class ClientGameRuntime implements ClientGameController {
             bullets: this.bullets,
             closeNameEditor: this.closeNameEditor,
             endGame: this.endGame,
-            hasMatchTimeExpired: this.roundData.hasMatchTimeExpired,
+            hasMatchTimeExpired: this.shouldUseLocalMatchExpiry,
             renderHud: this.renderHud,
             resetAmmo: this.resetAmmo,
             roundData: this.roundData,
@@ -693,7 +693,7 @@ export class ClientGameRuntime implements ClientGameController {
             setRoundState: this.setRoundState,
             socket: this.socket,
             timers: this.timers,
-            notifyServer: options?.notifyServer
+            notifyServer: serverOwnsLifecycle ? false : options?.notifyServer
         });
     };
 
