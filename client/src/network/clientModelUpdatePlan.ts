@@ -16,7 +16,6 @@ type PublicModel = {
     } | null;
     matchState?: string;
     phase?: string;
-    status?: string;
 };
 
 type CreatePlanOptions = {

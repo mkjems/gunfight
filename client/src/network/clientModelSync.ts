@@ -9,7 +9,7 @@ type ModelClient = {
 
 type PublicModel = {
     clients: ModelClient[];
-    status?: string;
+    phase?: string;
 };
 
 export function getLocalClient(
@@ -61,7 +61,7 @@ export function analyze(
     playerId?: ClientId | null
 ) {
     return {
-        abandoned: model && model.status === 'abandoned',
+        abandoned: model && model.phase === 'abandoned',
         clearLocalReadyRequest: shouldClearLocalReadyRequest(model, playerId),
         clientBecameReady: didAnyClientBecomeReady(previousModel, model)
     };

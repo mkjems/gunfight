@@ -114,10 +114,6 @@ export function parseGameModel(data: unknown): RuntimeGameModel | null {
         model.scores = data.scores.slice();
     }
 
-    if (typeof data.status === 'string') {
-        model.status = data.status;
-    }
-
     if (isFiniteNumber(data.version)) {
         model.version = data.version;
     }

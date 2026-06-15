@@ -24,7 +24,6 @@ function createTimedPhaseLobby(modelOverrides = {}) {
         playerLimit: 2,
         roundNumber: 1,
         scores: [0, 0],
-        status: 'readying',
         version: 7,
         ...modelOverrides
     };

@@ -37,9 +37,9 @@
     - [x] Define how each server phase behaves when a player disconnects.
     - [x] Keep automatic pairing limited to safe waiting states.
     - [x] Ensure abandoned games clear ready state, stop phase timers, and publish one final authoritative model.
-- [ ] Update the public model and client parsing.
+- [x] Update the public model and client parsing.
     - [x] Add `version`, `phase`, `phaseStartedAt`, `phaseEndsAt`, and `matchEndsAt` to the shared contracts.
-    - [ ] Future follow-up: remove the compatibility `status` field once clients no longer need it.
+    - [x] Remove the compatibility `status` field once clients no longer need it.
     - [x] Update the client model parser and model-update planner to consume the new lifecycle fields.
 - [x] Update client orchestration.
     - [x] Make `ClientModelUpdateFlow` translate server phase changes into local presentation transitions.
@@ -112,8 +112,8 @@
           and `updateName`.
     - [x] Identify compatibility paths that still exist only for the old client
           lifecycle model.
-        - Compatibility paths: projected public `status`, no-phase local match
-          timer, and no-phase local round reset.
+        - Compatibility paths: no-phase local match timer and no-phase local
+          round reset.
 - [x] Harden `gfmodel` as the one lifecycle state machine.
     - [x] Write the legal transition table for `waiting`, `readying`,
           `readyCountdown`, `roundIntro`, `playing`, `hitPause`, `gameOver`,
@@ -135,14 +135,14 @@
     - [x] Ensure stale timers cannot advance a game after a newer phase or
           version has replaced them.
     - [x] Clear timers when a game becomes `abandoned` or `closed`.
-- [ ] Make the public model sufficient for clients to follow without deciding.
+- [x] Make the public model sufficient for clients to follow without deciding.
     - [x] Confirm the client can render every non-gameplay phase from
           `phase`, `version`, `phaseStartedAt`, `phaseEndsAt`, `matchEndsAt`,
           `roundNumber`, `scores`, `clients`, and `currentScenario`.
     - [x] Add any missing neutral timing/state fields needed for presentation;
           avoid adding UI text decisions to the server unless they are true game
           state.
-    - [ ] Remove the compatibility `status` field after all client code follows
+    - [x] Remove the compatibility `status` field after all client code follows
           `phase`.
     - [x] Document which model fields are authoritative and which are
           presentation hints.
@@ -169,7 +169,7 @@
           prevention.
     - [ ] Do not add server-side bullet simulation, rollback, or authoritative
           movement in P8.
-- [ ] Simplify socket event contracts.
+- [x] Simplify socket event contracts.
     - [x] Separate client intent/report events from authoritative server
           `modelUpdate` events in documentation and tests.
     - [x] Ensure each accepted intent emits exactly one fresh public model or a
@@ -207,8 +207,8 @@
     - [ ] Game over returns to the lobby from server-controlled timing.
     - [ ] An abandoned game requeues safely without accepting late reports.
 - [ ] Update documentation after implementation.
-    - [ ] Update `Connection-state-model.md` with the final P8 lifecycle rules.
-    - [ ] Update `State-ownership.md` with the stricter server-control/client-
+    - [x] Update `Connection-state-model.md` with the final P8 lifecycle rules.
+    - [x] Update `State-ownership.md` with the stricter server-control/client-
           presentation boundary.
     - [ ] Update `Specification-main.md` for ready countdown, hit pause,
           game-over, and return-to-lobby timing.

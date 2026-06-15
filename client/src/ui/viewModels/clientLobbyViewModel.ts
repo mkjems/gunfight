@@ -9,7 +9,7 @@ type LobbyClient = {
 
 type LobbyModel = {
     gameId?: string;
-    status?: string;
+    phase?: string;
     message?: string;
     playerLimit?: number;
     clients?: LobbyClient[];
@@ -100,7 +100,7 @@ export function isLocalClientWaiting(options: LobbyOptions): boolean {
         client &&
         !isLocalClientReady(options) &&
         options.model &&
-        options.model.status !== 'abandoned'
+        options.model.phase !== 'abandoned'
     );
 }
 
@@ -110,7 +110,7 @@ export function canLocalClientReady(options: LobbyOptions): boolean {
 
 export function shouldShowLobbyPrompt(options: LobbyOptions): boolean {
     return (
-        (!options.model || options.model.status !== 'abandoned') &&
+        (!options.model || options.model.phase !== 'abandoned') &&
         canLocalClientReady(options)
     );
 }
@@ -201,7 +201,7 @@ function getLobbyOpponentPlaceholder(
     if (
         !localClient ||
         !options.model ||
-        options.model.status === 'abandoned' ||
+        options.model.phase === 'abandoned' ||
         clients.length !== 1
     ) {
         return [];

@@ -1,12 +1,5 @@
 // Shared data contracts and runtime guards for the TypeScript migration.
 
-export type GameStatus =
-    | 'waiting'
-    | 'readying'
-    | 'playing'
-    | 'abandoned'
-    | 'closed';
-
 export type MatchState = 'idle' | 'playing' | 'gameOver';
 
 export type GamePhase =
@@ -29,7 +22,6 @@ export interface PublicClient {
 
 export interface PublicGameModel {
     gameId: string;
-    status: GameStatus;
     message: string;
     playerLimit: number;
     clients: PublicClient[];

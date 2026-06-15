@@ -128,7 +128,7 @@ test('builds high scores app state with keyboard back prompt', async function ()
         model: {
             clients: [{ id: 'p1', ready: false }],
             gameId: 'game-1',
-            status: 'waiting'
+            phase: 'waiting'
         }
     });
 
@@ -159,7 +159,7 @@ test('builds mobile high scores app state with five rows and no keyboard prompt'
         model: {
             clients: [{ id: 'p1', ready: false }],
             gameId: 'game-1',
-            status: 'waiting'
+            phase: 'waiting'
         }
     });
 
@@ -187,7 +187,7 @@ test('keeps main lobby visible until high scores are selected', async function (
         model: {
             clients: [{ id: 'p1', ready: false }],
             gameId: 'game-1',
-            status: 'waiting'
+            phase: 'waiting'
         }
     });
 

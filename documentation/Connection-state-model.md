@@ -8,12 +8,12 @@ This document aims to describe this, in the simplest clearest way by describing 
 
 ## AS IS
 
-The server owns connection, pairing, names, ready flags, lifecycle phase,
-projected game status, phase timing, match clock, scenario selection, round
-number, match state, accepted round results, match score, and the final
-high-score result source. The browser owns the active screen, local
-presentation round phase, input state, player movement, bullets, hit detection,
-obstacle damage, ammo, and match timer presentation.
+The server owns connection, pairing, names, ready flags, lifecycle phase, phase
+timing, match clock, scenario selection, round number, match state, accepted
+round results, match score, and the final high-score result source. The browser
+owns the active screen, local presentation round phase, input state, player
+movement, bullets, hit detection, obstacle damage, ammo, and match timer
+presentation.
 
 The server does not simulate gameplay. It creates sessions, publishes the
 public model, and relays gameplay events inside one game room.
@@ -27,7 +27,7 @@ flowchart TD
 
     Lobby --> Session["GameSession<br/>id, room<br/>clients, timestamps"]
     Session --> Gfmodel["gfmodel<br/>client id + ready<br/>phase, version, timing<br/>scenario, roundNumber<br/>matchState, scores"]
-    Session --> PublicModel["PublicGameModel<br/>gameId, status, message<br/>clients, phase, timing<br/>scenario, roundNumber<br/>matchState, scores"]
+    Session --> PublicModel["PublicGameModel<br/>gameId, message<br/>clients, phase, timing<br/>scenario, roundNumber<br/>matchState, scores"]
     Gfmodel --> PublicModel
 
     PublicModel --> LatestModel["Client latestModel<br/>server-owned session copy"]
@@ -47,7 +47,7 @@ flowchart TD
     Scores -->|"highScores"| ClientHighScores["Client highScores<br/>local render state"]
 
     Gfmodel -->|"server gameOver timer"| RoundState
-    LatestModel -->|"status = abandoned"| Abandoned["ClientLobbyFlow<br/>enter lobby<br/>schedule requeue"]
+    LatestModel -->|"phase = abandoned"| Abandoned["ClientLobbyFlow<br/>enter lobby<br/>schedule requeue"]
     Abandoned -->|"requeue"| Join
 ```
 
@@ -111,7 +111,6 @@ The public model sent to clients is built from the `gfmodel` snapshot plus
 lobby-owned socket metadata:
 
 - `gameId`
-- `status`
 - `message`
 - `playerLimit`
 - `clients`: `id`, `name`, `ready`, `slot`
@@ -130,7 +129,7 @@ Authoritative public model fields:
 | `gameId`, `playerLimit`, `clients`                                                            | Server | Pairing, player identity, display names, slots, and ready flags.                       |
 | `phase`, `version`, `phaseStartedAt`, `phaseEndsAt`, `matchEndsAt`                            | Server | Lifecycle, stale-update guard, phase timing, and match clock.                          |
 | `currentScenario`, `roundNumber`, `matchState`, `matchResultId`, `scores`                     | Server | Scenario choice, duel number, match state, final result id, and authoritative scoring. |
-| `status`, `message`                                                                           | Server | Compatibility/UI projection derived from authoritative server state.                   |
+| `message`                                                                                     | Server | Lobby/result message derived from authoritative server state.                          |
 | Client `roundState`, timers, text beats, effects, sounds, animation, bullets, positions, ammo | Client | Presentation and real-time gameplay details that follow the public model.              |
 
 The current public model is sufficient for every non-gameplay phase. The client
@@ -139,16 +138,12 @@ and return-to-lobby from `phase`, `version`, timing fields, `roundNumber`,
 `scores`, `clients`, and `currentScenario`. No additional neutral presentation
 fields are needed in P8.
 
-### Server phase and status rules
+### Server phase rules
 
-`gfmodel` owns lifecycle `phase`. `lobby.ts` projects the older `status` field
-for UI compatibility:
-
-- `waiting` phase maps to `waiting` status.
-- `readying` and `readyCountdown` phases map to `readying` status.
-- `roundIntro`, `playing`, `hitPause`, and `gameOver` phases map to `playing`
-  status.
-- `abandoned` and `closed` phases map to matching statuses.
+`gfmodel` owns lifecycle `phase`. The public model sends that phase directly;
+clients do not receive a separate compatibility `status` field. `lobby.ts` may
+derive private phase groups for server messages and pairing decisions, but
+those groups are not part of the public client contract.
 
 `waiting` means a game exists with one connected client and room for another.
 
@@ -319,7 +314,7 @@ That model gives the client:
 
 - its own `playerId`
 - the current client list, names, slots, and ready flags
-- game status and lobby message
+- lobby message
 - current scenario
 - lifecycle phase, model version, phase timing, match clock, match state, and
   score
@@ -389,8 +384,6 @@ the remaining player is no longer ready.
 
 ### Known weaknesses
 
-- `status` is still present as a compatibility projection for existing UI
-  logic. The authoritative lifecycle field is now server `phase`.
 - Server `phase` and client `roundState` are related but separate state
   machines. The client follows server phase, but still owns presentation
   animation details.

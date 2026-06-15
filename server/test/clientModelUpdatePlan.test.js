@@ -79,8 +79,7 @@ test('does not start a round from ready flags without server round intro', async
                 { x: 120, y: 430, facing: 1, frame: 0 },
                 { x: 830, y: 430, facing: -1, frame: 2 }
             ]
-        },
-        status: 'playing'
+        }
     };
 
     const result = plan.create({
@@ -114,8 +113,7 @@ test('plans a round start when the server enters round intro', async function ()
                 { x: 830, y: 430, facing: -1, frame: 2 }
             ]
         },
-        phase: 'roundIntro',
-        status: 'playing'
+        phase: 'roundIntro'
     };
 
     assert.deepEqual(
@@ -160,8 +158,7 @@ test('does not start gameplay while the server is in ready countdown', async fun
                     { id: 'p1', ready: true },
                     { id: 'p2', ready: true }
                 ],
-                phase: 'readyCountdown',
-                status: 'readying'
+                phase: 'readyCountdown'
             },
             playerId: 'p1',
             previousModel: {
@@ -184,7 +181,7 @@ test('plans local-first lobby slots while waiting in the lobby', async function 
             { id: 'p1', ready: false },
             { id: 'p2', ready: false }
         ],
-        status: 'readying'
+        phase: 'readying'
     };
 
     assert.deepEqual(
@@ -238,7 +235,7 @@ test('plans abandoned-game recovery', async function () {
             plan.create({
                 model: {
                     clients: [{ id: 'p1', ready: false }],
-                    status: 'abandoned'
+                    phase: 'abandoned'
                 },
                 playerId: 'p1',
                 previousModel: null,
@@ -279,8 +276,7 @@ test('plans lobby recovery when the server returns from game over', async functi
                         { id: 'p1', ready: false },
                         { id: 'p2', ready: false }
                     ],
-                    phase: 'readying',
-                    status: 'readying'
+                    phase: 'readying'
                 },
                 playerId: 'p1',
                 previousModel: {
@@ -288,8 +284,7 @@ test('plans lobby recovery when the server returns from game over', async functi
                         { id: 'p1', ready: true },
                         { id: 'p2', ready: true }
                     ],
-                    phase: 'gameOver',
-                    status: 'playing'
+                    phase: 'gameOver'
                 },
                 roundState: 'gameOver'
             })
@@ -351,8 +346,7 @@ test('plans game-over presentation when the server ends an active match', async 
                 { id: 'p2', ready: true }
             ],
             matchState: 'gameOver',
-            phase: 'gameOver',
-            status: 'playing'
+            phase: 'gameOver'
         },
         playerId: 'p1',
         previousModel: {
@@ -361,8 +355,7 @@ test('plans game-over presentation when the server ends an active match', async 
                 { id: 'p2', ready: true }
             ],
             matchState: 'playing',
-            phase: 'playing',
-            status: 'playing'
+            phase: 'playing'
         },
         roundState: 'playing'
     });

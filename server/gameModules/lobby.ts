@@ -2,7 +2,6 @@ import { createGameModel } from './gfmodel.js';
 import type {
     GameModelClient,
     GameResultPayload,
-    GameStatus,
     PublicClient,
     PublicGameModel,
     RoundResultPayload
@@ -38,6 +37,8 @@ interface GameSession {
     createdAt: number;
     updatedAt: number;
 }
+
+type GameStatus = 'waiting' | 'readying' | 'playing' | 'abandoned' | 'closed';
 
 interface LobbyOptions {
     now?: () => number;
@@ -469,7 +470,6 @@ export function createLobby(options: LobbyOptions = {}) {
         return {
             ...model,
             gameId: game.id,
-            status: getGameStatus(game),
             message: getGameMessage(game),
             playerLimit: MAX_PLAYERS_PER_GAME,
             clients: game.clients.map(toPublicClient)

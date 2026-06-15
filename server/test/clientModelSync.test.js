@@ -37,14 +37,14 @@ test('finds the local client in the public game model', async function () {
 test('analyzes model changes for client synchronization', async function () {
     const sync = await loadClientModelSync();
     const previousModel = {
-        status: 'readying',
+        phase: 'readying',
         clients: [
             { id: 1, ready: false },
             { id: 2, ready: false }
         ]
     };
     const model = {
-        status: 'playing',
+        phase: 'playing',
         clients: [
             { id: 1, ready: true },
             { id: 2, ready: true }
@@ -61,7 +61,7 @@ test('analyzes model changes for client synchronization', async function () {
 test('detects abandoned games and cleared local ready state', async function () {
     const sync = await loadClientModelSync();
     const model = {
-        status: 'abandoned',
+        phase: 'abandoned',
         clients: [{ id: 1, ready: false }]
     };
 

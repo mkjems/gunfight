@@ -33,7 +33,7 @@ test('builds lobby view models for keyboard clients', async function () {
     const model = {
         gameId: 'abc',
         playerLimit: 2,
-        status: 'waiting',
+        phase: 'waiting',
         clients: [
             { id: 'p1', name: 'ACE', ready: false, slot: 0 },
             { id: 'p2', name: 'CAL', ready: true, slot: 1 }
@@ -114,7 +114,7 @@ test('shows a lobby-only opponent placeholder when the local client is alone', a
     const model = {
         gameId: 'abc',
         playerLimit: 2,
-        status: 'waiting',
+        phase: 'waiting',
         clients: [{ id: 'p1', name: 'ACE', ready: false, slot: 0 }]
     };
 
@@ -158,7 +158,7 @@ test('does not show the opponent placeholder when an opponent exists or the lobb
         Object.hasOwn(
             lobby.getLobbyViewModel({
                 model: {
-                    status: 'waiting',
+                    phase: 'waiting',
                     clients: [{ id: 'p1' }, { id: 'p2' }]
                 },
                 playerId: 'p1'
@@ -171,7 +171,7 @@ test('does not show the opponent placeholder when an opponent exists or the lobb
         Object.hasOwn(
             lobby.getLobbyViewModel({
                 model: {
-                    status: 'abandoned',
+                    phase: 'abandoned',
                     clients: [{ id: 'p1' }]
                 },
                 playerId: 'p1'
@@ -187,7 +187,7 @@ test('omits static lobby slot rows for touch clients', async function () {
     const model = {
         message: 'LOOKING FOR CHALLENGER',
         playerLimit: 2,
-        status: 'waiting',
+        phase: 'waiting',
         clients: [{ id: 'p1', ready: true, slot: 0 }]
     };
 
@@ -205,7 +205,7 @@ test('omits static lobby slot rows for touch clients', async function () {
 test('decides lobby prompts and explicit high score visibility', async function () {
     const lobby = await loadClientLobbyViewModel();
     const model = {
-        status: 'waiting',
+        phase: 'waiting',
         clients: [{ id: 'p1', ready: false, slot: 0 }]
     };
 
@@ -229,7 +229,7 @@ test('decides lobby prompts and explicit high score visibility', async function 
         lobby.canLocalClientReady({
             localReadyRequested: false,
             model: {
-                status: 'readying',
+                phase: 'readying',
                 clients: [
                     { id: 'p1', ready: false, slot: 0 },
                     { id: 'p2', ready: false, slot: 1 }
@@ -269,7 +269,7 @@ test('decides lobby prompts and explicit high score visibility', async function 
     assert.equal(
         lobby.shouldShowLobbyPrompt({
             localReadyRequested: false,
-            model: { status: 'abandoned', clients: [{ id: 'p1' }] },
+            model: { phase: 'abandoned', clients: [{ id: 'p1' }] },
             playerId: 'p1'
         }),
         false

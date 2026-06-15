@@ -66,7 +66,7 @@ Client modules are grouped by the architecture boundary they belong to:
 and validates `scenarios.json` / `rocks.json` at startup.
 
 - `lobby.ts` — pairs sockets into games, sanitizes names, assigns slots, and
-  projects compatibility status/message values from the game model.
+  builds public lobby/result messages from the game model.
 - `gfmodel.ts` — the public game model: clients, ready flags, lifecycle phase,
   model version, phase timing, match clock, scenario, round number, match
   state, and scores.

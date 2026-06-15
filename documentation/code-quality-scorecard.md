@@ -21,7 +21,7 @@ Status labels:
 | Formatting            | Good   | Prettier covers package/config files, scripts, server, shared, client, docs.    |
 | Linting               | Good   | ESLint catches accidental globals and unsafe equality in JS/client code.        |
 | Type checking         | Good   | Shared and client TypeScript are strict; server JS is checked less strictly.    |
-| Node tests            | Good   | 200 Node tests cover core behavior and pure modules.                            |
+| Node tests            | Good   | 230 Node tests cover core behavior and pure modules.                            |
 | Browser smoke tests   | Good   | 10 Playwright smoke tests cover app startup, mobile lobby, and two-client play. |
 | Source escape hatches | Good   | No `any`, `@ts-ignore`, `@ts-expect-error`, `TODO`, or `FIXME` in source.       |
 
@@ -30,16 +30,16 @@ an escalated run because the server listens on port `18080`.
 
 ## Architecture Boundary Status
 
-| Boundary        | Status | Notes                                                                                   |
-| --------------- | ------ | --------------------------------------------------------------------------------------- |
-| Server          | Good   | Owns sessions, pairing, names, ready flags, game status, scenarios, and high scores.    |
-| Runtime         | Watch  | `client/src/runtime/game/runtime.ts` is central and large; keep new orchestration thin. |
-| Flows           | Good   | Side effects and sequencing live in flow modules.                                       |
-| View models     | Good   | View models are framework-independent and do not use browser, socket, or timer APIs.    |
-| Components      | Good   | Components own DOM markup and callbacks, not game state or side effects.                |
-| Canvas engine   | Good   | Simulation and drawing stay outside the component tree.                                 |
-| Shared models   | Watch  | `shared/contracts.ts` is useful but large; split content validation if it grows.        |
-| Authoring tools | Watch  | Editor UI files are large; keep core editor logic separate from DOM wiring.             |
+| Boundary        | Status | Notes                                                                                    |
+| --------------- | ------ | ---------------------------------------------------------------------------------------- |
+| Server          | Good   | Owns sessions, pairing, names, ready flags, lifecycle phase, scenarios, and high scores. |
+| Runtime         | Watch  | `client/src/runtime/game/runtime.ts` is central and large; keep new orchestration thin.  |
+| Flows           | Good   | Side effects and sequencing live in flow modules.                                        |
+| View models     | Good   | View models are framework-independent and do not use browser, socket, or timer APIs.     |
+| Components      | Good   | Components own DOM markup and callbacks, not game state or side effects.                 |
+| Canvas engine   | Good   | Simulation and drawing stay outside the component tree.                                  |
+| Shared models   | Watch  | `shared/contracts.ts` is useful but large; split content validation if it grows.         |
+| Authoring tools | Watch  | Editor UI files are large; keep core editor logic separate from DOM wiring.              |
 
 The boundary rules are defined in `Architecture-flow.md`, `State-ownership.md`,
 and `UI-ownership.md`. Keep this scorecard aligned with those documents.
@@ -50,19 +50,19 @@ These files are not automatically bad, but they deserve care before adding more
 responsibility:
 
 - `client/src/tools/scenarioEditor.ts` - 1100 lines. DOM-heavy authoring tool.
-- `client/src/runtime/game/runtime.ts` - 1069 lines. Main runtime wiring and
+- `client/src/runtime/game/runtime.ts` - 1122 lines. Main runtime wiring and
   orchestration.
 - `client/src/tools/scenarioEditorCore.ts` - 826 lines. Scenario editor domain
   logic.
-- `shared/contracts.ts` - 784 lines. Shared data contracts and runtime guards.
+- `shared/contracts.ts` - 852 lines. Shared data contracts and runtime guards.
 - `client/src/tools/rockEditor.ts` - 622 lines. DOM-heavy authoring tool.
 - `client/src/tools/rockEditorCore.ts` - 520 lines. Rock editor domain logic.
 - `client/src/engine/scenarioRenderer.ts` - 493 lines. Scenario rendering.
-- `client/src/runtime/game/types.ts` - 476 lines. Runtime type surface.
+- `client/src/runtime/game/types.ts` - 472 lines. Runtime type surface.
 - `client/src/input/touchControls.ts` - 447 lines. Imperative touch pointer
   handling.
-- `server/gameModules/lobby.ts` - 385 lines. Server matchmaking rules.
-- `server/server.js` - 369 lines. HTTP routes and socket protocol handlers.
+- `server/gameModules/lobby.ts` - 503 lines. Server matchmaking rules.
+- `server/server.js` - 395 lines. HTTP routes and socket protocol handlers.
 
 When changing one of these files, prefer a small local extraction only if it
 clarifies ownership or removes repeated rules.
@@ -92,7 +92,7 @@ cross-module contracts:
 
 - Product rules belong in `Config` or state modules.
 - Screen and round-state names belong in `client/src/state/clientScreens.ts`.
-- Server game statuses belong in `shared/contracts.ts`.
+- Server lifecycle phases belong in `shared/contracts.ts`.
 - One-off drawing values can stay local to the renderer that uses them.
 - Editor-only dimensions can stay in the editor module unless reused by editor
   core logic and editor UI.
@@ -111,7 +111,7 @@ Current test shape:
 
 - 57 Node test files.
 - 3 Playwright browser smoke spec files.
-- 200 Node tests passing.
+- 230 Node tests passing.
 - 10 browser smoke tests passing.
 
 Behavior areas with good coverage:

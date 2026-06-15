@@ -7,8 +7,8 @@ This is the current state split. Keep it updated when ownership changes.
 - Socket.IO connections and room membership.
 - Game ids and room ids.
 - Player ids, names, slots, and ready flags.
-- Game lifecycle phase, projected status, phase timestamps, return-to-lobby
-  timing, and model version.
+- Game lifecycle phase, phase timestamps, return-to-lobby timing, and model
+  version.
 - Current scenario selection, `roundNumber`, match state, match clock, and match
   score.
 - Accepted round results and final game-result records for high scores.

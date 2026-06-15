@@ -407,7 +407,6 @@ export type RuntimeGameModel = {
     playerLimit?: number;
     roundNumber?: number;
     scores?: number[];
-    status?: string;
     version?: number;
 };
 
