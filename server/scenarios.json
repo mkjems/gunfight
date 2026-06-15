@@ -1,32 +1,200 @@
 [
     {
+        "name": "new-scenario",
+        "playerStarts": [
+            {
+                "x": 51.61,
+                "y": 75,
+                "facing": 1,
+                "frame": 0
+            },
+            {
+                "x": 886.37,
+                "y": 546.67,
+                "facing": -1,
+                "frame": 2
+            }
+        ],
+        "decorations": [
+            {
+                "type": "saloon",
+                "x": 2.24,
+                "y": 354.02
+            }
+        ],
+        "cacti": [
+            {
+                "x": 437.72,
+                "y": 358.78
+            },
+            {
+                "x": 453.75,
+                "y": 444.85
+            },
+            {
+                "x": 427.78,
+                "y": 530.3
+            },
+            {
+                "x": 452.27,
+                "y": 176.24
+            },
+            {
+                "x": 402.79,
+                "y": 137.65
+            }
+        ],
+        "rocks": [
+            {
+                "type": "tall",
+                "x": 442.35,
+                "y": 247.06
+            },
+            {
+                "type": "small",
+                "x": 452.36,
+                "y": 568.42
+            },
+            {
+                "type": "tall",
+                "x": 433.04,
+                "y": 31.35
+            }
+        ],
+        "wagon": {
+            "x": 587.75,
+            "fromY": 712.78,
+            "toY": -67.22,
+            "duration": 40000
+        }
+    },
+    {
         "name": "single-cactus",
-        "decorations": [{ "type": "saloon", "x": 0, "y": 220 }],
-        "cacti": [{ "x": 475, "y": 378 }],
-        "rocks": [{ "type": "small", "x": 475, "y": 445 }]
+        "playerStarts": [
+            {
+                "x": 150,
+                "y": 430,
+                "facing": 1,
+                "frame": 0
+            },
+            {
+                "x": 793.06,
+                "y": 393.92,
+                "facing": -1,
+                "frame": 2
+            }
+        ],
+        "decorations": [
+            {
+                "type": "saloon",
+                "x": 0,
+                "y": 220
+            }
+        ],
+        "cacti": [
+            {
+                "x": 338.38,
+                "y": 385.38
+            }
+        ],
+        "rocks": [
+            {
+                "type": "small",
+                "x": 402.24,
+                "y": 434.7
+            }
+        ]
     },
     {
         "name": "split-cacti",
-        "decorations": [{ "type": "saloon", "x": 0, "y": 220 }],
+        "playerStarts": [
+            {
+                "x": 150,
+                "y": 430,
+                "facing": 1,
+                "frame": 0
+            },
+            {
+                "x": 800,
+                "y": 430,
+                "facing": -1,
+                "frame": 2
+            }
+        ],
+        "decorations": [
+            {
+                "type": "saloon",
+                "x": 0,
+                "y": 220
+            }
+        ],
         "cacti": [
-            { "x": 380, "y": 360 },
-            { "x": 570, "y": 430 }
+            {
+                "x": 380,
+                "y": 360
+            },
+            {
+                "x": 570,
+                "y": 430
+            }
         ],
         "rocks": [
-            { "type": "tall", "x": 475, "y": 335 },
-            { "type": "small", "x": 610, "y": 500 }
+            {
+                "type": "tall",
+                "x": 475,
+                "y": 335
+            },
+            {
+                "type": "small",
+                "x": 610,
+                "y": 500
+            }
         ]
     },
     {
         "name": "wagon-crossing",
-        "decorations": [{ "type": "saloon", "x": 0, "y": 220 }],
+        "playerStarts": [
+            {
+                "x": 150,
+                "y": 430,
+                "facing": 1,
+                "frame": 0
+            },
+            {
+                "x": 800,
+                "y": 430,
+                "facing": -1,
+                "frame": 2
+            }
+        ],
+        "decorations": [
+            {
+                "type": "saloon",
+                "x": 0,
+                "y": 220
+            }
+        ],
         "cacti": [
-            { "x": 565, "y": 290 },
-            { "x": 565, "y": 510 }
+            {
+                "x": 565,
+                "y": 290
+            },
+            {
+                "x": 565,
+                "y": 510
+            }
         ],
         "rocks": [
-            { "type": "tall", "x": 410, "y": 405 },
-            { "type": "small", "x": 610, "y": 455 }
+            {
+                "type": "tall",
+                "x": 410,
+                "y": 405
+            },
+            {
+                "type": "small",
+                "x": 610,
+                "y": 455
+            }
         ],
         "wagon": {
             "x": 475,

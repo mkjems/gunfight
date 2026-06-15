@@ -19,6 +19,37 @@
     - [x] Do not pair players out of `playing` games; only pair `waiting` single-player games.
     - [x] Update docs
 
+## P7 Code quality maintainability readability
+
+My opinion on code quality: The best way to ensure quality is to write readable modular and understandable code that is easy to change.
+The idea is not to create a giant harness of things we have to do all the time. The idea is to make the code itself logical and nice to work with. Self descriptive.
+
+- [ ] Create `documentation/code-quality-scorecard.md`
+    - [ ] Record current check status: format, lint, typecheck, Node tests, browser smoke tests.
+    - [ ] Document current architecture boundaries from `Architecture-flow.md`, `State-ownership.md`, and `UI-ownership.md`.
+    - [ ] List the largest or most central modules that may need future splitting.
+    - [ ] List known weak spots where code and documentation may drift.
+    - [ ] List where typing is intentionally weaker, especially server JS/test JS.
+    - [ ] List constants/config values that should stay local vs shared.
+
+- [ ] Audit module boundaries
+    - [ ] Check that UI components do not own game state or side effects.
+    - [ ] Check that view models stay framework-independent.
+    - [ ] Check that flow modules remain the side-effect boundary.
+
+- [ ] Audit game constants
+    - [ ] Identify repeated durations, dimensions, control labels, socket event names, and state strings.
+    - [ ] Extract only constants that are reused or define product rules.
+    - [ ] Avoid one giant constants file; keep constants near their owning module unless shared.
+
+- [ ] Audit tests by behavior area
+    - [ ] Map tests to lobby, matchmaking, round flow, touch controls, high scores, editors, and browser smoke.
+    - [ ] Identify behavior with high risk but thin coverage.
+
+- [ ] Audit duplication carefully
+    - [ ] Remove duplicated rules, protocols, and state derivation.
+    - [ ] Do not force DRY on drawing code or simple symmetric UI where duplication is clearer.
+
 ## Other Ideas
 
 - [ ] Add persistent high scores with a database.
