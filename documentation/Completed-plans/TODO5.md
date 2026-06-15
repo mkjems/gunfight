@@ -78,23 +78,4 @@ The idea is not to create a giant harness of things we have to do all the time. 
     - [x] Format `server/scenarios.json`.
     - [x] Format `documentation/TODO5.md`.
 
-## Ideas
 
-- [ ] In lobby screen add particle burst to gun, but fire no bullet.
-- [ ] In lobby screen desktop - avoid H1 title and keyboard instructions jump on screen when entering into ready state.
-- [ ] When both players have marked themselves as ready - I would like a leave-lobby-for-game-sequence. I would like the lobby screen to keep the players in the lobby for a few seconds so you can see the READY status in negative text for 2 seconds and hear the ready sound before switching to the game screen.
-
-## Other Ideas
-
-- [ ] Add persistent high scores with a database.
-- [ ] Add private room codes.
-- [ ] Add spectator mode.
-- [ ] Add optional rematch flow.
-- [ ] Add a small original story or Stranger Things-style twist.
-- [ ] Add more sounds, animations, and scenario themes.
-- [ ] Add the number of wins/kills after the name in the lobby: LUKE 5/10
-
-## Maybe bad Ideas
-
-- [ ] After the game. Players should see the high score page for a period of time, before returning to main lobby.
-- [ ] On Desktop, after a game. 'Game over' should continue to be shown in the main lobby as should the last game result in the top line.
