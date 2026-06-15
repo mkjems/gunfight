@@ -222,7 +222,8 @@ socket from its current game and immediately joins it to a waiting or new game
 using the same resolved name.
 
 On `updateName`, the server sanitizes the requested name, makes it unique inside
-the current game, stores it on the lobby client, and emits `modelUpdate`.
+the current game, stores it on the lobby client, and emits `modelUpdate` only
+when the public name changes. A same-name request is a no-op.
 
 ### Readiness and round selection
 
@@ -266,7 +267,7 @@ decides whether the match may actually end.
 | Event            | Direction                | Server action                                                                       |
 | ---------------- | ------------------------ | ----------------------------------------------------------------------------------- |
 | `joinLobby`      | client to server         | Join this socket to a waiting or new game.                                          |
-| `updateName`     | client to server         | Sanitize and store the client's name; emit `modelUpdate`.                           |
+| `updateName`     | client to server         | Sanitize and store changed names; same-name requests are no-ops.                    |
 | `leaveGame`      | client to server         | Remove the socket from the game; optionally rejoin.                                 |
 | `requeue`        | client to server         | Leave the current game and join a waiting or new game.                              |
 | `clientReady`    | client to server         | Mark the client ready only when paired; enter `readyCountdown` when both are ready. |

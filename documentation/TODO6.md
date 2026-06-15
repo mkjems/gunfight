@@ -117,17 +117,17 @@
           `matchExpired`, client `resetReady`, no-phase local match timer, and
           no-phase local round reset.
 - [ ] Harden `gfmodel` as the one lifecycle state machine.
-    - [ ] Write the legal transition table for `waiting`, `readying`,
+    - [x] Write the legal transition table for `waiting`, `readying`,
           `readyCountdown`, `roundIntro`, `playing`, `hitPause`, `gameOver`,
           `abandoned`, and `closed`.
-    - [ ] Route all phase changes through a small set of command methods with
+    - [x] Route all phase changes through a small set of command methods with
           transition guards.
-    - [ ] Keep `phaseStartedAt`, optional `phaseEndsAt`, optional `matchEndsAt`,
+    - [x] Keep `phaseStartedAt`, optional `phaseEndsAt`, optional `matchEndsAt`,
           and `version` updated by the same transition path.
     - [x] Add a clear server-owned return path from `gameOver` back to
           `readying` or `waiting`; do not require the client to decide when the
           match is reset.
-    - [ ] Make name changes, ready changes, disconnects, requeues, accepted hit
+    - [x] Make name changes, ready changes, disconnects, requeues, accepted hit
           reports, match expiry, and high-score recording all produce versioned
           model updates when they affect public state.
 - [ ] Centralize server timers.
@@ -177,7 +177,7 @@
           `modelUpdate` events in documentation and tests.
     - [ ] Ensure each accepted intent emits exactly one fresh public model or a
           clearly documented no-op.
-    - [ ] Ensure rejected or stale intents do not mutate the public model.
+    - [x] Ensure rejected or stale intents do not mutate the public model.
     - [ ] Remove legacy socket events once no client code depends on them.
 - [ ] Strengthen disconnect, requeue, and reconnect behavior.
     - [ ] Define server behavior for disconnect in every phase.
@@ -188,9 +188,9 @@
           always create a new lobby session; document the rule before coding it.
 - [ ] Add focused server coverage.
     - [ ] Test legal and illegal transitions for every phase.
-    - [ ] Test stale timer protection by version and phase.
-    - [ ] Test every accepted slow-state event increments `version`.
-    - [ ] Test rejected stale events leave `version` and public state unchanged.
+    - [x] Test stale timer protection by version and phase.
+    - [x] Test every accepted slow-state event increments `version`.
+    - [x] Test rejected stale events leave `version` and public state unchanged.
     - [ ] Test game-over expiry resets ready/lobby state from the server.
     - [ ] Test disconnect, abandon, requeue, and auto-pairing in each relevant
           phase.

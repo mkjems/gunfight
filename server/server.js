@@ -14,6 +14,7 @@ import {
     normalizeRoundResultPayload,
     shouldRejoinAfterLeave
 } from '../shared/contracts.js';
+import { advanceTimedGamePhase as advanceTimedLobbyPhase } from './gameModules/serverPhaseTimer.js';
 
 const portNumber = process.env.PORT || 8080;
 const __filename = fileURLToPath(import.meta.url);
@@ -125,28 +126,19 @@ function recordResult(result) {
 }
 
 function advanceTimedGamePhase(gameId, version, phase) {
-    const game = lobby.getGame(gameId);
-    const model = game && lobby.getModel(game);
-    let result = null;
+    const advanced = advanceTimedLobbyPhase({
+        lobby: lobby,
+        gameId: gameId,
+        version: version,
+        phase: phase
+    });
 
-    if (!game || !model || model.version !== version || model.phase !== phase) {
+    if (!advanced.advanced || !advanced.game) {
         return;
     }
 
-    if (phase === 'readyCountdown') {
-        lobby.startMatch(game);
-    } else if (phase === 'roundIntro') {
-        result = lobby.enterPlaying(game);
-    } else if (phase === 'playing') {
-        result = lobby.finishMatch(game);
-    } else if (phase === 'hitPause') {
-        result = lobby.finishHitPause(game);
-    } else if (phase === 'gameOver') {
-        lobby.returnToLobbyAfterGameOver(game);
-    }
-
-    recordResult(result);
-    emitGameModel(game);
+    recordResult(advanced.result);
+    emitGameModel(advanced.game);
 }
 
 function joinSocketGame(socket, options) {

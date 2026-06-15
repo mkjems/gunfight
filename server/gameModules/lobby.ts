@@ -329,11 +329,17 @@ export function createLobby(options: LobbyOptions = {}) {
             return null;
         }
 
-        client.name = resolveUniqueName(name, {
+        const resolvedName = resolveUniqueName(name, {
             clients: game.clients.filter(function (item) {
                 return item.socketId !== socketId;
             })
         });
+
+        if (client.name === resolvedName) {
+            return null;
+        }
+
+        client.name = resolvedName;
         game.model.touch();
         game.updatedAt = now();
 

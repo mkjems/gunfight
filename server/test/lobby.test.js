@@ -44,6 +44,28 @@ function advanceAfterHit(lobby, game) {
     assert.equal(lobby.getModel(game).phase, 'roundIntro');
 }
 
+function cloneModel(model) {
+    return JSON.parse(JSON.stringify(model));
+}
+
+function assertVersionIncreased(lobby, game, action) {
+    const previousVersion = lobby.getModel(game).version;
+    const result = action();
+
+    assert.equal(lobby.getModel(game).version > previousVersion, true);
+
+    return result;
+}
+
+function assertModelUnchanged(lobby, game, action) {
+    const previousModel = cloneModel(lobby.getModel(game));
+    const result = action();
+
+    assert.deepEqual(cloneModel(lobby.getModel(game)), previousModel);
+
+    return result;
+}
+
 test('pairs the first two clients into the same game', function () {
     const lobby = createTestLobby();
     const first = lobby.join('socket-1', { name: 'red' });
@@ -350,6 +372,163 @@ test('increments the public model version when a player changes name', function 
             return client.name;
         }),
         ['ACE', 'TWO']
+    );
+});
+
+test('versions accepted slow-state changes that affect the public model', function () {
+    const manual = createManualLobby();
+    const lobby = manual.lobby;
+    const first = lobby.join('socket-1', { name: 'one' });
+    const second = lobby.join('socket-2', { name: 'two' });
+
+    assert.notEqual(
+        assertVersionIncreased(lobby, first.game, function () {
+            return lobby.updateName('socket-1', 'ace');
+        }),
+        null
+    );
+    assert.equal(
+        assertVersionIncreased(lobby, first.game, function () {
+            return lobby.readyClient(first.game, first.client);
+        }),
+        true
+    );
+    assert.equal(
+        assertVersionIncreased(lobby, first.game, function () {
+            return lobby.readyClient(first.game, second.client);
+        }),
+        true
+    );
+    assert.equal(
+        assertVersionIncreased(lobby, first.game, function () {
+            return lobby.startMatch(first.game);
+        }),
+        true
+    );
+    assert.equal(
+        assertVersionIncreased(lobby, first.game, function () {
+            return lobby.enterPlaying(first.game);
+        }),
+        null
+    );
+    assert.equal(
+        assertVersionIncreased(lobby, first.game, function () {
+            return lobby.recordRoundResult(first.game, {
+                roundNumber: 1,
+                targetId: second.client.id,
+                winnerId: first.client.id
+            });
+        }),
+        true
+    );
+    assert.equal(
+        assertVersionIncreased(lobby, first.game, function () {
+            return lobby.finishHitPause(first.game);
+        }),
+        null
+    );
+
+    manual.setTime(lobby.getModel(first.game).matchEndsAt);
+
+    assert.notEqual(
+        assertVersionIncreased(lobby, first.game, function () {
+            return lobby.finishMatch(first.game);
+        }),
+        null
+    );
+
+    manual.setTime(lobby.getModel(first.game).phaseEndsAt);
+
+    assert.equal(
+        assertVersionIncreased(lobby, first.game, function () {
+            return lobby.returnToLobbyAfterGameOver(first.game);
+        }),
+        true
+    );
+    assert.notEqual(
+        assertVersionIncreased(lobby, first.game, function () {
+            return lobby.leave('socket-2');
+        }),
+        null
+    );
+});
+
+test('leaves rejected slow-state intents as public model no-ops', function () {
+    const manual = createManualLobby();
+    const lobby = manual.lobby;
+    const first = lobby.join('socket-1', { name: 'one' });
+
+    assert.equal(
+        assertModelUnchanged(lobby, first.game, function () {
+            return lobby.readyClient(first.game, first.client);
+        }),
+        false
+    );
+    assert.equal(
+        assertModelUnchanged(lobby, first.game, function () {
+            return lobby.updateName('socket-1', 'one');
+        }),
+        null
+    );
+
+    const second = lobby.join('socket-2', { name: 'two' });
+
+    assert.equal(lobby.readyClient(first.game, first.client), true);
+    assert.equal(
+        assertModelUnchanged(lobby, first.game, function () {
+            return lobby.readyClient(first.game, first.client);
+        }),
+        false
+    );
+    assert.equal(lobby.readyClient(first.game, second.client), true);
+    assert.equal(lobby.startMatch(first.game), true);
+    assert.equal(lobby.enterPlaying(first.game), null);
+    assert.equal(
+        assertModelUnchanged(lobby, first.game, function () {
+            return lobby.finishMatch(first.game);
+        }),
+        null
+    );
+    assert.equal(
+        assertModelUnchanged(lobby, first.game, function () {
+            return lobby.recordRoundResult(first.game, {
+                roundNumber: 2,
+                targetId: second.client.id,
+                winnerId: first.client.id
+            });
+        }),
+        false
+    );
+    assert.equal(
+        lobby.recordRoundResult(first.game, {
+            roundNumber: 1,
+            targetId: second.client.id,
+            winnerId: first.client.id
+        }),
+        true
+    );
+    assert.equal(
+        assertModelUnchanged(lobby, first.game, function () {
+            return lobby.recordRoundResult(first.game, {
+                roundNumber: 1,
+                targetId: second.client.id,
+                winnerId: first.client.id
+            });
+        }),
+        false
+    );
+
+    manual.setTime(lobby.getModel(first.game).matchEndsAt);
+
+    assert.notEqual(lobby.finishMatch(first.game), null);
+
+    manual.setTime(lobby.getModel(first.game).phaseEndsAt - 1);
+
+    assert.equal(
+        assertModelUnchanged(lobby, first.game, function () {
+            return lobby.resetReady(first.game);
+        }),
+        false
     );
 });
 
