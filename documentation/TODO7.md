@@ -35,8 +35,8 @@
 
 
 ## P10 - Lobby screen improvements
-- [ ] In lobby screen add particle burst to gun when it is activated, but fire no bullet.
-- [ ] In lobby screen desktop - avoid title and keyboard instructions jump on screen when entering into ready state.
+- [ ] In lobby screen add particle burst to gun when it is activated, but fire no bullet. Bursts should be same style as in the game.
+- [ ] In lobby screen desktop - avoid title and keyboard instructions jump on screen when entering into ready state (possibly because of display none).
 - [ ] If there is a previous game between the two players, the top line containing 'Game over' and the player names and score, should show in the main lobby.
 
 ## P11 Mobile lobby screen improvements  
