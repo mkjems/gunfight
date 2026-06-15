@@ -1,5 +1,38 @@
 # Gunfight TODO7
 
+## P9 - Centralize Shared Protocol Constants
+
+- [ ] Extract `MATCH_STATE` as an enum-like string constant map.
+    - [ ] Keep the existing wire values: `idle`, `playing`, and `gameOver`.
+    - [ ] Derive the `MatchState` type from `MATCH_STATE`.
+    - [ ] Replace server/client comparisons that currently use inline match-state strings.
+    - [ ] Add a small shared contract test for the constant map and any guard.
+- [ ] Extract `SOCKET_EVENT` as an enum-like string constant map.
+    - [ ] Include client intent/report events: `clientReady`, `roundResult`,
+          `requeue`, `leaveGame`, `joinLobby`, `updateName`, `clientKeyEvent`,
+          `playerPosition`, and `obstacleDamage`.
+    - [ ] Include authoritative/server events: `joinedGame`, `newClient`,
+          `modelUpdate`, `playerKeyEvent`, `playerPosition`, `obstacleDamage`,
+          and `gameResult`.
+    - [ ] Replace server, client network, flow, input, and browser smoke literals
+          where the event name is part of the socket protocol.
+    - [ ] Keep tests readable; use constants for protocol behavior, but keep
+          expected payload text literal where that is clearer.
+    - [ ] Add coverage that the exported event values match the public wire names.
+- [ ] Extract `LOBBY_STATUS` as a server-local enum-like string constant map.
+    - [ ] Keep it local to `server/gameModules/lobby.ts` unless another module
+          needs it.
+    - [ ] Use it for the derived lobby status values: `waiting`, `readying`,
+          `playing`, `abandoned`, and `closed`.
+    - [ ] Keep `LOBBY_STATUS` separate from `GAME_PHASE`; lobby status is a
+          coarse server helper, while `GAME_PHASE` is the public lifecycle
+          protocol.
+- [ ] Review timer-name strings after the protocol constants are done.
+    - [ ] Consider extracting only repeated coordination names such as `ritual`,
+          `hit`, `reset`, and `abandonedRequeue`.
+    - [ ] Do not create a broad global constants file; keep constants near their
+          owning module unless they are shared protocol values.
+
 ## Ideas
 
 - [ ] In lobby screen add particle burst to gun, but fire no bullet.
