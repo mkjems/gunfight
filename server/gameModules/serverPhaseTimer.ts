@@ -3,6 +3,7 @@ import type {
     GameResultPayload,
     PublicGameModel
 } from '../../shared/contracts.js';
+import { GAME_PHASE } from '../../shared/contracts.js';
 
 export interface TimedPhaseLobby<GameSession> {
     getGame(gameId: string): GameSession | null;
@@ -47,15 +48,15 @@ export function advanceTimedGamePhase<GameSession>(
         };
     }
 
-    if (options.phase === 'readyCountdown') {
+    if (options.phase === GAME_PHASE.ReadyCountdown) {
         options.lobby.startMatch(game);
-    } else if (options.phase === 'roundIntro') {
+    } else if (options.phase === GAME_PHASE.RoundIntro) {
         result = options.lobby.enterPlaying(game);
-    } else if (options.phase === 'playing') {
+    } else if (options.phase === GAME_PHASE.Playing) {
         result = options.lobby.finishMatch(game);
-    } else if (options.phase === 'hitPause') {
+    } else if (options.phase === GAME_PHASE.HitPause) {
         result = options.lobby.finishHitPause(game);
-    } else if (options.phase === 'gameOver') {
+    } else if (options.phase === GAME_PHASE.GameOver) {
         options.lobby.returnToLobbyAfterGameOver(game);
     }
 

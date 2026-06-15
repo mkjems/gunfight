@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import {
+    GAME_PHASE,
     parseRockDefinitions,
     parseScenarioSources,
     resolveScenarioSource,
@@ -26,15 +27,43 @@ export const GAME_MODEL_TIMINGS = {
 };
 
 export const LEGAL_PHASE_TRANSITIONS: Record<GamePhase, GamePhase[]> = {
-    waiting: ['readying', 'closed'],
-    readying: ['waiting', 'readyCountdown', 'closed'],
-    readyCountdown: ['roundIntro', 'abandoned', 'closed'],
-    roundIntro: ['playing', 'gameOver', 'abandoned', 'closed'],
-    playing: ['hitPause', 'gameOver', 'abandoned', 'closed'],
-    hitPause: ['roundIntro', 'gameOver', 'abandoned', 'closed'],
-    gameOver: ['waiting', 'readying', 'abandoned', 'closed'],
-    abandoned: ['closed'],
-    closed: []
+    [GAME_PHASE.Waiting]: [GAME_PHASE.Readying, GAME_PHASE.Closed],
+    [GAME_PHASE.Readying]: [
+        GAME_PHASE.Waiting,
+        GAME_PHASE.ReadyCountdown,
+        GAME_PHASE.Closed
+    ],
+    [GAME_PHASE.ReadyCountdown]: [
+        GAME_PHASE.RoundIntro,
+        GAME_PHASE.Abandoned,
+        GAME_PHASE.Closed
+    ],
+    [GAME_PHASE.RoundIntro]: [
+        GAME_PHASE.Playing,
+        GAME_PHASE.GameOver,
+        GAME_PHASE.Abandoned,
+        GAME_PHASE.Closed
+    ],
+    [GAME_PHASE.Playing]: [
+        GAME_PHASE.HitPause,
+        GAME_PHASE.GameOver,
+        GAME_PHASE.Abandoned,
+        GAME_PHASE.Closed
+    ],
+    [GAME_PHASE.HitPause]: [
+        GAME_PHASE.RoundIntro,
+        GAME_PHASE.GameOver,
+        GAME_PHASE.Abandoned,
+        GAME_PHASE.Closed
+    ],
+    [GAME_PHASE.GameOver]: [
+        GAME_PHASE.Waiting,
+        GAME_PHASE.Readying,
+        GAME_PHASE.Abandoned,
+        GAME_PHASE.Closed
+    ],
+    [GAME_PHASE.Abandoned]: [GAME_PHASE.Closed],
+    [GAME_PHASE.Closed]: []
 };
 
 interface GameModelOptions {
@@ -59,11 +88,11 @@ function defaultNow(): number {
 
 function isActivePhase(phase: GamePhase): boolean {
     return (
-        phase === 'readyCountdown' ||
-        phase === 'roundIntro' ||
-        phase === 'playing' ||
-        phase === 'hitPause' ||
-        phase === 'gameOver'
+        phase === GAME_PHASE.ReadyCountdown ||
+        phase === GAME_PHASE.RoundIntro ||
+        phase === GAME_PHASE.Playing ||
+        phase === GAME_PHASE.HitPause ||
+        phase === GAME_PHASE.GameOver
     );
 }
 
@@ -82,7 +111,7 @@ export function createGameModel(options: GameModelOptions = {}) {
     let matchResultId: string | null = null;
     let matchState: MatchState = 'idle';
     let matchEndsAt: number | null = null;
-    let phase: GamePhase = 'waiting';
+    let phase: GamePhase = GAME_PHASE.Waiting;
     let phaseEndsAt: number | null = null;
     let phaseStartedAt = now();
     let roundNumber = 0;
@@ -152,12 +181,15 @@ export function createGameModel(options: GameModelOptions = {}) {
 
     function setWaitingPhase(): boolean {
         if (clients.length === 0) {
-            return setPhase('closed');
+            return setPhase(GAME_PHASE.Closed);
         }
 
-        return setPhase(clients.length >= 2 ? 'readying' : 'waiting', {
-            allowSamePhase: true
-        });
+        return setPhase(
+            clients.length >= 2 ? GAME_PHASE.Readying : GAME_PHASE.Waiting,
+            {
+                allowSamePhase: true
+            }
+        );
     }
 
     function resetMatch(): void {
@@ -172,7 +204,7 @@ export function createGameModel(options: GameModelOptions = {}) {
         matchState = 'playing';
         matchEndsAt = now() + GAME_MODEL_TIMINGS.matchMs;
         advanceRound();
-        return setPhase('roundIntro', {
+        return setPhase(GAME_PHASE.RoundIntro, {
             endsAt: now() + GAME_MODEL_TIMINGS.roundIntroMs
         });
     }
@@ -184,21 +216,21 @@ export function createGameModel(options: GameModelOptions = {}) {
 
         if (
             matchState !== 'playing' ||
-            !canTransitionPhase(phase, 'gameOver')
+            !canTransitionPhase(phase, GAME_PHASE.GameOver)
         ) {
             return false;
         }
 
         matchResultId = resultId;
         matchState = 'gameOver';
-        return setPhase('gameOver', {
+        return setPhase(GAME_PHASE.GameOver, {
             endsAt: now() + GAME_MODEL_TIMINGS.gameOverMs
         });
     }
 
     function returnToLobbyAfterGameOver(): boolean {
         if (
-            phase !== 'gameOver' ||
+            phase !== GAME_PHASE.GameOver ||
             matchState !== 'gameOver' ||
             (phaseEndsAt !== null && now() < phaseEndsAt)
         ) {
@@ -244,9 +276,9 @@ export function createGameModel(options: GameModelOptions = {}) {
             }
 
             if (clients.length === 0) {
-                setPhase('closed');
+                setPhase(GAME_PHASE.Closed);
             } else if (wasActive) {
-                setPhase('abandoned');
+                setPhase(GAME_PHASE.Abandoned);
             } else {
                 setWaitingPhase();
             }
@@ -292,7 +324,7 @@ export function createGameModel(options: GameModelOptions = {}) {
                 return false;
             }
 
-            if (clients.length < 2 || phase !== 'readying') {
+            if (clients.length < 2 || phase !== GAME_PHASE.Readying) {
                 return false;
             }
 
@@ -301,7 +333,7 @@ export function createGameModel(options: GameModelOptions = {}) {
 
             if (areAllReady()) {
                 resetMatch();
-                return setPhase('readyCountdown', {
+                return setPhase(GAME_PHASE.ReadyCountdown, {
                     endsAt: now() + GAME_MODEL_TIMINGS.readyCountdownMs
                 });
             }
@@ -310,7 +342,7 @@ export function createGameModel(options: GameModelOptions = {}) {
         },
 
         startMatch: function (): boolean {
-            if (phase !== 'readyCountdown' || !areAllReady()) {
+            if (phase !== GAME_PHASE.ReadyCountdown || !areAllReady()) {
                 return false;
             }
 
@@ -318,7 +350,7 @@ export function createGameModel(options: GameModelOptions = {}) {
         },
 
         enterPlaying: function (resultId: string): boolean {
-            if (phase !== 'roundIntro' || matchState !== 'playing') {
+            if (phase !== GAME_PHASE.RoundIntro || matchState !== 'playing') {
                 return false;
             }
 
@@ -326,7 +358,7 @@ export function createGameModel(options: GameModelOptions = {}) {
                 return finishMatch(resultId);
             }
 
-            return setPhase('playing', {
+            return setPhase(GAME_PHASE.Playing, {
                 endsAt: matchEndsAt
             });
         },
@@ -336,7 +368,7 @@ export function createGameModel(options: GameModelOptions = {}) {
             const targetSlot = getClientSlot(result.targetId);
 
             if (
-                phase !== 'playing' ||
+                phase !== GAME_PHASE.Playing ||
                 matchState !== 'playing' ||
                 clients.length < 2 ||
                 result.roundNumber !== roundNumber ||
@@ -349,13 +381,13 @@ export function createGameModel(options: GameModelOptions = {}) {
             }
 
             scores[winnerSlot]++;
-            return setPhase('hitPause', {
+            return setPhase(GAME_PHASE.HitPause, {
                 endsAt: now() + GAME_MODEL_TIMINGS.hitPauseMs
             });
         },
 
         finishHitPause: function (resultId: string): boolean {
-            if (phase !== 'hitPause' || matchState !== 'playing') {
+            if (phase !== GAME_PHASE.HitPause || matchState !== 'playing') {
                 return false;
             }
 
@@ -364,7 +396,7 @@ export function createGameModel(options: GameModelOptions = {}) {
             }
 
             advanceRound();
-            return setPhase('roundIntro', {
+            return setPhase(GAME_PHASE.RoundIntro, {
                 endsAt: now() + GAME_MODEL_TIMINGS.roundIntroMs
             });
         },

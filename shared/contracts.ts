@@ -2,16 +2,26 @@
 
 export type MatchState = 'idle' | 'playing' | 'gameOver';
 
-export type GamePhase =
-    | 'waiting'
-    | 'readying'
-    | 'readyCountdown'
-    | 'roundIntro'
-    | 'playing'
-    | 'hitPause'
-    | 'gameOver'
-    | 'abandoned'
-    | 'closed';
+export const GAME_PHASE = {
+    Waiting: 'waiting',
+    Readying: 'readying',
+    ReadyCountdown: 'readyCountdown',
+    RoundIntro: 'roundIntro',
+    Playing: 'playing',
+    HitPause: 'hitPause',
+    GameOver: 'gameOver',
+    Abandoned: 'abandoned',
+    Closed: 'closed'
+} as const;
+
+export type GamePhase = (typeof GAME_PHASE)[keyof typeof GAME_PHASE];
+
+export const GAME_PHASE_VALUES: readonly GamePhase[] =
+    Object.values(GAME_PHASE);
+
+export function isGamePhase(value: unknown): value is GamePhase {
+    return GAME_PHASE_VALUES.includes(value as GamePhase);
+}
 
 export interface PublicClient {
     id: number;

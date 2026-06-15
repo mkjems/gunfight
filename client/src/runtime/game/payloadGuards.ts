@@ -1,4 +1,4 @@
-import type { Scenario } from '../../../../shared/contracts.js';
+import type { GamePhase, Scenario } from '../../../../shared/contracts.js';
 import type {
     ClientId,
     RuntimeClient,
@@ -21,6 +21,20 @@ function isClientId(value: unknown): value is ClientId {
 
 function isFiniteNumber(value: unknown): value is number {
     return typeof value === 'number' && Number.isFinite(value);
+}
+
+function isRuntimeGamePhase(value: unknown): value is GamePhase {
+    return (
+        value === 'waiting' ||
+        value === 'readying' ||
+        value === 'readyCountdown' ||
+        value === 'roundIntro' ||
+        value === 'playing' ||
+        value === 'hitPause' ||
+        value === 'gameOver' ||
+        value === 'abandoned' ||
+        value === 'closed'
+    );
 }
 
 function parseClient(data: unknown): RuntimeClient | null {
@@ -85,7 +99,7 @@ export function parseGameModel(data: unknown): RuntimeGameModel | null {
         model.matchEndsAt = data.matchEndsAt;
     }
 
-    if (typeof data.phase === 'string') {
+    if (isRuntimeGamePhase(data.phase)) {
         model.phase = data.phase;
     }
 

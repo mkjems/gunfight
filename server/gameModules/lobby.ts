@@ -1,4 +1,5 @@
 import { createGameModel } from './gfmodel.js';
+import { GAME_PHASE } from '../../shared/contracts.js';
 import type {
     GameModelClient,
     GameResultPayload,
@@ -130,7 +131,7 @@ function getGameMessage(game: GameSession): string {
         return 'LOOKING FOR CHALLENGER';
     }
 
-    if (model.phase === 'readyCountdown') {
+    if (model.phase === GAME_PHASE.ReadyCountdown) {
         return '';
     }
 
@@ -140,24 +141,24 @@ function getGameMessage(game: GameSession): string {
 function getGameStatus(game: GameSession): GameStatus {
     const phase = game.model.getModel().phase;
 
-    if (phase === 'closed') {
+    if (phase === GAME_PHASE.Closed) {
         return 'closed';
     }
 
-    if (phase === 'abandoned') {
+    if (phase === GAME_PHASE.Abandoned) {
         return 'abandoned';
     }
 
     if (
-        phase === 'roundIntro' ||
-        phase === 'playing' ||
-        phase === 'hitPause' ||
-        phase === 'gameOver'
+        phase === GAME_PHASE.RoundIntro ||
+        phase === GAME_PHASE.Playing ||
+        phase === GAME_PHASE.HitPause ||
+        phase === GAME_PHASE.GameOver
     ) {
         return 'playing';
     }
 
-    if (phase === 'readying' || phase === 'readyCountdown') {
+    if (phase === GAME_PHASE.Readying || phase === GAME_PHASE.ReadyCountdown) {
         return 'readying';
     }
 

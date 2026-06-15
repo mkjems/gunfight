@@ -1,3 +1,5 @@
+import type { GamePhase } from '../../../shared/contracts.js';
+
 type ClientId = number | string;
 
 type ModelClient = {
@@ -9,7 +11,7 @@ type ModelClient = {
 
 type PublicModel = {
     clients: ModelClient[];
-    phase?: string;
+    phase?: GamePhase;
 };
 
 export function getLocalClient(

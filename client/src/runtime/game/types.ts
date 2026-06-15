@@ -1,4 +1,8 @@
-import type { HighScoreEntry, Scenario } from '../../../../shared/contracts.js';
+import type {
+    GamePhase,
+    HighScoreEntry,
+    Scenario
+} from '../../../../shared/contracts.js';
 import type { RoundState as RoundStateValue } from '../../state/clientScreens.js';
 
 export type ClientId = number | string;
@@ -400,7 +404,7 @@ export type RuntimeGameModel = {
     matchEndsAt?: number;
     matchState?: string;
     message?: string;
-    phase?: string;
+    phase?: GamePhase;
     phaseEndsAt?: number;
     phaseStartedAt?: number;
     playerLimit?: number;

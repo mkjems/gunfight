@@ -1,3 +1,4 @@
+import type { GamePhase } from '../../../shared/contracts.js';
 import { Config } from '../platform/config.js';
 import { RoundState } from '../state/clientScreens.js';
 
@@ -6,7 +7,7 @@ type ClientRoundRitualOptions = {
         reset: () => void;
     };
     closeNameEditor: () => void;
-    getServerPhase: () => string | undefined;
+    getServerPhase: () => GamePhase | undefined;
     renderHud: () => void;
     resetAmmo: () => void;
     roundData: {

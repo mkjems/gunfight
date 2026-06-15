@@ -1,3 +1,4 @@
+import type { GamePhase } from '../../../shared/contracts.js';
 import { Config } from '../platform/config.js';
 import { analyze } from './clientModelSync.js';
 import { RoundState } from '../state/clientScreens.js';
@@ -15,7 +16,7 @@ type PublicModel = {
         playerStarts?: typeof Config.player.slots;
     } | null;
     matchState?: string;
-    phase?: string;
+    phase?: GamePhase;
 };
 
 type CreatePlanOptions = {
@@ -80,7 +81,7 @@ function canStartRoundFromState(roundState: RoundState): boolean {
     );
 }
 
-function isServerLobbyPhase(phase?: string): boolean {
+function isServerLobbyPhase(phase?: GamePhase): boolean {
     return phase === 'waiting' || phase === 'readying';
 }
 

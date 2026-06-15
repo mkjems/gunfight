@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+    GAME_PHASE,
+    GAME_PHASE_VALUES,
     createKeyEventPayload,
     createPlayerPositionPayload,
     getNameFromPayload,
+    isGamePhase,
     normalizeBulletSnapshot,
     normalizeGameResultPayload,
     normalizeObstacleDamagePayload,
@@ -25,6 +28,13 @@ const shot = {
     height: 4,
     hasRicocheted: true
 };
+
+test('exports lifecycle phase constants and guard', function () {
+    assert.equal(GAME_PHASE.Playing, 'playing');
+    assert.ok(GAME_PHASE_VALUES.includes(GAME_PHASE.HitPause));
+    assert.equal(isGamePhase('roundIntro'), true);
+    assert.equal(isGamePhase('not-a-phase'), false);
+});
 
 test('extracts player names from string and object payloads', function () {
     assert.equal(getNameFromPayload('kid'), 'kid');

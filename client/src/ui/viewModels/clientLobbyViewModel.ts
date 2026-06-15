@@ -1,3 +1,5 @@
+import type { GamePhase } from '../../../../shared/contracts.js';
+
 type ClientId = number | string;
 
 type LobbyClient = {
@@ -9,7 +11,7 @@ type LobbyClient = {
 
 type LobbyModel = {
     gameId?: string;
-    phase?: string;
+    phase?: GamePhase;
     message?: string;
     playerLimit?: number;
     clients?: LobbyClient[];

@@ -146,6 +146,32 @@ async function waitForPhase(page, phase) {
     return getLatestModel(page);
 }
 
+async function waitForClientCount(page, count) {
+    await page.waitForFunction(function (expectedCount) {
+        return window.__gunfightLatestModel?.clients?.length === expectedCount;
+    }, count);
+
+    return getLatestModel(page);
+}
+
+async function waitForLocalReady(page) {
+    await expect
+        .poll(async function () {
+            return page.evaluate(function () {
+                const joined = window.__gunfightJoinedGame;
+                const model = window.__gunfightLatestModel;
+                const client =
+                    joined &&
+                    model?.clients?.find(function (item) {
+                        return item.id === joined.playerId;
+                    });
+
+                return !!client?.ready;
+            });
+        })
+        .toBe(true);
+}
+
 async function waitForScore(page, scoreLabel) {
     await expect
         .poll(async function () {
@@ -221,6 +247,12 @@ async function openNameEditorWithKeyboard(page) {
 async function readyWithKeyboard(page) {
     await focusPageForKeyboard(page);
     await page.keyboard.press('p');
+    await waitForLocalReady(page);
+}
+
+async function readyWithTouch(page) {
+    await page.locator('#touchPlayButton').click();
+    await waitForLocalReady(page);
 }
 
 async function selectNameEditorKey(page, value) {
@@ -370,13 +402,15 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
     captureBrowserErrors(desktop, 'desktop', browserErrors);
     captureBrowserErrors(mobile, 'mobile', browserErrors);
 
+    await gotoPreparedLobby(desktop, '/', {
+        freezeDate: false
+    });
+    await gotoPreparedLobby(mobile, '/?touch=1', {
+        freezeDate: false
+    });
     await Promise.all([
-        gotoPreparedLobby(desktop, '/', {
-            freezeDate: false
-        }),
-        gotoPreparedLobby(mobile, '/?touch=1', {
-            freezeDate: false
-        })
+        waitForClientCount(desktop, 2),
+        waitForClientCount(mobile, 2)
     ]);
 
     await Promise.all([
@@ -390,19 +424,19 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
     await captureMobileScreenshot(mobile, testInfo, 'mobile-01-lobby.png');
 
     await openNameEditorWithKeyboard(desktop);
-    await replaceName(desktop, 'ACE');
+    await replaceName(desktop, 'NOVA');
     await mobile.locator('#touchEditButton').click();
-    await replaceName(mobile, 'REX');
+    await replaceName(mobile, 'ZED');
 
     await Promise.all([
-        expect(desktop.locator('#lobbyPlayerLabels')).toContainText('ACE'),
-        expect(desktop.locator('#lobbyPlayerLabels')).toContainText('REX'),
-        expect(mobile.locator('#lobbyPlayerLabels')).toContainText('ACE'),
-        expect(mobile.locator('#lobbyPlayerLabels')).toContainText('REX')
+        expect(desktop.locator('#lobbyPlayerLabels')).toContainText('NOVA'),
+        expect(desktop.locator('#lobbyPlayerLabels')).toContainText('ZED'),
+        expect(mobile.locator('#lobbyPlayerLabels')).toContainText('NOVA'),
+        expect(mobile.locator('#lobbyPlayerLabels')).toContainText('ZED')
     ]);
 
     await readyWithKeyboard(desktop);
-    await mobile.locator('#touchPlayButton').click();
+    await readyWithTouch(mobile);
 
     await Promise.all([
         expect(desktop.locator('#roundMessage')).toHaveText('GET READY'),
@@ -426,16 +460,16 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
         expect(desktop.locator('#scoreRow')).toBeVisible(),
         expect(desktop.locator('#scoreLeft .scoreValue')).toHaveText('0'),
         expect(desktop.locator('#scoreRight .scoreValue')).toHaveText('0'),
-        expect(desktop.locator('#scoreLeft .scoreName')).toHaveText('ACE'),
-        expect(desktop.locator('#scoreRight .scoreName')).toHaveText('REX'),
+        expect(desktop.locator('#scoreLeft .scoreName')).toHaveText('NOVA'),
+        expect(desktop.locator('#scoreRight .scoreName')).toHaveText('ZED'),
         expect(desktop.locator('#ammoLeft .ammoRound')).toHaveCount(6),
         expect(desktop.locator('#ammoRight .ammoRound')).toHaveCount(6),
         expect(mobile.locator('#gameHud')).toBeVisible(),
         expect(mobile.locator('#scoreRow')).toBeVisible(),
         expect(mobile.locator('#scoreLeft .scoreValue')).toHaveText('0'),
         expect(mobile.locator('#scoreRight .scoreValue')).toHaveText('0'),
-        expect(mobile.locator('#scoreLeft .scoreName')).toHaveText('ACE'),
-        expect(mobile.locator('#scoreRight .scoreName')).toHaveText('REX'),
+        expect(mobile.locator('#scoreLeft .scoreName')).toHaveText('NOVA'),
+        expect(mobile.locator('#scoreRight .scoreName')).toHaveText('ZED'),
         expect(mobile.locator('#ammoRow')).toBeVisible(),
         expect(mobile.locator('#ammoLeft .ammoRound')).toHaveCount(6),
         expect(mobile.locator('#ammoRight .ammoRound')).toHaveCount(6),
@@ -517,19 +551,21 @@ test('server hit pause holds score until next round and server game over returns
     captureBrowserErrors(playerA, 'playerA', browserErrors);
     captureBrowserErrors(playerB, 'playerB', browserErrors);
 
+    await gotoPreparedLobby(playerA, '/', {
+        freezeDate: false
+    });
+    await gotoPreparedLobby(playerB, '/', {
+        freezeDate: false
+    });
     await Promise.all([
-        gotoPreparedLobby(playerA, '/', {
-            freezeDate: false
-        }),
-        gotoPreparedLobby(playerB, '/', {
-            freezeDate: false
-        })
+        waitForClientCount(playerA, 2),
+        waitForClientCount(playerB, 2)
     ]);
 
     await openNameEditorWithKeyboard(playerA);
-    await replaceName(playerA, 'ACE');
+    await replaceName(playerA, 'NOVA');
     await openNameEditorWithKeyboard(playerB);
-    await replaceName(playerB, 'REX');
+    await replaceName(playerB, 'ZED');
 
     await readyWithKeyboard(playerA);
     await readyWithKeyboard(playerB);
@@ -628,13 +664,15 @@ test('abandoned games requeue safely and reject late round reports', async ({
     captureBrowserErrors(playerA, 'playerA', browserErrors);
     captureBrowserErrors(playerB, 'playerB', browserErrors);
 
+    await gotoPreparedLobby(playerA, '/', {
+        freezeDate: false
+    });
+    await gotoPreparedLobby(playerB, '/', {
+        freezeDate: false
+    });
     await Promise.all([
-        gotoPreparedLobby(playerA, '/', {
-            freezeDate: false
-        }),
-        gotoPreparedLobby(playerB, '/', {
-            freezeDate: false
-        })
+        waitForClientCount(playerA, 2),
+        waitForClientCount(playerB, 2)
     ]);
 
     await readyWithKeyboard(playerA);
