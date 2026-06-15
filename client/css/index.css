@@ -887,6 +887,7 @@ h2 {
 .large-text {
     font-size: var(--large-text-size);
     font-family: var(--font-family-h1);
+    text-shadow: 3px 3px 0 rgb(0, 0, 0);
 }
 
 .negative-text {
