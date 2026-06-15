@@ -19,6 +19,8 @@ documents:
 - [UI-ownership.md](UI-ownership.md): canvas and DOM UI ownership.
 - [Architecture-flow.md](Architecture-flow.md): system flow and runtime
   architecture.
+- [code-quality-scorecard.md](code-quality-scorecard.md): maintainability,
+  typing, tooling, and test-coverage status.
 
 Operational notes live in `documentation/Technical stuff`. Completed plans live
 in `documentation/Completed-plans` and are historical, not current
