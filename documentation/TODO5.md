@@ -4,33 +4,34 @@
 
 ### P3.3 - State model review and future plans
 
-- [ ] State model review
-    - [ ] Confirm the target ownership model.
-        - [ ] Keep movement, input response, bullets, hit feel, sounds, animation, and local round timing client-owned.
-        - [ ] Move authoritative match score, accepted round result, game-over decision, and high-score result source to the server.
-        - [ ] Do not move full gameplay simulation or server-side physics in this pass.
-    - [ ] Add server-owned match state.
-        - [ ] Store per-player match score on the server session or game model.
-        - [ ] Store enough round state to reject stale or duplicate round results.
-        - [ ] Include authoritative score and match state in the public game model.
-    - [ ] Replace client-owned score progression.
-        - [ ] Replace or wrap `advanceRound` with a round-result event sent by the client that saw the hit.
-        - [ ] Validate that the reporting socket belongs to the game, the game is `playing`, the round is current, both players are connected, and the round result has not already been accepted.
-        - [ ] Let the server increment score, decide whether the match is over, advance the scenario and `roundNumber` when needed, and broadcast the updated model.
-    - [ ] Make the client consume server-owned score.
-        - [ ] Treat score, round number, match over, and final result as authoritative values from the server model.
-        - [ ] Keep hit pause, round ritual, animation, audio, and responsive local controls on the client.
-        - [ ] Remove client-side score authority from `scoreKeeper` and round-end flow, or reduce it to display-only local state.
-    - [ ] Make high scores use server-owned results.
-        - [ ] Stop trusting a client-submitted final score as the high-score source of truth.
-        - [ ] Record high scores from the server-owned final match score after the server decides the game is over.
-    - [ ] Review state machines after the score change.
-        - [ ] Decide whether server `status` needs a clearer match lifecycle state beyond `playing`.
-        - [ ] Keep client `roundState` for presentation phases, but document how it follows server match state.
-    - [ ] Update coverage and documentation.
-        - [ ] Add server tests for score updates, stale round results, duplicate round results, game over, disconnect during play, and high-score recording.
-        - [ ] Add client tests for consuming server-owned score and match-over state.
-        - [ ] Update `Connection-state-model.md`, `State-ownership.md`, and `Specification-main.md`.
+- [x] State model review
+    - [x] Confirm the target ownership model.
+        - [x] Keep movement, input response, bullets, hit feel, sounds, animation, and local round timing client-owned.
+        - [x] Move authoritative match score, accepted round result, game-over decision, and high-score result source to the server.
+        - [x] Do not move full gameplay simulation or server-side physics in this pass.
+    - [x] Add server-owned match state.
+        - [x] Store per-player match score on the server session or game model.
+        - [x] Store enough round state to reject stale or duplicate round results.
+        - [x] Include authoritative score and match state in the public game model.
+    - [x] Replace client-owned score progression.
+        - [x] Replace or wrap `advanceRound` with a round-result event sent by the client that saw the hit.
+        - [x] Validate that the reporting socket belongs to the game, the game is `playing`, the round is current, both players are connected, and the round result has not already been accepted.
+        - [x] Let the server increment score, decide whether the match is over, advance the scenario and `roundNumber` when needed, and broadcast the updated model.
+    - [x] Make the client consume server-owned score.
+        - [x] Treat score, round number, match over, and final result as authoritative values from the server model.
+        - [x] Keep hit pause, round ritual, animation, audio, and responsive local controls on the client.
+        - [x] Remove client-side score authority from `scoreKeeper` and round-end flow, or reduce it to display-only local state.
+    - [x] Make high scores use server-owned results.
+        - [x] Stop trusting a client-submitted final score as the high-score source of truth.
+        - [x] Record high scores from the server-owned final match score after the server decides the game is over.
+    - [x] Review state machines after the score change.
+        - [x] Decide whether server `status` needs a clearer match lifecycle state beyond `playing`.
+        - [x] Keep client `roundState` for presentation phases, but document how it follows server match state.
+    - [x] Update coverage and documentation.
+        - [x] Add server tests for score updates, stale round results, duplicate round results, game over, disconnect during play, and high-score recording.
+        - [x] Add client tests for consuming server-owned score and match-over state.
+        - [x] Update `Connection-state-model.md`, `State-ownership.md`, and `Specification-main.md`.
+    - [ ] Future follow-up: decide whether the server should run the authoritative match clock instead of accepting client-reported `matchExpired`.
 
 - [x] No ready state without opponent
     - [x] Should you be able to be in ready state when you have no opponent? No. `READY` requires a connected opponent.
@@ -77,6 +78,12 @@ The idea is not to create a giant harness of things we have to do all the time. 
     - [x] Format `server/scenarios.json`.
     - [x] Format `documentation/TODO5.md`.
 
+## Ideas
+
+- [ ] In lobby screen add particle burst to gun, but fire no bullet.
+- [ ] In lobby screen desktop - avoid H1 title and keyboard instructions jump on screen when entering into ready state.
+- [ ] When both players have marked themselves as ready - I would like a leave-lobby-for-game-sequence. I would like the lobby screen to keep the players in the lobby for a few seconds so you can see the READY status in negative text for 2 seconds and hear the ready sound before switching to the game screen.
+
 ## Other Ideas
 
 - [ ] Add persistent high scores with a database.
@@ -87,9 +94,7 @@ The idea is not to create a giant harness of things we have to do all the time. 
 - [ ] Add more sounds, animations, and scenario themes.
 - [ ] Add the number of wins/kills after the name in the lobby: LUKE 5/10
 
-## MAYBE bad Ideas
+## Maybe bad Ideas
 
 - [ ] After the game. Players should see the high score page for a period of time, before returning to main lobby.
-- [ ] When both players have marked themselves as ready - I would like a leave-lobby-for-game-sequence. I would like the lobby screen to keep the players in the lobby for a few seconds so you can see the READY status in negative text for 2 seconds and hear the ready sound before switching to the game screen.
-- [ ] We should collect all game constants like this leave-lobby-pause-duration above in some central shared place.
 - [ ] On Desktop, after a game. 'Game over' should continue to be shown in the main lobby as should the last game result in the top line.

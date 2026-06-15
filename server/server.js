@@ -10,8 +10,8 @@ import {
     createKeyEventPayload,
     createPlayerPositionPayload,
     getNameFromPayload,
-    normalizeGameResultPayload,
     normalizeObstacleDamagePayload,
+    normalizeRoundResultPayload,
     shouldRejoinAfterLeave
 } from '../shared/contracts.js';
 
@@ -332,30 +332,41 @@ io.on('connection', function (socket) {
         emitGameModel(context.game);
     });
 
-    socket.on('advanceRound', function () {
+    socket.on(
+        'roundResult',
+        /** @param {unknown} data */
+        function (data) {
+            const context = getSocketGameContext(socket);
+            const result = normalizeRoundResultPayload(data);
+
+            if (!context || !result || result.winnerId !== context.client.id) {
+                return;
+            }
+
+            if (!lobby.recordRoundResult(context.game, result)) {
+                return;
+            }
+
+            emitGameModel(context.game);
+        }
+    );
+
+    socket.on('matchExpired', function () {
         const context = getSocketGameContext(socket);
+        let result;
 
         if (!context) {
             return;
         }
 
-        context.game.model.advanceRound();
-        emitGameModel(context.game);
-    });
+        result = lobby.finishMatch(context.game);
 
-    socket.on(
-        'recordGameResult',
-        /** @param {unknown} data */
-        function (data) {
-            const result = normalizeGameResultPayload(data);
-
-            if (!result) {
-                return;
-            }
-
+        if (result) {
             io.emit('highScores', highScores.recordGame(result));
         }
-    );
+
+        emitGameModel(context.game);
+    });
 });
 
 server.listen(portNumber, function () {

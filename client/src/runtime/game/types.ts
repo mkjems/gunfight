@@ -218,7 +218,6 @@ export type RuntimeRoundData = {
     clearObstacleDamage: () => void;
     clearRoundEnd: () => void;
     clearRoundPauseFlags: () => void;
-    consumeAdvanceRoundAfterHit: () => boolean;
     damageObstacle: (id: string) => void;
     getHitMessage: () => { targetId: ClientId; text: string } | null;
     getObstacleDamage: (id: string) => number;
@@ -228,7 +227,6 @@ export type RuntimeRoundData = {
     getSecondsLeft: (defaultSeconds: number) => number;
     hasMatchTimeExpired: () => boolean;
     resetRoundFlags: () => void;
-    setAdvanceRoundAfterHit: (value: boolean) => void;
     setHitMessage: (message: { targetId: ClientId; text: string }) => void;
     setRoundEndsAt: (value: number) => void;
     setRoundMessage: (message?: string) => void;
@@ -275,22 +273,13 @@ export type RuntimeScoreClient = RuntimeNamedClient & {
 };
 
 export type RuntimeScoreKeeper = {
-    addPoint: (slot: number) => void;
-    createGameResult?: (
-        model?: {
-            clients?: RuntimeScoreClient[];
-            gameId?: string;
-            roundNumber?: number;
-        } | null,
-        getClientName?: (client: RuntimeScoreClient) => string
-    ) => unknown;
     getGameOverMessage: (
         clients?: RuntimeScoreClient[],
         getClientName?: (client: RuntimeScoreClient) => string
     ) => string;
     getScore: (slot: number) => number;
-    resetRecordedResult: () => void;
     resetScores: () => void;
+    setScores: (scores?: unknown) => boolean;
 };
 
 export type RuntimeTimers = {
@@ -408,9 +397,12 @@ export type RuntimeGameModel = {
     clients: RuntimeClient[];
     currentScenario?: Scenario | null;
     gameId?: string;
+    matchResultId?: string;
+    matchState?: string;
     message?: string;
     playerLimit?: number;
     roundNumber?: number;
+    scores?: number[];
     status?: string;
 };
 

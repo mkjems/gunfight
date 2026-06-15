@@ -13,7 +13,7 @@ rendering rule).
 │ SERVER (authoritative for sessions)                             │
 │ server.js → lobby.ts, gfmodel.ts, highScores.ts                 │
 │ owns: matchmaking, names, slots, ready flags, game status,      │
-│       scenario selection, round number, high scores             │
+│       scenario selection, round number, match score, high scores │
 └───────────────────────────┬─────────────────────────────────────┘
                             │ Socket.IO events (both directions)
 ┌───────────────────────────┴─────────────────────────────────────┐
@@ -66,17 +66,17 @@ Client modules are grouped by the architecture boundary they belong to:
 and validates `scenarios.json` / `rocks.json` at startup.
 
 - `lobby.ts` — pairs sockets into games, sanitizes names, assigns slots.
-- `gfmodel.ts` — the public game model: clients, status, scenario, round
-  number.
+- `gfmodel.ts` — the public game model: clients, ready flags, scenario, round
+  number, match state, and scores.
 - `highScores.ts` — in-memory high score table.
 
 The server is authoritative for session state and is a relay for gameplay
 events. It never simulates gameplay.
 
-| Direction       | Events                                                                                                                                                     |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Server → client | `joinedGame`, `newClient`, `leftGame`, `modelUpdate`, `highScores`, relayed `keyEvent` / `playerPosition` / `obstacleDamage`                               |
-| Client → server | `updateName`, `leaveGame`, `requeue`, `clientReady`, `resetReady`, `advanceRound`, `gameResult`, outgoing `keyEvent` / `playerPosition` / `obstacleDamage` |
+| Direction       | Events                                                                                                                                                      |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Server → client | `joinedGame`, `newClient`, `leftGame`, `modelUpdate`, `highScores`, relayed `keyEvent` / `playerPosition` / `obstacleDamage`                                |
+| Client → server | `updateName`, `leaveGame`, `requeue`, `clientReady`, `resetReady`, `roundResult`, `matchExpired`, outgoing `keyEvent` / `playerPosition` / `obstacleDamage` |
 
 ## Client Construction: Who Creates Whom
 
@@ -155,9 +155,9 @@ flowchart TD
 The control rules, in one list:
 
 1. **The server controls sessions.** Clients never decide who is in a game,
-   what anyone is named, or what the round number is. They request
-   (`clientReady`, `advanceRound`) and the server broadcasts the result via
-   `modelUpdate`.
+   what anyone is named, what the score is, or what the round number is. They
+   request (`clientReady`, `roundResult`, `matchExpired`) and the server
+   broadcasts the result via `modelUpdate`.
 2. **The game loop controls time.** `ClientGameLoop` fires
    `ClientFrameFlow.update` then `.render` every animation frame. Everything
    that happens per frame is reachable only from there.
@@ -176,8 +176,11 @@ The control rules, in one list:
 
 ## Gameplay Synchronization Model
 
-Gameplay is client-authoritative and peer-relayed. Each client simulates
-locally; key events, periodic positions, and obstacle damage are relayed
-through the server to the opponent. At game over the client submits
-`gameResult` and the server records high scores. The known divergence risk is
-documented in `documentation/State-ownership.md`.
+Gameplay movement and hit detection are client-authoritative and peer-relayed.
+Each client simulates locally; key events, periodic positions, and obstacle
+damage are relayed through the server to the opponent. The winning client
+reports `roundResult`; the server accepts only current, non-duplicate,
+winner-owned results and updates the authoritative score. At game over the
+client reports `matchExpired`; the server records high scores from its own final
+score. The remaining divergence risk is documented in
+`documentation/State-ownership.md`.

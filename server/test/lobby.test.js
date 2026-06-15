@@ -142,6 +142,80 @@ test('does not allow a client to become ready before an opponent joins', functio
     );
 });
 
+test('records round results on the server and rejects stale duplicates', function () {
+    const lobby = createTestLobby();
+    const first = lobby.join('socket-1', { name: 'one' });
+    const second = lobby.join('socket-2', { name: 'two' });
+
+    first.game.model.readyClient(first.client);
+    first.game.model.readyClient(second.client);
+    lobby.markPlaying(first.game);
+
+    assert.deepEqual(lobby.getModel(first.game).scores, [0, 0]);
+    assert.equal(lobby.getModel(first.game).matchState, 'playing');
+    assert.equal(lobby.getModel(first.game).roundNumber, 1);
+
+    assert.equal(
+        lobby.recordRoundResult(first.game, {
+            roundNumber: 1,
+            targetId: second.client.id,
+            winnerId: first.client.id
+        }),
+        true
+    );
+
+    assert.deepEqual(lobby.getModel(first.game).scores, [1, 0]);
+    assert.equal(lobby.getModel(first.game).roundNumber, 2);
+
+    assert.equal(
+        lobby.recordRoundResult(first.game, {
+            roundNumber: 1,
+            targetId: second.client.id,
+            winnerId: first.client.id
+        }),
+        false
+    );
+    assert.deepEqual(lobby.getModel(first.game).scores, [1, 0]);
+});
+
+test('finishes matches from server-owned scores for high scores', function () {
+    const lobby = createTestLobby();
+    const first = lobby.join('socket-1', { name: 'one' });
+    const second = lobby.join('socket-2', { name: 'two' });
+
+    first.game.model.readyClient(first.client);
+    first.game.model.readyClient(second.client);
+    lobby.markPlaying(first.game);
+    lobby.recordRoundResult(first.game, {
+        roundNumber: 1,
+        targetId: second.client.id,
+        winnerId: first.client.id
+    });
+
+    const result = lobby.finishMatch(first.game);
+    const model = lobby.getModel(first.game);
+
+    assert.deepEqual(result, {
+        resultId: 'G0001:2',
+        gameId: 'G0001',
+        roundNumber: 2,
+        clients: [
+            { name: 'ONE', slot: 0 },
+            { name: 'TWO', slot: 1 }
+        ],
+        scores: [1, 0]
+    });
+    assert.equal(model.matchState, 'gameOver');
+    assert.equal(model.matchResultId, 'G0001:2');
+    assert.equal(lobby.finishMatch(first.game), null);
+
+    first.game.model.resetReady();
+    lobby.refreshStatus(first.game);
+
+    assert.equal(lobby.getModel(first.game).matchState, 'idle');
+    assert.deepEqual(lobby.getModel(first.game).scores, [0, 0]);
+});
+
 test('keeps game rooms and models isolated', function () {
     const lobby = createTestLobby();
     const firstA = lobby.join('a-1', { name: 'ace' });
@@ -152,7 +226,11 @@ test('keeps game rooms and models isolated', function () {
     firstA.game.model.readyClient(firstA.client);
     firstA.game.model.readyClient(secondA.client);
     lobby.markPlaying(firstA.game);
-    firstA.game.model.advanceRound();
+    lobby.recordRoundResult(firstA.game, {
+        roundNumber: 1,
+        targetId: secondA.client.id,
+        winnerId: firstA.client.id
+    });
     lobby.updateName('a-1', 'jet');
 
     assert.notEqual(firstA.game.room, firstB.game.room);

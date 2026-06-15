@@ -5,6 +5,8 @@ import {
     resolveScenarioSource,
     type GameModelClient,
     type GameModelSnapshot,
+    type MatchState,
+    type RoundResultPayload,
     type Scenario
 } from '../../shared/contracts.js';
 
@@ -24,7 +26,10 @@ export function createGameModel() {
     let counter = 0;
     const clients: GameModelClient[] = [];
     let currentScenarioIndex = -1;
+    let matchResultId: string | null = null;
+    let matchState: MatchState = 'idle';
     let roundNumber = 0;
+    let scores = [0, 0];
 
     function getCurrentScenario(): Scenario | null {
         if (currentScenarioIndex < 0 || scenarios.length === 0) {
@@ -56,6 +61,24 @@ export function createGameModel() {
         roundNumber++;
     }
 
+    function getClientSlot(clientId: number): number {
+        return clients.findIndex(function (client) {
+            return client.id === clientId;
+        });
+    }
+
+    function resetMatch(): void {
+        matchResultId = null;
+        matchState = 'idle';
+        scores = [0, 0];
+    }
+
+    function startMatch(): void {
+        resetMatch();
+        matchState = 'playing';
+        advanceRound();
+    }
+
     return {
         getNewClient: function (): GameModelClient {
             counter++;
@@ -82,15 +105,24 @@ export function createGameModel() {
                 clients.forEach(function (remainingClient) {
                     remainingClient.ready = false;
                 });
+                resetMatch();
             }
         },
 
         getModel: function (): GameModelSnapshot {
-            return {
+            const snapshot: GameModelSnapshot = {
                 clients: clients.slice(),
                 currentScenario: getCurrentScenario(),
-                roundNumber: roundNumber
+                matchState: matchState,
+                roundNumber: roundNumber,
+                scores: scores.slice()
             };
+
+            if (matchResultId) {
+                snapshot.matchResultId = matchResultId;
+            }
+
+            return snapshot;
         },
 
         readyClient: function (client: GameModelClient): boolean {
@@ -108,7 +140,7 @@ export function createGameModel() {
             }
 
             if (!wasReadyToStart && areAllReady()) {
-                advanceRound();
+                startMatch();
             }
 
             return !!existingClient;
@@ -118,8 +150,43 @@ export function createGameModel() {
             clients.forEach(function (client) {
                 client.ready = false;
             });
+            resetMatch();
         },
 
-        advanceRound: advanceRound
+        recordRoundResult: function (result: RoundResultPayload): boolean {
+            const winnerSlot = getClientSlot(result.winnerId);
+            const targetSlot = getClientSlot(result.targetId);
+
+            if (
+                matchState !== 'playing' ||
+                clients.length < 2 ||
+                result.roundNumber !== roundNumber ||
+                winnerSlot < 0 ||
+                targetSlot < 0 ||
+                winnerSlot === targetSlot
+            ) {
+                return false;
+            }
+
+            scores[winnerSlot]++;
+            advanceRound();
+
+            return true;
+        },
+
+        finishMatch: function (resultId: string): boolean {
+            if (matchState === 'gameOver') {
+                return false;
+            }
+
+            if (matchState !== 'playing') {
+                return false;
+            }
+
+            matchResultId = resultId;
+            matchState = 'gameOver';
+
+            return true;
+        }
     };
 }

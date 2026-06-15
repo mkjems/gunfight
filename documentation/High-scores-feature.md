@@ -2,6 +2,9 @@
 
 The running server should keep a record of all the games played (to a limit) and provide a high score table on the high scores screen.
 
+High scores are recorded from the server-owned final match score, not from a
+client-submitted score payload.
+
 | place | player name | wins | kills | deaths |
 | ----- | ----------- | ---- | ----- | ------ |
 | 1ST   | LUK         | 10   | 40    | 20     |

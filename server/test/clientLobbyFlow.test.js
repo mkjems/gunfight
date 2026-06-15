@@ -73,11 +73,6 @@ function createLobbyOptions(overrides = {}) {
                 calls.push('roundIntro.clear');
             }
         },
-        scoreKeeper: {
-            resetRecordedResult() {
-                calls.push('scoreKeeper.resetRecordedResult');
-            }
-        },
         setRoundState(state) {
             calls.push(['setRoundState', state]);
         },
@@ -130,7 +125,6 @@ test('enters lobby state by clearing round activity and sync state', async funct
         'roundIntro.clear',
         'roundData.resetRoundFlags',
         ['setRoundState', 'waiting'],
-        'scoreKeeper.resetRecordedResult',
         'players.clearKeys',
         'bullets.clear',
         'syncNameEditor'

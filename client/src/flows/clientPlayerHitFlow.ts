@@ -8,6 +8,10 @@ type Player = {
     playDeathAnimation?: () => void;
 };
 
+type RoundResultModel = {
+    roundNumber?: number;
+};
+
 type Players = {
     all: Record<string, Player | undefined>;
     clearKeys: () => void;
@@ -21,23 +25,29 @@ type HandleHitOptions = {
         targetId: ClientId;
         winnerId: ClientId;
     };
+    model?: RoundResultModel | null;
     playerId: ClientId;
     players: Players;
     playPain: () => void;
     renderHud: () => void;
     resetAfterHit: () => void;
     roundData: {
-        setAdvanceRoundAfterHit: (value: boolean) => void;
         setHitMessage: (message: { targetId: ClientId; text: string }) => void;
     };
-    scoreKeeper: {
-        addPoint: (slot: number) => void;
-    };
     setRoundState: (roundState: RoundState) => void;
+    socket: {
+        emit: (
+            event: 'roundResult',
+            payload: {
+                roundNumber: number | undefined;
+                targetId: ClientId;
+                winnerId: ClientId;
+            }
+        ) => void;
+    };
     timers: {
         set: (name: 'hit', callback: () => void, delay: number) => void;
     };
-    winnerSlot: number;
 };
 
 type ResetAfterHitOptions = {
@@ -52,10 +62,6 @@ type ResetAfterHitOptions = {
     resetAmmo: () => void;
     roundData: {
         clearHitMessage: () => void;
-        consumeAdvanceRoundAfterHit?: () => boolean;
-    };
-    socket: {
-        emit: (event: 'advanceRound') => void;
     };
     startRoundRitual: (options: { resetScores: boolean }) => void;
 };
@@ -74,10 +80,14 @@ export function handleHit(options: HandleHitOptions) {
         target.playDeathAnimation();
     }
 
-    options.scoreKeeper.addPoint(options.winnerSlot);
-    options.roundData.setAdvanceRoundAfterHit(
-        options.hit.winnerId === options.playerId
-    );
+    if (options.hit.winnerId === options.playerId) {
+        options.socket.emit('roundResult', {
+            roundNumber: options.model?.roundNumber,
+            targetId: options.hit.targetId,
+            winnerId: options.hit.winnerId
+        });
+    }
+
     options.renderHud();
     options.players.clearKeys();
     options.bullets.clear();
@@ -91,10 +101,6 @@ export function resetAfterHit(options: ResetAfterHitOptions) {
     if (options.hasMatchTimeExpired()) {
         options.endGame();
         return;
-    }
-
-    if (options.roundData.consumeAdvanceRoundAfterHit?.()) {
-        options.socket.emit('advanceRound');
     }
 
     options.bullets.reset();

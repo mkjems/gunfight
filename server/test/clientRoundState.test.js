@@ -45,7 +45,7 @@ test('tracks round clock and messages', async function () {
     assert.equal(state.getRoundMessage(), '');
 });
 
-test('tracks hit state and consumes advance-round requests', async function () {
+test('tracks hit state', async function () {
     const ClientRoundState = await loadClientRoundState();
     const state = new ClientRoundState();
     const hitMessage = {
@@ -54,12 +54,8 @@ test('tracks hit state and consumes advance-round requests', async function () {
     };
 
     state.setHitMessage(hitMessage);
-    state.setAdvanceRoundAfterHit(true);
 
     assert.equal(state.getHitMessage(), hitMessage);
-    assert.equal(state.shouldAdvanceRoundAfterHit(), true);
-    assert.equal(state.consumeAdvanceRoundAfterHit(), true);
-    assert.equal(state.consumeAdvanceRoundAfterHit(), false);
 
     state.clearHitMessage();
     assert.equal(state.getHitMessage(), null);
@@ -73,14 +69,12 @@ test('resets obstacle damage only for full round resets', async function () {
     state.damageObstacle('wagon');
     state.setRoundEndsAt(2000);
     state.setHitMessage({ text: 'hit' });
-    state.setAdvanceRoundAfterHit(true);
 
     state.clearRoundPauseFlags();
 
     assert.equal(state.getObstacleDamage('wagon'), 2);
     assert.equal(state.getRoundEndsAt(), null);
     assert.equal(state.getHitMessage(), null);
-    assert.equal(state.shouldAdvanceRoundAfterHit(), false);
 
     state.resetRoundFlags();
 

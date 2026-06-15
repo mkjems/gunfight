@@ -19,20 +19,17 @@ export function ClientRoundState(options: ClientRoundStateOptions = {}) {
     let roundMessage = '';
     let hitMessage: HitMessage | null = null;
     let scenarioStartedAt: number | null = null;
-    let advanceRoundAfterHit = false;
     let obstacleDamage: Record<string, number> = {};
 
     function resetRoundFlags(): void {
         roundEndsAt = null;
         hitMessage = null;
-        advanceRoundAfterHit = false;
         obstacleDamage = {};
     }
 
     function clearRoundPauseFlags(): void {
         roundEndsAt = null;
         hitMessage = null;
-        advanceRoundAfterHit = false;
     }
 
     function getSecondsLeft(defaultSeconds: number): number {
@@ -87,22 +84,6 @@ export function ClientRoundState(options: ClientRoundStateOptions = {}) {
         return scenarioStartedAt;
     }
 
-    function setAdvanceRoundAfterHit(value: boolean): void {
-        advanceRoundAfterHit = !!value;
-    }
-
-    function shouldAdvanceRoundAfterHit(): boolean {
-        return advanceRoundAfterHit;
-    }
-
-    function consumeAdvanceRoundAfterHit(): boolean {
-        const shouldAdvance = advanceRoundAfterHit;
-
-        advanceRoundAfterHit = false;
-
-        return shouldAdvance;
-    }
-
     function clearObstacleDamage(): void {
         obstacleDamage = {};
     }
@@ -120,7 +101,6 @@ export function ClientRoundState(options: ClientRoundStateOptions = {}) {
         clearObstacleDamage,
         clearRoundPauseFlags,
         clearRoundEnd,
-        consumeAdvanceRoundAfterHit,
         damageObstacle,
         getHitMessage,
         getObstacleDamage,
@@ -130,11 +110,9 @@ export function ClientRoundState(options: ClientRoundStateOptions = {}) {
         getSecondsLeft,
         hasMatchTimeExpired,
         resetRoundFlags,
-        setAdvanceRoundAfterHit,
         setHitMessage,
         setRoundEndsAt,
         setRoundMessage,
-        shouldAdvanceRoundAfterHit,
         startScenario
     };
 }

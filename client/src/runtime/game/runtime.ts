@@ -100,6 +100,7 @@ export class ClientGameRuntime implements ClientGameController {
     private roundIntro!: RuntimeRoundIntro;
     private localReadyRequested = false;
     private playerId: ClientId | null = null;
+    private activeScenario: Scenario | null | undefined = undefined;
     private hasStarted = false;
     private lastParticleUpdatedAt: number | null = null;
 
@@ -434,8 +435,13 @@ export class ClientGameRuntime implements ClientGameController {
 
     private syncPlayers = (model: RuntimeGameModel) => {
         const previousModel = this.latestModel;
+        const shouldEnterServerGameOver =
+            model.matchState === 'gameOver' &&
+            this.roundState !== this.RoundState.WAITING &&
+            this.roundState !== this.RoundState.GAME_OVER;
 
         this.latestModel = model;
+        this.scoreKeeper.setScores(model.scores);
 
         this.dependencies.ClientModelUpdateFlow.sync({
             clearAbandonedRequeue: this.clearAbandonedRequeue,
@@ -455,6 +461,10 @@ export class ClientGameRuntime implements ClientGameController {
             syncNameEditor: this.syncNameEditor,
             syncStoredPlayerName: this.syncStoredPlayerName
         });
+
+        if (shouldEnterServerGameOver) {
+            this.endGame({ notifyServer: false });
+        }
     };
 
     private handleKeyEvent = (keyEvent: RuntimeKeyEvent) => {
@@ -537,6 +547,7 @@ export class ClientGameRuntime implements ClientGameController {
     private startRoundRitual = (options?: { resetScores?: boolean }) => {
         options = options || {};
         this.highScoresVisible = false;
+        this.activeScenario = this.latestModel?.currentScenario ?? null;
 
         this.dependencies.ClientRoundRitual.start({
             bullets: this.bullets,
@@ -615,16 +626,16 @@ export class ClientGameRuntime implements ClientGameController {
         this.dependencies.ClientPlayerHitFlow.handleHit({
             bullets: this.bullets,
             hit,
+            model: this.latestModel,
             playerId: this.playerId,
             players: this.players,
             playPain: this.gameSounds.playPain,
             renderHud: this.renderHud,
             resetAfterHit: this.resetAfterHit,
             roundData: this.roundData,
-            scoreKeeper: this.scoreKeeper,
             setRoundState: this.setRoundState,
-            timers: this.timers,
-            winnerSlot: this.getPlayerSlot(hit.winnerId)
+            socket: this.socket,
+            timers: this.timers
         });
     };
 
@@ -636,7 +647,6 @@ export class ClientGameRuntime implements ClientGameController {
             players: this.players,
             resetAmmo: this.resetAmmo,
             roundData: this.roundData,
-            socket: this.socket,
             startRoundRitual: this.startRoundRitual
         });
     };
@@ -659,7 +669,7 @@ export class ClientGameRuntime implements ClientGameController {
         });
     };
 
-    private endGame = () => {
+    private endGame = (options?: { notifyServer?: boolean }) => {
         this.dependencies.ClientRoundEndFlow.endGame({
             bullets: this.bullets,
             closeNameEditor: this.closeNameEditor,
@@ -674,7 +684,8 @@ export class ClientGameRuntime implements ClientGameController {
             setRoundMessage: this.setRoundMessage,
             setRoundState: this.setRoundState,
             socket: this.socket,
-            timers: this.timers
+            timers: this.timers,
+            notifyServer: options?.notifyServer
         });
     };
 
@@ -696,6 +707,7 @@ export class ClientGameRuntime implements ClientGameController {
 
     private resetToStartScreen = () => {
         this.clearParticles();
+        this.activeScenario = undefined;
 
         this.dependencies.ClientRoundResetFlow.resetToStartScreen({
             bullets: this.bullets,
@@ -713,13 +725,13 @@ export class ClientGameRuntime implements ClientGameController {
 
     private enterLobbyState = () => {
         this.clearParticles();
+        this.activeScenario = undefined;
 
         this.dependencies.ClientLobbyFlow.enter({
             bullets: this.bullets,
             players: this.players,
             roundData: this.roundData,
             roundIntro: this.roundIntro,
-            scoreKeeper: this.scoreKeeper,
             setRoundState: this.setRoundState,
             syncNameEditor: this.syncNameEditor,
             timers: this.timers
@@ -911,6 +923,10 @@ export class ClientGameRuntime implements ClientGameController {
     };
 
     private getCurrentScenario = () => {
+        if (this.activeScenario !== undefined) {
+            return this.activeScenario;
+        }
+
         return this.latestModel && this.latestModel.currentScenario;
     };
 

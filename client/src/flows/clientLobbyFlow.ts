@@ -14,9 +14,6 @@ type ClientLobbyFlowOptions = {
     roundIntro: {
         clear: () => void;
     };
-    scoreKeeper: {
-        resetRecordedResult: () => void;
-    };
     setRoundState: (roundState: RoundState) => void;
     socket?: {
         emit: (event: 'requeue') => void;
@@ -48,7 +45,6 @@ export function enter(options: ClientLobbyFlowOptions) {
     options.roundIntro.clear();
     options.roundData.resetRoundFlags();
     options.setRoundState(RoundState.WAITING);
-    options.scoreKeeper.resetRecordedResult();
     options.players.clearKeys();
     options.bullets.clear();
     options.syncNameEditor();

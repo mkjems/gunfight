@@ -7,6 +7,7 @@ import {
     normalizeBulletSnapshot,
     normalizeGameResultPayload,
     normalizeObstacleDamagePayload,
+    normalizeRoundResultPayload,
     parseRockDefinitions,
     parseScenarioSources,
     resolveScenarioSource,
@@ -145,6 +146,30 @@ test('normalizes obstacle damage payloads', function () {
             id: '',
             ownerId: 2,
             roundNumber: 4
+        }),
+        null
+    );
+});
+
+test('normalizes round result payloads', function () {
+    assert.deepEqual(
+        normalizeRoundResultPayload({
+            roundNumber: 4,
+            targetId: '2',
+            winnerId: '1'
+        }),
+        {
+            roundNumber: 4,
+            targetId: 2,
+            winnerId: 1
+        }
+    );
+
+    assert.equal(
+        normalizeRoundResultPayload({
+            roundNumber: 4,
+            targetId: 2,
+            winnerId: Number.POSITIVE_INFINITY
         }),
         null
     );

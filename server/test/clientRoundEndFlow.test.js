@@ -109,17 +109,6 @@ function createRoundOptions(overrides = {}) {
             }
         },
         scoreKeeper: {
-            addPoint(slot) {
-                calls.push(['scoreKeeper.addPoint', slot]);
-            },
-            createGameResult(model, getClientName) {
-                calls.push(['scoreKeeper.createGameResult', model.gameId]);
-
-                return {
-                    resultId: model.gameId + ':' + model.roundNumber,
-                    winner: getClientName(model.clients[0])
-                };
-            },
             getGameOverMessage(clients, getClientName) {
                 calls.push(['scoreKeeper.getGameOverMessage', clients.length]);
 
@@ -133,8 +122,8 @@ function createRoundOptions(overrides = {}) {
             calls.push(['setRoundState', state]);
         },
         socket: {
-            emit(event, payload) {
-                calls.push(['socket.emit', event, payload.resultId]);
+            emit(event) {
+                calls.push(['socket.emit', event]);
             }
         },
         timers: {
@@ -171,7 +160,6 @@ test('ends a round by scoring the winner and scheduling the reset', async functi
         ['setRoundState', 'roundOver'],
         'closeNameEditor',
         'roundData.clearRoundPauseFlags',
-        ['scoreKeeper.addPoint', 0],
         ['setRoundMessage', 'PLAYER 1 WINS'],
         'renderHud',
         'players.clearKeys',
@@ -204,7 +192,7 @@ test('ends a round on time without adding a point', async function () {
     ]);
 });
 
-test('ends the game by recording the result and scheduling the start reset', async function () {
+test('ends the game by notifying match expiry and scheduling the start reset', async function () {
     const flow = await loadClientRoundEndFlow();
     const { calls, options } = createRoundOptions();
 
@@ -213,8 +201,7 @@ test('ends the game by recording the result and scheduling the start reset', asy
     assert.deepEqual(plain(calls), [
         ['setRoundState', 'gameOver'],
         'closeNameEditor',
-        ['scoreKeeper.createGameResult', 'game-1'],
-        ['socket.emit', 'recordGameResult', 'game-1:3'],
+        ['socket.emit', 'matchExpired'],
         'roundData.resetRoundFlags',
         ['scoreKeeper.getGameOverMessage', 2],
         ['setRoundMessage', 'Ada WINS 3-1'],
@@ -248,23 +235,17 @@ test('ends the game with the start-screen reset callback when available', async 
     assert.deepEqual(resetCallbacks, [['reset', resetToStartScreen]]);
 });
 
-test('does not record a game result without a socket or result payload', async function () {
+test('does not notify match expiry without a socket or when disabled', async function () {
     const flow = await loadClientRoundEndFlow();
     const withoutSocket = createRoundOptions({
         socket: null
     });
     const withoutResult = createRoundOptions({
-        scoreKeeper: {
-            createGameResult() {
-                withoutResult.calls.push('scoreKeeper.createGameResult');
-
-                return null;
-            }
-        }
+        notifyServer: false
     });
 
-    assert.equal(flow.recordGameResult(withoutSocket.options), false);
-    assert.equal(flow.recordGameResult(withoutResult.options), false);
+    assert.equal(flow.notifyMatchExpired(withoutSocket.options), false);
+    assert.equal(flow.notifyMatchExpired(withoutResult.options), false);
     assert.deepEqual(withoutSocket.calls, []);
-    assert.deepEqual(withoutResult.calls, ['scoreKeeper.createGameResult']);
+    assert.deepEqual(withoutResult.calls, []);
 });

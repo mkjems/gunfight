@@ -7,6 +7,8 @@ export type GameStatus =
     | 'abandoned'
     | 'closed';
 
+export type MatchState = 'idle' | 'playing' | 'gameOver';
+
 export interface PublicClient {
     id: number;
     name: string;
@@ -21,7 +23,10 @@ export interface PublicGameModel {
     playerLimit: number;
     clients: PublicClient[];
     currentScenario: Scenario | null;
+    matchResultId?: string;
+    matchState: MatchState;
     roundNumber: number;
+    scores: number[];
 }
 
 export interface HighScoreEntry {
@@ -116,7 +121,10 @@ export interface GameModelClient {
 export interface GameModelSnapshot {
     clients: GameModelClient[];
     currentScenario: Scenario | null;
+    matchResultId?: string;
+    matchState: MatchState;
     roundNumber: number;
+    scores: number[];
 }
 
 export interface BulletSnapshot {
@@ -153,6 +161,12 @@ export interface ObstacleDamagePayload {
     id: string;
     ownerId: number;
     roundNumber: number;
+}
+
+export interface RoundResultPayload {
+    roundNumber: number;
+    targetId: number;
+    winnerId: number;
 }
 
 export interface GameResultClient {
@@ -198,6 +212,25 @@ function getFiniteNumber(record: DataRecord, key: string): number | null {
     const value = record[key];
 
     return isFiniteNumber(value) ? value : null;
+}
+
+function getFiniteNumberOrNumericString(
+    record: DataRecord,
+    key: string
+): number | null {
+    const value = record[key];
+
+    if (isFiniteNumber(value)) {
+        return value;
+    }
+
+    if (typeof value !== 'string' || value.trim() === '') {
+        return null;
+    }
+
+    const parsed = Number(value);
+
+    return isFiniteNumber(parsed) ? parsed : null;
 }
 
 function copyNumberArray(value: unknown): number[] | null {
@@ -724,6 +757,28 @@ export function normalizeObstacleDamagePayload(
         id: data.id,
         ownerId: ownerId,
         roundNumber: roundNumber
+    };
+}
+
+export function normalizeRoundResultPayload(
+    data: unknown
+): RoundResultPayload | null {
+    if (!isRecord(data)) {
+        return null;
+    }
+
+    const roundNumber = getFiniteNumber(data, 'roundNumber');
+    const targetId = getFiniteNumberOrNumericString(data, 'targetId');
+    const winnerId = getFiniteNumberOrNumericString(data, 'winnerId');
+
+    if (roundNumber === null || targetId === null || winnerId === null) {
+        return null;
+    }
+
+    return {
+        roundNumber: roundNumber,
+        targetId: targetId,
+        winnerId: winnerId
     };
 }
 

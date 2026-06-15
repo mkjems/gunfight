@@ -2,39 +2,31 @@ type ClientLike = {
     slot: number;
 };
 
-type GameModelLike = {
-    clients?: ClientLike[];
-    gameId?: string;
-    roundNumber?: number;
-};
-
-type GameResult = {
-    clients: Array<{
-        name: string;
-        slot: number;
-    }>;
-    gameId: string;
-    resultId: string;
-    roundNumber: number | undefined;
-    scores: number[];
-};
-
 export function ScoreKeeper() {
     let scores = [0, 0];
-    let lastRecordedResultId: string | null = null;
+
+    function normalizeScore(score: unknown): number {
+        const value = Number(score);
+
+        if (!Number.isFinite(value) || value < 0) {
+            return 0;
+        }
+
+        return Math.floor(value);
+    }
 
     function resetScores() {
         scores = [0, 0];
     }
 
-    function resetRecordedResult() {
-        lastRecordedResultId = null;
-    }
-
-    function addPoint(slot: number) {
-        if (slot >= 0 && slot < scores.length) {
-            scores[slot]++;
+    function setScores(nextScores: unknown) {
+        if (!Array.isArray(nextScores)) {
+            return false;
         }
+
+        scores = [normalizeScore(nextScores[0]), normalizeScore(nextScores[1])];
+
+        return true;
     }
 
     function getScores() {
@@ -79,43 +71,11 @@ export function ScoreKeeper() {
         );
     }
 
-    function createGameResult(
-        model: GameModelLike | null | undefined,
-        getClientName: (client: ClientLike) => string
-    ): GameResult | null {
-        if (!model || !model.gameId || !model.clients) {
-            return null;
-        }
-
-        const resultId = model.gameId + ':' + model.roundNumber;
-
-        if (lastRecordedResultId === resultId) {
-            return null;
-        }
-
-        lastRecordedResultId = resultId;
-
-        return {
-            resultId,
-            gameId: model.gameId,
-            roundNumber: model.roundNumber,
-            clients: model.clients.map(function (client) {
-                return {
-                    name: getClientName(client),
-                    slot: client.slot
-                };
-            }),
-            scores: getScores()
-        };
-    }
-
     return {
-        addPoint,
-        createGameResult,
         getGameOverMessage,
         getScore,
         getScores,
-        resetRecordedResult,
-        resetScores
+        resetScores,
+        setScores
     };
 }

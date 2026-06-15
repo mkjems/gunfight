@@ -359,15 +359,12 @@ test('name editor opens keyboard editing with the current name prefilled', async
     assert.deepEqual(calls, ['change', 'change', 'change']);
 });
 
-test('score keeper records scores and deduplicates game results', async function () {
+test('score keeper syncs server scores and formats game-over messages', async function () {
     const { ScoreKeeper } = await loadStateUtilities();
     const scoreKeeper = ScoreKeeper();
 
-    scoreKeeper.addPoint(0);
-    scoreKeeper.addPoint(0);
-    scoreKeeper.addPoint(1);
-
-    assert.deepEqual(scoreKeeper.getScores(), [2, 1]);
+    assert.equal(scoreKeeper.setScores([5, 3]), true);
+    assert.deepEqual(scoreKeeper.getScores(), [5, 3]);
     assert.equal(
         scoreKeeper.getGameOverMessage(
             [
@@ -378,39 +375,11 @@ test('score keeper records scores and deduplicates game results', async function
                 return client.name;
             }
         ),
-        'ACE WINS 2-1'
+        'ACE WINS 5-3'
     );
 
-    const model = {
-        clients: [
-            { slot: 0, name: 'ACE' },
-            { slot: 1, name: 'DOC' }
-        ],
-        gameId: 'G0001',
-        roundNumber: 7
-    };
-
-    assert.deepEqual(
-        scoreKeeper.createGameResult(model, function (client) {
-            return client.name;
-        }),
-        {
-            clients: [
-                { name: 'ACE', slot: 0 },
-                { name: 'DOC', slot: 1 }
-            ],
-            gameId: 'G0001',
-            resultId: 'G0001:7',
-            roundNumber: 7,
-            scores: [2, 1]
-        }
-    );
-    assert.equal(
-        scoreKeeper.createGameResult(model, function (client) {
-            return client.name;
-        }),
-        null
-    );
+    scoreKeeper.resetScores();
+    assert.deepEqual(scoreKeeper.getScores(), [0, 0]);
 });
 
 test('round intro walks players from spawn edge to their slots', async function () {

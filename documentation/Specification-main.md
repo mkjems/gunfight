@@ -154,7 +154,8 @@ Each match lasts 70 seconds total. The timer starts when the first duel begins a
 3. The screen shows `GET READY` at the center of the screen.
 4. The screen shows `DRAW !` at the center of the screen.
 5. The duel begins.
-6. A hit pauses the game, awards one point, reloads both players, and starts the next duel.
+6. A hit pauses the game. The winning client reports the hit, the server awards
+   one point, both players reload, and the next duel starts.
 7. When the match timer ends, the game shows `GAME OVER` with the winning player name or `TIE` and the final score, keeps it visible briefly, and returns to the lobby.
 
 ### Gameplay rules
@@ -200,7 +201,9 @@ Expected columns:
 - kills
 - deaths
 
-Scores are stored in server memory. They survive while the server process is running and are lost on restart.
+Scores are recorded from the server-owned final match score and stored in
+server memory. They survive while the server process is running and are lost on
+restart.
 
 ## Authoring tools
 
@@ -265,7 +268,9 @@ Server responsibilities:
   waiting players
 - store player names and ready state
 - choose the current scenario
-- relay input, position, obstacle damage, and round events inside each room
+- accept current-round results, keep match score, and record high scores from
+  the server-owned final score
+- relay input, position, and obstacle damage inside each room
 - mark games as waiting, readying, playing, abandoned, or closed
 
 Client responsibilities:
@@ -275,7 +280,8 @@ Client responsibilities:
 - apply remote input when received
 - run the local game loop
 - move players and bullets by elapsed time
-- detect hits and obstacle damage
+- detect hits and report round results
+- detect obstacle damage
 - draw HUD, lobby, and name editor state
 
 ## PWA and mobile behavior

@@ -69,6 +69,9 @@ test('handles player hits by entering hit pause and scheduling reset', async fun
             targetId: 'p2',
             winnerId: 'p1'
         },
+        model: {
+            roundNumber: 4
+        },
         playerId: 'p1',
         players: {
             all: {
@@ -90,27 +93,29 @@ test('handles player hits by entering hit pause and scheduling reset', async fun
         },
         resetAfterHit() {},
         roundData: {
-            setAdvanceRoundAfterHit(value) {
-                calls.push(['roundData.setAdvanceRoundAfterHit', value]);
-            },
             setHitMessage(message) {
                 calls.push(['roundData.setHitMessage', message]);
-            }
-        },
-        scoreKeeper: {
-            addPoint(slot) {
-                calls.push(['scoreKeeper.addPoint', slot]);
             }
         },
         setRoundState(state) {
             calls.push(['setRoundState', state]);
         },
+        socket: {
+            emit(event, payload) {
+                calls.push([
+                    'socket.emit',
+                    event,
+                    payload.roundNumber,
+                    payload.winnerId,
+                    payload.targetId
+                ]);
+            }
+        },
         timers: {
             set(name, callback, delay) {
                 calls.push(['timers.set', name, typeof callback, delay]);
             }
-        },
-        winnerSlot: 0
+        }
     });
 
     assert.deepEqual(plain(calls), [
@@ -124,8 +129,7 @@ test('handles player hits by entering hit pause and scheduling reset', async fun
         ],
         'playPain',
         'target.playDeathAnimation',
-        ['scoreKeeper.addPoint', 0],
-        ['roundData.setAdvanceRoundAfterHit', true],
+        ['socket.emit', 'roundResult', 4, 'p1', 'p2'],
         'renderHud',
         'players.clearKeys',
         'bullets.clear',
@@ -133,7 +137,7 @@ test('handles player hits by entering hit pause and scheduling reset', async fun
     ]);
 });
 
-test('resets after hit and emits advance-round when local player won', async function () {
+test('resets after hit and starts the next ritual', async function () {
     const flow = await loadClientPlayerHitFlow();
     const calls = [];
 
@@ -164,14 +168,6 @@ test('resets after hit and emits advance-round when local player won', async fun
         roundData: {
             clearHitMessage() {
                 calls.push('roundData.clearHitMessage');
-            },
-            consumeAdvanceRoundAfterHit() {
-                return true;
-            }
-        },
-        socket: {
-            emit(event) {
-                calls.push(['socket.emit', event]);
             }
         },
         startRoundRitual(options) {
@@ -182,7 +178,6 @@ test('resets after hit and emits advance-round when local player won', async fun
     assert.deepEqual(calls, [
         'roundData.clearHitMessage',
         'p1.clearDeathAnimation',
-        ['socket.emit', 'advanceRound'],
         'bullets.reset',
         'resetAmmo',
         ['startRoundRitual', false]
@@ -225,11 +220,6 @@ test('resets after remote hit without advancing the round locally', async functi
         roundData: {
             clearHitMessage() {
                 calls.push('roundData.clearHitMessage');
-            },
-            consumeAdvanceRoundAfterHit() {
-                calls.push('roundData.consumeAdvanceRoundAfterHit');
-
-                return false;
             }
         },
         socket: {
@@ -246,7 +236,6 @@ test('resets after remote hit without advancing the round locally', async functi
         'roundData.clearHitMessage',
         'p1.clearDeathAnimation',
         'p2.clearDeathAnimation',
-        'roundData.consumeAdvanceRoundAfterHit',
         'bullets.reset',
         'resetAmmo',
         ['startRoundRitual', false]

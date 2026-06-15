@@ -73,12 +73,29 @@ export function parseGameModel(data: unknown): RuntimeGameModel | null {
         model.message = data.message;
     }
 
+    if (typeof data.matchResultId === 'string') {
+        model.matchResultId = data.matchResultId;
+    }
+
+    if (typeof data.matchState === 'string') {
+        model.matchState = data.matchState;
+    }
+
     if (isFiniteNumber(data.playerLimit)) {
         model.playerLimit = data.playerLimit;
     }
 
     if (isFiniteNumber(data.roundNumber)) {
         model.roundNumber = data.roundNumber;
+    }
+
+    if (
+        Array.isArray(data.scores) &&
+        data.scores.every(function (score) {
+            return isFiniteNumber(score);
+        })
+    ) {
+        model.scores = data.scores.slice();
     }
 
     if (typeof data.status === 'string') {

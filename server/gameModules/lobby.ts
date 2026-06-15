@@ -1,9 +1,11 @@
 import { createGameModel } from './gfmodel.js';
 import type {
     GameModelClient,
+    GameResultPayload,
     GameStatus,
     PublicClient,
-    PublicGameModel
+    PublicGameModel,
+    RoundResultPayload
 } from '../../shared/contracts.js';
 
 const MAX_PLAYERS_PER_GAME = 2;
@@ -351,6 +353,51 @@ export function createLobby(options: LobbyOptions = {}) {
         game.updatedAt = now();
     }
 
+    function recordRoundResult(
+        game: GameSession,
+        result: RoundResultPayload
+    ): boolean {
+        const accepted = game.model.recordRoundResult(result);
+
+        if (accepted) {
+            game.updatedAt = now();
+        }
+
+        return accepted;
+    }
+
+    function createGameResult(
+        game: GameSession,
+        resultId: string
+    ): GameResultPayload {
+        const model = getModel(game);
+
+        return {
+            resultId: resultId,
+            gameId: game.id,
+            roundNumber: model.roundNumber,
+            clients: model.clients.map(function (client) {
+                return {
+                    name: client.name,
+                    slot: client.slot
+                };
+            }),
+            scores: model.scores.slice()
+        };
+    }
+
+    function finishMatch(game: GameSession): GameResultPayload | null {
+        const resultId = game.id + ':' + game.model.getModel().roundNumber;
+
+        if (!game.model.finishMatch(resultId)) {
+            return null;
+        }
+
+        game.updatedAt = now();
+
+        return createGameResult(game, resultId);
+    }
+
     function getModel(game: GameSession): PublicGameModel {
         const model = game.model.getModel();
 
@@ -378,6 +425,8 @@ export function createLobby(options: LobbyOptions = {}) {
         join: join,
         leave: leave,
         markPlaying: markPlaying,
+        finishMatch: finishMatch,
+        recordRoundResult: recordRoundResult,
         refreshStatus: refreshStatus,
         requeue: requeue,
         updateName: updateName
