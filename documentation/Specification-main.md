@@ -85,7 +85,8 @@ The lobby does not rotate automatically to high scores. High scores are opened o
 - `READY`: player has chosen to play.
 - `OPPONENT LEFT`: matched opponent disconnected.
 
-When both connected players are ready, the game starts.
+When both connected players are ready, the server enters the ready countdown
+and then starts the match.
 
 When the local player has pressed `P` and entered `READY`, the lobby does not show edit-name, high-score, or play navigation. Pressing `E`, `S`, or `P` does not navigate away from the ready lobby state. Navigation becomes available again only after the local player returns to `WAITING`.
 
@@ -166,6 +167,11 @@ the player with the highest score when the timer reaches zero.
 9. When the server match timer ends, the game shows `GAME OVER` with the
    winning player name or `TIE` and the final score. The server keeps it
    visible briefly, then returns both players to the lobby.
+
+The browser follows server lifecycle updates for ready countdown, round intro,
+hit pause, game over, and return to lobby. The browser does not locally start
+rounds, expire matches, advance after hit pause, or reset the lobby lifecycle;
+it only presents those phases and sends player intents or reports.
 
 ### Gameplay rules
 

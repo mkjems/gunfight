@@ -182,15 +182,15 @@
           gameplay reports.
     - [x] Decide whether reconnect should restore a player to an active game or
           always create a new lobby session; document the rule before coding it.
-- [ ] Add focused server coverage.
-    - [ ] Test legal and illegal transitions for every phase.
+- [x] Add focused server coverage.
+    - [x] Test legal and illegal transitions for every phase.
     - [x] Test stale timer protection by version and phase.
     - [x] Test every accepted slow-state event increments `version`.
     - [x] Test rejected stale events leave `version` and public state unchanged.
     - [x] Test game-over expiry resets ready/lobby state from the server.
     - [x] Test disconnect, abandon, requeue, and auto-pairing in each relevant
           phase.
-- [ ] Add focused client coverage.
+- [x] Add focused client coverage.
     - [x] Test that ready flags alone never start gameplay.
     - [x] Test that only server `roundIntro` starts the round ritual.
     - [x] Test that local presentation timers cannot advance lifecycle after
@@ -199,7 +199,7 @@
     - [x] Test that stale model versions are ignored and fresh same-phase
           versions update names, scores, and public metadata.
 - [ ] Add browser smoke coverage.
-    - [ ] Two clients can join, edit names, ready up, see ready countdown, and
+    - [x] Two clients can join, edit names, ready up, see ready countdown, and
           enter gameplay.
     - [ ] A hit shows hit presentation until the server `hitPause` phase ends.
     - [ ] Scores stay stable across round starts and game over.
@@ -209,7 +209,7 @@
     - [x] Update `Connection-state-model.md` with the final P8 lifecycle rules.
     - [x] Update `State-ownership.md` with the stricter server-control/client-
           presentation boundary.
-    - [ ] Update `Specification-main.md` for ready countdown, hit pause,
+    - [x] Update `Specification-main.md` for ready countdown, hit pause,
           game-over, and return-to-lobby timing.
     - [ ] Move completed P8 planning notes to the completed-plans graveyard only
           when the implementation is done and verified.

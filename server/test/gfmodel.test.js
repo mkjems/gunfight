@@ -52,6 +52,23 @@ test('documents legal lifecycle phase transitions', function () {
     assert.equal(canTransitionPhase('closed', 'waiting'), false);
 });
 
+test('covers legal and illegal lifecycle transitions for every phase', function () {
+    const phases =
+        /** @type {Array<import('../../shared/contracts.js').GamePhase>} */ (
+            Object.keys(LEGAL_PHASE_TRANSITIONS)
+        );
+
+    phases.forEach(function (fromPhase) {
+        phases.forEach(function (toPhase) {
+            assert.equal(
+                canTransitionPhase(fromPhase, toPhase),
+                LEGAL_PHASE_TRANSITIONS[fromPhase].includes(toPhase),
+                fromPhase + ' -> ' + toPhase
+            );
+        });
+    });
+});
+
 test('rejects lifecycle commands that are illegal for the current phase', function () {
     const { model } = createManualModel();
     const firstClient = model.getNewClient();

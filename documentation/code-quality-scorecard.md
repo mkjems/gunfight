@@ -21,7 +21,7 @@ Status labels:
 | Formatting            | Good   | Prettier covers package/config files, scripts, server, shared, client, docs.    |
 | Linting               | Good   | ESLint catches accidental globals and unsafe equality in JS/client code.        |
 | Type checking         | Good   | Shared and client TypeScript are strict; server JS is checked less strictly.    |
-| Node tests            | Good   | 225 Node tests cover core behavior and pure modules.                            |
+| Node tests            | Good   | 226 Node tests cover core behavior and pure modules.                            |
 | Browser smoke tests   | Good   | 10 Playwright smoke tests cover app startup, mobile lobby, and two-client play. |
 | Source escape hatches | Good   | No `any`, `@ts-ignore`, `@ts-expect-error`, `TODO`, or `FIXME` in source.       |
 
@@ -111,7 +111,7 @@ Current test shape:
 
 - 59 Node test files.
 - 3 Playwright browser smoke spec files.
-- 225 Node tests passing.
+- 226 Node tests passing.
 - 10 browser smoke tests passing.
 
 Behavior areas with good coverage:

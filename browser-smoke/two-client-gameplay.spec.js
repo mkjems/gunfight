@@ -105,6 +105,31 @@ async function captureMobileScreenshot(page, testInfo, fileName) {
     });
 }
 
+async function selectNameEditorKey(page, value) {
+    await page
+        .locator('#nameEditorGrid')
+        .getByRole('button', {
+            exact: true,
+            name: value
+        })
+        .click();
+}
+
+async function replaceName(page, name) {
+    await expect(page.locator('#nameEditor')).toBeVisible();
+
+    for (let i = 0; i < 8; i++) {
+        await selectNameEditorKey(page, 'DEL');
+    }
+
+    for (const character of name) {
+        await selectNameEditorKey(page, character);
+    }
+
+    await selectNameEditorKey(page, 'OK');
+    await expect(page.locator('#nameEditor')).toBeHidden();
+}
+
 async function expectMobileAmmoInViewport(page) {
     const box = await page.locator('#ammoRow').boundingBox();
     const viewport = page.viewportSize();
@@ -242,6 +267,18 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
     ]);
     await captureMobileScreenshot(mobile, testInfo, 'mobile-01-lobby.png');
 
+    await desktop.keyboard.press('e');
+    await replaceName(desktop, 'ACE');
+    await mobile.locator('#touchEditButton').click();
+    await replaceName(mobile, 'REX');
+
+    await Promise.all([
+        expect(desktop.locator('#lobbyPlayerLabels')).toContainText('ACE'),
+        expect(desktop.locator('#lobbyPlayerLabels')).toContainText('REX'),
+        expect(mobile.locator('#lobbyPlayerLabels')).toContainText('ACE'),
+        expect(mobile.locator('#lobbyPlayerLabels')).toContainText('REX')
+    ]);
+
     await desktop.keyboard.press('p');
     await mobile.locator('#touchPlayButton').click();
 
@@ -267,16 +304,16 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
         expect(desktop.locator('#scoreRow')).toBeVisible(),
         expect(desktop.locator('#scoreLeft .scoreValue')).toHaveText('0'),
         expect(desktop.locator('#scoreRight .scoreValue')).toHaveText('0'),
-        expect(desktop.locator('#scoreLeft .scoreName')).not.toHaveText(''),
-        expect(desktop.locator('#scoreRight .scoreName')).not.toHaveText(''),
+        expect(desktop.locator('#scoreLeft .scoreName')).toHaveText('ACE'),
+        expect(desktop.locator('#scoreRight .scoreName')).toHaveText('REX'),
         expect(desktop.locator('#ammoLeft .ammoRound')).toHaveCount(6),
         expect(desktop.locator('#ammoRight .ammoRound')).toHaveCount(6),
         expect(mobile.locator('#gameHud')).toBeVisible(),
         expect(mobile.locator('#scoreRow')).toBeVisible(),
         expect(mobile.locator('#scoreLeft .scoreValue')).toHaveText('0'),
         expect(mobile.locator('#scoreRight .scoreValue')).toHaveText('0'),
-        expect(mobile.locator('#scoreLeft .scoreName')).not.toHaveText(''),
-        expect(mobile.locator('#scoreRight .scoreName')).not.toHaveText(''),
+        expect(mobile.locator('#scoreLeft .scoreName')).toHaveText('ACE'),
+        expect(mobile.locator('#scoreRight .scoreName')).toHaveText('REX'),
         expect(mobile.locator('#ammoRow')).toBeVisible(),
         expect(mobile.locator('#ammoLeft .ammoRound')).toHaveCount(6),
         expect(mobile.locator('#ammoRight .ammoRound')).toHaveCount(6),
