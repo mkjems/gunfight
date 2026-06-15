@@ -58,6 +58,137 @@
     - [x] Update `State-ownership.md` to describe slow server authority and fast client authority.
     - [x] Update `Specification-main.md` for ready countdown, match clock, hit pause, and game-over behavior.
 
+### P8 - Concentrate all control-logic, outside off gameplay itself, on the server side. Make client about presentation-logic and real time game play.
+
+- [ ] Define the target ownership boundary.
+    - [ ] Server owns all slow/control state: connection, pairing, names, ready
+          flags, ready countdown, lobby-to-game transition, scenario selection,
+          round number, phase changes, score, match clock, hit pause, game over,
+          high-score recording, abandonment, requeue, and return-to-lobby timing.
+    - [ ] Client owns fast real-time gameplay: input feel, movement, aiming,
+          bullets, collision, local hit detection, camera, particles, sounds,
+          touch controls, and rendering.
+    - [ ] Client owns presentation of server phases: lobby UI, `GET READY`,
+          `DRAW!`, intro walking, hit text, death animation, game-over display,
+          and HUD rendering.
+    - [ ] Client events that mutate slow state are intent/report events only;
+          the server decides whether the intent is accepted and what the next
+          public model is.
+    - [ ] Every accepted server-side public model change increments `version`.
+- [ ] Audit all current lifecycle/control decisions.
+    - [ ] List every client place that starts, ends, resets, or advances a game
+          phase: `ClientModelUpdateFlow`, `ClientRoundRitual`,
+          `ClientPlayerHitFlow`, `ClientRoundResetFlow`, `ClientRoundEndFlow`,
+          `ClientMatchTimer`, `ClientScreens`, and runtime helpers.
+    - [ ] Classify each decision as server-control, client-presentation, or
+          real-time gameplay.
+    - [ ] List every server socket event that mutates lifecycle state:
+          `clientReady`, `roundResult`, `matchExpired`, `resetReady`, `requeue`,
+          `leaveGame`, `joinLobby`, and `updateName`.
+    - [ ] Identify compatibility paths that still exist only for the old client
+          lifecycle model.
+- [ ] Harden `gfmodel` as the one lifecycle state machine.
+    - [ ] Write the legal transition table for `waiting`, `readying`,
+          `readyCountdown`, `roundIntro`, `playing`, `hitPause`, `gameOver`,
+          `abandoned`, and `closed`.
+    - [ ] Route all phase changes through a small set of command methods with
+          transition guards.
+    - [ ] Keep `phaseStartedAt`, optional `phaseEndsAt`, optional `matchEndsAt`,
+          and `version` updated by the same transition path.
+    - [ ] Add a clear server-owned return path from `gameOver` back to
+          `readying` or `waiting`; do not require the client to decide when the
+          match is reset.
+    - [ ] Make name changes, ready changes, disconnects, requeues, accepted hit
+          reports, match expiry, and high-score recording all produce versioned
+          model updates when they affect public state.
+- [ ] Centralize server timers.
+    - [ ] Keep one server scheduler responsible for `phaseEndsAt`.
+    - [ ] Schedule and validate timed transitions for `readyCountdown`,
+          `roundIntro`, `playing`, `hitPause`, and `gameOver`.
+    - [ ] Ensure stale timers cannot advance a game after a newer phase or
+          version has replaced them.
+    - [ ] Clear timers when a game becomes `abandoned` or `closed`.
+- [ ] Make the public model sufficient for clients to follow without deciding.
+    - [ ] Confirm the client can render every non-gameplay phase from
+          `phase`, `version`, `phaseStartedAt`, `phaseEndsAt`, `matchEndsAt`,
+          `roundNumber`, `scores`, `clients`, and `currentScenario`.
+    - [ ] Add any missing neutral timing/state fields needed for presentation;
+          avoid adding UI text decisions to the server unless they are true game
+          state.
+    - [ ] Remove the compatibility `status` field after all client code follows
+          `phase`.
+    - [ ] Document which model fields are authoritative and which are
+          presentation hints.
+- [ ] Convert the client into a lifecycle follower.
+    - [ ] Make `ClientModelUpdateFlow` the only client entry point that reacts
+          to authoritative phase changes.
+    - [ ] Remove any client path that starts a round from ready flags, local
+          timeout, local score state, or local match expiry.
+    - [ ] Remove client-owned `matchExpired` authority; keep any remaining event
+          only as a temporary compatibility request until deleted.
+    - [ ] Remove client-owned `resetReady`/return-to-lobby authority once the
+          server owns `gameOver` expiry and lobby reset.
+    - [ ] Keep client timers only for presentation inside the current server
+          phase: animation beats, text timing, effects, sounds, and local HUD
+          refresh.
+    - [ ] Make duplicate or stale model updates no-ops by `version`.
+    - [ ] Make out-of-order presentation timers check the latest server phase
+          before applying visible state.
+- [ ] Preserve responsive real-time gameplay on the client.
+    - [ ] Keep movement, aiming, shooting, bullets, collision, obstacle damage,
+          hit detection, ammo presentation, particles, camera, and sound local.
+    - [ ] Keep `roundResult` as a client-originated hit report for now.
+    - [ ] Keep server validation limited to current phase, current round,
+          connected clients, reporting socket ownership, and duplicate
+          prevention.
+    - [ ] Do not add server-side bullet simulation, rollback, or authoritative
+          movement in P8.
+- [ ] Simplify socket event contracts.
+    - [ ] Separate client intent/report events from authoritative server
+          `modelUpdate` events in documentation and tests.
+    - [ ] Ensure each accepted intent emits exactly one fresh public model or a
+          clearly documented no-op.
+    - [ ] Ensure rejected or stale intents do not mutate the public model.
+    - [ ] Remove legacy socket events once no client code depends on them.
+- [ ] Strengthen disconnect, requeue, and reconnect behavior.
+    - [ ] Define server behavior for disconnect in every phase.
+    - [ ] Ensure automatic pairing only uses safe one-player `waiting` games.
+    - [ ] Ensure abandoned games publish one final model and do not accept late
+          gameplay reports.
+    - [ ] Decide whether reconnect should restore a player to an active game or
+          always create a new lobby session; document the rule before coding it.
+- [ ] Add focused server coverage.
+    - [ ] Test legal and illegal transitions for every phase.
+    - [ ] Test stale timer protection by version and phase.
+    - [ ] Test every accepted slow-state event increments `version`.
+    - [ ] Test rejected stale events leave `version` and public state unchanged.
+    - [ ] Test game-over expiry resets ready/lobby state from the server.
+    - [ ] Test disconnect, abandon, requeue, and auto-pairing in each relevant
+          phase.
+- [ ] Add focused client coverage.
+    - [ ] Test that ready flags alone never start gameplay.
+    - [ ] Test that only server `roundIntro` starts the round ritual.
+    - [ ] Test that local presentation timers cannot advance lifecycle after
+          the server phase changed.
+    - [ ] Test that game over and return-to-lobby follow server model updates.
+    - [ ] Test that stale model versions are ignored and fresh same-phase
+          versions update names, scores, and public metadata.
+- [ ] Add browser smoke coverage.
+    - [ ] Two clients can join, edit names, ready up, see ready countdown, and
+          enter gameplay.
+    - [ ] A hit shows hit presentation until the server `hitPause` phase ends.
+    - [ ] Scores stay stable across round starts and game over.
+    - [ ] Game over returns to the lobby from server-controlled timing.
+    - [ ] An abandoned game requeues safely without accepting late reports.
+- [ ] Update documentation after implementation.
+    - [ ] Update `Connection-state-model.md` with the final P8 lifecycle rules.
+    - [ ] Update `State-ownership.md` with the stricter server-control/client-
+          presentation boundary.
+    - [ ] Update `Specification-main.md` for ready countdown, hit pause,
+          game-over, and return-to-lobby timing.
+    - [ ] Move completed P8 planning notes to the completed-plans graveyard only
+          when the implementation is done and verified.
+
 ## Ideas
 
 - [ ] In lobby screen add particle burst to gun, but fire no bullet.
