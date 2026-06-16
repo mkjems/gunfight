@@ -60,6 +60,36 @@
 - [x] Fix or document any low-noise rule findings from the first TypeScript
       lint run.
 
+## P10.7 - Experiment with ESLint rules
+
+- [ ] Add candidate architecture-boundary rules in a trial branch or isolated
+      commit.
+    - [ ] `shared/**` must not import client or server modules.
+    - [ ] client modules must not import server modules.
+    - [ ] view models and state modules must stay free of DOM, socket, timer,
+          canvas, runtime, and platform side effects.
+- [ ] Add candidate TypeScript escape-hatch rules.
+    - [ ] Reject `any`, TypeScript suppression comments, and non-null
+          assertions unless a specific exception is documented.
+    - [ ] Prefer explicit type-only imports where they improve readability.
+- [ ] Trial type-aware TypeScript ESLint rules separately from normal lint.
+    - [ ] Start with promise and async safety rules such as floating promises,
+          misused promises, and awaiting non-promises.
+    - [ ] Consider switch exhaustiveness only where it fits the project's
+          const-map state style.
+    - [ ] Keep type-aware rules only if the added lint time and findings are
+          worthwhile.
+- [ ] Trial human-readability smell rules as warnings first.
+    - [ ] Review complexity, nesting depth, and parameter-count warnings by
+          reading the affected code, not by blindly satisfying numbers.
+    - [ ] Consider restricted syntax for focused tests and TypeScript enums if
+          those patterns become real risks.
+- [ ] Decide which rules to keep.
+    - [ ] Keep rules that catch real unwanted patterns with low noise.
+    - [ ] Drop rules that mostly create churn, style fights, or less readable
+          code.
+    - [ ] Document kept rules and rejected rules in the code quality scorecard.
+
 ## P11 Mobile lobby screen improvements
 
 - [ ]On mobile, in the lobby. Ad some vertical space between the 'Play gunfight' button and the other two buttons.
