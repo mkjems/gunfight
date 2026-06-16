@@ -1,0 +1,17 @@
+.row[hidden] {
+    display: none;
+}
+
+.primary {
+    margin-bottom: 25px;
+}
+
+.secondary {
+    display: flex;
+    flex-direction: row;
+    gap: clamp(8px, 2.4cqw, 18px);
+}
+
+.secondary button {
+    width: 100%;
+}

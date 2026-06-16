@@ -95,6 +95,21 @@ state, gameplay state, player identity, round state, network state, touch input
 state, and name editor value state must stay in the existing client state
 modules.
 
+### Component styles may use CSS Modules
+
+Product components may move local presentation classes into adjacent
+`*.module.css` files and import them as a `styles` object. CSS Modules are for
+component-owned styling such as internal rows, labels, alignment, and spacing.
+
+Global CSS remains the right home for app foundations and cross-layer layout:
+font faces, CSS variables, reset/body rules, `#gameStage`, canvas layers,
+install and rotate prompts, fixed DOM ids, and selectors shared by several
+screens or imperative flows.
+
+Tests should not select elements by CSS Module class names because those names
+are build-generated. Keep stable ids or semantic queries for elements that tests,
+accessibility, or cross-layer code need to address.
+
 ## Data Flow
 
 The preferred flow is:

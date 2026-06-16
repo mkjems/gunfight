@@ -680,20 +680,6 @@ h2 {
     display: none;
 }
 
-.touchLobbyRow[hidden] {
-    display: none;
-}
-
-.touchLobbyRow.is-secondary {
-    display: flex;
-    flex-direction: row;
-    gap: clamp(8px, 2.4cqw, 18px);
-}
-
-.touchLobbyRow.is-secondary button {
-    width: 100%;
-}
-
 #touchControls button[hidden],
 #touchLobbyControls button[hidden] {
     display: none;
@@ -707,10 +693,6 @@ h2 {
     min-width: 0;
     padding: 0 0.65em;
     white-space: nowrap;
-}
-
-#touchPlayButton {
-    margin-bottom: 25px;
 }
 
 #touchJoystick {

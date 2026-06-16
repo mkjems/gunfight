@@ -13,9 +13,8 @@ import ts from 'typescript';
 import { Window } from 'happy-dom';
 
 function compileClientModule(sourceName, outputName, tempDirectory) {
-    const source = readFileSync(
-        path.join(process.cwd(), 'client/src', sourceName),
-        'utf8'
+    const source = stubCssModuleImports(
+        readFileSync(path.join(process.cwd(), 'client/src', sourceName), 'utf8')
     );
     const transpiled = ts.transpileModule(source, {
         compilerOptions: {
@@ -31,6 +30,13 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
 
     mkdirSync(path.dirname(outputPath), { recursive: true });
     writeFileSync(outputPath, transpiled.outputText, 'utf8');
+}
+
+function stubCssModuleImports(source) {
+    return source.replace(
+        "import styles from './touchLobbyControlsComponentScreen.module.css';",
+        "const styles = { row: 'row', primary: 'primary', secondary: 'secondary' };"
+    );
 }
 
 async function loadClientUi() {

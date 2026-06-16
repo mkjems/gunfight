@@ -13,9 +13,8 @@ import ts from 'typescript';
 import { Window } from 'happy-dom';
 
 function compileClientModule(sourceName, outputName, tempDirectory) {
-    const source = readFileSync(
-        path.join(process.cwd(), 'client/src', sourceName),
-        'utf8'
+    const source = stubCssModuleImports(
+        readFileSync(path.join(process.cwd(), 'client/src', sourceName), 'utf8')
     );
     const transpiled = ts.transpileModule(source, {
         compilerOptions: {
@@ -31,6 +30,13 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
 
     mkdirSync(path.dirname(outputPath), { recursive: true });
     writeFileSync(outputPath, transpiled.outputText, 'utf8');
+}
+
+function stubCssModuleImports(source) {
+    return source.replace(
+        "import styles from './touchLobbyControlsComponentScreen.module.css';",
+        "const styles = { row: 'row', primary: 'primary', secondary: 'secondary' };"
+    );
 }
 
 async function loadClientApp() {
@@ -537,9 +543,9 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
 
     assert.equal(query(root, '#touchLobbyControls').hidden, false);
 
-    const primaryRow = query(root, '.touchLobbyRow.is-primary');
-    const secondaryRow = query(root, '.touchLobbyRow.is-secondary');
-    const backRow = query(root, '.touchLobbyRow.is-back');
+    const primaryRow = query(root, '#touchLobbyPrimaryRow');
+    const secondaryRow = query(root, '#touchLobbySecondaryRow');
+    const backRow = query(root, '#touchLobbyBackRow');
     const editButton = query(root, '#touchEditButton');
     const highScoresButton = query(root, '#touchHighScoresButton');
     const playButton = query(root, '#touchPlayButton');
@@ -584,8 +590,8 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
         }
     });
 
-    assert.equal(query(root, '.touchLobbyRow.is-primary').hidden, true);
-    assert.equal(query(root, '.touchLobbyRow.is-secondary').hidden, false);
+    assert.equal(query(root, '#touchLobbyPrimaryRow').hidden, true);
+    assert.equal(query(root, '#touchLobbySecondaryRow').hidden, false);
     assert.equal(query(root, '#touchEditButton').hidden, false);
     assert.equal(query(root, '#touchHighScoresButton').hidden, false);
     assert.equal(query(root, '#touchPlayButton').hidden, true);
@@ -602,9 +608,9 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
     });
 
     assert.equal(query(root, '#touchLobbyControls').hidden, false);
-    assert.equal(query(root, '.touchLobbyRow.is-primary').hidden, true);
-    assert.equal(query(root, '.touchLobbyRow.is-secondary').hidden, true);
-    assert.equal(query(root, '.touchLobbyRow.is-back').hidden, false);
+    assert.equal(query(root, '#touchLobbyPrimaryRow').hidden, true);
+    assert.equal(query(root, '#touchLobbySecondaryRow').hidden, true);
+    assert.equal(query(root, '#touchLobbyBackRow').hidden, false);
     assert.equal(query(root, '#touchEditButton').hidden, true);
     assert.equal(query(root, '#touchHighScoresButton').hidden, true);
     assert.equal(query(root, '#touchPlayButton').hidden, true);

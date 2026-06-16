@@ -117,18 +117,33 @@
 ## P15 - Improve the CSS - start using CSS Modules in the product
 
 - [ ] Introduce CSS Modules for product UI components, not as a full CSS rewrite.
-    - [ ] Keep global CSS for app-wide foundations: font faces, CSS variables,
+    - [x] Keep global CSS for app-wide foundations: font faces, CSS variables,
           reset/body rules, `#gameStage`, canvas layers, install/rotate prompts,
           and any selectors that intentionally target fixed DOM ids.
-    - [ ] Start with one small product component as the pilot, preferably a
+    - [x] Start with one small product component as the pilot, preferably a
           Preact-only surface such as touch lobby controls or high scores.
-    - [ ] Add a `*.module.css` file next to that component and import it from the
+    - [x] Add a `*.module.css` file next to that component and import it from the
           component.
-    - [ ] Keep ids only where tests, accessibility, or cross-layer lookup depend
+    - [x] Keep ids only where tests, accessibility, or cross-layer lookup depend
           on them; move purely presentational classes into the module.
-    - [ ] Add or keep TypeScript support for `*.module.css` imports if the
+    - [x] Add or keep TypeScript support for `*.module.css` imports if the
           current build needs a declaration file.
 - [ ] Migrate product styles incrementally by ownership area.
+    - [x] Move touch lobby controls row styling as the first CSS Modules pilot.
+- [ ] Move component tests that import CSS Modules onto a Vite-aware path.
+    - [ ] Decide between Vitest for component/UI tests or a shared Vite SSR
+          loader used from `node:test`.
+    - [ ] Prefer Vitest if it can run the Preact component tests with low setup
+          cost and without weakening the existing Node test workflow.
+    - [ ] Keep `node:test` for server/domain tests that do not need Vite asset,
+          TSX, or CSS transforms.
+    - [ ] Replace per-test `stubCssModuleImports` helpers with the Vite-aware
+          loader/test runner.
+    - [ ] Prove the new path on `clientComponentScreens` and `clientHudOverlay`
+          before migrating more component styles.
+    - [ ] Update `package.json` scripts so normal checks run the Vite/Vitest UI
+          tests together with the existing Node tests.
+    - [ ] Document the chosen test boundary in `UI-ownership.md`.
     - [ ] Move isolated component styles first: touch lobby controls, high
           scores, name editor, ammo display, and score rows.
     - [ ] Leave layout styles that coordinate several layers in global CSS until
@@ -144,10 +159,10 @@
     - [ ] Consider CSS Modules for a tool only when actively changing that tool
           and when local scoping clearly makes the editor code easier to work
           with.
-- [ ] Document the kept pattern after the first successful migration.
-    - [ ] Naming convention for module files and imported `styles` objects.
-    - [ ] What remains global and why.
-    - [ ] How tests should select elements without depending on hashed class
+- [x] Document the kept pattern after the first successful migration.
+    - [x] Naming convention for module files and imported `styles` objects.
+    - [x] What remains global and why.
+    - [x] How tests should select elements without depending on hashed class
           names.
 
 ## Other Ideas
