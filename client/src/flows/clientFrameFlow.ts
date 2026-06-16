@@ -87,16 +87,14 @@ export function render(options: RenderOptions) {
     options.drawCollisionBodies();
     options.context.restore();
 
-    if (options.roundState !== RoundState.WAITING) {
-        options.particleContext.save();
+    options.particleContext.save();
 
-        if (options.shouldUseCamera()) {
-            options.camera.apply(options.particleContext);
-        }
-
-        options.drawParticles(options.particleContext);
-        options.particleContext.restore();
+    if (options.shouldUseCamera()) {
+        options.camera.apply(options.particleContext);
     }
+
+    options.drawParticles(options.particleContext);
+    options.particleContext.restore();
 
     options.renderHud();
     options.updateTouchControls();

@@ -80,6 +80,9 @@ function createOptions(overrides = {}) {
             onGunFired() {
                 calls.push('onGunFired');
             },
+            onWaitingFire() {
+                calls.push('onWaitingFire');
+            },
             onBulletFired() {
                 calls.push('onBulletFired');
             },
@@ -212,6 +215,7 @@ test('delegates gameplay key events to gameplay input', async function () {
                 gameplayCalls.push({
                     keyEvent: options.keyEvent,
                     onGunFired: Boolean(options.onGunFired),
+                    onWaitingFire: Boolean(options.onWaitingFire),
                     player: options.player,
                     roundState: options.roundState
                 });
@@ -234,6 +238,7 @@ test('delegates gameplay key events to gameplay input', async function () {
                 player: 'p1'
             },
             onGunFired: true,
+            onWaitingFire: true,
             player: {
                 id: 'p1'
             },

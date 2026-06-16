@@ -16,6 +16,7 @@ type LobbyHudFlowOptions = {
     } | null;
     onNameEditorSelect: (rowIndex: number, colIndex: number) => void;
     playerId?: Parameters<typeof getLobbyViewModel>[0]['playerId'];
+    previousResult?: unknown;
     players?: Parameters<typeof getLobbyViewModel>[0]['players'];
     roundState: Parameters<typeof getActiveScreen>[0]['roundState'];
 };
@@ -65,17 +66,24 @@ export function getState(options: LobbyHudFlowOptions): LobbyHudState {
         };
     }
 
+    const lobby = getLobbyViewModel({
+        isTouch,
+        localReadyRequested: options.localReadyRequested,
+        model: options.model,
+        playerId: options.playerId,
+        players: options.players
+    });
+
     return {
         activeScreen,
         canvasVisible: true,
         hudCanvasVisible: true,
-        lobby: getLobbyViewModel({
-            isTouch,
-            localReadyRequested: options.localReadyRequested,
-            model: options.model,
-            playerId: options.playerId,
-            players: options.players
-        })
+        lobby: {
+            ...lobby,
+            ...(isTouch || !options.previousResult
+                ? {}
+                : { previousResult: options.previousResult })
+        }
     };
 }
 

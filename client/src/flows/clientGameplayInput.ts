@@ -32,6 +32,7 @@ type ClientGameplayInputOptions = {
     onBulletFired: (bullet: Bullet) => void;
     onEmptyGun: () => void;
     onGunFired?: (bullet: Bullet) => void;
+    onWaitingFire?: (player: Player) => void;
     player?: Player | null;
     roundState: RoundState;
 };
@@ -61,6 +62,11 @@ export function handle(options: ClientGameplayInputOptions) {
     }
 
     if (keyEvent.key === ' ' && keyEvent.action === 'down') {
+        if (options.roundState === RoundState.WAITING) {
+            options.onWaitingFire?.(player);
+            return;
+        }
+
         let bullet: Bullet | false | null | undefined;
 
         if (

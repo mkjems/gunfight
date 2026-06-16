@@ -220,6 +220,9 @@ test('renders waiting frame without camera or scenario', async function () {
         'scene.drawAll',
         'drawCollisionBodies',
         'context.restore',
+        'particleContext.save',
+        'drawParticles',
+        'particleContext.restore',
         'renderHud',
         'updateTouchControls'
     ]);

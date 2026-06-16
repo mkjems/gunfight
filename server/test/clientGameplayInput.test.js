@@ -181,6 +181,51 @@ test('plays empty gun sound when firing without ammo', async function () {
     assert.deepEqual(calls, ['empty']);
 });
 
+test('activates the lobby gun without firing bullets while waiting', async function () {
+    const input = await loadClientGameplayInput();
+    const calls = [];
+    const player = {
+        playerId: 'p1'
+    };
+
+    input.handle({
+        ammo: {
+            hasAmmo() {
+                calls.push('hasAmmo');
+                return true;
+            },
+            spend() {
+                calls.push('spend');
+            }
+        },
+        bullets: {
+            fire() {
+                calls.push('fire');
+            }
+        },
+        keyEvent: {
+            action: 'down',
+            key: ' '
+        },
+        player,
+        roundState: 'waiting',
+        onGunFired() {
+            calls.push('gun');
+        },
+        onWaitingFire(firingPlayer) {
+            calls.push(['waitingFire', firingPlayer]);
+        },
+        onBulletFired() {
+            calls.push('fired');
+        },
+        onEmptyGun() {
+            calls.push('empty');
+        }
+    });
+
+    assert.deepEqual(calls, [['waitingFire', player]]);
+});
+
 test('only releases keys during locked round states', async function () {
     const input = await loadClientGameplayInput();
     const events = [];

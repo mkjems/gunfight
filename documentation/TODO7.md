@@ -35,14 +35,14 @@
 
 ## P10 - Lobby screen improvements
 
-- [ ] In lobby screen, add particle burst to gun when it is activated, but fire no bullet. Bursts should be same style as in the game.
-- [ ] In lobby screen desktop - avoid title and keyboard instructions jump on screen when entering into ready state (possibly because of display none).
-- [ ] In desktop main lobby, if the current two players have just completed a game together, show a top HUD result line.
-    - [ ] Reuse the game HUD layout: left side score then current player name, center `GAME OVER`, right side current player name then score.
-    - [ ] Keep it tied only to the current two-player game session; do not store or show longer-term history.
-    - [ ] Hide it when either player leaves, disconnects, is paired with a new opponent, or either player enters `READY`.
-    - [ ] Do not show this result line on mobile.
-    - [ ] Use current lobby names when rendering the previous result.
+- [x] In lobby screen, add particle burst to gun when it is activated, but fire no bullet. Bursts should be same style as in the game.
+- [x] In lobby screen desktop - avoid title and keyboard instructions jump on screen when entering into ready state (possibly because of display none).
+- [x] In desktop main lobby, if the current two players have just completed a game together, show a top HUD result line.
+    - [x] Reuse the game HUD layout: left side score then current player name, center `GAME OVER`, right side current player name then score.
+    - [x] Keep it tied only to the current two-player game session; do not store or show longer-term history.
+    - [x] Hide it when either player leaves, disconnects, is paired with a new opponent, or either player enters `READY`.
+    - [x] Do not show this result line on mobile.
+    - [x] Use current lobby names when rendering the previous result.
 
 ## P10.5 - Investigate how Eslint can help improve code quality
 
@@ -102,7 +102,7 @@
 
 ## P11 Mobile lobby screen improvements
 
-- [ ]On mobile, in the lobby. Ad some vertical space between the 'Play gunfight' button and the other two buttons.
+- [ ]On mobile, in the lobby. Ad some vertical space between the 'Play gunfight' button and the other two buttons. And I would like high-score and edit-name buttons to be horizontally aligned.
 
 ## P12 Improve visual impact of game
 

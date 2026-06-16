@@ -33,6 +33,7 @@ import type {
     RuntimeObstacleHit,
     RuntimeParticleLayer,
     RuntimeParticleSource,
+    RuntimePlayer,
     RuntimePlayerHit,
     RuntimePlayers,
     RuntimePositionSync,
@@ -49,6 +50,12 @@ import type {
     RuntimeTouchControls,
     RuntimeUi
 } from './types.js';
+
+type PreviousLobbyResult = {
+    clientIds: [ClientId, ClientId];
+    gameId?: string;
+    scores: [number, number];
+};
 
 export type ClientGameRuntimeOptions = {
     dependencies: ClientGameRuntimeModules;
@@ -100,6 +107,7 @@ export class ClientGameRuntime implements ClientGameController {
     private roundIntro!: RuntimeRoundIntro;
     private localReadyRequested = false;
     private playerId: ClientId | null = null;
+    private previousLobbyResult: PreviousLobbyResult | null = null;
     private activeScenario: Scenario | null | undefined = undefined;
     private hasStarted = false;
     private lastParticleUpdatedAt: number | null = null;
@@ -327,6 +335,7 @@ export class ClientGameRuntime implements ClientGameController {
                         onReady: () => {
                             this.highScoresVisible = false;
                             this.localReadyRequested = true;
+                            this.previousLobbyResult = null;
                             this.renderHud();
                         }
                     }
@@ -438,6 +447,7 @@ export class ClientGameRuntime implements ClientGameController {
 
         this.latestModel = model;
         this.scoreKeeper.setScores(model.scores);
+        this.syncPreviousLobbyResult(model);
         this.syncServerTiming(model);
 
         this.dependencies.ClientModelUpdateFlow.sync({
@@ -470,6 +480,7 @@ export class ClientGameRuntime implements ClientGameController {
             keyEvent,
             nameEditor: this.nameEditor,
             onGunFired: this.handleGunFired,
+            onWaitingFire: this.handleLobbyGunFired,
             onBulletFired: () => {
                 this.reloadIfBothPlayersAreOutOfAmmo();
                 this.renderHud();
@@ -800,6 +811,20 @@ export class ClientGameRuntime implements ClientGameController {
         this.particleLayer.spawnGunSmoke(source);
     };
 
+    private handleLobbyGunFired = (player?: unknown) => {
+        const source = this.getParticleSourceFromPlayer(
+            player as RuntimePlayer | null | undefined
+        );
+
+        if (!source) {
+            return;
+        }
+
+        this.gameSounds.playGun();
+        this.particleLayer.spawnMuzzleFlash(source);
+        this.particleLayer.spawnGunSmoke(source);
+    };
+
     private handleRicochet = (bullet?: Partial<RuntimeBullet>) => {
         this.gameSounds.playRicochet();
         const source = this.getParticleSourceFromBullet(bullet);
@@ -853,6 +878,40 @@ export class ClientGameRuntime implements ClientGameController {
         };
     };
 
+    private getParticleSourceFromPlayer = (
+        player?: RuntimePlayer | null
+    ): RuntimeParticleSource | null => {
+        if (!player) {
+            return null;
+        }
+
+        const config = this.dependencies.Config;
+        const aim =
+            typeof player.getAim === 'function' ? player.getAim() : player.aim;
+        const aimLevel =
+            config.player.aimLevels[aim] ||
+            config.player.aimLevels[config.player.defaultAim];
+
+        if (!aimLevel) {
+            return null;
+        }
+
+        const scale = config.graphics.scale;
+        const targetWidth = config.player.sprite.sourceWidth * scale;
+        const targetHeight = config.player.sprite.sourceHeight * scale;
+        const muzzleOffsetX = -targetWidth / 2 + aimLevel.muzzle.x * scale;
+        const muzzleOffsetY = -targetHeight + aimLevel.muzzle.y * scale;
+        const angle = (aimLevel.angleDegrees * Math.PI) / 180;
+
+        return {
+            facing: player.facing,
+            speedX: player.facing * Math.cos(angle) * config.bullet.speed,
+            speedY: Math.sin(angle) * config.bullet.speed,
+            x: player.x + player.facing * muzzleOffsetX,
+            y: player.y + muzzleOffsetY
+        };
+    };
+
     private updateTouchControls = () => {
         return this.dependencies.ClientTouchControlsFlow.update({
             aimLevel: this.getLocalAimLevel(),
@@ -878,9 +937,98 @@ export class ClientGameRuntime implements ClientGameController {
                 this.renderHud();
             },
             playerId: this.playerId,
+            previousResult: this.getPreviousLobbyResultHud(),
             players: this.players.all,
             roundState: this.roundState
         });
+    };
+
+    private syncPreviousLobbyResult = (model: RuntimeGameModel) => {
+        const scores = this.getModelResultScores(model);
+
+        if (
+            model.matchState === 'gameOver' &&
+            model.clients.length === 2 &&
+            scores
+        ) {
+            this.previousLobbyResult = {
+                clientIds: [model.clients[0].id, model.clients[1].id],
+                gameId: model.gameId,
+                scores
+            };
+            return;
+        }
+
+        if (
+            this.previousLobbyResult &&
+            !this.isPreviousLobbyResultCurrent(model)
+        ) {
+            this.previousLobbyResult = null;
+        }
+    };
+
+    private getModelResultScores = (
+        model: RuntimeGameModel
+    ): [number, number] | null => {
+        const leftScore = model.scores?.[0];
+        const rightScore = model.scores?.[1];
+
+        if (typeof leftScore !== 'number' || typeof rightScore !== 'number') {
+            return null;
+        }
+
+        return [leftScore, rightScore];
+    };
+
+    private isPreviousLobbyResultCurrent = (model: RuntimeGameModel) => {
+        const result = this.previousLobbyResult;
+
+        if (
+            !result ||
+            model.gameId !== result.gameId ||
+            model.clients.length !== 2 ||
+            model.clients.some(function (client) {
+                return client.ready;
+            })
+        ) {
+            return false;
+        }
+
+        return result.clientIds.every(function (clientId) {
+            return model.clients.some(function (client) {
+                return client.id === clientId;
+            });
+        });
+    };
+
+    private getPreviousLobbyResultHud = () => {
+        const result = this.previousLobbyResult;
+        const model = this.latestModel;
+
+        if (
+            !result ||
+            !model ||
+            this.localReadyRequested ||
+            this.isTouchInterface() ||
+            !this.isPreviousLobbyResultCurrent(model)
+        ) {
+            return undefined;
+        }
+
+        const leftClient = this.getModelClient(result.clientIds[0]);
+        const rightClient = this.getModelClient(result.clientIds[1]);
+
+        if (!leftClient || !rightClient) {
+            return undefined;
+        }
+
+        return {
+            leftName: this.getClientName(leftClient),
+            leftScore: result.scores[0],
+            rightName: this.getClientName(rightClient),
+            rightScore: result.scores[1],
+            timerLabel: 'GAME OVER'
+        };
     };
 
     private getInstallPromptProps = () => {
@@ -972,6 +1120,12 @@ export class ClientGameRuntime implements ClientGameController {
             this.latestModel,
             this.playerId
         );
+    };
+
+    private getModelClient = (clientId: ClientId) => {
+        return this.latestModel?.clients.find(function (client) {
+            return client.id === clientId;
+        });
     };
 
     private getClientName = (client: RuntimeNamedClient) => {

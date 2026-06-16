@@ -121,6 +121,43 @@ test('builds lobby main app state', async function () {
     });
 });
 
+test('includes previous game result only on desktop lobby main', async function () {
+    const flow = await loadClientLobbyHudFlow();
+    const previousResult = {
+        leftName: 'ACE',
+        leftScore: 3,
+        rightName: 'DOC',
+        rightScore: 2,
+        timerLabel: 'GAME OVER'
+    };
+    const { options } = createRenderOptions({
+        previousResult
+    });
+
+    assert.deepEqual(plain(flow.getState(options)).lobby.previousResult, {
+        leftName: 'ACE',
+        leftScore: 3,
+        rightName: 'DOC',
+        rightScore: 2,
+        timerLabel: 'GAME OVER'
+    });
+
+    assert.equal(
+        Object.hasOwn(
+            plain(
+                flow.getState({
+                    ...options,
+                    isTouchInterface() {
+                        return true;
+                    }
+                })
+            ).lobby,
+            'previousResult'
+        ),
+        false
+    );
+});
+
 test('builds high scores app state with keyboard back prompt', async function () {
     const flow = await loadClientLobbyHudFlow();
     const { options } = createRenderOptions({

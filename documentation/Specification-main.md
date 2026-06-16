@@ -58,7 +58,7 @@ It shows:
 - prompt to see high scores
 - prompt to play when an opponent is connected
 
-The lobby does not show the game id or a separate local identity line. The lobby background shows the player's avatar. If an opponent is connected, both avatars are visible. On desktop, the player can move in the lobby to learn the controls, but cannot shoot.
+The lobby does not show the game id or a separate local identity line. The lobby background shows the player's avatar. If an opponent is connected, both avatars are visible. On desktop, the player can move in the lobby to learn the controls and can activate the gun's muzzle burst, but cannot fire bullets.
 
 Each avatar shows the player's name above the character and lobby state beneath
 the character. This text is rendered as HTML overlay text and follows the avatar
@@ -77,6 +77,8 @@ When the local player is alone in a waiting lobby, the right side shows a lobby-
 A player cannot enter `READY` while alone. If a player loses their opponent because of disconnect or reload, the remaining player loses `READY` state and returns to waiting for an opponent.
 
 The lobby does not rotate automatically to high scores. High scores are opened only by explicit player navigation.
+
+After a completed two-player match returns to the desktop main lobby, the top HUD score row shows the previous result for the same two connected players with `GAME OVER` in the center. The row uses current lobby names, is not shown on mobile, and disappears when either player leaves, disconnects, pairs with a different opponent, or enters `READY`.
 
 ### State of players in Lobby
 
@@ -97,7 +99,7 @@ When the local player has pressed `P` and entered `READY`, the lobby does not sh
 - `P`: ready/play, only when an opponent is connected
 - `H J K L`: move left, down, up, right
 - `A Z`: aim up and down
-- `Space`: shoot in game only
+- `Space`: activate a lobby muzzle burst without a bullet; shoot during gameplay
 
 ### Mobile lobby
 

@@ -274,7 +274,8 @@ body.install-prompt-visible #touchControls {
     display: none;
 }
 
-#scoreRow {
+#scoreRow,
+.scoreRow {
     align-items: start;
     box-sizing: border-box;
     display: grid;
@@ -310,7 +311,8 @@ body.install-prompt-visible #touchControls {
     justify-self: start;
 }
 
-#roundTimer {
+#roundTimer,
+.roundTimer {
     justify-self: center;
 }
 
@@ -441,9 +443,12 @@ h2 {
     margin-bottom: 50px;
 }
 
-#lobbyEditPrompt:empty,
-#lobbyHighScoresPrompt:empty {
-    display: none;
+.lobbyPromptSlot {
+    min-height: 1lh;
+}
+
+.lobbyPromptSlot.is-reserved-hidden {
+    visibility: hidden;
 }
 
 .lobby-slot {
@@ -453,6 +458,14 @@ h2 {
 
 #lobbyPlayPrompt {
     min-height: 1lh;
+}
+
+#lobbyPreviousResult {
+    left: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    top: 0;
 }
 
 #lobbyPlayerLabels {

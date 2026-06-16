@@ -357,11 +357,19 @@ test('renders lobby screen sections through the app root', async function () {
                 }
             ],
             showControls: true,
-            showEditPrompt: true
+            showEditPrompt: true,
+            previousResult: {
+                leftName: 'ACE',
+                leftScore: 3,
+                rightName: 'DOC',
+                rightScore: 2,
+                timerLabel: 'GAME OVER'
+            }
         }
     });
 
     const main = query(root, '#lobby-main');
+    const previousResult = query(main, '#lobbyPreviousResult');
     const controls = query(main, '#lobbyControlsText');
     const editPrompt = query(main, '#lobbyEditPrompt');
     const labels = query(main, '#lobbyPlayerLabels');
@@ -370,6 +378,29 @@ test('renders lobby screen sections through the app root', async function () {
 
     assert.equal(main.hidden, false);
     assert.equal(query(root, '#highScoresScreen').hidden, true);
+    assert.equal(
+        query(previousResult, '#lobbyPreviousScoreLeft .scoreValue')
+            .textContent,
+        '3'
+    );
+    assert.equal(
+        query(previousResult, '#lobbyPreviousScoreLeft .scoreName').textContent,
+        'ACE'
+    );
+    assert.equal(
+        query(previousResult, '#lobbyPreviousRoundTimer').textContent,
+        'GAME OVER'
+    );
+    assert.equal(
+        query(previousResult, '#lobbyPreviousScoreRight .scoreName')
+            .textContent,
+        'DOC'
+    );
+    assert.equal(
+        query(previousResult, '#lobbyPreviousScoreRight .scoreValue')
+            .textContent,
+        '2'
+    );
     assert.equal(controls.hidden, false);
     assert.equal(editPrompt.hidden, false);
     assert.deepEqual(childTexts(controls), ['MOVE', 'FIRE']);
@@ -397,6 +428,26 @@ test('renders lobby screen sections through the app root', async function () {
 
     app.render({
         activeScreen: Screen.LOBBY_MAIN,
+        lobby: {
+            controls: ['MOVE', 'FIRE'],
+            showControls: true
+        }
+    });
+
+    assert.equal(query(main, '#lobbyEditPrompt').hidden, false);
+    assert.equal(
+        query(main, '#lobbyEditPrompt').className,
+        'lobbyPromptSlot is-reserved-hidden'
+    );
+    assert.equal(
+        query(main, '#lobbyEditPrompt').getAttribute('aria-hidden'),
+        'true'
+    );
+    assert.equal(query(main, '#lobbyHighScoresPrompt').hidden, false);
+    assert.equal(query(main, '#lobbyPlayPrompt').hidden, false);
+
+    app.render({
+        activeScreen: Screen.LOBBY_MAIN,
         lobby: {}
     });
 
@@ -404,8 +455,11 @@ test('renders lobby screen sections through the app root', async function () {
     assert.equal(query(main, '#lobbyControlsText').hidden, true);
     assert.equal(query(main, '#lobbyEditPrompt').hidden, true);
     assert.equal(query(main, '#lobbyEditPrompt').textContent, '');
+    assert.equal(query(main, '#lobbyHighScoresPrompt').hidden, true);
     assert.equal(query(main, '#lobbyHighScoresPrompt').textContent, '');
+    assert.equal(query(main, '#lobbyPlayPrompt').hidden, true);
     assert.equal(query(main, '#lobbyPlayPrompt').textContent, '');
+    assert.equal(root.querySelector('#lobbyPreviousResult'), null);
 });
 
 test('skips virtual-DOM work when app render props are value-equal', async function () {

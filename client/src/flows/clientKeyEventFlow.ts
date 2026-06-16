@@ -23,6 +23,7 @@ type ClientKeyEventFlowOptions = {
     onBulletFired: (...args: unknown[]) => void;
     onEmptyGun: (...args: unknown[]) => void;
     onGunFired?: (...args: unknown[]) => void;
+    onWaitingFire?: (...args: unknown[]) => void;
     player: unknown;
     playerId?: number | string;
     renderHud: () => void;
@@ -88,6 +89,7 @@ export function handle(options: ClientKeyEventFlowOptions) {
         player: options.player as never,
         roundState: options.roundState,
         onGunFired: options.onGunFired as never,
+        onWaitingFire: options.onWaitingFire as never,
         onBulletFired: options.onBulletFired as never,
         onEmptyGun: options.onEmptyGun as never
     });

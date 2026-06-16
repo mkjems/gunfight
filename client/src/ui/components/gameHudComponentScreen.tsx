@@ -22,6 +22,13 @@ export type GameHudProps = {
     timerLabel?: number | string | null;
 };
 
+export type ScoreRowProps = Pick<
+    GameHudProps,
+    'leftName' | 'leftScore' | 'rightName' | 'rightScore' | 'timerLabel'
+> & {
+    idPrefix?: string;
+};
+
 type HitMessageProps = {
     hitMessage?: HitMessage | null;
 };
@@ -29,27 +36,38 @@ type HitMessageProps = {
 export function GameHudComponent(options: GameHudProps) {
     return (
         <>
-            <div id="scoreRow">
-                <ScoreSide
-                    id="scoreLeft"
-                    name={options.leftName}
-                    score={options.leftScore}
-                    side="left"
-                />
-                <div id="roundTimer">{toText(options.timerLabel)}</div>
-                <ScoreSide
-                    id="scoreRight"
-                    name={options.rightName}
-                    score={options.rightScore}
-                    side="right"
-                />
-            </div>
+            <ScoreRow {...options} />
             <AmmoRow displays={options.ammoDisplays || []} />
             <div id="roundMessage" className="large-text">
                 {toText(options.roundMessage)}
             </div>
             <HitMessageView hitMessage={options.hitMessage} />
         </>
+    );
+}
+
+export function ScoreRow(options: ScoreRowProps) {
+    return (
+        <div className="scoreRow" id={getScoreRowId(options, 'scoreRow')}>
+            <ScoreSide
+                id={getScoreRowId(options, 'scoreLeft')}
+                name={options.leftName}
+                score={options.leftScore}
+                side="left"
+            />
+            <div
+                className="roundTimer"
+                id={getScoreRowId(options, 'roundTimer')}
+            >
+                {toText(options.timerLabel)}
+            </div>
+            <ScoreSide
+                id={getScoreRowId(options, 'scoreRight')}
+                name={options.rightName}
+                score={options.rightScore}
+                side="right"
+            />
+        </div>
     );
 }
 
@@ -80,6 +98,14 @@ function ScoreSide(props: ScoreSideProps) {
             )}
         </div>
     );
+}
+
+function getScoreRowId(options: ScoreRowProps, id: string) {
+    if (!options.idPrefix) {
+        return id;
+    }
+
+    return options.idPrefix + id.charAt(0).toUpperCase() + id.slice(1);
 }
 
 type AmmoRowProps = {
