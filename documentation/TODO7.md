@@ -75,15 +75,23 @@
           assertions unless a specific exception is documented.
     - [ ] Prefer explicit type-only imports where they improve readability.
 - [ ] Trial type-aware TypeScript ESLint rules separately from normal lint.
-    - [ ] Start with promise and async safety rules such as floating promises,
-          misused promises, and awaiting non-promises.
+    - [x] Do not enable promise and async safety rules now; the first useful
+          findings were in lower-priority tool/install code, and the type-aware
+          lint cost is not worth it yet.
     - [ ] Consider switch exhaustiveness only where it fits the project's
           const-map state style.
     - [ ] Keep type-aware rules only if the added lint time and findings are
           worthwhile.
 - [ ] Trial human-readability smell rules as warnings first.
-    - [ ] Review complexity, nesting depth, and parameter-count warnings by
-          reading the affected code, not by blindly satisfying numbers.
+    - [x] Add `npm run lint:complexity` as a warning-only review pass.
+    - [x] Add `npm run lint:shape` as a warning-only file/function size review
+          pass.
+    - [x] Exclude `client/src/tools/**` from complexity warnings; tools should
+          work correctly but do not need polished application architecture.
+    - [x] Exclude `client/src/tools/**`, `server/test/**`, and `browser-smoke/**`
+          from shape warnings.
+    - [ ] Review complexity, shape, nesting depth, and parameter-count warnings
+          by reading the affected code, not by blindly satisfying numbers.
     - [ ] Consider restricted syntax for focused tests and TypeScript enums if
           those patterns become real risks.
 - [ ] Decide which rules to keep.

@@ -66,14 +66,49 @@ ESLint owns lint rules:
   layers or UI code, and browser/socket/canvas globals are restricted there too.
   Timer globals are restricted in state modules except for `clientTimers.ts`,
   which deliberately owns timer handles.
+- `npm run lint:complexity` is a warning-only review pass for complexity,
+  nesting depth, and parameter count. It is intentionally separate from
+  `npm run lint` and excludes `client/src/tools/**`.
+- `npm run lint:shape` is a warning-only review pass for product file size,
+  function length, and statement count. It is intentionally separate from
+  `npm run lint` and excludes `client/src/tools/**`, `server/test/**`, and
+  `browser-smoke/**`.
 
 Useful rules now:
 
 - Let Prettier own whitespace, wrapping, and formatting.
-- Avoid subjective gates such as line count, complexity, import sorting, or
-  naming style unless they are tried as warnings and agreed in a TODO.
+- Avoid subjective gates such as line count, import sorting, or naming style
+  unless they are tried as warnings and agreed in a TODO.
 - Keep TypeScript ESLint non-type-aware unless a specific type-aware rule is
   worth the extra lint cost.
+
+Current complexity warnings:
+
+- `client/src/engine/bullet.ts`: constructor complexity and
+  `getSegmentIntersection` parameter count.
+- `client/src/flows/clientKeyEventFlow.ts`: `handle` complexity.
+- `client/src/input/touchControls.ts`: `update` complexity.
+- `client/src/runtime/game/payloadGuards.ts`: `parseGameModel` complexity.
+- `client/src/ui/viewModels/clientLobbyViewModel.ts`: lobby text helper
+  parameter count.
+
+Current shape warnings:
+
+- `client/src/runtime/game/runtime.ts`: file length.
+- `shared/contracts.ts`: file length.
+- `client/src/engine/scenarioRenderer.ts`: `ScenarioRenderer` function length.
+- `client/src/input/keysModel.ts`: `KeysModel` function length.
+- `client/src/input/nameEditor.ts`: `NameEditor` function length.
+- `client/src/input/touchControls.ts`: `TouchControls` function length.
+- `client/src/ui/installPrompt.ts`: `createInstallPrompt` function length.
+- `server/gameModules/gfmodel.ts`: `createGameModel` function length.
+- `server/gameModules/lobby.ts`: `createLobby` function length.
+- `server/server.js`: socket connection handler function length.
+
+The authoring tools in `client/src/tools/**` are useful internal utilities, not
+the main product surface. They still run through normal lint, typecheck, and
+tests, but readability-smell rules should not push them toward polished
+application architecture unless a real tool change justifies that work.
 
 Agent workflow:
 
@@ -116,14 +151,11 @@ and `UI-ownership.md`. Keep this scorecard aligned with those documents.
 These files are not automatically bad, but they deserve care before adding more
 responsibility:
 
-- `client/src/tools/scenarioEditor.ts` - 1100 lines. DOM-heavy authoring tool.
+Product modules:
+
 - `client/src/runtime/game/runtime.ts` - 1085 lines. Main runtime wiring and
   orchestration.
-- `client/src/tools/scenarioEditorCore.ts` - 826 lines. Scenario editor domain
-  logic.
 - `shared/contracts.ts` - 852 lines. Shared data contracts and runtime guards.
-- `client/src/tools/rockEditor.ts` - 622 lines. DOM-heavy authoring tool.
-- `client/src/tools/rockEditorCore.ts` - 520 lines. Rock editor domain logic.
 - `client/src/engine/scenarioRenderer.ts` - 493 lines. Scenario rendering.
 - `client/src/runtime/game/types.ts` - 471 lines. Runtime type surface.
 - `client/src/input/touchControls.ts` - 447 lines. Imperative touch pointer
@@ -131,8 +163,18 @@ responsibility:
 - `server/gameModules/lobby.ts` - 503 lines. Server matchmaking rules.
 - `server/server.js` - 395 lines. HTTP routes and socket protocol handlers.
 
-When changing one of these files, prefer a small local extraction only if it
-clarifies ownership or removes repeated rules.
+Tools:
+
+- `client/src/tools/scenarioEditor.ts` - 1100 lines. DOM-heavy authoring tool.
+- `client/src/tools/scenarioEditorCore.ts` - 826 lines. Scenario editor domain
+  logic.
+- `client/src/tools/rockEditor.ts` - 622 lines. DOM-heavy authoring tool.
+- `client/src/tools/rockEditorCore.ts` - 520 lines. Rock editor domain logic.
+
+When changing a product module, prefer a small local extraction only if it
+clarifies ownership or removes repeated rules. Tool modules should stay correct
+and typed, but do not need readability-driven cleanup unless the tool itself is
+being changed.
 
 ## Typing Status
 
@@ -241,12 +283,14 @@ Good next tasks, in priority order:
 
 1. Trial TypeScript escape-hatch rules such as rejecting `any`, suppression
    comments, and non-null assertions.
-2. Consider type-aware TypeScript ESLint rules only when a concrete bug pattern
+2. Review current complexity and shape warnings. Extract only where readability
+   clearly improves.
+3. Consider type-aware TypeScript ESLint rules only when a concrete bug pattern
    justifies the added lint cost.
-3. Extract shared socket event constants when touching the socket protocol.
-4. Split `shared/contracts.ts` if content validation and network payload guards
+4. Extract shared socket event constants when touching the socket protocol.
+5. Split `shared/contracts.ts` if content validation and network payload guards
    start to obscure each other.
-5. Split authoring tool DOM files only around a real editor change.
-6. Revisit server TypeScript conversion when server behavior changes enough to
+6. Split authoring tool DOM files only around a real editor change.
+7. Revisit server TypeScript conversion when server behavior changes enough to
    justify the migration.
-7. Add browser smoke coverage for any new cross-device or visual-state flow.
+8. Add browser smoke coverage for any new cross-device or visual-state flow.
