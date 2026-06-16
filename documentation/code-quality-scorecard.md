@@ -59,12 +59,13 @@ ESLint owns lint rules:
   TypeScript lint run showed it mostly rewrites existing `!!value` expressions
   into `Boolean(...)`, including long expressions where that is not clearly
   more readable.
-- ESLint enforces the first architecture boundary: view-model modules cannot
-  import side-effectful client layers or use browser, socket, timer, or canvas
-  globals. State modules cannot import side-effectful client layers or UI code,
-  and browser/socket/canvas globals are restricted there too. Timer globals are
-  restricted in state modules except for `clientTimers.ts`, which deliberately
-  owns timer handles.
+- ESLint enforces architecture boundaries: shared modules cannot import client
+  or server modules, and client modules cannot import server modules. View-model
+  modules cannot import side-effectful client layers or use browser, socket,
+  timer, or canvas globals. State modules cannot import side-effectful client
+  layers or UI code, and browser/socket/canvas globals are restricted there too.
+  Timer globals are restricted in state modules except for `clientTimers.ts`,
+  which deliberately owns timer handles.
 
 Useful rules now:
 
@@ -238,7 +239,8 @@ Watch items for future cleanup:
 
 Good next tasks, in priority order:
 
-1. Add shared/client/server import boundary rules if a trial stays low-noise.
+1. Trial TypeScript escape-hatch rules such as rejecting `any`, suppression
+   comments, and non-null assertions.
 2. Consider type-aware TypeScript ESLint rules only when a concrete bug pattern
    justifies the added lint cost.
 3. Extract shared socket event constants when touching the socket protocol.

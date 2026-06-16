@@ -62,9 +62,9 @@
 
 ## P10.7 - Experiment with ESLint rules
 
-- [ ] Add architecture-boundary rules incrementally.
-    - [ ] `shared/**` must not import client or server modules.
-    - [ ] client modules must not import server modules.
+- [x] Add architecture-boundary rules incrementally.
+    - [x] `shared/**` must not import client or server modules.
+    - [x] client modules must not import server modules.
     - [x] View models must not import side-effectful client layers or use DOM,
           socket, timer, canvas, runtime, or platform side effects.
     - [x] State modules must not import side-effectful client layers or UI code;

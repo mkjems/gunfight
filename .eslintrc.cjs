@@ -134,6 +134,31 @@ const CLIENT_TIMER_GLOBALS = [
     }
 ];
 
+const FORBIDDEN_SERVER_IMPORT_PATTERNS = [
+    {
+        group: ['server/**', '**/server/**'],
+        message:
+            'Client modules must use shared contracts or network APIs instead of importing server code.'
+    }
+];
+
+const FORBIDDEN_CLIENT_IMPORT_PATTERNS = [
+    {
+        group: ['client/**', '**/client/**'],
+        message:
+            'Shared modules must stay environment-neutral and must not import client code.'
+    }
+];
+
+const SHARED_IMPORT_PATTERNS = [
+    ...FORBIDDEN_CLIENT_IMPORT_PATTERNS,
+    {
+        group: ['server/**', '**/server/**'],
+        message:
+            'Shared modules must stay environment-neutral and must not import server code.'
+    }
+];
+
 module.exports = {
     root: true,
     env: {
@@ -177,6 +202,28 @@ module.exports = {
             }
         },
         {
+            files: ['client/**/*.js', 'client/**/*.ts', 'client/**/*.tsx'],
+            rules: {
+                'no-restricted-imports': [
+                    'error',
+                    {
+                        patterns: FORBIDDEN_SERVER_IMPORT_PATTERNS
+                    }
+                ]
+            }
+        },
+        {
+            files: ['shared/**/*.ts'],
+            rules: {
+                'no-restricted-imports': [
+                    'error',
+                    {
+                        patterns: SHARED_IMPORT_PATTERNS
+                    }
+                ]
+            }
+        },
+        {
             files: ['client/src/ui/viewModels/**/*.ts'],
             rules: {
                 'no-restricted-globals': [
@@ -187,7 +234,10 @@ module.exports = {
                 'no-restricted-imports': [
                     'error',
                     {
-                        patterns: VIEW_MODEL_IMPORT_PATTERNS
+                        patterns: [
+                            ...VIEW_MODEL_IMPORT_PATTERNS,
+                            ...FORBIDDEN_SERVER_IMPORT_PATTERNS
+                        ]
                     }
                 ]
             }
@@ -202,7 +252,10 @@ module.exports = {
                 'no-restricted-imports': [
                     'error',
                     {
-                        patterns: STATE_IMPORT_PATTERNS
+                        patterns: [
+                            ...STATE_IMPORT_PATTERNS,
+                            ...FORBIDDEN_SERVER_IMPORT_PATTERNS
+                        ]
                     }
                 ]
             }
