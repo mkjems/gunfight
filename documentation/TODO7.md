@@ -116,10 +116,10 @@
 
 ## P15 - Improve the CSS - start using CSS Modules in the product
 
-- [ ] Introduce CSS Modules for product UI components, not as a full CSS rewrite.
+- [x] Introduce CSS Modules for product UI components, not as a full CSS rewrite.
     - [x] Keep global CSS for app-wide foundations: font faces, CSS variables,
-          reset/body rules, `#gameStage`, canvas layers, install/rotate prompts,
-          and any selectors that intentionally target fixed DOM ids.
+          reset/body rules, `#gameStage`, canvas layers, shared HUD/touch shell
+          rules, and selectors that intentionally coordinate several layers.
     - [x] Start with one small product component as the pilot, preferably a
           Preact-only surface such as touch lobby controls or high scores.
     - [x] Add a `*.module.css` file next to that component and import it from the
@@ -128,7 +128,7 @@
           on them; move purely presentational classes into the module.
     - [x] Add or keep TypeScript support for `*.module.css` imports if the
           current build needs a declaration file.
-- [ ] Migrate product styles incrementally by ownership area.
+- [x] Migrate product styles incrementally by ownership area.
     - [x] Move touch lobby controls row styling as the first CSS Modules pilot.
     - [x] Move high-scores table and row styling into a CSS Module.
     - [x] Move name editor value, help, grid, row, and key styling into a CSS
@@ -145,11 +145,11 @@
           a CSS Module while keeping screen ids stable.
     - [x] Move the first isolated component set while keeping ids stable and
           moving only owned presentation classes.
-    - [ ] Leave layout styles that coordinate several layers in global CSS until
+    - [x] Leave layout styles that coordinate several layers in global CSS until
           their ownership is clearer.
-    - [ ] For future component migrations, keep running component tests and a
+    - [x] For future component migrations, keep running component tests and a
           quick browser check for desktop/mobile layout.
-    - [ ] Avoid future id or markup changes unless the component migration needs
+    - [x] Avoid future id or markup changes unless the component migration needs
           them.
 - [x] Move component tests that import CSS Modules onto a Vite-aware path.
     - [x] Decide between Vitest for component/UI tests or a shared Vite SSR
@@ -165,11 +165,11 @@
     - [x] Update `package.json` scripts so normal checks run the Vite/Vitest UI
           tests together with the existing Node tests.
     - [x] Document the chosen test boundary in `UI-ownership.md`.
-- [ ] Decide how CSS Modules relate to tools.
-    - [ ] Do not migrate `client/src/tools/**` just to match the product.
-    - [ ] Tools are internal authoring utilities; they should work correctly, but
+- [x] Decide how CSS Modules relate to tools.
+    - [x] Do not migrate `client/src/tools/**` just to match the product.
+    - [x] Tools are internal authoring utilities; they should work correctly, but
           they do not need the same CSS architecture polish as the game product.
-    - [ ] Consider CSS Modules for a tool only when actively changing that tool
+    - [x] Consider CSS Modules for a tool only when actively changing that tool
           and when local scoping clearly makes the editor code easier to work
           with.
 - [x] Document the kept pattern after the first successful migration.
