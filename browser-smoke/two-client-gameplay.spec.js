@@ -183,7 +183,7 @@ async function waitForLocalReady(page) {
                         return item.id === joined.playerId;
                     });
 
-                return !!client?.ready;
+                return Boolean(client?.ready);
             });
         })
         .toBe(true);

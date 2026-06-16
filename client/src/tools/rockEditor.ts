@@ -91,7 +91,7 @@ async function loadInitialRockJson() {
         if (response.ok) {
             elements.input.value = await response.text();
         }
-    } catch (error) {
+    } catch {
         statusMessage = 'Using built-in rock JSON sample.';
         statusIsError = false;
     }
@@ -153,7 +153,7 @@ async function copyOutputJson() {
         await navigator.clipboard.writeText(elements.output.value);
         statusMessage = 'Output JSON copied.';
         statusIsError = false;
-    } catch (error) {
+    } catch {
         statusMessage = 'Copy failed; select the output JSON manually.';
         statusIsError = true;
     }

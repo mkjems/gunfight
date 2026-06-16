@@ -301,13 +301,12 @@ io.on('connection', function (socket) {
         /** @param {unknown} data */
         function (data) {
             const context = getSocketGameContext(socket);
-            let keyEvent;
 
             if (!context) {
                 return;
             }
 
-            keyEvent = createKeyEventPayload(data, context.client.id);
+            const keyEvent = createKeyEventPayload(data, context.client.id);
 
             if (!keyEvent) {
                 return;
@@ -322,13 +321,15 @@ io.on('connection', function (socket) {
         /** @param {unknown} data */
         function (data) {
             const context = getSocketGameContext(socket);
-            let position;
 
             if (!context) {
                 return;
             }
 
-            position = createPlayerPositionPayload(data, context.client.id);
+            const position = createPlayerPositionPayload(
+                data,
+                context.client.id
+            );
 
             if (!position) {
                 return;

@@ -24,7 +24,6 @@ import { DEFAULT_ROCK_EDITOR_JSON } from './rockEditorCore.js';
 import type {
     Decoration,
     RockDefinitions,
-    RockPlacement,
     ScenarioSource,
     WagonInstance
 } from '../../../shared/contracts.js';
@@ -159,7 +158,7 @@ async function loadInitialRockJson() {
             );
             return;
         }
-    } catch (error) {
+    } catch {
         statusMessage = 'Using built-in rock JSON sample.';
         statusIsError = false;
     }
@@ -176,7 +175,7 @@ async function loadInitialScenarioJson() {
         if (response.ok) {
             elements.input.value = await response.text();
         }
-    } catch (error) {
+    } catch {
         statusMessage = 'Using built-in scenario JSON sample.';
         statusIsError = false;
     }
@@ -263,7 +262,7 @@ async function copyOutputJson() {
         await navigator.clipboard.writeText(elements.output.value);
         statusMessage = 'Output JSON copied.';
         statusIsError = false;
-    } catch (error) {
+    } catch {
         statusMessage = 'Copy failed; select the output JSON manually.';
         statusIsError = true;
     }

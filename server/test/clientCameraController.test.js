@@ -56,7 +56,7 @@ function createWindow(options = {}) {
         },
         matchMedia() {
             return {
-                matches: !!options.coarse
+                matches: Boolean(options.coarse)
             };
         }
     };

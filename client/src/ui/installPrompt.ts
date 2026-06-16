@@ -175,7 +175,9 @@ export function createInstallPrompt(options: InstallPromptOptions = {}) {
     function dismiss() {
         try {
             ownerStorage.setItem(dismissedStorageKey, '1');
-        } catch (err) {}
+        } catch {
+            // Storage failures should not block dismissal for this session.
+        }
 
         hide();
     }
@@ -239,7 +241,7 @@ export function createInstallPrompt(options: InstallPromptOptions = {}) {
     function wasDismissed() {
         try {
             return ownerStorage.getItem(dismissedStorageKey) === '1';
-        } catch (err) {
+        } catch {
             return false;
         }
     }

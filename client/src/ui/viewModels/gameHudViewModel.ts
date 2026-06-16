@@ -80,20 +80,18 @@ export function getTimerLabel(options: TimerOptions): number | string {
 
 export function getHitMessage(options: HitMessageOptions) {
     const hitMessage = options.roundData.getHitMessage();
-    let target: PlayerPosition | undefined;
-    let point: Point;
 
     if (!hitMessage) {
         return null;
     }
 
-    target = options.players.all[hitMessage.targetId];
+    const target = options.players.all[hitMessage.targetId];
 
     if (!target) {
         return null;
     }
 
-    point = options.cameraController.worldToHudPoint({
+    const point = options.cameraController.worldToHudPoint({
         camera: options.camera,
         roundState: options.roundState,
         x: target.x,

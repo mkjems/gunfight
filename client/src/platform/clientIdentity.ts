@@ -29,7 +29,7 @@ export function ClientIdentity(options: ClientIdentityOptions) {
     function getStoredPlayerName() {
         try {
             return storage.getItem(storageKey) || '';
-        } catch (error) {
+        } catch {
             return '';
         }
     }
@@ -42,7 +42,7 @@ export function ClientIdentity(options: ClientIdentityOptions) {
         try {
             storage.setItem(storageKey, name);
             return true;
-        } catch (error) {
+        } catch {
             return false;
         }
     }

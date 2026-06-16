@@ -100,7 +100,7 @@ function createTouchElement(id) {
         classList: {
             classes: {},
             toggle(className, force) {
-                this.classes[className] = !!force;
+                this.classes[className] = Boolean(force);
             }
         },
         hidden: false,

@@ -9,22 +9,35 @@ module.exports = {
         ecmaVersion: 2022,
         sourceType: 'module'
     },
+    extends: ['eslint:recommended'],
     globals: {
         GF: 'readonly',
         io: 'readonly',
         requestAnimFrame: 'readonly'
     },
     ignorePatterns: ['node_modules/', 'package-lock.json'],
+    plugins: ['@typescript-eslint'],
     rules: {
+        curly: ['error', 'all'],
         eqeqeq: ['error', 'always'],
+        'no-implicit-coercion': 'error',
         'no-undef': 'error',
-        'no-unused-vars': 'off'
+        'no-var': 'error',
+        'no-unused-vars': 'off',
+        'prefer-const': 'error'
     },
     overrides: [
         {
-            files: ['client/js/**/*.js'],
+            files: ['**/*.ts', '**/*.tsx'],
+            extends: ['plugin:@typescript-eslint/recommended'],
+            parser: '@typescript-eslint/parser',
             parserOptions: {
-                sourceType: 'script'
+                ecmaVersion: 2022,
+                sourceType: 'module'
+            },
+            rules: {
+                'no-implicit-coercion': 'off',
+                'no-undef': 'off'
             }
         },
         {

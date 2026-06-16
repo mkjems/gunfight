@@ -1,6 +1,6 @@
 # Code Quality Scorecard
 
-Last updated: 2026-06-15.
+Last updated: 2026-06-16.
 
 This document is a status report for code quality, maintainability, and
 readability. It is not a grade. The goal is to make future changes easier by
@@ -19,14 +19,74 @@ Status labels:
 | --------------------- | ------ | ------------------------------------------------------------------------------------- |
 | Full check            | Good   | `npm run check` passes after formatting.                                              |
 | Formatting            | Good   | Prettier covers package/config files, scripts, server, shared, client, docs.          |
-| Linting               | Good   | ESLint catches accidental globals and unsafe equality in JS/client code.              |
+| Linting               | Good   | ESLint covers JavaScript and TypeScript safety/readability rules.                     |
 | Type checking         | Good   | Shared and client TypeScript are strict; server JS is checked less strictly.          |
-| Node tests            | Good   | 226 Node tests cover core behavior and pure modules.                                  |
+| Node tests            | Good   | 229 Node tests cover core behavior and pure modules.                                  |
 | Browser smoke tests   | Good   | 12 Playwright smoke tests cover app startup, mobile lobby, and server lifecycle play. |
 | Source escape hatches | Good   | No `any`, `@ts-ignore`, `@ts-expect-error`, `TODO`, or `FIXME` in source.             |
 
 The browser smoke tests start a local server. In the Codex sandbox they may need
 an escalated run because the server listens on port `18080`.
+
+## Tool Responsibility Split
+
+Prettier owns formatting:
+
+- Prettier decides whitespace, wrapping, indentation, and other mechanical
+  presentation details.
+- Do not add ESLint rules that duplicate Prettier formatting decisions.
+
+`tsc` owns type correctness:
+
+- `tsc` checks TypeScript type relationships, project references, JS checking,
+  and build emit safety.
+- TypeScript ESLint is not the source of truth for type correctness. The
+  current ESLint setup intentionally uses non-type-aware recommended rules so
+  lint stays fast and focused.
+
+ESLint owns lint rules:
+
+- ESLint is the fast JavaScript and TypeScript safety/readability gate. It
+  covers `scripts`, `server`, `shared`, `client`, `browser-smoke`,
+  `playwright.config.js`, and `vite.config.js`.
+- TypeScript files use `@typescript-eslint/parser` and
+  `plugin:@typescript-eslint/recommended`.
+- Keep ESLint focused on bug-risk and clear readability rules:
+  `eslint:recommended`, `plugin:@typescript-eslint/recommended`, `eqeqeq`,
+  `no-undef` for JavaScript, `prefer-const`, `no-var`, `curly`, and
+  `no-implicit-coercion` for JavaScript.
+- `no-implicit-coercion` is disabled for TypeScript for now. The first
+  TypeScript lint run showed it mostly rewrites existing `!!value` expressions
+  into `Boolean(...)`, including long expressions where that is not clearly
+  more readable.
+
+Useful rules now:
+
+- Let Prettier own whitespace, wrapping, and formatting.
+- Avoid subjective gates such as line count, complexity, import sorting, or
+  naming style unless they are tried as warnings and agreed in a TODO.
+- Keep TypeScript ESLint non-type-aware unless a specific type-aware rule is
+  worth the extra lint cost.
+
+Agent workflow:
+
+- Run `npm run lint` after touching JavaScript or TypeScript source, browser
+  smoke tests, scripts, or config files covered by the lint script.
+- Run `npm run typecheck` after TypeScript or checked server changes; lint does
+  not replace the compiler.
+- When adding a rule, probe it first with `npx eslint ... --rule ...`, inspect
+  the findings, and only keep rules that are low-noise and easy to explain.
+- Prefer fixing code over suppressing a rule. If a suppression is needed, keep
+  it on the smallest line or block and include the reason.
+
+Rule-selection method:
+
+1. Start from an actual bug pattern, readability problem, or architecture
+   boundary.
+2. Trial one candidate rule in isolation on the current tree.
+3. Review the findings for human readability, not just mechanical correctness.
+4. Add it as an error only if it is clear, low-churn, and aligned with local
+   style. Otherwise leave it as a watch item.
 
 ## Architecture Boundary Status
 
@@ -111,7 +171,7 @@ Current test shape:
 
 - 59 Node test files.
 - 3 Playwright browser smoke spec files.
-- 226 Node tests passing.
+- 229 Node tests passing.
 - 12 browser smoke tests passing.
 
 Behavior areas with good coverage:
@@ -172,10 +232,12 @@ Watch items for future cleanup:
 
 Good next tasks, in priority order:
 
-1. Extract shared socket event constants when touching the socket protocol.
-2. Split `shared/contracts.ts` if content validation and network payload guards
+1. Consider type-aware TypeScript ESLint rules only when a concrete bug pattern
+   justifies the added lint cost.
+2. Extract shared socket event constants when touching the socket protocol.
+3. Split `shared/contracts.ts` if content validation and network payload guards
    start to obscure each other.
-3. Split authoring tool DOM files only around a real editor change.
-4. Revisit server TypeScript conversion when server behavior changes enough to
+4. Split authoring tool DOM files only around a real editor change.
+5. Revisit server TypeScript conversion when server behavior changes enough to
    justify the migration.
-5. Add browser smoke coverage for any new cross-device or visual-state flow.
+6. Add browser smoke coverage for any new cross-device or visual-state flow.

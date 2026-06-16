@@ -46,13 +46,23 @@
 
 ## P10.5 - Investigate how Eslint can help improve code quality
 
-- [ ] what is possible with ESLint
-- [ ] How can we make agents work well with ESLint
-- [ ] How do we find the rules that give us the human readable code we want.
+- [x] Document what is possible with ESLint.
+- [x] Document how agents should work well with ESLint.
+- [x] Document how to find rules that preserve human-readable code.
+- [x] Tighten the current JavaScript lint baseline and make lint targets
+      explicit.
+
+## P10.6 - Add TypeScript ESLint
+
+- [x] Add TypeScript ESLint dependencies and parser/plugin configuration.
+- [x] Update lint scripts so JavaScript and TypeScript files are linted.
+- [x] Document the responsibility split between ESLint, Prettier, and `tsc`.
+- [x] Fix or document any low-noise rule findings from the first TypeScript
+      lint run.
 
 ## P11 Mobile lobby screen improvements
 
-- [ ]on mobile, in the lobby. Ad some vertical space between the 'Play gunfight' button and the other two buttons.
+- [ ]On mobile, in the lobby. Ad some vertical space between the 'Play gunfight' button and the other two buttons.
 
 ## P12 Improve visual impact of game
 
