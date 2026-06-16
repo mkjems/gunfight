@@ -62,12 +62,14 @@
 
 ## P10.7 - Experiment with ESLint rules
 
-- [ ] Add candidate architecture-boundary rules in a trial branch or isolated
-      commit.
+- [ ] Add architecture-boundary rules incrementally.
     - [ ] `shared/**` must not import client or server modules.
     - [ ] client modules must not import server modules.
-    - [ ] view models and state modules must stay free of DOM, socket, timer,
-          canvas, runtime, and platform side effects.
+    - [x] View models must not import side-effectful client layers or use DOM,
+          socket, timer, canvas, runtime, or platform side effects.
+    - [x] State modules must not import side-effectful client layers or UI code;
+          DOM, socket, canvas, runtime, and platform side effects are
+          restricted. Timer globals are allowed only in `clientTimers.ts`.
 - [ ] Add candidate TypeScript escape-hatch rules.
     - [ ] Reject `any`, TypeScript suppression comments, and non-null
           assertions unless a specific exception is documented.
