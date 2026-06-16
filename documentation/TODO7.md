@@ -100,9 +100,9 @@
           code.
     - [ ] Document kept rules and rejected rules in the code quality scorecard.
 
-## P11 Mobile lobby screen improvements
+## P11 - Mobile lobby screen improvements
 
-- [ ]On mobile, in the lobby. Ad some vertical space between the 'Play gunfight' button and the other two buttons. And I would like high-score and edit-name buttons to be horizontally aligned.
+- [ ] On mobile, in the lobby. Ad some vertical space between the 'Play gunfight' button and the other two buttons. And I would like high-score and edit-name buttons to be horizontally aligned.
 
 ## P12 Improve visual impact of game
 
