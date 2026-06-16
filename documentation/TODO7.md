@@ -45,13 +45,14 @@
     - [ ] Use current lobby names when rendering the previous result.
 
 ## P10.5 - Investigate how Eslint can help improve code quality
+
 - [ ] what is possible with ESLint
 - [ ] How can we make agents work well with ESLint
-- [ ] How do we find the rules that give us the human readable code we want.  
+- [ ] How do we find the rules that give us the human readable code we want.
 
 ## P11 Mobile lobby screen improvements
 
-- [ ] on mobile, in the lobby. Ad some vertical space between the 'Play gunfight' button and the other two buttons.
+- [ ]on mobile, in the lobby. Ad some vertical space between the 'Play gunfight' button and the other two buttons.
 
 ## P12 Improve visual impact of game
 
