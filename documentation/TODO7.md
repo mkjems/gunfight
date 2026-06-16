@@ -35,9 +35,19 @@
 
 ## P10 - Lobby screen improvements
 
-- [ ] In lobby screen add particle burst to gun when it is activated, but fire no bullet. Bursts should be same style as in the game.
+- [ ] In lobby screen, add particle burst to gun when it is activated, but fire no bullet. Bursts should be same style as in the game.
 - [ ] In lobby screen desktop - avoid title and keyboard instructions jump on screen when entering into ready state (possibly because of display none).
-- [ ] If there is a previous game between the two players, the top line containing 'Game over' and the player names and score, should show in the main lobby.
+- [ ] In desktop main lobby, if the current two players have just completed a game together, show a top HUD result line.
+    - [ ] Reuse the game HUD layout: left side score then current player name, center `GAME OVER`, right side current player name then score.
+    - [ ] Keep it tied only to the current two-player game session; do not store or show longer-term history.
+    - [ ] Hide it when either player leaves, disconnects, is paired with a new opponent, or either player enters `READY`.
+    - [ ] Do not show this result line on mobile.
+    - [ ] Use current lobby names when rendering the previous result.
+
+## P10.5 - Investigate how Eslint can help improve code quality
+- [ ] what is possible with ESLint
+- [ ] How can we make agents work well with ESLint
+- [ ] How do we find the rules that give us the human readable code we want.  
 
 ## P11 Mobile lobby screen improvements
 

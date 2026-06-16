@@ -8,7 +8,9 @@ The human write the specifications but the agents help with keeping it up to dat
 
 For daily work, agents and human collaborate to describe/outline what the next changes will be, in the form of checkmark and tasks in the documentation/TODO{number} file.
 
-When we agree that the work described in the TODO is sensible and good we implement it.  
+When we agree that the work described in the TODO is sensible and good we implement it. 
+
+Interview me about things that you need clarifications about when being asked to do tasks. 
 
 The agents writes the code so it performs as per the specification/documentation and the TODO files.
 
