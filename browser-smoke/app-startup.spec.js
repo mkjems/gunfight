@@ -106,12 +106,10 @@ test('built browser app renders high scores through the app root', async ({
     await expect(page.locator('#highScoresBackPrompt')).toHaveText(
         'PRESS S TO RETURN TO LOBBY'
     );
-    await expect(
-        page.locator('#highScoresTable .high-score-row.is-header')
-    ).toContainText('NAME');
-    await expect(page.locator('#highScoresTable .high-score-row')).toHaveCount(
-        11
+    await expect(page.locator('#highScoresTable > div').first()).toContainText(
+        'NAME'
     );
+    await expect(page.locator('#highScoresTable > div')).toHaveCount(11);
     await expect(page.locator('#highScoresTable')).not.toContainText(
         'NO SCORES YET'
     );
@@ -247,12 +245,10 @@ test('built browser app renders the name editor through the app root', async ({
     await expect(page.locator('#nameEditorValue')).toHaveText(
         'NAME: ' + currentName
     );
-    await expect(page.locator('#nameEditorGrid .name-editor-row')).toHaveCount(
-        5
+    await expect(page.locator('#nameEditorGrid > div')).toHaveCount(5);
+    await expect(page.locator('#nameEditorGrid button').first()).toHaveText(
+        'A'
     );
-    await expect(
-        page.locator('#nameEditorGrid .name-editor-key').first()
-    ).toHaveText('A');
     await expect(page.locator('#nameEditorHelp')).toContainText('SPACE SELECT');
 
     expect(browserErrors).toEqual([]);

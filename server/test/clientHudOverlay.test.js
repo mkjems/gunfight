@@ -34,8 +34,8 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
 
 function stubCssModuleImports(source) {
     return source.replace(
-        "import styles from './touchLobbyControlsComponentScreen.module.css';",
-        "const styles = { row: 'row', primary: 'primary', secondary: 'secondary' };"
+        /import\s+(\w+)\s+from\s+['"][^'"]+\.module\.css['"];?/g,
+        'const $1 = new Proxy({}, { get(_target, property) { return String(property); } });'
     );
 }
 

@@ -1,0 +1,16 @@
+.table {
+    display: grid;
+    gap: clamp(4px, 1.1cqh, 8px);
+    margin: var(--lobby-margin);
+    width: 100%;
+}
+
+.row {
+    display: grid;
+    gap: clamp(6px, 1.4cqw, 14px);
+    grid-template-columns: 0.8fr 1.5fr repeat(3, 1fr);
+}
+
+.nameCell {
+    text-align: left;
+}

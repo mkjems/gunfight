@@ -1,3 +1,5 @@
+import styles from './highScoresComponentScreen.module.css';
+
 export type HighScoreRow = {
     deaths: number;
     kills: number;
@@ -25,7 +27,7 @@ export function HighScoresScreen(options: HighScoresProps = {}) {
     return (
         <>
             <h1>HIGH SCORES</h1>
-            <div id="highScoresTable">
+            <div className={styles.table} id="highScoresTable">
                 <HighScoresTable
                     rowLimit={options.rowLimit}
                     rows={options.rows || []}
@@ -76,11 +78,16 @@ function getHighScoreRows(rows: HighScoreRow[], rowLimit = 10) {
 
 function HighScoresRow(props: { isHeader?: boolean; values: unknown[] }) {
     return (
-        <div
-            className={'high-score-row' + (props.isHeader ? ' is-header' : '')}
-        >
+        <div className={styles.row}>
             {props.values.map(function (value, index) {
-                return <span key={index}>{String(value)}</span>;
+                return (
+                    <span
+                        className={index === 1 ? styles.nameCell : undefined}
+                        key={index}
+                    >
+                        {String(value)}
+                    </span>
+                );
             })}
         </div>
     );

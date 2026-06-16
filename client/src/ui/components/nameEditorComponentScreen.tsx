@@ -1,3 +1,5 @@
+import styles from './nameEditorComponentScreen.module.css';
+
 export type NameEditorState = {
     cursorCol?: number;
     cursorRow?: number;
@@ -38,8 +40,10 @@ export function NameEditorComponent(props: NameEditorProps = {}) {
     return (
         <>
             <h1>GUNFIGHT 1975</h1>
-            <div id="nameEditorValue">NAME: {state.name || ' '}</div>
-            <div id="nameEditorGrid">
+            <div className={styles.value} id="nameEditorValue">
+                NAME: {state.name || ' '}
+            </div>
+            <div className={styles.grid} id="nameEditorGrid">
                 <NameEditorGrid
                     cursorCol={state.cursorCol}
                     cursorRow={state.cursorRow}
@@ -47,7 +51,7 @@ export function NameEditorComponent(props: NameEditorProps = {}) {
                     onSelect={props.onSelect}
                 />
             </div>
-            <div id="nameEditorHelp">
+            <div className={styles.help} id="nameEditorHelp">
                 <Lines lines={props.helpLines || []} />
             </div>
         </>
@@ -59,23 +63,15 @@ function NameEditorGrid(props: NameEditorGridProps) {
         <>
             {props.grid.map(function (row, rowIndex) {
                 return (
-                    <div
-                        className={
-                            'name-editor-row' +
-                            (row.length < 9 ? ' is-short' : '')
-                        }
-                        key={rowIndex}
-                    >
+                    <div className={getRowClassName(row)} key={rowIndex}>
                         {row.map(function (value, colIndex) {
+                            const selected =
+                                props.cursorRow === rowIndex &&
+                                props.cursorCol === colIndex;
+
                             return (
                                 <button
-                                    className={
-                                        'name-editor-key' +
-                                        (props.cursorRow === rowIndex &&
-                                        props.cursorCol === colIndex
-                                            ? ' is-selected negative-text'
-                                            : '')
-                                    }
+                                    className={getKeyClassName(selected)}
                                     key={value}
                                     onPointerDown={function (evt) {
                                         evt.preventDefault();
@@ -92,6 +88,18 @@ function NameEditorGrid(props: NameEditorGridProps) {
             })}
         </>
     );
+}
+
+function getRowClassName(row: string[]) {
+    return [styles.row, row.length < 9 ? styles.shortRow : '']
+        .filter(Boolean)
+        .join(' ');
+}
+
+function getKeyClassName(selected: boolean) {
+    return [styles.key, selected ? styles.selectedKey : '']
+        .filter(Boolean)
+        .join(' ');
 }
 
 function Lines(props: LinesProps) {

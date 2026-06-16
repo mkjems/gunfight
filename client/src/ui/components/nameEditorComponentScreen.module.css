@@ -1,0 +1,54 @@
+.value {
+    min-height: 1.55em;
+}
+
+.grid {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(5px, 1.25cqh, 9px);
+    pointer-events: auto;
+    width: 100%;
+}
+
+.help {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.row {
+    display: grid;
+    gap: clamp(4px, 1cqw, 10px);
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    justify-content: center;
+}
+
+.shortRow {
+    align-self: center;
+    width: min(100%, 340px);
+}
+
+.key {
+    background: transparent;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+    color: var(--yellow);
+    font: inherit;
+    height: clamp(34px, 7cqh, 52px);
+    min-width: 0;
+    padding: 0;
+    text-align: center;
+    text-shadow: 1px 1px 0 rgb(0, 0, 0);
+    touch-action: manipulation;
+}
+
+.selectedKey {
+    background: var(--yellow);
+    border-color: var(--yellow);
+    color: var(--black);
+    outline: 2px solid var(--yellow);
+    outline-offset: 2px;
+    padding: 0 0.25em;
+    text-shadow: none;
+}

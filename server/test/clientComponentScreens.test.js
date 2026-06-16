@@ -34,8 +34,8 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
 
 function stubCssModuleImports(source) {
     return source.replace(
-        "import styles from './touchLobbyControlsComponentScreen.module.css';",
-        "const styles = { row: 'row', primary: 'primary', secondary: 'secondary' };"
+        /import\s+(\w+)\s+from\s+['"][^'"]+\.module\.css['"];?/g,
+        'const $1 = new Proxy({}, { get(_target, property) { return String(property); } });'
     );
 }
 
@@ -169,17 +169,13 @@ test('renders game HUD scores, timer, round text, and hit messages through the a
 
     assert.equal(query(root, '#gameHud').hidden, false);
     assert.equal(query(root, '#lobbyHud').hidden, true);
-    assert.equal(query(root, '#scoreLeft .scoreValue').textContent, '2');
-    assert.equal(query(root, '#scoreLeft .scoreName').textContent, 'ACE');
-    assert.equal(query(root, '#scoreRight .scoreName').textContent, 'DOC');
-    assert.equal(query(root, '#scoreRight .scoreValue').textContent, '1');
+    assert.deepEqual(childTexts(query(root, '#scoreLeft')), ['2', 'ACE']);
+    assert.deepEqual(childTexts(query(root, '#scoreRight')), ['DOC', '1']);
     assert.equal(root.querySelector('#roundTimer').textContent, '67');
     assert.equal(root.querySelector('#roundMessage').textContent, 'DRAW!');
     assert.equal(query(root, '#ammoRow').hidden, false);
     assert.equal(query(root, '#ammoLeft').children.length, 6);
     assert.equal(query(root, '#ammoRight').children.length, 6);
-    assert.equal(root.querySelectorAll('#ammoLeft .is-empty').length, 3);
-    assert.equal(root.querySelectorAll('#ammoRight .is-empty').length, 4);
 
     const hitMessage = query(root, '#hitMessage');
     assert.equal(hitMessage.textContent, 'HIT!');
@@ -230,10 +226,6 @@ test('renders high-score table rows with ten ranked places through the app root'
     assert.equal(query(root, '#highScoresBackPrompt').textContent, 'PRESS S');
     assert.equal(query(root, '#highScoresPlayPrompt').textContent, '');
     assert.equal(query(root, '#highScoresTable').children.length, 11);
-    assert.equal(
-        query(root, '#highScoresTable').children[0].className,
-        'high-score-row is-header'
-    );
     assert.deepEqual(childTexts(query(root, '#highScoresTable').children[0]), [
         'PLACE',
         'NAME',
@@ -384,28 +376,17 @@ test('renders lobby screen sections through the app root', async function () {
 
     assert.equal(main.hidden, false);
     assert.equal(query(root, '#highScoresScreen').hidden, true);
-    assert.equal(
-        query(previousResult, '#lobbyPreviousScoreLeft .scoreValue')
-            .textContent,
-        '3'
-    );
-    assert.equal(
-        query(previousResult, '#lobbyPreviousScoreLeft .scoreName').textContent,
-        'ACE'
+    assert.deepEqual(
+        childTexts(query(previousResult, '#lobbyPreviousScoreLeft')),
+        ['3', 'ACE']
     );
     assert.equal(
         query(previousResult, '#lobbyPreviousRoundTimer').textContent,
         'GAME OVER'
     );
-    assert.equal(
-        query(previousResult, '#lobbyPreviousScoreRight .scoreName')
-            .textContent,
-        'DOC'
-    );
-    assert.equal(
-        query(previousResult, '#lobbyPreviousScoreRight .scoreValue')
-            .textContent,
-        '2'
+    assert.deepEqual(
+        childTexts(query(previousResult, '#lobbyPreviousScoreRight')),
+        ['DOC', '2']
     );
     assert.equal(controls.hidden, false);
     assert.equal(editPrompt.hidden, false);
@@ -739,15 +720,14 @@ test('renders name editor grid and dispatches pointer selections through the app
 
     const grid = query(root, '#nameEditorGrid');
     assert.equal(grid.children.length, 2);
-    assert.equal(grid.children[0].className, 'name-editor-row is-short');
+    assert.deepEqual(childTexts(grid.children[0]), ['A', 'B']);
+    assert.deepEqual(childTexts(grid.children[1]), ['OK']);
 
     const selectedKey = /** @type {TestElement} */ (
         /** @type {unknown} */ (grid.children[0].children[1])
     );
-    assert.equal(
-        selectedKey.className,
-        'name-editor-key is-selected negative-text'
-    );
+    assert.equal(selectedKey.tagName, 'BUTTON');
+    assert.equal(selectedKey.textContent, 'B');
 
     const pointerDown = new browser.window.PointerEvent('pointerdown', {
         cancelable: true

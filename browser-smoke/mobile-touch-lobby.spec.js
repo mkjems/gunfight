@@ -171,9 +171,7 @@ test.describe('mobile touch lobby', function () {
         await page.locator('#touchHighScoresButton').click();
 
         await expect(page.locator('#highScoresScreen')).toBeVisible();
-        await expect(
-            page.locator('#highScoresTable .high-score-row')
-        ).toHaveCount(6);
+        await expect(page.locator('#highScoresTable > div')).toHaveCount(6);
         await expect(page.locator('#highScoresTable')).toContainText('5TH');
         await expect(page.locator('#highScoresTable')).not.toContainText('6TH');
         await expect(page.locator('#touchLobbyControls')).toBeVisible();

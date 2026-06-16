@@ -274,116 +274,6 @@ body.install-prompt-visible #touchControls {
     display: none;
 }
 
-#scoreRow,
-.scoreRow {
-    align-items: start;
-    box-sizing: border-box;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    left: 0;
-    padding: clamp(12px, 3.4cqh, 24px) clamp(56px, 12.8cqw, 122px) 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-}
-
-.scoreSide {
-    align-items: center;
-    display: flex;
-    gap: clamp(7px, 1.5cqw, 14px);
-    max-width: 100%;
-    min-width: 0;
-    white-space: nowrap;
-}
-
-.scoreName {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.scoreValue {
-    flex: 0 0 auto;
-}
-
-#scoreLeft,
-.scoreSide.is-left {
-    justify-self: start;
-}
-
-#roundTimer,
-.roundTimer {
-    justify-self: center;
-}
-
-#scoreRight,
-.scoreSide.is-right {
-    justify-self: end;
-}
-
-#ammoRow {
-    align-items: end;
-    bottom: max(2px, 0.3cqh);
-    box-sizing: border-box;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    left: 0;
-    padding: 0 clamp(56px, 12.8cqw, 122px);
-    pointer-events: none;
-    position: absolute;
-    right: 0;
-}
-
-#ammoRow[hidden] {
-    display: none;
-}
-
-.ammoDisplay {
-    display: flex;
-    gap: clamp(3px, 0.63cqw, 6px);
-}
-
-.ammoDisplay[hidden] {
-    display: none;
-}
-
-#ammoLeft {
-    justify-self: start;
-}
-
-#ammoRight {
-    flex-direction: row-reverse;
-    justify-self: end;
-}
-
-.ammoRound {
-    display: block;
-    filter: drop-shadow(2px 2px 0 var(--shadow-color));
-    height: clamp(24px, 6.2cqh, 40px);
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-    object-fit: fill;
-    width: clamp(11px, 2.31cqw, 18px);
-}
-
-.ammoRound.is-empty {
-    visibility: hidden;
-}
-
-#roundMessage {
-    align-self: center;
-    grid-row: 2;
-    justify-self: center;
-    max-width: 100%;
-    white-space: nowrap;
-}
-
-#hitMessage {
-    position: absolute;
-    transform: translate(-50%, -100%);
-    white-space: nowrap;
-}
-
 #lobbyHud {
     box-sizing: border-box;
     align-items: center;
@@ -432,7 +322,6 @@ h2 {
 #lobbyIdentity,
 #lobbyControlsText,
 #lobbySlots,
-#nameEditorHelp,
 #highScoresScreen {
     align-items: center;
     display: flex;
@@ -499,27 +388,6 @@ h2 {
     width: min(78cqw, 760px);
 }
 
-#highScoresTable {
-    display: grid;
-    gap: clamp(4px, 1.1cqh, 8px);
-    margin: var(--lobby-margin);
-    width: 100%;
-}
-
-.high-score-row {
-    display: grid;
-    grid-template-columns: 0.8fr 1.5fr repeat(3, 1fr);
-    gap: clamp(6px, 1.4cqw, 14px);
-}
-
-.high-score-row span:nth-child(2) {
-    text-align: left;
-}
-
-.high-score-empty {
-    min-height: 1lh;
-}
-
 #nameEditor {
     align-items: center;
     justify-content: center;
@@ -527,51 +395,6 @@ h2 {
     flex-direction: column;
     gap: clamp(12px, 2.6cqh, 22px);
     width: min(82cqw, 760px);
-}
-
-#nameEditorValue {
-    min-height: 1.55em;
-}
-
-#nameEditorGrid {
-    display: flex;
-    flex-direction: column;
-    gap: clamp(5px, 1.25cqh, 9px);
-    pointer-events: auto;
-    width: 100%;
-}
-
-.name-editor-row {
-    display: grid;
-    gap: clamp(4px, 1cqw, 10px);
-    grid-auto-columns: minmax(0, 1fr);
-    grid-auto-flow: column;
-    justify-content: center;
-}
-
-.name-editor-row.is-short {
-    align-self: center;
-    width: min(100%, 340px);
-}
-
-.name-editor-key {
-    background: transparent;
-    border: 2px solid transparent;
-    box-sizing: border-box;
-    color: var(--yellow);
-    font: inherit;
-    height: clamp(34px, 7cqh, 52px);
-    min-width: 0;
-    padding: 0;
-    text-align: center;
-    text-shadow: 1px 1px 0 rgb(0, 0, 0);
-    touch-action: manipulation;
-}
-
-.name-editor-key.is-selected {
-    border-color: var(--yellow);
-    outline: 2px solid var(--yellow);
-    outline-offset: 2px;
 }
 
 #touchControls {
@@ -585,37 +408,6 @@ h2 {
     #gameHud {
         inset: 0;
         position: fixed;
-    }
-
-    #scoreRow {
-        padding: max(8px, env(safe-area-inset-top, 0)) clamp(12px, 4vw, 24px) 0;
-    }
-
-    .scoreSide {
-        gap: clamp(5px, 1.8vw, 10px);
-    }
-
-    .scoreName {
-        max-width: 28vw;
-    }
-
-    #ammoRow {
-        bottom: max(8px, env(safe-area-inset-bottom, 0));
-        display: flex;
-        gap: clamp(60px, 18vw, 162px);
-        justify-content: center;
-        left: max(130px, env(safe-area-inset-left, 0));
-        padding: 0;
-        right: max(145px, env(safe-area-inset-right, 0));
-    }
-
-    .ammoDisplay {
-        gap: clamp(3px, 0.9vw, 5px);
-    }
-
-    .ammoRound {
-        height: clamp(25px, 7vh, 34px);
-        width: clamp(11px, 2.8vw, 15px);
     }
 
     #touchControls {
@@ -895,12 +687,6 @@ h2 {
 
 .blink-text {
     animation: blink-animation 2s steps(1, end) infinite;
-}
-
-.large-text {
-    font-size: var(--large-text-size);
-    font-family: var(--font-family-h1);
-    text-shadow: 3px 3px 0 rgb(0, 0, 0);
 }
 
 .negative-text {

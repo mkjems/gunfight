@@ -130,6 +130,19 @@
           current build needs a declaration file.
 - [ ] Migrate product styles incrementally by ownership area.
     - [x] Move touch lobby controls row styling as the first CSS Modules pilot.
+    - [x] Move high-scores table and row styling into a CSS Module.
+    - [x] Move name editor value, help, grid, row, and key styling into a CSS
+          Module.
+    - [x] Move score row, ammo display, round message, and hit message styling
+          into a CSS Module.
+    - [x] Move the first isolated component set while keeping ids stable and
+          moving only owned presentation classes.
+    - [ ] Leave layout styles that coordinate several layers in global CSS until
+          their ownership is clearer.
+    - [ ] For future component migrations, keep running component tests and a
+          quick browser check for desktop/mobile layout.
+    - [ ] Avoid future id or markup changes unless the component migration needs
+          them.
 - [ ] Move component tests that import CSS Modules onto a Vite-aware path.
     - [ ] Decide between Vitest for component/UI tests or a shared Vite SSR
           loader used from `node:test`.
@@ -144,14 +157,6 @@
     - [ ] Update `package.json` scripts so normal checks run the Vite/Vitest UI
           tests together with the existing Node tests.
     - [ ] Document the chosen test boundary in `UI-ownership.md`.
-    - [ ] Move isolated component styles first: touch lobby controls, high
-          scores, name editor, ammo display, and score rows.
-    - [ ] Leave layout styles that coordinate several layers in global CSS until
-          their ownership is clearer.
-    - [ ] After each component migration, run component tests and a quick browser
-          check for desktop/mobile layout.
-    - [ ] Avoid renaming ids or changing markup unless the component migration
-          needs it.
 - [ ] Decide how CSS Modules relate to tools.
     - [ ] Do not migrate `client/src/tools/**` just to match the product.
     - [ ] Tools are internal authoring utilities; they should work correctly, but

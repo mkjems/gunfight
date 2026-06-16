@@ -213,8 +213,8 @@ async function getExpectedScoreForWinner(page, winnerId) {
 
 function getWinningScoreSelector(scoreLabel) {
     return scoreLabel.indexOf('1-') === 0
-        ? '#scoreLeft .scoreValue'
-        : '#scoreRight .scoreValue';
+        ? '#scoreLeft span:first-child'
+        : '#scoreRight span:last-child';
 }
 
 async function createRoundResultPayload(page) {
@@ -481,21 +481,27 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
     await Promise.all([
         expect(desktop.locator('#gameHud')).toBeVisible(),
         expect(desktop.locator('#scoreRow')).toBeVisible(),
-        expect(desktop.locator('#scoreLeft .scoreValue')).toHaveText('0'),
-        expect(desktop.locator('#scoreRight .scoreValue')).toHaveText('0'),
-        expect(desktop.locator('#scoreLeft .scoreName')).toHaveText('NOVA'),
-        expect(desktop.locator('#scoreRight .scoreName')).toHaveText('ZED'),
-        expect(desktop.locator('#ammoLeft .ammoRound')).toHaveCount(6),
-        expect(desktop.locator('#ammoRight .ammoRound')).toHaveCount(6),
+        expect(desktop.locator('#scoreLeft span:first-child')).toHaveText('0'),
+        expect(desktop.locator('#scoreRight span:last-child')).toHaveText('0'),
+        expect(desktop.locator('#scoreLeft span:last-child')).toHaveText(
+            'NOVA'
+        ),
+        expect(desktop.locator('#scoreRight span:first-child')).toHaveText(
+            'ZED'
+        ),
+        expect(desktop.locator('#ammoLeft img')).toHaveCount(6),
+        expect(desktop.locator('#ammoRight img')).toHaveCount(6),
         expect(mobile.locator('#gameHud')).toBeVisible(),
         expect(mobile.locator('#scoreRow')).toBeVisible(),
-        expect(mobile.locator('#scoreLeft .scoreValue')).toHaveText('0'),
-        expect(mobile.locator('#scoreRight .scoreValue')).toHaveText('0'),
-        expect(mobile.locator('#scoreLeft .scoreName')).toHaveText('NOVA'),
-        expect(mobile.locator('#scoreRight .scoreName')).toHaveText('ZED'),
+        expect(mobile.locator('#scoreLeft span:first-child')).toHaveText('0'),
+        expect(mobile.locator('#scoreRight span:last-child')).toHaveText('0'),
+        expect(mobile.locator('#scoreLeft span:last-child')).toHaveText('NOVA'),
+        expect(mobile.locator('#scoreRight span:first-child')).toHaveText(
+            'ZED'
+        ),
         expect(mobile.locator('#ammoRow')).toBeVisible(),
-        expect(mobile.locator('#ammoLeft .ammoRound')).toHaveCount(6),
-        expect(mobile.locator('#ammoRight .ammoRound')).toHaveCount(6),
+        expect(mobile.locator('#ammoLeft img')).toHaveCount(6),
+        expect(mobile.locator('#ammoRight img')).toHaveCount(6),
         expect(mobile.locator('#touchJoystick')).toBeVisible(),
         expect(mobile.locator('#touchAimSlider')).toBeVisible(),
         expect(mobile.locator('#touchShootButton')).toBeVisible()

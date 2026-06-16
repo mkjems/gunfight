@@ -1,4 +1,5 @@
 import { Config } from '../../platform/config.js';
+import styles from './gameHudComponentScreen.module.css';
 
 export type HitMessage = {
     text: string;
@@ -38,7 +39,7 @@ export function GameHudComponent(options: GameHudProps) {
         <>
             <ScoreRow {...options} />
             <AmmoRow displays={options.ammoDisplays || []} />
-            <div id="roundMessage" className="large-text">
+            <div className={styles.roundMessage} id="roundMessage">
                 {toText(options.roundMessage)}
             </div>
             <HitMessageView hitMessage={options.hitMessage} />
@@ -48,7 +49,10 @@ export function GameHudComponent(options: GameHudProps) {
 
 export function ScoreRow(options: ScoreRowProps) {
     return (
-        <div className="scoreRow" id={getScoreRowId(options, 'scoreRow')}>
+        <div
+            className={styles.scoreRow}
+            id={getScoreRowId(options, 'scoreRow')}
+        >
             <ScoreSide
                 id={getScoreRowId(options, 'scoreLeft')}
                 name={options.leftName}
@@ -56,7 +60,7 @@ export function ScoreRow(options: ScoreRowProps) {
                 side="left"
             />
             <div
-                className="roundTimer"
+                className={styles.roundTimer}
                 id={getScoreRowId(options, 'roundTimer')}
             >
                 {toText(options.timerLabel)}
@@ -80,11 +84,15 @@ type ScoreSideProps = {
 
 function ScoreSide(props: ScoreSideProps) {
     const name = toText(props.name).trim();
-    const score = <span className="scoreValue">{toText(props.score, 0)}</span>;
-    const label = name ? <span className="scoreName">{name}</span> : null;
+    const score = (
+        <span className={styles.scoreValue}>{toText(props.score, 0)}</span>
+    );
+    const label = name ? (
+        <span className={styles.scoreName}>{name}</span>
+    ) : null;
 
     return (
-        <div className={'scoreSide is-' + props.side} id={props.id}>
+        <div className={getScoreSideClassName(props.side)} id={props.id}>
             {props.side === 'left' ? (
                 <>
                     {score}
@@ -98,6 +106,13 @@ function ScoreSide(props: ScoreSideProps) {
             )}
         </div>
     );
+}
+
+function getScoreSideClassName(side: ScoreSideProps['side']) {
+    return getClassName([
+        styles.scoreSide,
+        side === 'left' ? styles.leftSide : styles.rightSide
+    ]);
 }
 
 function getScoreRowId(options: ScoreRowProps, id: string) {
@@ -117,7 +132,12 @@ function AmmoRow(props: AmmoRowProps) {
     const right = props.displays.find((display) => display.side === 'right');
 
     return (
-        <div aria-hidden="true" hidden={!left && !right} id="ammoRow">
+        <div
+            aria-hidden="true"
+            className={styles.ammoRow}
+            hidden={!left && !right}
+            id="ammoRow"
+        >
             <AmmoDisplay display={left} id="ammoLeft" side="left" />
             <AmmoDisplay display={right} id="ammoRight" side="right" />
         </div>
@@ -133,13 +153,20 @@ type AmmoDisplayProps = {
 function AmmoDisplay(props: AmmoDisplayProps) {
     return (
         <div
-            className={'ammoDisplay is-' + props.side}
+            className={getAmmoDisplayClassName(props.side)}
             hidden={!props.display}
             id={props.id}
         >
             {createAmmoRounds(props.display?.count || 0)}
         </div>
     );
+}
+
+function getAmmoDisplayClassName(side: AmmoDisplayProps['side']) {
+    return getClassName([
+        styles.ammoDisplay,
+        side === 'left' ? styles.leftAmmo : styles.rightAmmo
+    ]);
 }
 
 function createAmmoRounds(count: number) {
@@ -151,7 +178,7 @@ function createAmmoRounds(count: number) {
         return (
             <img
                 alt=""
-                className={'ammoRound' + (visible ? '' : ' is-empty')}
+                className={getAmmoRoundClassName(visible)}
                 key={index}
                 src="images/bullet.png"
             />
@@ -159,15 +186,23 @@ function createAmmoRounds(count: number) {
     });
 }
 
+function getAmmoRoundClassName(visible: boolean) {
+    return getClassName([
+        styles.ammoRound,
+        visible ? '' : styles.emptyAmmoRound
+    ]);
+}
+
 function HitMessageView(props: HitMessageProps) {
     const hitMessage = props.hitMessage;
 
     if (!hitMessage) {
-        return <div id="hitMessage" hidden></div>;
+        return <div className={styles.hitMessage} id="hitMessage" hidden></div>;
     }
 
     return (
         <div
+            className={styles.hitMessage}
             id="hitMessage"
             style={{
                 left: (hitMessage.x / Config.canvas.width) * 100 + '%',
@@ -177,6 +212,10 @@ function HitMessageView(props: HitMessageProps) {
             {hitMessage.text}
         </div>
     );
+}
+
+function getClassName(classNames: string[]) {
+    return classNames.filter(Boolean).join(' ');
 }
 
 function toText(value: unknown, fallback: unknown = '') {
