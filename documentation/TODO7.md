@@ -102,14 +102,27 @@
 
 ## P11 - Mobile lobby screen improvements
 
-- [ ] On mobile, in the lobby. Ad some vertical space between the 'Play gunfight' button and the other two buttons. And I would like high-score and edit-name buttons to be horizontally aligned.
+- [x] On mobile, in the lobby. Ad some vertical space between the 'Play gunfight' button and the other two buttons. And I would like high-score and edit-name buttons to be horizontally aligned.
 
 ## P12 Improve visual impact of game
 
 - [ ] Add a an option for a rain effect on the scenario. It should just look like it is raining. I would like to see raindrops falling at an 7 degrees angle and hitting the ground. We cant do collision detection for all drops so we must cheat.
 
+## P13 - Improve Rock editor
+
+-[ ] The WYSIWYG area with the rock itself should not scale the axis as the dimensions of the rock changes. The scale should be absolute. Add zoom - and + to change the axis values.
+
+## P14 - Improve Scenario editor
+
+## P15 - Improve the CSS - start using CSS Modules in the product
+
 ## Other Ideas
 
+- [ ] Add more interactive elements to the scenarios,
+      [ ] Barrels you shoot and liquid spills out
+      [ ] TNT you can shoot that explodes
+      [ ] Better gun you can pick up
+      [ ] A force shield that will protect you from bullet in a number of seconds
 - [ ] Add persistent high scores with a database.
 - [ ] Add private room codes.
 - [ ] Add spectator mode.

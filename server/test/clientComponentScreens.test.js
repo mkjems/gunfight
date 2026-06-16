@@ -537,10 +537,17 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
 
     assert.equal(query(root, '#touchLobbyControls').hidden, false);
 
+    const primaryRow = query(root, '.touchLobbyRow.is-primary');
+    const secondaryRow = query(root, '.touchLobbyRow.is-secondary');
+    const backRow = query(root, '.touchLobbyRow.is-back');
     const editButton = query(root, '#touchEditButton');
     const highScoresButton = query(root, '#touchHighScoresButton');
     const playButton = query(root, '#touchPlayButton');
     const backButton = query(root, '#touchBackButton');
+    assert.equal(primaryRow.hidden, false);
+    assert.equal(secondaryRow.hidden, false);
+    assert.equal(backRow.hidden, true);
+    assert.deepEqual(childTexts(secondaryRow), ['EDIT NAME', 'HIGH SCORES']);
     assert.equal(editButton.textContent, 'EDIT NAME');
     assert.equal(highScoresButton.textContent, 'HIGH SCORES');
     assert.equal(playButton.textContent, 'PLAY GUNFIGHT');
@@ -577,6 +584,8 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
         }
     });
 
+    assert.equal(query(root, '.touchLobbyRow.is-primary').hidden, true);
+    assert.equal(query(root, '.touchLobbyRow.is-secondary').hidden, false);
     assert.equal(query(root, '#touchEditButton').hidden, false);
     assert.equal(query(root, '#touchHighScoresButton').hidden, false);
     assert.equal(query(root, '#touchPlayButton').hidden, true);
@@ -593,6 +602,9 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
     });
 
     assert.equal(query(root, '#touchLobbyControls').hidden, false);
+    assert.equal(query(root, '.touchLobbyRow.is-primary').hidden, true);
+    assert.equal(query(root, '.touchLobbyRow.is-secondary').hidden, true);
+    assert.equal(query(root, '.touchLobbyRow.is-back').hidden, false);
     assert.equal(query(root, '#touchEditButton').hidden, true);
     assert.equal(query(root, '#touchHighScoresButton').hidden, true);
     assert.equal(query(root, '#touchPlayButton').hidden, true);

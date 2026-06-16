@@ -18,33 +18,46 @@ type TouchLobbyButtonProps = {
 };
 
 export function TouchLobbyControls(options: TouchLobbyControlsProps = {}) {
+    const showPlayButton = options.showPlayButton ?? options.showMainButtons;
+    const showSecondaryButtons = !!options.showMainButtons;
+    const showBackButton = !!options.showBackButton;
+
     return (
         <>
-            <TouchLobbyButton
-                id="touchPlayButton"
-                label="PLAY GUNFIGHT"
-                negative={true}
-                onTap={options.onPlay}
-                visible={options.showPlayButton ?? options.showMainButtons}
-            />
-            <TouchLobbyButton
-                id="touchEditButton"
-                label="EDIT NAME"
-                onTap={options.onEdit}
-                visible={options.showMainButtons}
-            />
-            <TouchLobbyButton
-                id="touchHighScoresButton"
-                label="HIGH SCORES"
-                onTap={options.onHighScores}
-                visible={options.showMainButtons}
-            />
-            <TouchLobbyButton
-                id="touchBackButton"
-                label="BACK TO LOBBY"
-                onTap={options.onBack}
-                visible={options.showBackButton}
-            />
+            <div className="touchLobbyRow is-primary" hidden={!showPlayButton}>
+                <TouchLobbyButton
+                    id="touchPlayButton"
+                    label="PLAY GUNFIGHT"
+                    negative={true}
+                    onTap={options.onPlay}
+                    visible={showPlayButton}
+                />
+            </div>
+            <div
+                className="touchLobbyRow is-secondary"
+                hidden={!showSecondaryButtons}
+            >
+                <TouchLobbyButton
+                    id="touchEditButton"
+                    label="EDIT NAME"
+                    onTap={options.onEdit}
+                    visible={showSecondaryButtons}
+                />
+                <TouchLobbyButton
+                    id="touchHighScoresButton"
+                    label="HIGH SCORES"
+                    onTap={options.onHighScores}
+                    visible={showSecondaryButtons}
+                />
+            </div>
+            <div className="touchLobbyRow is-back" hidden={!showBackButton}>
+                <TouchLobbyButton
+                    id="touchBackButton"
+                    label="BACK TO LOBBY"
+                    onTap={options.onBack}
+                    visible={showBackButton}
+                />
+            </div>
         </>
     );
 }
