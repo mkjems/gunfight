@@ -110,7 +110,56 @@
 
 ## P13 - Improve Rock editor
 
--[ ] The WYSIWYG area with the rock itself should not scale the axis as the dimensions of the rock changes. The scale should be absolute. Add zoom - and + to change the axis values.
+- [ ] Make the rock preview use an absolute world-coordinate scale.
+    - [ ] Replace the bounds-based preview scale in
+          `client/src/tools/rockEditor.ts` with editor zoom state so the view
+          transform no longer derives scale from the selected rock dimensions.
+    - [ ] Keep world origin centered by default and draw the x/y axes from that
+          origin; changing rock width, height, or selected type must not recenter
+          or rescale the axes.
+    - [ ] Keep drag hit testing and `screenToWorld` coordinate edits on the same
+          absolute transform so dragged points still write real rock coordinates.
+- [ ] Add preview zoom controls to the rock editor UI.
+    - [ ] Add `-` and `+` zoom buttons, plus a compact zoom or axis-scale label,
+          near the preview toolbar in `client/rock-editor.html`.
+    - [ ] Store zoom as discrete, clamped levels in `rockEditor.ts`; default to a
+          practical world-to-screen scale for the existing rocks.
+    - [ ] Make zoom redraw only the preview transform and grid; it must not change
+          rock JSON, point coordinates, width, height, selected point, or
+          validation state.
+    - [ ] Disable the zoom buttons at min/max zoom or otherwise make the limits
+          clear.
+- [ ] Add preview panning.
+    - [ ] Show the world origin `(0, 0)` as a low-noise draggable marker on the
+          canvas.
+    - [ ] Dragging the origin marker should pan the viewport by changing the
+          preview offset; it must not move the rock or rewrite point
+          coordinates.
+    - [ ] Allow empty-canvas drag panning if it feels natural after the origin
+          marker is in place.
+    - [ ] Add a reset-view control if panning makes it easy to lose the rock or
+          origin.
+- [ ] Draw the grid from world coordinates instead of fixed canvas pixels.
+    - [ ] Derive grid-line spacing and axis labels from the current zoom level.
+    - [ ] Keep major axes visually distinct from regular grid lines.
+    - [ ] Add a subtle size reference such as a scale-bar label or sparse axis
+          numbers; keep it quiet enough that polygon editing remains the focus.
+    - [ ] Keep the canvas usable on desktop and stacked mobile layouts.
+- [ ] Verify the behavior.
+    - [ ] Extend the rock-editor browser smoke test to prove canvas rendering
+          still works after zooming.
+    - [ ] Add a browser smoke assertion that applying a larger rock size changes
+          the rock's on-canvas size while the axis/grid scale stays stable.
+    - [ ] Add a browser smoke assertion that panning changes only the preview
+          transform, not the output JSON.
+    - [ ] Run `npm run check:deploy`.
+    - [ ] Run `npm run test:browser` for the updated `/rock-editor` smoke
+          coverage.
+- [ ] Update docs after implementation.
+    - [ ] Update `documentation/Specification-main.md` to mention absolute
+          preview scale, zoom controls, panning, and the low-noise size
+          reference.
+    - [ ] Mark this P13 checklist done as each implementation task lands.
 
 ## P14 - Improve Scenario editor
 
@@ -177,6 +226,55 @@
     - [x] What remains global and why.
     - [x] How tests should select elements without depending on hashed class
           names.
+
+## P16 - Improve current mega components by breaking them into smaller reusable parts and follow component guidelines.
+
+- [ ] Use `Preact-components.md` as the component design guide for this work.
+    - [ ] Prefer smaller arrow-function components when touching existing
+          component files.
+    - [ ] Keep screen/domain components allowed, but compose them from focused
+          child components.
+    - [ ] Keep gameplay state, network state, timers, socket work, and canvas
+          work outside the component tree.
+    - [ ] Do not create primitive/shared UI components until at least two real
+          product components need the same concept.
+- [ ] Split `ClientApp` into clearer app-shell components.
+    - [ ] Extract prompt components: rotate prompt and install prompt.
+    - [ ] Extract screen wrapper components for game, lobby, high scores, and
+          name editor.
+    - [ ] Extract touch control wrapper components for lobby and gameplay touch
+          controls.
+    - [ ] Keep `ClientApp` responsible for composing app state into the visible
+          screen tree, not for detailed markup.
+- [ ] Split `GameHudComponent` into focused HUD pieces.
+    - [ ] Keep `ScoreRow`, `ScoreSide`, `AmmoRow`, `AmmoDisplay`,
+          `RoundMessage`, and `HitMessage` as clear individual components.
+    - [ ] Keep ids stable for tests and browser/runtime lookup.
+    - [ ] Keep score/ammo formatting logic small and local unless another
+          component needs it.
+- [ ] Split `LobbyMain` into focused lobby pieces.
+    - [ ] Extract lobby title/instructions, prompt stack, individual prompt
+          slots, previous result, and player labels.
+    - [ ] Keep lobby layout data flowing in through props from view models.
+    - [ ] Keep visual state such as reserved hidden prompts explicit and easy to
+          read.
+- [ ] Split `NameEditorComponent` into focused editor pieces.
+    - [ ] Extract name value, key grid, key row, key button, and help lines.
+    - [ ] Keep direct key selection callback behavior covered by Vitest.
+    - [ ] Keep keyboard/name editing state outside the component.
+- [ ] Split `HighScoresScreen` into focused score-table pieces.
+    - [ ] Extract table, row, cell, and prompt components.
+    - [ ] Keep row-limit behavior and empty-row formatting covered by Vitest.
+- [ ] Review shared UI opportunities after the first splits.
+    - [ ] Consider shared `ArcadeButton`, `ScreenTitle`, `PromptText`, or
+          `Stack` components only if the extracted components reveal real
+          duplication.
+    - [ ] Avoid generic abstractions that make the arcade UI harder to read.
+- [ ] Verify each component split incrementally.
+    - [ ] Run `npm run test:ui` after each component-area split.
+    - [ ] Run `npm run check:deploy` after each completed area.
+    - [ ] Run browser smoke tests after changes that affect layout, touch
+          controls, or screen visibility.
 
 ## Other Ideas
 
