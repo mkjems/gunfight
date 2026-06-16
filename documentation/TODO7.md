@@ -135,6 +135,8 @@
           Module.
     - [x] Move score row, ammo display, round message, and hit message styling
           into a CSS Module.
+    - [x] Move lobby instructions, prompt slots, player labels, and previous
+          result wrapper styling into a CSS Module.
     - [x] Move the first isolated component set while keeping ids stable and
           moving only owned presentation classes.
     - [ ] Leave layout styles that coordinate several layers in global CSS until

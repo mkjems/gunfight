@@ -1,4 +1,5 @@
 import { ScoreRow, type ScoreRowProps } from './gameHudComponentScreen.js';
+import styles from './lobbyComponentScreen.module.css';
 
 export type LobbySlot = {
     label: string;
@@ -45,9 +46,13 @@ export function LobbyMain(options: LobbyComponentProps = {}) {
     return (
         <>
             <LobbyPreviousResult result={options.previousResult} />
-            <div class="lobbyInstructions">
-                <h1>GUNFIGHT 1975</h1>
-                <div id="lobbyControlsText" hidden={!options.showControls}>
+            <div className={styles.instructions}>
+                <h1 className={styles.title}>GUNFIGHT 1975</h1>
+                <div
+                    className={styles.controlsText}
+                    id="lobbyControlsText"
+                    hidden={!options.showControls}
+                >
                     <Lines lines={options.controls || []} />
                 </div>
                 <div
@@ -68,16 +73,17 @@ export function LobbyMain(options: LobbyComponentProps = {}) {
                 </div>
                 <div
                     aria-hidden={!options.playPrompt}
-                    className={
-                        'blink-text ' + getPromptClassName(!!options.playPrompt)
-                    }
+                    className={getClassName([
+                        'blink-text',
+                        getPromptClassName(!!options.playPrompt)
+                    ])}
                     hidden={!reserveDesktopPrompts && !options.playPrompt}
                     id="lobbyPlayPrompt"
                 >
                     <Text text={options.playPrompt || ''} />
                 </div>
             </div>
-            <div id="lobbyPlayerLabels">
+            <div className={styles.playerLabels} id="lobbyPlayerLabels">
                 <LobbyPlayerLabels
                     labels={[
                         ...(options.playerLabels || []),
@@ -95,14 +101,17 @@ function LobbyPreviousResult(props: { result?: ScoreRowProps | null }) {
     }
 
     return (
-        <div id="lobbyPreviousResult">
+        <div className={styles.previousResult} id="lobbyPreviousResult">
             <ScoreRow {...props.result} idPrefix="lobbyPrevious" />
         </div>
     );
 }
 
 function getPromptClassName(visible: boolean) {
-    return 'lobbyPromptSlot' + (visible ? '' : ' is-reserved-hidden');
+    return getClassName([
+        styles.promptSlot,
+        visible ? '' : styles.reservedHidden
+    ]);
 }
 
 function Lines(props: LinesProps) {
@@ -129,11 +138,7 @@ function LobbyPlayerLabels(props: { labels: LobbyTextLine[] }) {
             {props.labels.map(function (label) {
                 return (
                     <div
-                        className={
-                            'lobby-player-label' +
-                            (label.variant ? ' is-' + label.variant : '') +
-                            (label.negative ? ' negative-text' : '')
-                        }
+                        className={getPlayerLabelClassName(label)}
                         key={label.key}
                         style={{
                             left: label.x + '%',
@@ -146,4 +151,28 @@ function LobbyPlayerLabels(props: { labels: LobbyTextLine[] }) {
             })}
         </>
     );
+}
+
+function getPlayerLabelClassName(label: LobbyTextLine) {
+    return getClassName([
+        styles.playerLabel,
+        getPlayerLabelVariantClassName(label.variant),
+        label.negative ? 'negative-text' : ''
+    ]);
+}
+
+function getPlayerLabelVariantClassName(variant: LobbyTextLine['variant']) {
+    if (variant === 'player-status') {
+        return styles.playerStatus;
+    }
+
+    if (variant === 'opponent-placeholder-marker') {
+        return styles.opponentPlaceholderMarker;
+    }
+
+    return '';
+}
+
+function getClassName(classNames: string[]) {
+    return classNames.filter(Boolean).join(' ');
 }

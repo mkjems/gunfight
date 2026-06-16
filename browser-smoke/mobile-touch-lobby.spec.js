@@ -131,7 +131,7 @@ test.describe('mobile touch lobby', function () {
         ).toBeLessThan(2);
 
         const currentName = await page
-            .locator('#lobbyPlayerLabels .lobby-player-label')
+            .locator('#lobbyPlayerLabels > div')
             .first()
             .textContent();
 

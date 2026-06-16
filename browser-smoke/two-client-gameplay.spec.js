@@ -340,7 +340,7 @@ function expectAmmoBoxesStable(before, after) {
 
 async function getYouLabelBox(page) {
     const box = await page
-        .locator('#lobbyPlayerLabels .lobby-player-label')
+        .locator('#lobbyPlayerLabels > div')
         .filter({
             hasText: '(YOU)'
         })

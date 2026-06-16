@@ -1,0 +1,58 @@
+.instructions {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 2.4cqh, 20px);
+    grid-row: 2;
+    justify-content: center;
+}
+
+.title {
+    align-self: end;
+    margin: 0 0 clamp(42px, 11cqh, 78px);
+}
+
+.controlsText {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 50px;
+}
+
+.promptSlot {
+    min-height: 1lh;
+}
+
+.reservedHidden {
+    visibility: hidden;
+}
+
+.previousResult {
+    left: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.playerLabels {
+    inset: 0;
+    pointer-events: none;
+    position: absolute;
+}
+
+.playerLabel {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+}
+
+.playerStatus {
+    transform: translateX(-50%);
+}
+
+.opponentPlaceholderMarker {
+    font-size: 2em;
+    line-height: 1;
+    padding: 0 0.12em;
+}

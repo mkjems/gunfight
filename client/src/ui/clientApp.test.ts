@@ -323,14 +323,8 @@ test('renders lobby screen sections through the app root', function () {
         labels.children[0].getAttribute('style'),
         'left: 12.5%; top: 75%;'
     );
-    assert.equal(
-        labels.children[1].className,
-        'lobby-player-label is-player-status negative-text'
-    );
-    assert.equal(
-        labels.children[2].className,
-        'lobby-player-label is-opponent-placeholder-marker negative-text'
-    );
+    assert.equal(labels.children[1].className.includes('negative-text'), true);
+    assert.equal(labels.children[2].className.includes('negative-text'), true);
     assert.equal(editPrompt.textContent, 'EDIT NAME');
     assert.equal(highScoresPrompt.textContent, 'SCORES');
     assert.equal(playPrompt.textContent, 'READY?');
@@ -344,10 +338,6 @@ test('renders lobby screen sections through the app root', function () {
     });
 
     assert.equal(query(main, '#lobbyEditPrompt').hidden, false);
-    assert.equal(
-        query(main, '#lobbyEditPrompt').className,
-        'lobbyPromptSlot is-reserved-hidden'
-    );
     assert.equal(
         query(main, '#lobbyEditPrompt').getAttribute('aria-hidden'),
         'true'

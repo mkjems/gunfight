@@ -236,7 +236,7 @@ test('built browser app renders the name editor through the app root', async ({
 
     await expect(page.locator('#lobby-main')).toBeVisible();
     const currentName = await page
-        .locator('#lobbyPlayerLabels .lobby-player-label')
+        .locator('#lobbyPlayerLabels > div')
         .first()
         .textContent();
     await page.keyboard.press('e');
