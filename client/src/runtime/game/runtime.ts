@@ -820,7 +820,6 @@ export class ClientGameRuntime implements ClientGameController {
             return;
         }
 
-        this.gameSounds.playGun();
         this.particleLayer.spawnMuzzleFlash(source);
         this.particleLayer.spawnGunSmoke(source);
     };
