@@ -143,20 +143,20 @@
           quick browser check for desktop/mobile layout.
     - [ ] Avoid future id or markup changes unless the component migration needs
           them.
-- [ ] Move component tests that import CSS Modules onto a Vite-aware path.
-    - [ ] Decide between Vitest for component/UI tests or a shared Vite SSR
+- [x] Move component tests that import CSS Modules onto a Vite-aware path.
+    - [x] Decide between Vitest for component/UI tests or a shared Vite SSR
           loader used from `node:test`.
-    - [ ] Prefer Vitest if it can run the Preact component tests with low setup
+    - [x] Prefer Vitest if it can run the Preact component tests with low setup
           cost and without weakening the existing Node test workflow.
-    - [ ] Keep `node:test` for server/domain tests that do not need Vite asset,
+    - [x] Keep `node:test` for server/domain tests that do not need Vite asset,
           TSX, or CSS transforms.
-    - [ ] Replace per-test `stubCssModuleImports` helpers with the Vite-aware
+    - [x] Replace per-test `stubCssModuleImports` helpers with the Vite-aware
           loader/test runner.
-    - [ ] Prove the new path on `clientComponentScreens` and `clientHudOverlay`
+    - [x] Prove the new path on `clientComponentScreens` and `clientHudOverlay`
           before migrating more component styles.
-    - [ ] Update `package.json` scripts so normal checks run the Vite/Vitest UI
+    - [x] Update `package.json` scripts so normal checks run the Vite/Vitest UI
           tests together with the existing Node tests.
-    - [ ] Document the chosen test boundary in `UI-ownership.md`.
+    - [x] Document the chosen test boundary in `UI-ownership.md`.
 - [ ] Decide how CSS Modules relate to tools.
     - [ ] Do not migrate `client/src/tools/**` just to match the product.
     - [ ] Tools are internal authoring utilities; they should work correctly, but

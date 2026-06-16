@@ -110,6 +110,14 @@ Tests should not select elements by CSS Module class names because those names
 are build-generated. Keep stable ids or semantic queries for elements that tests,
 accessibility, or cross-layer code need to address.
 
+Component and UI tests that import TSX or CSS Modules run through Vitest. Vitest
+uses Vite transforms for Preact components and adjacent `*.module.css` files, so
+these tests should import the real client modules instead of stubbing CSS.
+
+Server and domain tests that do not import TSX, client assets, or CSS Modules
+stay on `node:test`. That keeps server tests independent of the client bundler
+and keeps the Vite-aware path focused on UI behavior.
+
 ## Data Flow
 
 The preferred flow is:

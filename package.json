@@ -4,19 +4,20 @@
     "type": "module",
     "scripts": {
         "check": "npm run check:deploy && npm run test:browser",
-        "check:deploy": "npm run format:check && npm run lint && npm run typecheck && npm test",
-        "build": "tsc --project tsconfig.build.json && vite build && node scripts/copy-build-assets.js",
+        "check:deploy": "npm run format:check && npm run lint && npm run typecheck && npm run test:ui && npm test",
+        "build": "node scripts/clean-server-build.js && tsc --project tsconfig.build.json && vite build && node scripts/copy-build-assets.js",
         "start": "node dist/server/server.js",
         "dev": "npm run build && node dist/server/server.js",
-        "format": "prettier --write --ignore-unknown package.json tsconfig.json tsconfig.shared.json tsconfig.build.json tsconfig.client.json playwright.config.js vite.config.js scripts server shared client browser-smoke compose.yaml .github/workflows/container.yml \"documentation/*.md\" README.markdown",
+        "format": "prettier --write --ignore-unknown package.json tsconfig.json tsconfig.shared.json tsconfig.build.json tsconfig.client.json playwright.config.js vite.config.js vitest.config.js scripts server shared client browser-smoke compose.yaml .github/workflows/container.yml \"documentation/*.md\" README.markdown",
         "format:docs": "prettier --write --ignore-unknown \"documentation/*.md\" README.markdown",
         "format:docs:check": "prettier --check --ignore-unknown \"documentation/*.md\" README.markdown",
-        "format:check": "prettier --check --ignore-unknown package.json tsconfig.json tsconfig.shared.json tsconfig.build.json tsconfig.client.json playwright.config.js vite.config.js scripts server shared client browser-smoke compose.yaml .github/workflows/container.yml \"documentation/*.md\" README.markdown",
-        "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.tsx scripts server shared client browser-smoke playwright.config.js vite.config.js",
+        "format:check": "prettier --check --ignore-unknown package.json tsconfig.json tsconfig.shared.json tsconfig.build.json tsconfig.client.json playwright.config.js vite.config.js vitest.config.js scripts server shared client browser-smoke compose.yaml .github/workflows/container.yml \"documentation/*.md\" README.markdown",
+        "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.tsx scripts server shared client browser-smoke playwright.config.js vite.config.js vitest.config.js",
         "lint:complexity": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.tsx --ignore-pattern \"client/src/tools/**\" --rule \"complexity: [warn, 12]\" --rule \"max-depth: [warn, 4]\" --rule \"max-params: [warn, 5]\" client/src shared server browser-smoke",
         "lint:shape": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.tsx --ignore-pattern \"client/src/tools/**\" --ignore-pattern \"server/test/**\" --ignore-pattern \"browser-smoke/**\" --rule \"max-lines: [warn, {max: 500, skipBlankLines: true, skipComments: true}]\" --rule \"max-lines-per-function: [warn, {max: 120, skipBlankLines: true, skipComments: true}]\" --rule \"max-statements: [warn, 50]\" client/src shared server scripts",
         "typecheck": "tsc --project tsconfig.json && tsc --project tsconfig.shared.json && tsc --project tsconfig.client.json",
         "test": "npm run build && node --test dist/server/test/*.test.js",
+        "test:ui": "vitest run --config vitest.config.js",
         "test:browser": "npm run build && playwright test",
         "test:browser:ui": "npm run build && PLAYWRIGHT_SCREENSHOTS=1 playwright test --headed --output=playwright-screenshots"
     },
@@ -33,6 +34,7 @@
         "happy-dom": "^20.10.2",
         "prettier": "^3.3.3",
         "typescript": "^5.5.4",
-        "vite": "^8.0.16"
+        "vite": "^8.0.16",
+        "vitest": "^4.1.9"
     }
 }

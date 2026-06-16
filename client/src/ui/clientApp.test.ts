@@ -1,141 +1,66 @@
 import assert from 'node:assert/strict';
-import {
-    mkdirSync,
-    mkdtempSync,
-    readFileSync,
-    rmSync,
-    writeFileSync
-} from 'node:fs';
-import path from 'node:path';
-import { pathToFileURL } from 'node:url';
-import test from 'node:test';
-import ts from 'typescript';
 import { Window } from 'happy-dom';
+import { afterEach, test } from 'vitest';
+import { Screen } from '../state/clientScreens.js';
+import { ClientAppMount } from './clientApp.js';
 
-function compileClientModule(sourceName, outputName, tempDirectory) {
-    const source = stubCssModuleImports(
-        readFileSync(path.join(process.cwd(), 'client/src', sourceName), 'utf8')
-    );
-    const transpiled = ts.transpileModule(source, {
-        compilerOptions: {
-            jsx: ts.JsxEmit.ReactJSX,
-            jsxImportSource: 'preact',
-            module: ts.ModuleKind.ES2022,
-            target: ts.ScriptTarget.ES2022
-        },
-        fileName: sourceName
-    });
+type TestElement = HTMLElement & {
+    dispatchEvent: (event: Event) => boolean;
+};
 
-    const outputPath = path.join(tempDirectory, outputName);
+type Browser = {
+    createElement: (tagName?: string) => HTMLElement;
+    window: Window;
+};
 
-    mkdirSync(path.dirname(outputPath), { recursive: true });
-    writeFileSync(outputPath, transpiled.outputText, 'utf8');
-}
+type PointerEventWindow = Window & {
+    PointerEvent: typeof PointerEvent;
+};
 
-function stubCssModuleImports(source) {
-    return source.replace(
-        /import\s+(\w+)\s+from\s+['"][^'"]+\.module\.css['"];?/g,
-        'const $1 = new Proxy({}, { get(_target, property) { return String(property); } });'
-    );
-}
+const testGlobal = globalThis as typeof globalThis & {
+    document?: Document;
+};
 
-async function loadClientApp() {
-    const cacheDirectory = path.join(process.cwd(), 'node_modules', '.cache');
-    mkdirSync(cacheDirectory, { recursive: true });
+afterEach(function () {
+    Reflect.deleteProperty(testGlobal, 'document');
+});
 
-    const tempDirectory = mkdtempSync(
-        path.join(cacheDirectory, 'gunfight-client-app-')
-    );
-
-    [
-        ['state/clientScreens.ts', 'state/clientScreens.js'],
-        ['ui/componentRenderProps.ts', 'ui/componentRenderProps.js'],
-        ['platform/config.ts', 'platform/config.js'],
-        [
-            'ui/components/gameHudComponentScreen.tsx',
-            'ui/components/gameHudComponentScreen.js'
-        ],
-        [
-            'ui/components/highScoresComponentScreen.tsx',
-            'ui/components/highScoresComponentScreen.js'
-        ],
-        [
-            'ui/components/lobbyComponentScreen.tsx',
-            'ui/components/lobbyComponentScreen.js'
-        ],
-        [
-            'ui/components/nameEditorComponentScreen.tsx',
-            'ui/components/nameEditorComponentScreen.js'
-        ],
-        [
-            'ui/components/touchGameplayControlsComponentScreen.tsx',
-            'ui/components/touchGameplayControlsComponentScreen.js'
-        ],
-        [
-            'ui/components/touchLobbyControlsComponentScreen.tsx',
-            'ui/components/touchLobbyControlsComponentScreen.js'
-        ],
-        ['ui/clientApp.tsx', 'ui/clientApp.js']
-    ].forEach(function ([sourceName, outputName]) {
-        compileClientModule(sourceName, outputName, tempDirectory);
-    });
-
-    try {
-        const [appModule, screensModule] = await Promise.all(
-            ['ui/clientApp.js', 'state/clientScreens.js'].map(
-                function (fileName) {
-                    return import(
-                        pathToFileURL(path.join(tempDirectory, fileName)).href
-                    );
-                }
-            )
-        );
-
-        return {
-            ClientAppMount: appModule.ClientAppMount,
-            Screen: screensModule.Screen
-        };
-    } finally {
-        rmSync(tempDirectory, { force: true, recursive: true });
-    }
-}
-
-function createBrowser() {
+function createBrowser(): Browser {
     const window = new Window();
 
-    globalThis.document = /** @type {Document} */ (
-        /** @type {unknown} */ (window.document)
-    );
+    testGlobal.document = window.document as unknown as Document;
 
     return {
         createElement(tagName = 'div') {
-            return window.document.createElement(tagName);
+            return window.document.createElement(
+                tagName
+            ) as unknown as HTMLElement;
         },
         window
     };
 }
 
-function childTexts(element) {
+function childTexts(element: Element) {
     return Array.from(element.children).map(function (child) {
         return child.textContent;
     });
 }
 
-/**
- * @typedef {HTMLElement & {
- *     dispatchEvent: (event: unknown) => boolean
- * }} TestElement
- */
+function query(element: ParentNode, selector: string) {
+    const result = element.querySelector(selector);
 
-/** @returns {TestElement} */
-function query(element, selector) {
-    return /** @type {TestElement} */ (
-        /** @type {unknown} */ (element.querySelector(selector))
-    );
+    assert.ok(result);
+
+    return result as TestElement;
 }
 
-test('renders game HUD scores, timer, round text, and hit messages through the app root', async function () {
-    const { ClientAppMount, Screen } = await loadClientApp();
+function createPointerDown(window: Window): Event {
+    return new (window as PointerEventWindow).PointerEvent('pointerdown', {
+        cancelable: true
+    }) as unknown as Event;
+}
+
+test('renders game HUD scores, timer, round text, and hit messages through the app root', function () {
     const browser = createBrowser();
     const root = browser.createElement();
     const app = ClientAppMount.create({ root });
@@ -171,8 +96,8 @@ test('renders game HUD scores, timer, round text, and hit messages through the a
     assert.equal(query(root, '#lobbyHud').hidden, true);
     assert.deepEqual(childTexts(query(root, '#scoreLeft')), ['2', 'ACE']);
     assert.deepEqual(childTexts(query(root, '#scoreRight')), ['DOC', '1']);
-    assert.equal(root.querySelector('#roundTimer').textContent, '67');
-    assert.equal(root.querySelector('#roundMessage').textContent, 'DRAW!');
+    assert.equal(query(root, '#roundTimer').textContent, '67');
+    assert.equal(query(root, '#roundMessage').textContent, 'DRAW!');
     assert.equal(query(root, '#ammoRow').hidden, false);
     assert.equal(query(root, '#ammoLeft').children.length, 6);
     assert.equal(query(root, '#ammoRight').children.length, 6);
@@ -188,16 +113,15 @@ test('renders game HUD scores, timer, round text, and hit messages through the a
         gameHud: {}
     });
 
-    assert.equal(root.querySelector('#scoreLeft').textContent, '0');
-    assert.equal(root.querySelector('#scoreRight').textContent, '0');
-    assert.equal(root.querySelector('#roundTimer').textContent, '');
-    assert.equal(root.querySelector('#roundMessage').textContent, '');
+    assert.equal(query(root, '#scoreLeft').textContent, '0');
+    assert.equal(query(root, '#scoreRight').textContent, '0');
+    assert.equal(query(root, '#roundTimer').textContent, '');
+    assert.equal(query(root, '#roundMessage').textContent, '');
     assert.equal(query(root, '#ammoRow').hidden, true);
     assert.equal(query(root, '#hitMessage').hidden, true);
 });
 
-test('renders high-score table rows with ten ranked places through the app root', async function () {
-    const { ClientAppMount, Screen } = await loadClientApp();
+test('renders high-score table rows with ten ranked places through the app root', function () {
     const browser = createBrowser();
     const root = browser.createElement();
     const app = ClientAppMount.create({ root });
@@ -264,13 +188,12 @@ test('renders high-score table rows with ten ranked places through the app root'
         ''
     ]);
     assert.equal(
-        query(root, '#highScoresTable').textContent.includes('NO SCORES YET'),
+        query(root, '#highScoresTable').textContent?.includes('NO SCORES YET'),
         false
     );
 });
 
-test('renders mobile high scores with five rows and touch actions underneath', async function () {
-    const { ClientAppMount, Screen } = await loadClientApp();
+test('renders mobile high scores with five rows and touch actions underneath', function () {
     const browser = createBrowser();
     const root = browser.createElement();
     const app = ClientAppMount.create({ root });
@@ -308,8 +231,7 @@ test('renders mobile high scores with five rows and touch actions underneath', a
     assert.equal(query(root, '#touchBackButton').hidden, false);
 });
 
-test('renders lobby screen sections through the app root', async function () {
-    const { ClientAppMount, Screen } = await loadClientApp();
+test('renders lobby screen sections through the app root', function () {
     const browser = createBrowser();
     const root = browser.createElement();
     const app = ClientAppMount.create({ root });
@@ -354,15 +276,15 @@ test('renders lobby screen sections through the app root', async function () {
                     y: 80
                 }
             ],
-            showControls: true,
-            showEditPrompt: true,
             previousResult: {
                 leftName: 'ACE',
                 leftScore: 3,
                 rightName: 'DOC',
                 rightScore: 2,
                 timerLabel: 'GAME OVER'
-            }
+            },
+            showControls: true,
+            showEditPrompt: true
         }
     });
 
@@ -449,11 +371,10 @@ test('renders lobby screen sections through the app root', async function () {
     assert.equal(root.querySelector('#lobbyPreviousResult'), null);
 });
 
-test('skips virtual-DOM work when app render props are value-equal', async function () {
-    const { ClientAppMount, Screen } = await loadClientApp();
+test('skips virtual-DOM work when app render props are value-equal', function () {
     const browser = createBrowser();
     const root = browser.createElement();
-    const renders = [];
+    const renders: string[] = [];
     const app = ClientAppMount.create({
         afterRender() {
             renders.push('rendered');
@@ -461,7 +382,7 @@ test('skips virtual-DOM work when app render props are value-equal', async funct
         root
     });
 
-    function props(timerLabel) {
+    function props(timerLabel: number) {
         return {
             activeScreen: Screen.GAME,
             gameHud: {
@@ -495,10 +416,9 @@ test('skips virtual-DOM work when app render props are value-equal', async funct
     assert.deepEqual(renders, ['rendered', 'rendered']);
 });
 
-test('renders touch lobby buttons and dispatches tap actions through the app root', async function () {
-    const { ClientAppMount, Screen } = await loadClientApp();
+test('renders touch lobby buttons and dispatches tap actions through the app root', function () {
     const browser = createBrowser();
-    const actions = [];
+    const actions: string[] = [];
     const root = browser.createElement();
     const app = ClientAppMount.create({ root });
 
@@ -545,16 +465,10 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
     assert.equal(backButton.hidden, true);
     assert.equal(playButton.className, 'negative-button');
 
-    const pointerDown = new browser.window.PointerEvent('pointerdown', {
-        cancelable: true
-    });
+    const pointerDown = createPointerDown(browser.window);
     playButton.dispatchEvent(pointerDown);
-    highScoresButton.dispatchEvent(
-        new browser.window.PointerEvent('pointerdown', { cancelable: true })
-    );
-    editButton.dispatchEvent(
-        new browser.window.PointerEvent('pointerdown', { cancelable: true })
-    );
+    highScoresButton.dispatchEvent(createPointerDown(browser.window));
+    editButton.dispatchEvent(createPointerDown(browser.window));
 
     assert.equal(pointerDown.defaultPrevented, true);
     assert.deepEqual(actions, ['play', 'scores', 'edit']);
@@ -610,8 +524,7 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
     assert.equal(query(root, '#touchLobbyControls').hidden, true);
 });
 
-test('renders gameplay touch controls markup and keeps imperative styles', async function () {
-    const { ClientAppMount, Screen } = await loadClientApp();
+test('renders gameplay touch controls markup and keeps imperative styles', function () {
     const browser = createBrowser();
     const root = browser.createElement();
     const app = ClientAppMount.create({ root });
@@ -686,10 +599,9 @@ test('renders gameplay touch controls markup and keeps imperative styles', async
     assert.equal(query(root, '#touchAimHandle').style.top, '25%');
 });
 
-test('renders name editor grid and dispatches pointer selections through the app root', async function () {
-    const { ClientAppMount, Screen } = await loadClientApp();
+test('renders name editor grid and dispatches pointer selections through the app root', function () {
     const browser = createBrowser();
-    const selected = [];
+    const selected: number[][] = [];
     const root = browser.createElement();
     const app = ClientAppMount.create({ root });
 
@@ -723,15 +635,11 @@ test('renders name editor grid and dispatches pointer selections through the app
     assert.deepEqual(childTexts(grid.children[0]), ['A', 'B']);
     assert.deepEqual(childTexts(grid.children[1]), ['OK']);
 
-    const selectedKey = /** @type {TestElement} */ (
-        /** @type {unknown} */ (grid.children[0].children[1])
-    );
+    const selectedKey = grid.children[0].children[1] as TestElement;
     assert.equal(selectedKey.tagName, 'BUTTON');
     assert.equal(selectedKey.textContent, 'B');
 
-    const pointerDown = new browser.window.PointerEvent('pointerdown', {
-        cancelable: true
-    });
+    const pointerDown = createPointerDown(browser.window);
     selectedKey.dispatchEvent(pointerDown);
 
     assert.equal(pointerDown.defaultPrevented, true);
