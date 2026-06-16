@@ -116,6 +116,40 @@
 
 ## P15 - Improve the CSS - start using CSS Modules in the product
 
+- [ ] Introduce CSS Modules for product UI components, not as a full CSS rewrite.
+    - [ ] Keep global CSS for app-wide foundations: font faces, CSS variables,
+          reset/body rules, `#gameStage`, canvas layers, install/rotate prompts,
+          and any selectors that intentionally target fixed DOM ids.
+    - [ ] Start with one small product component as the pilot, preferably a
+          Preact-only surface such as touch lobby controls or high scores.
+    - [ ] Add a `*.module.css` file next to that component and import it from the
+          component.
+    - [ ] Keep ids only where tests, accessibility, or cross-layer lookup depend
+          on them; move purely presentational classes into the module.
+    - [ ] Add or keep TypeScript support for `*.module.css` imports if the
+          current build needs a declaration file.
+- [ ] Migrate product styles incrementally by ownership area.
+    - [ ] Move isolated component styles first: touch lobby controls, high
+          scores, name editor, ammo display, and score rows.
+    - [ ] Leave layout styles that coordinate several layers in global CSS until
+          their ownership is clearer.
+    - [ ] After each component migration, run component tests and a quick browser
+          check for desktop/mobile layout.
+    - [ ] Avoid renaming ids or changing markup unless the component migration
+          needs it.
+- [ ] Decide how CSS Modules relate to tools.
+    - [ ] Do not migrate `client/src/tools/**` just to match the product.
+    - [ ] Tools are internal authoring utilities; they should work correctly, but
+          they do not need the same CSS architecture polish as the game product.
+    - [ ] Consider CSS Modules for a tool only when actively changing that tool
+          and when local scoping clearly makes the editor code easier to work
+          with.
+- [ ] Document the kept pattern after the first successful migration.
+    - [ ] Naming convention for module files and imported `styles` objects.
+    - [ ] What remains global and why.
+    - [ ] How tests should select elements without depending on hashed class
+          names.
+
 ## Other Ideas
 
 - [ ] Add more interactive elements to the scenarios,
