@@ -21,6 +21,7 @@ documents:
   architecture.
 - [code-quality-scorecard.md](code-quality-scorecard.md): maintainability,
   typing, tooling, and test-coverage status.
+- [Preact-components.md](Preact-components.md): good Preact component guidelines
 
 Operational notes live in `documentation/Technical stuff`. Completed plans live
 in `documentation/Completed-plans` and are historical, not current
