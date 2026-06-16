@@ -224,7 +224,6 @@ test('renders mobile high scores with five rows and touch actions underneath', f
         ''
     ]);
     assert.equal(touchControls.hidden, false);
-    assert.equal(touchControls.className, 'is-high-scores');
     assert.equal(query(root, '#touchEditButton').hidden, true);
     assert.equal(query(root, '#touchHighScoresButton').hidden, true);
     assert.equal(query(root, '#touchPlayButton').hidden, true);
@@ -453,7 +452,7 @@ test('renders touch lobby buttons and dispatches tap actions through the app roo
     assert.equal(highScoresButton.hidden, false);
     assert.equal(playButton.hidden, false);
     assert.equal(backButton.hidden, true);
-    assert.equal(playButton.className, 'negative-button');
+    assert.equal(playButton.className.includes('negative-button'), true);
 
     const pointerDown = createPointerDown(browser.window);
     playButton.dispatchEvent(pointerDown);

@@ -1,4 +1,5 @@
 import { render as renderComponent } from 'preact';
+import styles from './clientApp.module.css';
 import { arePropsEqual } from './componentRenderProps.js';
 import {
     GameHudComponent,
@@ -138,18 +139,21 @@ export function ClientApp(props: ClientAppProps) {
                 </div>
                 <div hidden={activeScreen === Screen.GAME} id="lobbyHud">
                     <div
+                        className={styles.lobbyMain}
                         hidden={activeScreen !== Screen.LOBBY_MAIN}
                         id="lobby-main"
                     >
                         <LobbyMain {...(props.lobby || {})} />
                     </div>
                     <div
+                        className={styles.highScoresScreen}
                         hidden={activeScreen !== Screen.HIGH_SCORES}
                         id="highScoresScreen"
                     >
                         <HighScoresScreen {...(props.highScores || {})} />
                     </div>
                     <div
+                        className={styles.nameEditor}
                         hidden={activeScreen !== Screen.LOBBY_EDIT_NAME}
                         id="nameEditor"
                     >
@@ -157,11 +161,7 @@ export function ClientApp(props: ClientAppProps) {
                     </div>
                     <div
                         hidden={!touchControls.lobby.visible}
-                        className={
-                            activeScreen === Screen.HIGH_SCORES
-                                ? 'is-high-scores'
-                                : ''
-                        }
+                        className={getTouchLobbyControlsClassName(activeScreen)}
                         id="touchLobbyControls"
                     >
                         <TouchLobbyControls {...touchControls.lobby} />
@@ -181,9 +181,10 @@ export function ClientApp(props: ClientAppProps) {
 
 function RotatePrompt() {
     return (
-        <div id="rotatePrompt">
+        <div className={styles.rotatePrompt} id="rotatePrompt">
             <img
                 alt="Rotate your device to landscape"
+                className={styles.rotatePromptImage}
                 src="/images/RotatePlease.png"
             />
         </div>
@@ -193,12 +194,13 @@ function RotatePrompt() {
 function InstallPrompt(props: InstallPromptProps) {
     return (
         <div
-            className={props.visible ? 'is-visible' : ''}
+            className={getInstallPromptClassName(props)}
             hidden={!props.visible}
             id="installPrompt"
         >
             <button
                 aria-label="Dismiss install instructions"
+                className={styles.installPromptClose}
                 id="installPromptClose"
                 onClick={props.onDismiss}
                 type="button"
@@ -208,6 +210,7 @@ function InstallPrompt(props: InstallPromptProps) {
             <div>FULL SCREEN MODE</div>
             <div id="installPromptText">{props.text}</div>
             <button
+                className={styles.installPromptButton}
                 hidden={!props.canInstall}
                 id="installPromptButton"
                 onClick={props.onInstall}
@@ -217,6 +220,21 @@ function InstallPrompt(props: InstallPromptProps) {
             </button>
         </div>
     );
+}
+
+function getInstallPromptClassName(props: InstallPromptProps) {
+    return [styles.installPrompt, props.visible ? styles.visible : '']
+        .filter(Boolean)
+        .join(' ');
+}
+
+function getTouchLobbyControlsClassName(activeScreen: Screen) {
+    return [
+        styles.touchLobbyControls,
+        activeScreen === Screen.HIGH_SCORES ? styles.touchLobbyHighScores : ''
+    ]
+        .filter(Boolean)
+        .join(' ');
 }
 
 function getTouchControlsClassName(props: TouchControlsAppProps) {

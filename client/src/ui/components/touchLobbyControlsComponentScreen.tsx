@@ -80,7 +80,7 @@ function getRowClassName(variant?: string) {
 function TouchLobbyButton(props: TouchLobbyButtonProps) {
     return (
         <button
-            className={props.negative ? 'negative-button' : ''}
+            className={getButtonClassName(props)}
             hidden={!props.visible}
             id={props.id}
             onPointerDown={function (evt) {
@@ -92,4 +92,10 @@ function TouchLobbyButton(props: TouchLobbyButtonProps) {
             {props.label}
         </button>
     );
+}
+
+function getButtonClassName(props: TouchLobbyButtonProps) {
+    return [styles.button, props.negative ? 'negative-button' : '']
+        .filter(Boolean)
+        .join(' ');
 }

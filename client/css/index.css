@@ -134,29 +134,6 @@ body {
     user-select: none;
 }
 
-#rotatePrompt {
-    display: none;
-}
-
-#rotatePrompt img {
-    display: block;
-    image-rendering: pixelated;
-    max-height: 50vh;
-    max-width: 50vw;
-}
-
-@media (pointer: coarse) and (orientation: portrait) {
-    #rotatePrompt {
-        align-items: center;
-        background: var(--black);
-        display: flex;
-        inset: 0;
-        justify-content: center;
-        position: fixed;
-        z-index: 10;
-    }
-}
-
 #gameStage {
     background-color: var(--black);
     aspect-ratio: 950 / 640;
@@ -261,16 +238,8 @@ body.install-prompt-visible #touchControls {
     pointer-events: none;
 }
 
-#lobby-main,
-#highScoresScreen {
-    pointer-events: none;
-}
-
 #gameHud[hidden],
-#lobbyHud[hidden],
-#lobby-main[hidden],
-#highScoresScreen[hidden],
-#nameEditor[hidden] {
+#lobbyHud[hidden] {
     display: none;
 }
 
@@ -292,37 +261,6 @@ h2 {
     font: inherit;
     font-size: var(--font-size);
     margin: 0;
-}
-
-#lobby-main {
-    box-sizing: border-box;
-    display: grid;
-    grid-template-rows: minmax(0, 1fr) auto minmax(0, 1.55fr);
-    height: 100%;
-    justify-items: center;
-    overflow: hidden;
-    position: relative;
-    width: 100%;
-}
-
-#highScoresScreen {
-    align-items: center;
-    display: flex;
-    flex-direction: column;
-}
-
-#highScoresScreen {
-    justify-content: center;
-    width: min(78cqw, 760px);
-}
-
-#nameEditor {
-    align-items: center;
-    justify-content: center;
-    display: flex;
-    flex-direction: column;
-    gap: clamp(12px, 2.6cqh, 22px);
-    width: min(82cqw, 760px);
 }
 
 #touchControls {
@@ -374,105 +312,13 @@ h2 {
     text-shadow: none;
 }
 
-#touchLobbyControls {
-    align-items: center;
-    display: flex;
-    flex-direction: column;
-    gap: clamp(18px, 4cqh, 34px);
-    justify-content: center;
-    left: 0;
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
-#touchLobbyControls.is-high-scores {
-    left: auto;
-    margin-top: clamp(8px, 1.8cqh, 14px);
-    position: static;
-    right: auto;
-    top: auto;
-    transform: none;
-}
-
-#touchLobbyControls[hidden] {
-    display: none;
-}
-
 #touchControls button[hidden],
 #touchLobbyControls button[hidden] {
     display: none;
 }
 
-#touchEditButton,
-#touchHighScoresButton,
-#touchBackButton,
-#touchPlayButton {
-    min-height: 1.65em;
-    min-width: 0;
-    padding: 0 0.65em;
-    white-space: nowrap;
-}
-
 @media (pointer: fine) {
     #touchControls:not(.debug-touch) {
-        display: none;
-    }
-}
-
-#installPrompt {
-    background-color: rgb(30, 30, 30);
-    border: 1px solid rgb(255, 244, 0);
-    box-shadow: 3px 3px 0 rgb(0, 0, 0);
-    box-sizing: border-box;
-    color: rgb(255, 244, 0);
-    display: none;
-    font-family: var(--font-family);
-    font-size: var(--font-size);
-    gap: 8px;
-    left: max(10px, env(safe-area-inset-left, 0));
-    line-height: var(--line-height);
-    padding: 9px 34px 9px 10px;
-    position: fixed;
-    right: max(10px, env(safe-area-inset-right, 0));
-    text-align: center;
-    top: max(10px, env(safe-area-inset-top, 0));
-    z-index: 5;
-}
-
-#installPrompt.is-visible {
-    display: block;
-}
-
-#installPrompt[hidden] {
-    display: none;
-}
-
-#installPrompt button {
-    background: rgb(30, 30, 30);
-    border: 1px solid rgb(255, 244, 0);
-    color: rgb(255, 244, 0);
-    cursor: pointer;
-    font-family: var(--font-family);
-    font-size: var(--font-size);
-}
-
-#installPromptClose {
-    height: 24px;
-    position: absolute;
-    right: 6px;
-    top: 6px;
-    width: 24px;
-}
-
-#installPromptButton {
-    margin-top: 8px;
-    padding: 6px 10px;
-}
-
-@media (pointer: fine) {
-    #installPrompt {
         display: none;
     }
 }
