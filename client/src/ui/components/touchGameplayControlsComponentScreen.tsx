@@ -1,3 +1,5 @@
+import styles from './touchGameplayControlsComponentScreen.module.css';
+
 export type TouchGameplayControlsProps = {
     visible?: boolean;
 };
@@ -13,15 +15,35 @@ export function TouchGameplayControls(
 ) {
     return (
         <>
-            <div aria-label="Move" hidden={!options.visible} id="touchJoystick">
-                <div id="touchJoystickKnob"></div>
+            <div
+                aria-label="Move"
+                className={styles.joystick}
+                hidden={!options.visible}
+                id="touchJoystick"
+            >
+                <div
+                    className={styles.joystickKnob}
+                    id="touchJoystickKnob"
+                ></div>
             </div>
-            <div hidden={!options.visible} id="touchActionControls">
-                <div aria-label="Aim" id="touchAimSlider">
-                    <div id="touchAimTrack"></div>
-                    <div id="touchAimHandle"></div>
+            <div
+                className={styles.actionControls}
+                hidden={!options.visible}
+                id="touchActionControls"
+            >
+                <div
+                    aria-label="Aim"
+                    className={styles.aimSlider}
+                    id="touchAimSlider"
+                >
+                    <div className={styles.aimTrack} id="touchAimTrack"></div>
+                    <div className={styles.aimHandle} id="touchAimHandle"></div>
                 </div>
-                <button id="touchShootButton" type="button">
+                <button
+                    className={styles.shootButton}
+                    id="touchShootButton"
+                    type="button"
+                >
                     FIRE
                 </button>
             </div>

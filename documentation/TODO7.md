@@ -137,6 +137,8 @@
           into a CSS Module.
     - [x] Move lobby instructions, prompt slots, player labels, and previous
           result wrapper styling into a CSS Module.
+    - [x] Move gameplay touch joystick, aim slider, and fire button styling
+          into a CSS Module while keeping imperative ids stable.
     - [x] Move the first isolated component set while keeping ids stable and
           moving only owned presentation classes.
     - [ ] Leave layout styles that coordinate several layers in global CSS until

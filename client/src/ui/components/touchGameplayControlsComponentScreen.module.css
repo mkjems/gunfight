@@ -1,0 +1,124 @@
+.joystick {
+    background: rgba(30, 30, 30, 0.42);
+    border: 2px solid var(--yellow);
+    border-radius: 50%;
+    bottom: max(22px, env(safe-area-inset-bottom, 0));
+    height: 126px;
+    left: max(22px, env(safe-area-inset-left, 0));
+    pointer-events: auto;
+    position: absolute;
+    touch-action: none;
+    width: 126px;
+}
+
+.joystick[hidden] {
+    display: none;
+}
+
+.joystick::before,
+.joystick::after {
+    background: rgba(255, 244, 0, 0.45);
+    content: '';
+    left: 50%;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.joystick::before {
+    height: 2px;
+    width: 72px;
+}
+
+.joystick::after {
+    height: 72px;
+    width: 2px;
+}
+
+.joystickKnob {
+    background: rgb(255, 244, 0);
+    border-radius: 50%;
+    height: 34px;
+    left: calc(50% - 17px);
+    position: absolute;
+    top: calc(50% - 17px);
+    width: 34px;
+}
+
+.actionControls {
+    align-items: center;
+    bottom: max(20px, env(safe-area-inset-bottom, 0));
+    display: flex;
+    gap: 14px;
+    pointer-events: none;
+    position: absolute;
+    right: max(20px, env(safe-area-inset-right, 0));
+}
+
+.actionControls[hidden] {
+    display: none;
+}
+
+.aimSlider {
+    background: rgba(30, 30, 30, 0.42);
+    border: 2px solid rgba(255, 244, 0, 0.9);
+    height: 138px;
+    pointer-events: auto;
+    position: relative;
+    touch-action: none;
+    width: 44px;
+}
+
+.aimTrack {
+    background: rgba(255, 244, 0, 0.45);
+    bottom: 12px;
+    left: 50%;
+    position: absolute;
+    top: 12px;
+    transform: translateX(-50%);
+    width: 2px;
+}
+
+.aimHandle {
+    background: rgb(255, 244, 0);
+    height: 14px;
+    left: 8px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+}
+
+.shootButton {
+    border-radius: 50%;
+    height: 82px;
+    width: 82px;
+}
+
+:global(#touchControls.is-editing) .aimSlider {
+    display: none;
+}
+
+:global(#touchControls.is-editing) .shootButton {
+    height: 74px;
+    width: 74px;
+}
+
+@media (pointer: coarse) {
+    .joystick {
+        bottom: 8px;
+        height: 120px;
+        left: 5px;
+        width: 120px;
+    }
+
+    .actionControls {
+        bottom: 8px;
+        gap: 8px;
+        right: 5px;
+    }
+
+    .aimSlider {
+        height: 132px;
+    }
+}
