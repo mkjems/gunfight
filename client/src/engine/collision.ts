@@ -5,8 +5,13 @@ type Box = {
     y: number;
 };
 
-type BulletLike = {
+type HarmfulBulletLike = {
+    canHarm?: () => boolean;
     deleteMe?: boolean;
+    isHarmful?: boolean;
+};
+
+type BulletLike = HarmfulBulletLike & {
     getHitBox: () => Box;
     hasRicocheted?: boolean;
     ownerId: string | number;
@@ -39,7 +44,7 @@ export function findBulletHit(
     Object.keys(bullets).forEach(function (bulletId) {
         const bullet = bullets[bulletId];
 
-        if (hit || !bullet || bullet.deleteMe) {
+        if (hit || !bullet || bullet.deleteMe || !canBulletHarm(bullet)) {
             return;
         }
 
@@ -86,8 +91,17 @@ export function getWinnerId(
     return winnerId;
 }
 
+export function canBulletHarm(bullet: HarmfulBulletLike) {
+    if (typeof bullet.canHarm === 'function') {
+        return bullet.canHarm();
+    }
+
+    return bullet.isHarmful !== false;
+}
+
 export const Collision = {
     boxesOverlap,
+    canBulletHarm,
     findBulletHit,
     getWinnerId
 };

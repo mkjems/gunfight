@@ -104,7 +104,16 @@ export const Config = {
         width: 4,
         height: 4,
         speed: 420,
-        fixedStep: 1 / 120
+        fixedStep: 1 / 120,
+        defaultStraightness: 0.8,
+        minimumHarmStraightness: 0.18,
+        harmVelocity: 150,
+        restVelocity: 18,
+        altitudeGravity: 900,
+        altitudeBounceVelocity: 240,
+        altitudeMaxStart: 16,
+        altitudeMinBounceVelocity: 44,
+        groundDrag: 3.4
     },
     colors: {
         yellowRgb: [255, 255, 0],

@@ -200,7 +200,12 @@ export interface BulletSnapshot {
     aim: number;
     width: number;
     height: number;
+    straightness: number;
+    altitude: number;
+    altitudeVelocity: number;
     hasRicocheted?: boolean;
+    isResting: boolean;
+    isHarmful: boolean;
 }
 
 export interface ClientKeyEventPayload {
@@ -276,6 +281,20 @@ function getFiniteNumber(record: DataRecord, key: string): number | null {
     const value = record[key];
 
     return isFiniteNumber(value) ? value : null;
+}
+
+function getOptionalBoolean(
+    record: DataRecord,
+    key: string,
+    defaultValue: boolean
+): boolean | null {
+    const value = record[key];
+
+    if (value === undefined) {
+        return defaultValue;
+    }
+
+    return typeof value === 'boolean' ? value : null;
 }
 
 function getFiniteNumberOrNumericString(
@@ -667,29 +686,39 @@ export function shouldRejoinAfterLeave(data: unknown): boolean {
 }
 
 export function normalizeBulletSnapshot(data: unknown): BulletSnapshot | null {
-    if (
-        !isRecord(data) ||
-        (data.hasRicocheted !== undefined &&
-            typeof data.hasRicocheted !== 'boolean')
-    ) {
+    if (!isRecord(data)) {
         return null;
     }
 
     const aim = getFiniteNumber(data, 'aim');
+    const altitude = getFiniteNumber(data, 'altitude');
+    const altitudeVelocity = getFiniteNumber(data, 'altitudeVelocity');
     const facing = getFiniteNumber(data, 'facing');
+    const hasRicocheted = getOptionalBoolean(data, 'hasRicocheted', false);
     const height = getFiniteNumber(data, 'height');
+    const isHarmful =
+        typeof data.isHarmful === 'boolean' ? data.isHarmful : null;
+    const isResting =
+        typeof data.isResting === 'boolean' ? data.isResting : null;
     const speedX = getFiniteNumber(data, 'speedX');
     const speedY = getFiniteNumber(data, 'speedY');
+    const straightness = getFiniteNumber(data, 'straightness');
     const width = getFiniteNumber(data, 'width');
     const x = getFiniteNumber(data, 'x');
     const y = getFiniteNumber(data, 'y');
 
     if (
         aim === null ||
+        altitude === null ||
+        altitudeVelocity === null ||
         facing === null ||
+        hasRicocheted === null ||
         height === null ||
+        isHarmful === null ||
+        isResting === null ||
         speedX === null ||
         speedY === null ||
+        straightness === null ||
         width === null ||
         x === null ||
         y === null
@@ -706,7 +735,12 @@ export function normalizeBulletSnapshot(data: unknown): BulletSnapshot | null {
         aim: aim,
         width: width,
         height: height,
-        hasRicocheted: data.hasRicocheted === true
+        straightness: Math.max(0, Math.min(1, straightness)),
+        altitude: altitude,
+        altitudeVelocity: altitudeVelocity,
+        hasRicocheted: hasRicocheted,
+        isResting: isResting,
+        isHarmful: isHarmful
     };
 }
 

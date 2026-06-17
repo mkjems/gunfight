@@ -4,17 +4,23 @@ type Owner = {
     aim?: number;
     facing: number;
     playerId: string | number;
+    shootingStraightness?: number;
     x: number;
     y: number;
 };
 
 type BulletOptions = {
     aim?: number;
+    altitude?: number;
+    altitudeVelocity?: number;
     facing?: number;
     hasRicocheted?: boolean;
     height?: number;
+    isHarmful?: boolean;
+    isResting?: boolean;
     speedX?: number;
     speedY?: number;
+    straightness?: number;
     width?: number;
     x?: number;
     y?: number;
@@ -45,14 +51,20 @@ export class Bullet {
     static onRicochet: ((bullet: Bullet) => void) | null = null;
 
     aim: number;
+    altitude: number;
+    altitudeVelocity: number;
     deleteMe: boolean;
     facing: number;
     hasRicocheted: boolean;
     height: number;
+    isHarmful: boolean;
+    hasStartedMoving: boolean;
+    isResting: boolean;
     ownerId: string | number;
     speedX: number;
     speedY: number;
     stepAccumulator: number;
+    straightness: number;
     width: number;
     x: number;
     y: number;
@@ -80,6 +92,11 @@ export class Bullet {
         this.ownerId = owner.playerId;
         this.facing = options.facing || owner.facing;
         this.aim = aim;
+        this.straightness = Bullet.normalizeStraightness(
+            typeof options.straightness === 'number'
+                ? options.straightness
+                : owner.shootingStraightness
+        );
         this.x = hasSnapshot
             ? (options.x as number)
             : owner.x + this.facing * muzzleOffsetX;
@@ -94,12 +111,35 @@ export class Bullet {
             typeof options.speedY === 'number'
                 ? options.speedY
                 : Math.sin(angle) * config.speed;
+        this.altitude =
+            typeof options.altitude === 'number'
+                ? Math.max(0, options.altitude)
+                : this.getStartingAltitude();
+        this.altitudeVelocity =
+            typeof options.altitudeVelocity === 'number'
+                ? options.altitudeVelocity
+                : this.getStartingAltitudeVelocity();
         this.stepAccumulator = 0;
         this.hasRicocheted = options.hasRicocheted || false;
+        this.hasStartedMoving = false;
+        this.isResting = options.isResting === true;
+        this.isHarmful =
+            typeof options.isHarmful === 'boolean' ? options.isHarmful : true;
         this.deleteMe = false;
+        this.updateRestingSnapshotState();
+        this.updateHarmState();
     }
 
     move(lastupdated: number, t: number) {
+        if (this.isResting) {
+            return;
+        }
+
+        if (!this.hasStartedMoving) {
+            this.hasStartedMoving = true;
+            return;
+        }
+
         const seconds = (t - lastupdated) / 1000;
         const fixedStep = Config.bullet.fixedStep;
         const maxAccumulatedSeconds = fixedStep * 8;
@@ -109,13 +149,29 @@ export class Bullet {
             maxAccumulatedSeconds
         );
 
-        while (this.stepAccumulator >= fixedStep && !this.deleteMe) {
+        while (
+            this.stepAccumulator >= fixedStep &&
+            !this.deleteMe &&
+            !this.isResting
+        ) {
             this.moveStep(fixedStep);
             this.stepAccumulator -= fixedStep;
         }
     }
 
     moveStep(seconds: number) {
+        if (this.isResting) {
+            return;
+        }
+
+        this.moveGround(seconds);
+        this.moveAltitude(seconds);
+        this.applyGroundDrag(seconds);
+        this.updateRestingState();
+        this.updateHarmState();
+    }
+
+    moveGround(seconds: number) {
         let remaining = seconds;
         let bounces = 0;
         const maxBounces = 3;
@@ -150,6 +206,79 @@ export class Bullet {
         }
     }
 
+    moveAltitude(seconds: number) {
+        if (this.isStraightFlight()) {
+            return;
+        }
+
+        this.altitude += this.altitudeVelocity * seconds;
+        this.altitudeVelocity -= Config.bullet.altitudeGravity * seconds;
+
+        if (this.altitude > 0) {
+            return;
+        }
+
+        this.altitude = 0;
+
+        if (this.altitudeVelocity >= 0) {
+            return;
+        }
+
+        const nextVelocity =
+            -this.altitudeVelocity * this.getAltitudeBounceRetention();
+
+        this.altitudeVelocity =
+            nextVelocity >= Config.bullet.altitudeMinBounceVelocity
+                ? nextVelocity
+                : 0;
+    }
+
+    applyGroundDrag(seconds: number) {
+        if (this.isStraightFlight()) {
+            return;
+        }
+
+        const drag = (1 - this.straightness) * Config.bullet.groundDrag;
+        const speedScale = Math.max(0, 1 - drag * seconds);
+
+        this.speedX *= speedScale;
+        this.speedY *= speedScale;
+    }
+
+    updateRestingState() {
+        if (
+            this.isStraightFlight() ||
+            this.altitude > 0 ||
+            Math.abs(this.altitudeVelocity) > 0 ||
+            this.getGroundSpeed() > Config.bullet.restVelocity
+        ) {
+            return;
+        }
+
+        this.isResting = true;
+        this.updateRestingSnapshotState();
+    }
+
+    updateRestingSnapshotState() {
+        if (!this.isResting) {
+            return;
+        }
+
+        this.altitude = 0;
+        this.altitudeVelocity = 0;
+        this.speedX = 0;
+        this.speedY = 0;
+        this.isHarmful = false;
+    }
+
+    updateHarmState() {
+        this.isHarmful =
+            !this.deleteMe &&
+            !this.isResting &&
+            this.straightness >= Config.bullet.minimumHarmStraightness &&
+            this.getGroundSpeed() >= Config.bullet.harmVelocity;
+    }
+
     reflect(normal: CollisionResult['normal']) {
         const dot = this.speedX * normal.x + this.speedY * normal.y;
 
@@ -170,33 +299,95 @@ export class Bullet {
             aim: this.aim,
             width: this.width,
             height: this.height,
+            straightness: this.straightness,
+            altitude: this.altitude,
+            altitudeVelocity: this.altitudeVelocity,
             speedX: this.speedX,
             speedY: this.speedY,
-            hasRicocheted: this.hasRicocheted
+            hasRicocheted: this.hasRicocheted,
+            isResting: this.isResting,
+            isHarmful: this.isHarmful
         };
     }
 
     getHitBox() {
+        const visualY = this.y - this.altitude;
+
         return {
             x: this.x - this.width / 2,
-            y: this.y - this.height / 2,
+            y: visualY - this.height / 2,
             width: this.width,
             height: this.height
         };
     }
 
+    canHarm() {
+        return this.isHarmful;
+    }
+
     draw(context: DrawContext) {
+        if (this.altitude > 0 || this.isResting) {
+            context.fillStyle = 'rgba(0, 0, 0, 0.35)';
+            context.fillRect(
+                this.x - this.width / 2,
+                this.y + this.height / 2,
+                this.width,
+                1
+            );
+        }
+
         context.fillStyle = Config.colors.yellow;
         context.fillRect(
             this.x - this.width / 2,
-            this.y - this.height / 2,
+            this.y - this.altitude - this.height / 2,
             this.width,
             this.height
         );
     }
 
+    getStartingAltitude() {
+        if (this.isStraightFlight()) {
+            return 0;
+        }
+
+        return (1 - this.straightness) * Config.bullet.altitudeMaxStart;
+    }
+
+    getStartingAltitudeVelocity() {
+        if (this.isStraightFlight()) {
+            return 0;
+        }
+
+        return (1 - this.straightness) * Config.bullet.altitudeBounceVelocity;
+    }
+
+    getAltitudeBounceRetention() {
+        return 0.3 + (1 - this.straightness) * 0.35;
+    }
+
+    getGroundSpeed() {
+        return Math.sqrt(this.speedX * this.speedX + this.speedY * this.speedY);
+    }
+
+    isStraightFlight() {
+        return this.straightness >= 1;
+    }
+
     static setCollisionLines(lines: CollisionLine[] = []) {
         Bullet.collisionLines = lines;
+    }
+
+    static normalizeStraightness(straightness?: number) {
+        const raw =
+            typeof straightness === 'number'
+                ? straightness
+                : Config.bullet.defaultStraightness;
+
+        if (!Number.isFinite(raw)) {
+            return Config.bullet.defaultStraightness;
+        }
+
+        return Math.max(0, Math.min(1, raw));
     }
 
     static findCollision(

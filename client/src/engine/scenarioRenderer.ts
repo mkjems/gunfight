@@ -99,8 +99,10 @@ type PolygonBody = {
 type ObstacleBody = CircleBody | PolygonBody | RectBody;
 
 type BulletLike = {
+    canHarm?: () => boolean;
     deleteMe?: boolean;
     getHitBox: () => Box;
+    isHarmful?: boolean;
 };
 
 export function ScenarioRenderer(options: ScenarioRendererOptions) {
@@ -439,7 +441,12 @@ export function ScenarioRenderer(options: ScenarioRendererOptions) {
         Object.keys(allBullets).forEach(function (bulletId) {
             const bullet = allBullets[bulletId];
 
-            if (hit || !bullet || bullet.deleteMe) {
+            if (
+                hit ||
+                !bullet ||
+                bullet.deleteMe ||
+                !Collision.canBulletHarm(bullet)
+            ) {
                 return;
             }
 

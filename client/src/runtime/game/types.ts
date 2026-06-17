@@ -170,6 +170,7 @@ export type RuntimePlayer = {
     playerId: ClientId;
     playDeathAnimation?: () => void;
     respondToKeyEvent?: (keyEvent: RuntimeKeyEvent) => void;
+    shootingStraightness?: number;
     x: number;
     y: number;
 };
@@ -183,13 +184,19 @@ export type RuntimePlayers = {
 };
 
 export type RuntimeBullet = {
+    altitude?: number;
+    altitudeVelocity?: number;
+    canHarm?: () => boolean;
     deleteMe?: boolean;
     facing?: number;
     getHitBox: () => RuntimeBox;
     hasRicocheted?: boolean;
+    isHarmful?: boolean;
+    isResting?: boolean;
     ownerId: ClientId;
     speedX?: number;
     speedY?: number;
+    straightness?: number;
     toSnapshot?: () => unknown;
     x?: number;
     y?: number;

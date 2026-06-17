@@ -20,7 +20,8 @@ server.
 The build has two parts:
 
 - `tsc` compiles the server and shared TypeScript.
-- Vite builds the browser entrypoint into `dist/client/assets/client.js`.
+- Vite builds the browser entrypoint into hashed files under
+  `dist/client/assets/`.
 
 Run checks:
 

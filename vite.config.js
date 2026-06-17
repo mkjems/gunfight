@@ -19,13 +19,9 @@ export default defineConfig({
                 )
             },
             output: {
-                assetFileNames: 'assets/[name][extname]',
-                chunkFileNames: 'assets/[name].js',
-                entryFileNames(chunkInfo) {
-                    return chunkInfo.name === 'index'
-                        ? 'assets/client.js'
-                        : 'assets/[name].js';
-                }
+                assetFileNames: 'assets/[name]-[hash][extname]',
+                chunkFileNames: 'assets/[name]-[hash].js',
+                entryFileNames: 'assets/[name]-[hash].js'
             }
         }
     },

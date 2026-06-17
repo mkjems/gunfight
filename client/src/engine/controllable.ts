@@ -7,6 +7,7 @@ type ControllableOptions = {
     facing?: number;
     frame?: number;
     playerId?: string | number;
+    shootingStraightness?: number;
     speed?: number;
 };
 
@@ -59,6 +60,7 @@ export class Controllable {
     movementBounds: MovementBounds | null;
     pen: Pen;
     playerId?: string | number;
+    shootingStraightness: number;
     slot?: number;
     speed: number;
     x: number;
@@ -84,6 +86,10 @@ export class Controllable {
         this.animationFrames = config.animationFrames;
         this.deathAnimationTime = null;
         this.speed = options.speed || config.speed;
+        this.shootingStraightness =
+            typeof options.shootingStraightness === 'number'
+                ? options.shootingStraightness
+                : Config.bullet.defaultStraightness;
         this.keys = {};
         this.pen = new Pen(
             this.x,
@@ -241,6 +247,7 @@ export class Controllable {
         this.idleFrame = slot.frame;
         this.frame = this.idleFrame;
         this.aim = Config.player.defaultAim;
+        this.shootingStraightness = Config.bullet.defaultStraightness;
         this.animationTime = 0;
         this.deathAnimationTime = null;
         this.clearKeys();

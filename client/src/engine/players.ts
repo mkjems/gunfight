@@ -66,6 +66,8 @@ export class Players {
             this.all[id].slot = index;
             this.all[id].facing = slot.facing;
             this.all[id].idleFrame = slot.frame;
+            this.all[id].shootingStraightness =
+                Config.bullet.defaultStraightness;
             this.all[id].setMovementBounds(slot.movementBounds);
 
             if (

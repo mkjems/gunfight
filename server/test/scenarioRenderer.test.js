@@ -181,3 +181,24 @@ test('finds bullet hits against damageable obstacles', async function () {
     assert.equal(hit.bullet, bullet);
     assert.equal(hit.obstacleId, 'cactus:0');
 });
+
+test('ignores harmless bullets against damageable obstacles', async function () {
+    const renderer = await createRenderer();
+    const bullet = {
+        deleteMe: false,
+        isHarmful: false,
+        getHitBox() {
+            return {
+                x: 15,
+                y: 20,
+                width: 4,
+                height: 4
+            };
+        }
+    };
+    const scenario = {
+        cacti: [{ x: 20, y: 80 }]
+    };
+
+    assert.equal(renderer.findBulletObstacleHit({ a: bullet }, scenario), null);
+});

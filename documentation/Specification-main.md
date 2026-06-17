@@ -185,6 +185,22 @@ it only presents those phases and sends player intents or reports.
 - If both players run out of bullets, both reload.
 - Bullets can hit players and damage selected obstacles.
 - Some bullets can ricochet.
+- Bullets have shooting straightness from `0.0` to `1.0`. The current
+  hardcoded player shooting straightness comes from
+  `Config.bullet.defaultStraightness` so the cartoon trajectory is visible
+  during playtesting, and existing players refresh that hardcoded value when
+  they sync or reset.
+- `straightness: 1.0` keeps the original straight, constant-speed bullet
+  behavior.
+- Lower-straightness bullets use `altitude` for a fake vertical bounce while
+  `x,y` remain the ground-plane path. Rocks and screen edges ricochet the
+  ground-plane path; ground bounces affect altitude only.
+- A newly fired bullet renders from its frozen muzzle state before scene
+  movement advances it, keeping local and remote shots visually symmetric.
+- Bullets below the harm straightness cutoff are theatrical only. Other bullets
+  become harmless once they slow below the harm velocity cutoff or come to rest.
+- Resting bullets stay visible for the current round and no longer block that
+  player from firing again.
 - A disconnected opponent returns the remaining player to the lobby state.
 
 ### Desktop game controls

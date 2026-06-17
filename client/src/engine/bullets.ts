@@ -10,13 +10,16 @@ type BulletOptions = ConstructorParameters<typeof Bullet>[1];
 export class Bullets {
     bullets: Record<string | number, Bullet>;
     scene: SceneLike;
+    trackedBullets: Bullet[];
 
     constructor(scene: SceneLike) {
         this.scene = scene;
         this.bullets = {};
+        this.trackedBullets = [];
     }
 
     fire(player: PlayerLike, options?: BulletOptions) {
+        this.pruneInactiveBullets();
         const activeBullet = this.bullets[player.playerId];
 
         if (activeBullet && !activeBullet.deleteMe) {
@@ -25,6 +28,7 @@ export class Bullets {
 
         const bullet = new Bullet(player, options);
         this.bullets[player.playerId] = bullet;
+        this.trackedBullets.push(bullet);
         this.scene.addFigure(bullet);
         return bullet;
     }
@@ -39,16 +43,33 @@ export class Bullets {
     }
 
     clear() {
-        Object.keys(this.bullets).forEach((id) => {
-            this.remove(id);
+        this.trackedBullets.forEach((bullet) => {
+            bullet.deleteMe = true;
         });
+        this.bullets = {};
+        this.trackedBullets = [];
     }
 
     reset() {
-        this.bullets = {};
+        this.clear();
     }
 
     all() {
+        this.pruneInactiveBullets();
         return this.bullets;
+    }
+
+    pruneInactiveBullets() {
+        Object.keys(this.bullets).forEach((id) => {
+            const bullet = this.bullets[id];
+
+            if (bullet.deleteMe || bullet.isResting) {
+                delete this.bullets[id];
+            }
+        });
+
+        this.trackedBullets = this.trackedBullets.filter((bullet) => {
+            return !bullet.deleteMe;
+        });
     }
 }

@@ -44,30 +44,37 @@ async function loadGameplayConstructors() {
         );
     });
 
-    const [bulletModule, bulletsModule, controllableModule, playersModule] =
-        await Promise.all(
-            [
-                'engine/bullet.js',
-                'engine/bullets.js',
-                'engine/controllable.js',
-                'engine/players.js'
-            ].map(function (fileName) {
-                return import(
-                    pathToFileURL(path.join(tempDirectory, fileName)).href
-                );
-            })
-        );
+    const [
+        bulletModule,
+        bulletsModule,
+        configModule,
+        controllableModule,
+        playersModule
+    ] = await Promise.all(
+        [
+            'engine/bullet.js',
+            'engine/bullets.js',
+            'platform/config.js',
+            'engine/controllable.js',
+            'engine/players.js'
+        ].map(function (fileName) {
+            return import(
+                pathToFileURL(path.join(tempDirectory, fileName)).href
+            );
+        })
+    );
 
     return {
         Bullet: bulletModule.Bullet,
         Bullets: bulletsModule.Bullets,
+        Config: configModule.Config,
         Controllable: controllableModule.Controllable,
         Players: playersModule.Players
     };
 }
 
 test('bullets fire once per owner and expose snapshots', async function () {
-    const { Bullets } = await loadGameplayConstructors();
+    const { Bullets, Config } = await loadGameplayConstructors();
     const figures = [];
     const bullets = new Bullets({
         addFigure(figure) {
@@ -88,6 +95,11 @@ test('bullets fire once per owner and expose snapshots', async function () {
     assert.equal(bullets.fire(player), false);
     assert.deepEqual(Object.keys(bullets.all()), ['p1']);
     assert.equal(typeof bullet.toSnapshot().speedX, 'number');
+    assert.equal(
+        bullet.toSnapshot().straightness,
+        Config.bullet.defaultStraightness
+    );
+    assert.equal(bullet.isHarmful, true);
 
     bullets.remove('p1');
 
@@ -139,6 +151,7 @@ test('bullet collision lines reflect ricochets', async function () {
         {
             speedX: 0,
             speedY: -120,
+            straightness: 1,
             x: 100,
             y: 10
         }
@@ -153,6 +166,121 @@ test('bullet collision lines reflect ricochets', async function () {
     assert.equal(bullet.hasRicocheted, true);
     assert.equal(bullet.speedY, 120);
     assert.equal(ricochets[0], bullet);
+});
+
+test('low-straightness bullets settle and allow another shot', async function () {
+    const { Bullets } = await loadGameplayConstructors();
+    const bullets = new Bullets({
+        addFigure() {}
+    });
+    const player = {
+        aim: 4,
+        facing: 1,
+        playerId: 'p1',
+        shootingStraightness: 0.2,
+        x: 100,
+        y: 200
+    };
+    const bullet = bullets.fire(player, {
+        speedX: 80,
+        speedY: 0,
+        x: 100,
+        y: 200
+    });
+
+    for (let i = 0; i < 600 && !bullet.isResting; i += 1) {
+        bullet.moveStep(1 / 60);
+    }
+
+    assert.equal(bullet.isResting, true);
+    assert.equal(bullet.isHarmful, false);
+    assert.deepEqual(bullets.all(), {});
+
+    const nextBullet = bullets.fire(player, { straightness: 1 });
+
+    assert.notEqual(nextBullet, false);
+    assert.notEqual(nextBullet, bullet);
+});
+
+test('new bullets keep the frozen muzzle position for their first scene move', async function () {
+    const { Bullet, Config } = await loadGameplayConstructors();
+    const bullet = new Bullet(
+        {
+            aim: 4,
+            facing: 1,
+            playerId: 'p1',
+            shootingStraightness: 0.5,
+            x: 100,
+            y: 200
+        },
+        {
+            straightness: 0.5
+        }
+    );
+    const start = bullet.toSnapshot();
+
+    Bullet.setCollisionLines([]);
+    bullet.move(0, 1000);
+
+    assert.equal(bullet.x, start.x);
+    assert.equal(bullet.y, start.y);
+
+    bullet.move(1000, 1000 + Config.bullet.fixedStep * 2000);
+
+    assert.notEqual(bullet.x, start.x);
+});
+
+test('dragged bullets settle at mirrored distances for both facings', async function () {
+    const { Bullet } = await loadGameplayConstructors();
+
+    Bullet.setCollisionLines([]);
+
+    [0.3, 0.5, 0.8].forEach(function (straightness) {
+        const left = new Bullet(
+            {
+                aim: 4,
+                facing: 1,
+                playerId: 'left',
+                shootingStraightness: straightness,
+                x: 118.58,
+                y: 320.29
+            },
+            { straightness }
+        );
+        const right = new Bullet(
+            {
+                aim: 4,
+                facing: -1,
+                playerId: 'right',
+                shootingStraightness: straightness,
+                x: 840.4,
+                y: 321.23
+            },
+            { straightness }
+        );
+        const leftStart = left.x;
+        const rightStart = right.x;
+
+        for (
+            let i = 0;
+            i < 2000 && (!left.isResting || !right.isResting);
+            i += 1
+        ) {
+            if (!left.isResting) {
+                left.moveStep(1 / 120);
+            }
+
+            if (!right.isResting) {
+                right.moveStep(1 / 120);
+            }
+        }
+
+        assert.equal(left.isResting, true);
+        assert.equal(right.isResting, true);
+        assert.ok(
+            Math.abs(left.x - leftStart - (rightStart - right.x)) < 0.000001
+        );
+    });
 });
 
 test('controllable moves, aims, and exposes collision geometry', async function () {
@@ -208,6 +336,45 @@ test('players sync clients, reset slots, and remove departed players', async fun
 
     assert.deepEqual(Object.keys(players.all), ['b']);
     assert.deepEqual(removed, ['a']);
+});
+
+test('players refresh hardcoded shooting straightness on sync and reset', async function () {
+    const { Config, Players } = await loadGameplayConstructors();
+    const players = new Players(
+        {
+            addFigure() {}
+        },
+        {
+            remove() {}
+        }
+    );
+
+    players.sync({
+        clients: [{ id: 'a' }, { id: 'b' }]
+    });
+    players.all.a.shootingStraightness = Config.bullet.defaultStraightness / 2;
+    players.all.b.shootingStraightness = Config.bullet.defaultStraightness / 3;
+
+    players.sync({
+        clients: [{ id: 'a' }, { id: 'b' }]
+    });
+
+    assert.equal(
+        players.all.a.shootingStraightness,
+        Config.bullet.defaultStraightness
+    );
+    assert.equal(
+        players.all.b.shootingStraightness,
+        Config.bullet.defaultStraightness
+    );
+
+    players.all.a.shootingStraightness = Config.bullet.defaultStraightness / 4;
+    players.resetAll();
+
+    assert.equal(
+        players.all.a.shootingStraightness,
+        Config.bullet.defaultStraightness
+    );
 });
 
 test('players constrain lobby movement', async function () {

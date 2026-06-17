@@ -32,7 +32,12 @@ const shot = {
     aim: 2,
     width: 3,
     height: 4,
-    hasRicocheted: true
+    straightness: 0.45,
+    altitude: 6,
+    altitudeVelocity: 12,
+    hasRicocheted: true,
+    isResting: false,
+    isHarmful: true
 };
 
 test('exports lifecycle phase constants and guard', function () {
@@ -115,10 +120,36 @@ test('defaults absent bullet ricochet state to false', function () {
         facing: 1,
         aim: 2,
         width: 3,
-        height: 4
+        height: 4,
+        straightness: 0.8,
+        altitude: 2,
+        altitudeVelocity: 10,
+        isResting: false,
+        isHarmful: true
     });
 
     assert.equal(normalized.hasRicocheted, false);
+    assert.equal(normalized.straightness, 0.8);
+    assert.equal(normalized.altitude, 2);
+    assert.equal(normalized.altitudeVelocity, 10);
+    assert.equal(normalized.isResting, false);
+    assert.equal(normalized.isHarmful, true);
+});
+
+test('rejects bullet snapshots without trajectory state', function () {
+    assert.equal(
+        normalizeBulletSnapshot({
+            x: 10,
+            y: 20,
+            speedX: 300,
+            speedY: -40,
+            facing: 1,
+            aim: 2,
+            width: 3,
+            height: 4
+        }),
+        null
+    );
 });
 
 test('normalizes player position payloads with server-owned player id', function () {

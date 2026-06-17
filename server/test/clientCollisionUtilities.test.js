@@ -87,6 +87,27 @@ test('finds bullet hits and handles ricochet self hits', async function () {
     });
 });
 
+test('ignores harmless bullets in player hit detection', async function () {
+    const { Collision } = await loadCollisionUtilities();
+    const players = {
+        b: {
+            playerId: 'b',
+            getHitBox() {
+                return { x: 0, y: 0, width: 10, height: 10 };
+            }
+        }
+    };
+    const bullet = {
+        isHarmful: false,
+        ownerId: 'a',
+        getHitBox() {
+            return { x: 0, y: 0, width: 4, height: 4 };
+        }
+    };
+
+    assert.equal(Collision.findBulletHit({ shot: bullet }, players), null);
+});
+
 test('detects circle collisions with rect, polygon, and circle bodies', async function () {
     const { Obstacles } = await loadCollisionUtilities();
 
