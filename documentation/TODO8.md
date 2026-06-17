@@ -99,20 +99,35 @@
 
 Idea: What if the players guns were not very good or dangerous in the beginning of the game. And they had to unlock better shooting by solving some challenge first. This could give the game a story and direction.
 
-- [ ] Introduce the concept of straightness to the bullet. A value between 0.0 and 1.0
-- [ ] How much straightness there is in a bullet depends on the player that shoots, The two players can shoot differently.
-- [ ] The straightness shooting of a player should be able to evolve during the game.
-- [ ] Once a bullet is fired the straightness of that bullet stays the same.
-- [ ] With straightness 1 the bullet flies, like it does today, constant speed straight line.
-      With low straightness, the bullet just bounces a long the 'ground' a couple of times and roles to a halt and stays there.
-      The idea is that we can add this cartoon like behavior in various amounts, ranging from totally straight to very slow bouncy rolling stopping bullet
-      On top of that the challenge is that we have this strange 2D isometric perspective to the whole game, so the fake bounce is always just straight up and down.
-- [ ] Give the bullet the concept of height
-- [ ] Player should still be able to shoot the bullet in different directions
-- [ ] Bullet should bounce like a ball on the 'ground', when height hits zero
-- [ ] Bullet should still ricochet on collision with rocks and edge of screen.
-- [ ] Bullet should slow down faster, with lower straightness.
-- [ ] Bullet should eventually role to a stop on the ground and stay there for the rest of the round if it runs out of velocity.
+- [ ] Introduce bullet `straightness` as a value from `0.0` to `1.0`.
+- [ ] Store shooting straightness on the player, not only on the bullet.
+      The two players can have different shooting straightness.
+- [ ] Let a player's shooting straightness evolve during the game.
+- [ ] Freeze `straightness` on each bullet when it is fired.
+- [ ] Keep `straightness: 1.0` as the current behavior: constant-speed,
+      straight-line flight, current collision behavior, and current ricochet
+      behavior.
+- [ ] Use `altitude` for the cartoon vertical arc. Do not call it `height`,
+      because bullet `height` already means sprite/collision-box height.
+- [ ] Keep `x` and `y` as the bullet's ground-plane path. Draw the bullet at
+      `y - altitude`, with any shadow or ground contact effect drawn at `x,y`.
+- [ ] Player aim should still control the ground-plane firing direction.
+- [ ] Low-straightness bullets should bounce along the ground, lose speed,
+      roll, then stop and stay visible for the rest of the round.
+- [ ] Ground bounces affect only `altitude` and vertical bounce velocity.
+      Ricochets against rocks and screen edges affect only the ground-plane
+      `x,y` movement.
+- [ ] Bullets should slow down faster when straightness is lower.
+- [ ] Define a `minimumHarmStraightness` cutoff. Bullets below that straightness
+      are theatrical only and can never hurt the opponent.
+- [ ] Above `minimumHarmStraightness`, a low-straightness bullet can hurt a
+      player only while it is still moving faster than a harm velocity cutoff.
+- [ ] Bullets that are rolling too slowly or lying on the ground are harmless.
+- [ ] When an un-straight bullet stops, it becomes resting scenery for the
+      current round and no longer blocks that player from firing another
+      bullet.
+- [ ] Include straightness, altitude, velocity, and resting/harmful state in the
+      shot snapshot so both clients simulate the same fired bullet.
 
 ## Other Ideas
 
