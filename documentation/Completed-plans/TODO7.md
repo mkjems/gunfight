@@ -60,53 +60,9 @@
 - [x] Fix or document any low-noise rule findings from the first TypeScript
       lint run.
 
-## P10.7 - Experiment with ESLint rules
-
-- [x] Add architecture-boundary rules incrementally.
-    - [x] `shared/**` must not import client or server modules.
-    - [x] client modules must not import server modules.
-    - [x] View models must not import side-effectful client layers or use DOM,
-          socket, timer, canvas, runtime, or platform side effects.
-    - [x] State modules must not import side-effectful client layers or UI code;
-          DOM, socket, canvas, runtime, and platform side effects are
-          restricted. Timer globals are allowed only in `clientTimers.ts`.
-- [ ] Add candidate TypeScript escape-hatch rules.
-    - [ ] Reject `any`, TypeScript suppression comments, and non-null
-          assertions unless a specific exception is documented.
-    - [ ] Prefer explicit type-only imports where they improve readability.
-- [ ] Trial type-aware TypeScript ESLint rules separately from normal lint.
-    - [x] Do not enable promise and async safety rules now; the first useful
-          findings were in lower-priority tool/install code, and the type-aware
-          lint cost is not worth it yet.
-    - [ ] Consider switch exhaustiveness only where it fits the project's
-          const-map state style.
-    - [ ] Keep type-aware rules only if the added lint time and findings are
-          worthwhile.
-- [ ] Trial human-readability smell rules as warnings first.
-    - [x] Add `npm run lint:complexity` as a warning-only review pass.
-    - [x] Add `npm run lint:shape` as a warning-only file/function size review
-          pass.
-    - [x] Exclude `client/src/tools/**` from complexity warnings; tools should
-          work correctly but do not need polished application architecture.
-    - [x] Exclude `client/src/tools/**`, `server/test/**`, and `browser-smoke/**`
-          from shape warnings.
-    - [ ] Review complexity, shape, nesting depth, and parameter-count warnings
-          by reading the affected code, not by blindly satisfying numbers.
-    - [ ] Consider restricted syntax for focused tests and TypeScript enums if
-          those patterns become real risks.
-- [ ] Decide which rules to keep.
-    - [ ] Keep rules that catch real unwanted patterns with low noise.
-    - [ ] Drop rules that mostly create churn, style fights, or less readable
-          code.
-    - [ ] Document kept rules and rejected rules in the code quality scorecard.
-
 ## P11 - Mobile lobby screen improvements
 
 - [x] On mobile, in the lobby. Ad some vertical space between the 'Play gunfight' button and the other two buttons. And I would like high-score and edit-name buttons to be horizontally aligned.
-
-## P12 Improve visual impact of game
-
-- [ ] Add a an option for a rain effect on the scenario. It should just look like it is raining. I would like to see raindrops falling at an 7 degrees angle and hitting the ground. We cant do collision detection for all drops so we must cheat.
 
 ## P13 - Improve Rock editor
 
@@ -160,8 +116,6 @@
           preview scale, zoom controls, panning, and the low-noise size
           reference.
     - [x] Mark this P13 checklist done as each implementation task lands.
-
-## P14 - Improve Scenario editor
 
 ## P15 - Improve the CSS - start using CSS Modules in the product
 
@@ -226,66 +180,3 @@
     - [x] What remains global and why.
     - [x] How tests should select elements without depending on hashed class
           names.
-
-## P16 - Improve current mega components by breaking them into smaller reusable parts and follow component guidelines.
-
-- [ ] Use `Preact-components.md` as the component design guide for this work.
-    - [ ] Prefer smaller arrow-function components when touching existing
-          component files.
-    - [ ] Keep screen/domain components allowed, but compose them from focused
-          child components.
-    - [ ] Keep gameplay state, network state, timers, socket work, and canvas
-          work outside the component tree.
-    - [ ] Do not create primitive/shared UI components until at least two real
-          product components need the same concept.
-- [ ] Split `ClientApp` into clearer app-shell components.
-    - [ ] Extract prompt components: rotate prompt and install prompt.
-    - [ ] Extract screen wrapper components for game, lobby, high scores, and
-          name editor.
-    - [ ] Extract touch control wrapper components for lobby and gameplay touch
-          controls.
-    - [ ] Keep `ClientApp` responsible for composing app state into the visible
-          screen tree, not for detailed markup.
-- [ ] Split `GameHudComponent` into focused HUD pieces.
-    - [ ] Keep `ScoreRow`, `ScoreSide`, `AmmoRow`, `AmmoDisplay`,
-          `RoundMessage`, and `HitMessage` as clear individual components.
-    - [ ] Keep ids stable for tests and browser/runtime lookup.
-    - [ ] Keep score/ammo formatting logic small and local unless another
-          component needs it.
-- [ ] Split `LobbyMain` into focused lobby pieces.
-    - [ ] Extract lobby title/instructions, prompt stack, individual prompt
-          slots, previous result, and player labels.
-    - [ ] Keep lobby layout data flowing in through props from view models.
-    - [ ] Keep visual state such as reserved hidden prompts explicit and easy to
-          read.
-- [ ] Split `NameEditorComponent` into focused editor pieces.
-    - [ ] Extract name value, key grid, key row, key button, and help lines.
-    - [ ] Keep direct key selection callback behavior covered by Vitest.
-    - [ ] Keep keyboard/name editing state outside the component.
-- [ ] Split `HighScoresScreen` into focused score-table pieces.
-    - [ ] Extract table, row, cell, and prompt components.
-    - [ ] Keep row-limit behavior and empty-row formatting covered by Vitest.
-- [ ] Review shared UI opportunities after the first splits.
-    - [ ] Consider shared `ArcadeButton`, `ScreenTitle`, `PromptText`, or
-          `Stack` components only if the extracted components reveal real
-          duplication.
-    - [ ] Avoid generic abstractions that make the arcade UI harder to read.
-- [ ] Verify each component split incrementally.
-    - [ ] Run `npm run test:ui` after each component-area split.
-    - [ ] Run `npm run check:deploy` after each completed area.
-    - [ ] Run browser smoke tests after changes that affect layout, touch
-          controls, or screen visibility.
-
-## Other Ideas
-
-- [ ] Add more interactive elements to the scenarios,
-      [ ] Barrels you shoot and liquid spills out
-      [ ] TNT you can shoot that explodes
-      [ ] Better gun you can pick up
-      [ ] A force shield that will protect you from bullet in a number of seconds
-- [ ] Add persistent high scores with a database.
-- [ ] Add private room codes.
-- [ ] Add spectator mode.
-- [ ] Add optional rematch flow.
-- [ ] Add a small original story or Stranger Things-style twist.
-- [ ] Add more sounds, animations, and scenario themes.
