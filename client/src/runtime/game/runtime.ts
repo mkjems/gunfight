@@ -231,6 +231,7 @@ export class ClientGameRuntime implements ClientGameController {
             },
             sprites: {
                 cactus: this.assets.sprites.cactus,
+                money: this.assets.sprites.money,
                 saloon: this.assets.sprites.saloon,
                 wagon: this.assets.sprites.wagon
             }

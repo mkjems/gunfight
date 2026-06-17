@@ -19,6 +19,8 @@ type ContextLike = {
 
 type SpriteLike = CanvasImageSource & {
     complete?: boolean;
+    naturalHeight?: number;
+    naturalWidth?: number;
 };
 
 type ScenarioRendererOptions = {
@@ -29,6 +31,7 @@ type ScenarioRendererOptions = {
     getTime?: () => number;
     sprites?: {
         cactus?: SpriteLike;
+        money?: SpriteLike;
         saloon?: SpriteLike;
         wagon?: SpriteLike;
     };
@@ -44,8 +47,15 @@ type Scenario = {
         x: number;
         y: number;
     }>;
+    moneyBags?: MoneyBag[];
     rocks?: Rock[];
     wagon?: Wagon;
+};
+
+type MoneyBag = {
+    gameRoundSeconds: number;
+    x: number;
+    y: number;
 };
 
 type Rock = {
@@ -145,6 +155,8 @@ export function ScenarioRenderer(options: ScenarioRendererOptions) {
         if (scenario.wagon) {
             drawWagon(scenario.wagon);
         }
+
+        drawMoneyBags(scenario);
     }
 
     function drawDecorations(scenario: Scenario) {
@@ -379,6 +391,79 @@ export function ScenarioRenderer(options: ScenarioRendererOptions) {
         context.restore();
     }
 
+    function drawMoneyBags(scenario: Scenario) {
+        (scenario.moneyBags || []).forEach(function (moneyBag) {
+            if (!isMoneyBagVisible(moneyBag)) {
+                return;
+            }
+
+            drawMoneyBag(moneyBag);
+        });
+    }
+
+    function isMoneyBagVisible(moneyBag: MoneyBag) {
+        return getRoundElapsedSeconds() >= moneyBag.gameRoundSeconds;
+    }
+
+    function drawMoneyBag(moneyBag: MoneyBag) {
+        const moneySprite = sprites.money;
+        const frame = getMoneyBagFrame(moneyBag);
+        const sourceWidth = getMoneySpriteWidth();
+        const sourceHeight = getMoneySpriteHeight();
+        const frameWidth = sourceWidth / Config.moneyBag.frames;
+        const scale = Config.graphics.scale;
+        const width = frameWidth * scale;
+        const height = sourceHeight * scale;
+
+        context.save();
+
+        if (moneySprite && moneySprite.complete) {
+            context.drawImage(
+                moneySprite,
+                frame * frameWidth,
+                0,
+                frameWidth,
+                sourceHeight,
+                moneyBag.x - width / 2,
+                moneyBag.y - height,
+                width,
+                height
+            );
+        } else {
+            context.fillStyle = Config.colors.yellow;
+            context.fillRect(
+                moneyBag.x - width / 2,
+                moneyBag.y - height,
+                width,
+                height
+            );
+        }
+
+        context.restore();
+    }
+
+    function getMoneyBagFrame(moneyBag: MoneyBag) {
+        const elapsedMs =
+            (getRoundElapsedSeconds() - moneyBag.gameRoundSeconds) * 1000;
+
+        return Math.min(
+            Config.moneyBag.frames - 1,
+            Math.max(0, Math.floor(elapsedMs / Config.moneyBag.frameDuration))
+        );
+    }
+
+    function getMoneySpriteWidth() {
+        const moneySprite = sprites.money;
+
+        return moneySprite?.naturalWidth || Config.moneyBag.sourceWidth;
+    }
+
+    function getMoneySpriteHeight() {
+        const moneySprite = sprites.money;
+
+        return moneySprite?.naturalHeight || Config.moneyBag.sourceHeight;
+    }
+
     function drawWagon(wagon: Wagon) {
         const position = getWagonPosition(wagon);
         const scale = Config.graphics.scale;
@@ -417,8 +502,7 @@ export function ScenarioRenderer(options: ScenarioRendererOptions) {
     }
 
     function getWagonPosition(wagon: Wagon) {
-        const scenarioStartedAt = getScenarioStartedAt();
-        const elapsed = scenarioStartedAt ? getTime() - scenarioStartedAt : 0;
+        const elapsed = getRoundElapsedMs();
         const duration = wagon.duration || 10000;
         const progress = Math.min(1, Math.max(0, elapsed / duration));
 
@@ -426,6 +510,16 @@ export function ScenarioRenderer(options: ScenarioRendererOptions) {
             x: wagon.x,
             y: wagon.fromY + (wagon.toY - wagon.fromY) * progress
         };
+    }
+
+    function getRoundElapsedSeconds() {
+        return getRoundElapsedMs() / 1000;
+    }
+
+    function getRoundElapsedMs() {
+        const scenarioStartedAt = getScenarioStartedAt();
+
+        return scenarioStartedAt ? getTime() - scenarioStartedAt : 0;
     }
 
     function findBulletObstacleHit(

@@ -105,7 +105,7 @@ export const Config = {
         height: 4,
         speed: 420,
         fixedStep: 1 / 120,
-        defaultStraightness: 0,
+        defaultStraightness: 0.25,
         minimumHarmStraightness: 0.18,
         harmVelocity: 150,
         restVelocity: 18,
@@ -114,6 +114,12 @@ export const Config = {
         altitudeMaxStart: 16,
         altitudeMinBounceVelocity: 44,
         groundDrag: 3.4
+    },
+    moneyBag: {
+        sourceWidth: 160,
+        sourceHeight: 20,
+        frames: 8,
+        frameDuration: 90
     },
     colors: {
         yellowRgb: [255, 255, 0],

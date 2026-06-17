@@ -314,6 +314,7 @@ test('validates and resolves scenario source content', function () {
                 ],
                 decorations: [{ type: 'saloon', x: 0, y: 220 }],
                 cacti: [{ x: 475, y: 378 }],
+                moneyBags: [{ x: 380, y: 420, gameRoundSeconds: 4 }],
                 rocks: [{ type: 'small', x: 475, y: 445 }],
                 wagon: {
                     x: 475,
@@ -336,6 +337,7 @@ test('validates and resolves scenario source content', function () {
             ],
             decorations: [{ type: 'saloon', x: 0, y: 220 }],
             cacti: [{ x: 475, y: 378 }],
+            moneyBags: [{ x: 380, y: 420, gameRoundSeconds: 4 }],
             rocks: [{ type: 'small', x: 475, y: 445 }],
             wagon: {
                 x: 475,
@@ -353,6 +355,7 @@ test('validates and resolves scenario source content', function () {
         ],
         decorations: [{ type: 'saloon', x: 0, y: 220 }],
         cacti: [{ x: 475, y: 378 }],
+        moneyBags: [{ x: 380, y: 420, gameRoundSeconds: 4 }],
         rocks: [
             {
                 type: 'small',

@@ -12,6 +12,7 @@ export function ClientAssets(options: ClientAssetsOptions) {
     const createRockPattern = options.createRockPattern;
     const sprites = {
         cactus: new ImageCtor(),
+        money: new ImageCtor(),
         rockPattern: new ImageCtor(),
         saloon: new ImageCtor(),
         wagon: new ImageCtor()
@@ -21,6 +22,7 @@ export function ClientAssets(options: ClientAssetsOptions) {
     function load() {
         sprites.wagon.src = 'images/wagon-1-4-37x38.png';
         sprites.cactus.src = 'images/cactus-1-4-17X32.png';
+        sprites.money.src = 'images/money.png';
         sprites.saloon.src = 'images/saloon-64x128.png';
         sprites.rockPattern.onload = function () {
             rockPattern = createRockPattern(sprites.rockPattern);

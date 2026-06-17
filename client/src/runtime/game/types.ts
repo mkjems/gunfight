@@ -91,6 +91,7 @@ export type RuntimeAssets = {
     load: () => void;
     sprites: {
         cactus: RuntimeSprite;
+        money: RuntimeSprite;
         saloon: RuntimeSprite;
         wagon: RuntimeSprite;
     };

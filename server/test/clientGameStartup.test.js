@@ -93,6 +93,7 @@ function createStartupDependencies(onNetworkStart) {
                     sprites: {
                         ammo: {},
                         cactus: {},
+                        money: {},
                         saloon: {},
                         wagon: {}
                     },

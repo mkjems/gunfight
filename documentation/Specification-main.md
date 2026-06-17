@@ -201,6 +201,11 @@ it only presents those phases and sends player intents or reports.
   become harmless once they slow below the harm velocity cutoff or come to rest.
 - Resting bullets stay visible for the current round and no longer block that
   player from firing again.
+- Scenarios may define `moneyBags` entries with `x`, `y`, and
+  `gameRoundSeconds`. A money bag appears once the current round reaches its
+  configured second, plays its eight-frame appear animation from
+  `client/images/money.png`, then remains visible. Money bags are passive
+  scenery until pickup/economy rules are designed.
 - A disconnected opponent returns the remaining player to the lobby state.
 
 ### Desktop game controls

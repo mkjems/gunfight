@@ -3,6 +3,7 @@ import {
     parseScenarioSources,
     type CactusInstance,
     type Decoration,
+    type MoneyBagInstance,
     type PlayerStart,
     type RockDefinitions,
     type RockPlacement,
@@ -152,6 +153,18 @@ export function validateScenarioSources(
                 label + ' cactus ' + String(cactusIndex + 1),
                 cactus
             );
+        });
+
+        (scenario.moneyBags || []).forEach(function (moneyBag, moneyIndex) {
+            const moneyLabel = label + ' money bag ' + String(moneyIndex + 1);
+
+            validateArenaPoint(errors, moneyLabel, moneyBag);
+
+            if (moneyBag.gameRoundSeconds < 0) {
+                errors.push(
+                    moneyLabel + ' gameRoundSeconds must be non-negative.'
+                );
+            }
         });
 
         (scenario.decorations || []).forEach(
@@ -745,6 +758,11 @@ function copyScenarioSource(scenario: ScenarioSource): ScenarioSource {
         cacti: scenario.cacti
             ? scenario.cacti.map(function (cactus) {
                   return { ...cactus };
+              })
+            : undefined,
+        moneyBags: scenario.moneyBags
+            ? scenario.moneyBags.map(function (moneyBag: MoneyBagInstance) {
+                  return { ...moneyBag };
               })
             : undefined,
         rocks: scenario.rocks

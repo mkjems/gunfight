@@ -17,6 +17,23 @@
         ],
         "decorations": [],
         "cacti": [],
+        "moneyBags": [
+            {
+                "x": 350,
+                "y": 430,
+                "gameRoundSeconds": 3
+            },
+            {
+                "x": 475,
+                "y": 360,
+                "gameRoundSeconds": 8
+            },
+            {
+                "x": 600,
+                "y": 430,
+                "gameRoundSeconds": 13
+            }
+        ],
         "rocks": []
     },
     {
@@ -37,6 +54,23 @@
         ],
         "decorations": [],
         "cacti": [],
+        "moneyBags": [
+            {
+                "x": 330,
+                "y": 430,
+                "gameRoundSeconds": 3
+            },
+            {
+                "x": 475,
+                "y": 340,
+                "gameRoundSeconds": 8
+            },
+            {
+                "x": 620,
+                "y": 430,
+                "gameRoundSeconds": 13
+            }
+        ],
         "rocks": [],
         "wagon": {
             "x": 465.38,
@@ -63,6 +97,23 @@
         ],
         "decorations": [],
         "cacti": [],
+        "moneyBags": [
+            {
+                "x": 360,
+                "y": 430,
+                "gameRoundSeconds": 3
+            },
+            {
+                "x": 475,
+                "y": 350,
+                "gameRoundSeconds": 8
+            },
+            {
+                "x": 590,
+                "y": 430,
+                "gameRoundSeconds": 13
+            }
+        ],
         "rocks": []
     }
 ]

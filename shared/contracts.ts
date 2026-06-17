@@ -100,6 +100,7 @@ export interface ScenarioSource {
     playerStarts?: PlayerStart[];
     rocks?: RockPlacement[];
     cacti?: CactusInstance[];
+    moneyBags?: MoneyBagInstance[];
     wagon?: WagonInstance;
     decorations?: Decoration[];
 }
@@ -109,6 +110,7 @@ export interface Scenario {
     playerStarts?: PlayerStart[];
     rocks?: RockInstance[];
     cacti?: CactusInstance[];
+    moneyBags?: MoneyBagInstance[];
     wagon?: WagonInstance;
     decorations?: Decoration[];
 }
@@ -147,6 +149,12 @@ export interface PlayerStart {
 export interface CactusInstance {
     x: number;
     y: number;
+}
+
+export interface MoneyBagInstance {
+    x: number;
+    y: number;
+    gameRoundSeconds: number;
 }
 
 export interface WagonInstance {
@@ -488,6 +496,31 @@ function parseCactusInstance(
     };
 }
 
+function parseMoneyBagInstance(
+    value: unknown,
+    sourceName: string
+): MoneyBagInstance {
+    const moneyBag = requireRecord(value, sourceName);
+    const gameRoundSeconds = requireNumber(
+        moneyBag,
+        'gameRoundSeconds',
+        sourceName
+    );
+
+    if (gameRoundSeconds < 0) {
+        throw createContentValidationError(
+            sourceName + '.gameRoundSeconds',
+            'expected a non-negative number'
+        );
+    }
+
+    return {
+        x: requireNumber(moneyBag, 'x', sourceName),
+        y: requireNumber(moneyBag, 'y', sourceName),
+        gameRoundSeconds
+    };
+}
+
 function parsePlayerStart(value: unknown, sourceName: string): PlayerStart {
     const start = requireRecord(value, sourceName);
 
@@ -621,6 +654,12 @@ export function parseScenarioSources(
                 scenarioLabel,
                 parseCactusInstance
             ),
+            moneyBags: parseOptionalArray(
+                record,
+                'moneyBags',
+                scenarioLabel,
+                parseMoneyBagInstance
+            ),
             rocks: parseOptionalArray(
                 record,
                 'rocks',
@@ -655,6 +694,11 @@ export function resolveScenarioSource(
         cacti: scenario.cacti
             ? scenario.cacti.map(function (cactus) {
                   return { ...cactus };
+              })
+            : undefined,
+        moneyBags: scenario.moneyBags
+            ? scenario.moneyBags.map(function (moneyBag) {
+                  return { ...moneyBag };
               })
             : undefined,
         rocks: (scenario.rocks || []).map(function (rock) {

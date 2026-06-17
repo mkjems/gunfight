@@ -43,6 +43,7 @@ test('loads client image assets with expected sources', async function () {
 
     assert.equal(assets.sprites.wagon.src, 'images/wagon-1-4-37x38.png');
     assert.equal(assets.sprites.cactus.src, 'images/cactus-1-4-17X32.png');
+    assert.equal(assets.sprites.money.src, 'images/money.png');
     assert.equal(assets.sprites.saloon.src, 'images/saloon-64x128.png');
     assert.equal(assets.sprites.rockPattern.src, 'images/rock-pattern.png');
 });

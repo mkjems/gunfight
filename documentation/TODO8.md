@@ -148,6 +148,8 @@ Lets have a brainstorm and throw some ideas on the table.
 - [ ] Random elixirs bottle: Maybe decreases maybe increases
 - [ ] Courage or exhaustion decides the shot quality
 - [ ] Money decides the shot quality
+- [x] Add passive timed money bags to scenarios as the first step toward a
+      money/gun-shop progression loop.
 
 ## P20 - Undo 'user is always to the left in main lobby'.
 

@@ -76,6 +76,7 @@ test('parses, validates, and formats scenario JSON', async function () {
                 name: 'test',
                 decorations: [{ type: 'saloon', x: 0, y: 220 }],
                 cacti: [{ x: 475, y: 378 }],
+                moneyBags: [{ x: 380, y: 420, gameRoundSeconds: 4 }],
                 rocks: [{ type: 'small', x: 475, y: 445 }]
             }
         ]),
@@ -88,7 +89,11 @@ test('parses, validates, and formats scenario JSON', async function () {
         { x: 150, y: 430, facing: 1, frame: 0 },
         { x: 800, y: 430, facing: -1, frame: 2 }
     ]);
+    assert.deepEqual(scenarios[0].moneyBags, [
+        { x: 380, y: 420, gameRoundSeconds: 4 }
+    ]);
     assert.match(formatScenarioSources(scenarios), /"name": "test"/);
+    assert.match(formatScenarioSources(scenarios), /"moneyBags"/);
 });
 
 test('updates scenario objects and produces readable validation errors', async function () {

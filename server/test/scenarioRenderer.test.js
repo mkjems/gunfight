@@ -159,6 +159,42 @@ test('builds rock collision lines and obstacle bodies from a scenario', async fu
     ]);
 });
 
+test('renders timed money bag appear animation from scenario seconds', async function () {
+    const calls = [];
+    const moneySprite = {
+        complete: true,
+        naturalHeight: 20,
+        naturalWidth: 160
+    };
+    const renderer = await createRenderer({
+        context: {
+            ...createContext(),
+            drawImage(...args) {
+                calls.push(args);
+            }
+        },
+        getScenarioStartedAt() {
+            return 1000;
+        },
+        getTime() {
+            return 3500;
+        },
+        sprites: {
+            money: moneySprite
+        }
+    });
+
+    renderer.render({
+        moneyBags: [
+            { x: 100, y: 200, gameRoundSeconds: 1 },
+            { x: 300, y: 200, gameRoundSeconds: 5 }
+        ]
+    });
+
+    assert.equal(calls.length, 1);
+    assert.deepEqual(calls[0], [moneySprite, 140, 0, 20, 20, 80, 160, 40, 40]);
+});
+
 test('finds bullet hits against damageable obstacles', async function () {
     const renderer = await createRenderer();
     const bullet = {
