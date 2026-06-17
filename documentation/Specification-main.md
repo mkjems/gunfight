@@ -66,11 +66,11 @@ the character. This text is rendered as HTML overlay text and follows the avatar
 while it moves. The lobby does not prefix names with `PLAYER 1` or `PLAYER 2`.
 The status text changes with the player's lobby state; `READY` is shown as
 negative text. The local player is marked clearly with a small `(YOU)` marker
-under the local name and is rendered on the left side of the lobby. The opponent
-is rendered on the right side of the lobby. Lobby-side placement is
-presentation-only; server player id, gameplay slot, HUD placement, and scoring
-behavior stay unchanged. Lobby movement is constrained to side areas so avatars
-and their following labels stay readable and do not overlap the central lobby
+under the local name. Lobby avatars use the same server slot sides as gameplay:
+slot 0 is left, slot 1 is right. Names, player positions, HUD placement, score
+sides, and gameplay slots must agree across lobby, duel, and game-over
+presentation. Lobby movement is constrained to side areas so avatars and their
+following labels stay readable and do not overlap the central lobby
 instructions.
 
 When the local player is alone in a waiting lobby, the right side shows a lobby-only opponent placeholder: a large negative-text `?` marker and the text `LOOKING FOR OPPONENT`. The placeholder is derived only for presentation. It does not add a fake client, player, score, HUD entry, sync state, or gameplay object. If a real opponent client is present, the real opponent is shown instead. If the game is abandoned, the abandoned/opponent-left state takes precedence over the generic placeholder.

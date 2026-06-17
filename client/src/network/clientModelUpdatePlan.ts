@@ -72,8 +72,6 @@ export function create(options: CreatePlanOptions) {
         syncNameEditor: true,
         syncStoredPlayerName: true,
         syncPlayers: {
-            localPlayerFirst: syncLobbySlots,
-            localPlayerId: syncLobbySlots ? options.playerId : undefined,
             resetChangedSlots: options.roundState === RoundState.WAITING,
             resetExisting: serverReturnedToLobby || undefined,
             slots: syncLobbySlots

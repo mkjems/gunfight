@@ -11,9 +11,8 @@ type BulletsLike = {
 
 type ClientLike = {
     id: string | number;
+    slot?: number;
 };
-
-type ClientId = ClientLike['id'];
 
 type PlayerSlot = {
     facing: number;
@@ -29,8 +28,6 @@ type PlayerSlot = {
 };
 
 type PlayersOptions = {
-    localPlayerFirst?: boolean;
-    localPlayerId?: ClientId | null;
     resetChangedSlots?: boolean;
     resetExisting?: boolean;
     slots?: PlayerSlot[];
@@ -90,34 +87,15 @@ export class Players {
         this.scene.addFigure(this.all[id]);
     }
 
-    getOrderedClients(clients: ClientLike[], options: PlayersOptions = {}) {
-        if (!options.localPlayerFirst || options.localPlayerId === undefined) {
-            return clients;
-        }
-
-        const localClient = clients.find((client) => {
-            return client.id === options.localPlayerId;
-        });
-
-        if (!localClient) {
-            return clients;
-        }
-
-        return [
-            localClient,
-            ...clients.filter((client) => {
-                return client.id !== options.localPlayerId;
-            })
-        ];
-    }
-
     sync(model: { clients: ClientLike[] }, options: PlayersOptions = {}) {
         const activePlayers: Record<string, boolean> = {};
-        const clients = this.getOrderedClients(model.clients, options);
 
-        clients.forEach((client, index) => {
+        model.clients.forEach((client, index) => {
+            const slotIndex =
+                typeof client.slot === 'number' ? client.slot : index;
+
             activePlayers[client.id] = true;
-            this.ensure(client, index, options);
+            this.ensure(client, slotIndex, options);
         });
 
         Object.keys(this.all).forEach((id) => {

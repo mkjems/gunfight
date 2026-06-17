@@ -137,7 +137,6 @@ test('plans a round start when the server enters round intro', async function ()
             syncNameEditor: true,
             syncStoredPlayerName: true,
             syncPlayers: {
-                localPlayerFirst: false,
                 resetChangedSlots: false,
                 slots: [
                     { x: 120, y: 430, facing: 1, frame: 0 },
@@ -174,7 +173,7 @@ test('does not start gameplay while the server is in ready countdown', async fun
     );
 });
 
-test('plans local-first lobby slots while waiting in the lobby', async function () {
+test('plans slot-ordered lobby slots while waiting in the lobby', async function () {
     const plan = await loadClientModelUpdatePlan();
     const model = {
         clients: [
@@ -194,8 +193,6 @@ test('plans local-first lobby slots while waiting in the lobby', async function 
             }).syncPlayers
         ),
         {
-            localPlayerFirst: true,
-            localPlayerId: 'p2',
             resetChangedSlots: true,
             slots: [
                 {
@@ -254,7 +251,6 @@ test('plans abandoned-game recovery', async function () {
             syncNameEditor: true,
             syncStoredPlayerName: true,
             syncPlayers: {
-                localPlayerFirst: false,
                 resetChangedSlots: false,
                 slots: [
                     { x: 150, y: 430, facing: 1, frame: 0 },
@@ -301,8 +297,6 @@ test('plans lobby recovery when the server returns from game over', async functi
             syncNameEditor: true,
             syncStoredPlayerName: true,
             syncPlayers: {
-                localPlayerFirst: true,
-                localPlayerId: 'p1',
                 resetChangedSlots: false,
                 resetExisting: true,
                 slots: [

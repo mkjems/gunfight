@@ -365,12 +365,7 @@ test('follows server game-over and return-to-lobby model updates', async functio
         version: 7
     };
     runtime.players.sync = function (model, options) {
-        calls.push([
-            'players.sync',
-            model.phase,
-            options.localPlayerFirst,
-            options.resetExisting
-        ]);
+        calls.push(['players.sync', model.phase, options.resetExisting]);
     };
     runtime.renderHud = function () {
         calls.push('renderHud');
@@ -417,7 +412,7 @@ test('follows server game-over and return-to-lobby model updates', async functio
         ['setRoundEndsAt', null],
         'syncStoredPlayerName',
         'clearAbandonedRequeue',
-        ['players.sync', 'gameOver', false, undefined],
+        ['players.sync', 'gameOver', undefined],
         'syncNameEditor',
         'renderHud',
         'endGame',
@@ -428,7 +423,7 @@ test('follows server game-over and return-to-lobby model updates', async functio
         'enterLobbyState',
         ['roundState', 'gameOver', 'waiting'],
         'clearAbandonedRequeue',
-        ['players.sync', 'readying', true, true],
+        ['players.sync', 'readying', true],
         'syncNameEditor',
         'renderHud'
     ]);

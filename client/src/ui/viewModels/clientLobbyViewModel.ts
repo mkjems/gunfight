@@ -147,11 +147,10 @@ function getLobbyPlayerLabels(options: LobbyViewModelOptions): LobbyTextLine[] {
     const players = options.players || {};
     const labels: LobbyTextLine[] = [];
 
-    clients.forEach(function (client, index) {
+    clients.forEach(function (client) {
         const player = players[client.id];
         const playerLabel = getClientName({
-            ...client,
-            slot: index
+            ...client
         });
         const state = client.ready ? 'READY' : 'WAITING';
 

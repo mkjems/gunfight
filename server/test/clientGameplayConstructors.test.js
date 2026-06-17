@@ -99,7 +99,12 @@ test('bullets fire once per owner and expose snapshots', async function () {
         bullet.toSnapshot().straightness,
         Config.bullet.defaultStraightness
     );
-    assert.equal(bullet.isHarmful, true);
+    assert.equal(
+        bullet.isHarmful,
+        Config.bullet.defaultStraightness >=
+            Config.bullet.minimumHarmStraightness &&
+            Config.bullet.speed >= Config.bullet.harmVelocity
+    );
 
     bullets.remove('p1');
 
@@ -440,7 +445,7 @@ test('players constrain lobby movement', async function () {
     assert.equal(players.all.a.movementBounds, null);
 });
 
-test('players can assign the local client to the first lobby slot', async function () {
+test('players use server slot values for lobby slots', async function () {
     const { Players } = await loadGameplayConstructors();
     const players = new Players(
         {
@@ -453,11 +458,12 @@ test('players can assign the local client to the first lobby slot', async functi
 
     players.sync(
         {
-            clients: [{ id: 'remote' }, { id: 'local' }]
+            clients: [
+                { id: 'local', slot: 1 },
+                { id: 'remote', slot: 0 }
+            ]
         },
         {
-            localPlayerFirst: true,
-            localPlayerId: 'local',
             resetChangedSlots: true,
             slots: [
                 { x: 100, y: 100, facing: 1, frame: 0 },
@@ -466,10 +472,10 @@ test('players can assign the local client to the first lobby slot', async functi
         }
     );
 
-    assert.equal(players.all.local.slot, 0);
-    assert.equal(players.all.local.x, 100);
-    assert.equal(players.all.remote.slot, 1);
-    assert.equal(players.all.remote.x, 200);
+    assert.equal(players.all.remote.slot, 0);
+    assert.equal(players.all.remote.x, 100);
+    assert.equal(players.all.local.slot, 1);
+    assert.equal(players.all.local.x, 200);
 });
 
 test('players can force existing clients back to lobby slots', async function () {
