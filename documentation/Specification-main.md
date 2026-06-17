@@ -236,6 +236,10 @@ Expected behavior:
 - The page is reachable at `/rock-editor` separately from normal play.
 - The editor loads the current rock definitions from `server/rocks.json`.
 - The editor shows a visual preview of the selected rock.
+- The preview uses an absolute world-coordinate scale. Changing the selected
+  rock or resizing its geometry must not rescale the preview axes.
+- The preview provides zoom controls, panning, a reset-view control, a visible
+  draggable `(0, 0)` origin marker, and a low-noise size reference.
 - The user can drag polygon points, edit point coordinates, add/remove points,
   rename or duplicate rock definitions, and scale the selected rock by width and
   height.

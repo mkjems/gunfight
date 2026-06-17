@@ -110,56 +110,56 @@
 
 ## P13 - Improve Rock editor
 
-- [ ] Make the rock preview use an absolute world-coordinate scale.
-    - [ ] Replace the bounds-based preview scale in
+- [x] Make the rock preview use an absolute world-coordinate scale.
+    - [x] Replace the bounds-based preview scale in
           `client/src/tools/rockEditor.ts` with editor zoom state so the view
           transform no longer derives scale from the selected rock dimensions.
-    - [ ] Keep world origin centered by default and draw the x/y axes from that
+    - [x] Keep world origin centered by default and draw the x/y axes from that
           origin; changing rock width, height, or selected type must not recenter
           or rescale the axes.
-    - [ ] Keep drag hit testing and `screenToWorld` coordinate edits on the same
+    - [x] Keep drag hit testing and `screenToWorld` coordinate edits on the same
           absolute transform so dragged points still write real rock coordinates.
-- [ ] Add preview zoom controls to the rock editor UI.
-    - [ ] Add `-` and `+` zoom buttons, plus a compact zoom or axis-scale label,
+- [x] Add preview zoom controls to the rock editor UI.
+    - [x] Add `-` and `+` zoom buttons, plus a compact zoom or axis-scale label,
           near the preview toolbar in `client/rock-editor.html`.
-    - [ ] Store zoom as discrete, clamped levels in `rockEditor.ts`; default to a
+    - [x] Store zoom as discrete, clamped levels in `rockEditor.ts`; default to a
           practical world-to-screen scale for the existing rocks.
-    - [ ] Make zoom redraw only the preview transform and grid; it must not change
+    - [x] Make zoom redraw only the preview transform and grid; it must not change
           rock JSON, point coordinates, width, height, selected point, or
           validation state.
-    - [ ] Disable the zoom buttons at min/max zoom or otherwise make the limits
+    - [x] Disable the zoom buttons at min/max zoom or otherwise make the limits
           clear.
-- [ ] Add preview panning.
-    - [ ] Show the world origin `(0, 0)` as a low-noise draggable marker on the
+- [x] Add preview panning.
+    - [x] Show the world origin `(0, 0)` as a low-noise draggable marker on the
           canvas.
-    - [ ] Dragging the origin marker should pan the viewport by changing the
+    - [x] Dragging the origin marker should pan the viewport by changing the
           preview offset; it must not move the rock or rewrite point
           coordinates.
-    - [ ] Allow empty-canvas drag panning if it feels natural after the origin
+    - [x] Allow empty-canvas drag panning if it feels natural after the origin
           marker is in place.
-    - [ ] Add a reset-view control if panning makes it easy to lose the rock or
+    - [x] Add a reset-view control if panning makes it easy to lose the rock or
           origin.
-- [ ] Draw the grid from world coordinates instead of fixed canvas pixels.
-    - [ ] Derive grid-line spacing and axis labels from the current zoom level.
-    - [ ] Keep major axes visually distinct from regular grid lines.
-    - [ ] Add a subtle size reference such as a scale-bar label or sparse axis
+- [x] Draw the grid from world coordinates instead of fixed canvas pixels.
+    - [x] Derive grid-line spacing and axis labels from the current zoom level.
+    - [x] Keep major axes visually distinct from regular grid lines.
+    - [x] Add a subtle size reference such as a scale-bar label or sparse axis
           numbers; keep it quiet enough that polygon editing remains the focus.
-    - [ ] Keep the canvas usable on desktop and stacked mobile layouts.
-- [ ] Verify the behavior.
-    - [ ] Extend the rock-editor browser smoke test to prove canvas rendering
+    - [x] Keep the canvas usable on desktop and stacked mobile layouts.
+- [x] Verify the behavior.
+    - [x] Extend the rock-editor browser smoke test to prove canvas rendering
           still works after zooming.
-    - [ ] Add a browser smoke assertion that applying a larger rock size changes
+    - [x] Add a browser smoke assertion that applying a larger rock size changes
           the rock's on-canvas size while the axis/grid scale stays stable.
-    - [ ] Add a browser smoke assertion that panning changes only the preview
+    - [x] Add a browser smoke assertion that panning changes only the preview
           transform, not the output JSON.
-    - [ ] Run `npm run check:deploy`.
-    - [ ] Run `npm run test:browser` for the updated `/rock-editor` smoke
+    - [x] Run `npm run check:deploy`.
+    - [x] Run `npm run test:browser` for the updated `/rock-editor` smoke
           coverage.
-- [ ] Update docs after implementation.
-    - [ ] Update `documentation/Specification-main.md` to mention absolute
+- [x] Update docs after implementation.
+    - [x] Update `documentation/Specification-main.md` to mention absolute
           preview scale, zoom controls, panning, and the low-noise size
           reference.
-    - [ ] Mark this P13 checklist done as each implementation task lands.
+    - [x] Mark this P13 checklist done as each implementation task lands.
 
 ## P14 - Improve Scenario editor
 

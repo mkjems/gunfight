@@ -27,17 +27,35 @@ type ViewTransform = {
     scale: number;
 };
 
+type DragState =
+    | {
+          pointIndex: number;
+          type: 'point';
+      }
+    | {
+          lastPoint: Point;
+          type: 'pan';
+      };
+
 const HANDLE_RADIUS = 7;
-const GRID_STEP = 10;
-const PREVIEW_PADDING = 38;
+const GRID_WORLD_STEPS = [5, 10, 20, 25, 50, 100, 200, 500];
+const MIN_GRID_PIXEL_STEP = 32;
+const ORIGIN_MARKER_HIT_RADIUS = 12;
+const ORIGIN_MARKER_RADIUS = 5;
+const SCALE_BAR_MIN_WIDTH = 58;
+const ZOOM_LEVELS = [1, 1.5, 2, 3, 4, 5, 6, 8, 10];
+const DEFAULT_ZOOM_INDEX = 4;
 const PREVIEW_COLORS = {
     axis: 'rgba(86,197,255,0.34)',
     background: 'rgb(8,11,13)',
     grid: 'rgba(137,156,165,0.18)',
     handle: 'rgb(219,229,234)',
     handleText: 'rgb(11,14,16)',
+    label: 'rgba(219,229,234,0.58)',
+    origin: 'rgba(255,232,145,0.86)',
     outline: 'rgb(200,200,200)',
     rock: 'rgba(28, 159, 192, 0.6)',
+    scaleBar: 'rgba(219,229,234,0.68)',
     selectedHandle: 'rgb(86,197,255)',
     shadow: 'rgba(0,0,0,0.55)'
 };
@@ -64,15 +82,21 @@ const elements = {
     typeSelect: requireElement('rockTypeSelect', HTMLSelectElement),
     useOutputButton: requireElement('rockUseOutputButton', HTMLButtonElement),
     validation: requireElement('rockValidation', HTMLElement),
-    widthInput: requireElement('rockWidthInput', HTMLInputElement)
+    widthInput: requireElement('rockWidthInput', HTMLInputElement),
+    zoomInButton: requireElement('rockZoomInButton', HTMLButtonElement),
+    zoomLabel: requireElement('rockZoomLabel', HTMLElement),
+    zoomOutButton: requireElement('rockZoomOutButton', HTMLButtonElement),
+    resetViewButton: requireElement('rockResetViewButton', HTMLButtonElement)
 };
 
 let definitions: RockDefinitions = {};
 let selectedPointIndex = 0;
 let selectedType = '';
-let dragPointIndex: number | null = null;
+let dragState: DragState | null = null;
+let panOffset: Point = { x: 0, y: 0 };
 let statusMessage: string | null = null;
 let statusIsError = false;
+let zoomIndex = DEFAULT_ZOOM_INDEX;
 
 async function start() {
     elements.input.value = DEFAULT_ROCK_EDITOR_JSON;
@@ -121,6 +145,9 @@ function installEvents() {
     elements.applySizeButton.addEventListener('click', applySize);
     elements.pointXInput.addEventListener('change', applySelectedPointInput);
     elements.pointYInput.addEventListener('change', applySelectedPointInput);
+    elements.zoomOutButton.addEventListener('click', zoomOut);
+    elements.zoomInButton.addEventListener('click', zoomIn);
+    elements.resetViewButton.addEventListener('click', resetView);
     elements.canvas.addEventListener('pointerdown', startDrag);
     elements.canvas.addEventListener('pointermove', continueDrag);
     elements.canvas.addEventListener('pointerup', endDrag);
@@ -238,51 +265,117 @@ function applySelectedPointInput() {
     );
 }
 
+function zoomOut() {
+    setZoomIndex(zoomIndex - 1);
+}
+
+function zoomIn() {
+    setZoomIndex(zoomIndex + 1);
+}
+
+function setZoomIndex(nextZoomIndex: number) {
+    const clampedZoomIndex = clamp(nextZoomIndex, 0, ZOOM_LEVELS.length - 1);
+
+    if (clampedZoomIndex === zoomIndex) {
+        return;
+    }
+
+    const rect = elements.canvas.getBoundingClientRect();
+    const centerScreen = {
+        x: rect.width / 2,
+        y: rect.height / 2
+    };
+    const centerWorld = screenToWorldExact(centerScreen, getViewTransform());
+
+    zoomIndex = clampedZoomIndex;
+    panOffset = {
+        x: centerScreen.x - rect.width / 2 - centerWorld.x * getZoomScale(),
+        y: centerScreen.y - rect.height / 2 - centerWorld.y * getZoomScale()
+    };
+
+    renderZoomControls();
+    renderCanvas();
+}
+
+function resetView() {
+    zoomIndex = DEFAULT_ZOOM_INDEX;
+    panOffset = { x: 0, y: 0 };
+    renderZoomControls();
+    renderCanvas();
+}
+
 function startDrag(event: PointerEvent) {
     const definition = getSelectedDefinition();
+    const canvasPoint = getCanvasPoint(event);
+    const transform = getViewTransform();
 
-    if (!definition) {
-        return;
-    }
-
-    const points = definitionToPoints(definition);
-    const hitIndex = getPointAtCanvasPosition(points, event);
-
-    if (hitIndex === null) {
-        return;
-    }
+    const hitIndex = definition
+        ? getPointAtCanvasPosition(definitionToPoints(definition), canvasPoint)
+        : null;
 
     event.preventDefault();
     elements.canvas.setPointerCapture(event.pointerId);
-    dragPointIndex = hitIndex;
-    selectedPointIndex = hitIndex;
-    clearStatus();
-    render();
+
+    if (hitIndex !== null) {
+        dragState = {
+            pointIndex: hitIndex,
+            type: 'point'
+        };
+        selectedPointIndex = hitIndex;
+        clearStatus();
+        render();
+        return;
+    }
+
+    dragState = {
+        lastPoint: canvasPoint,
+        type: 'pan'
+    };
+
+    if (isOriginMarkerAtCanvasPosition(canvasPoint, transform)) {
+        renderCanvas();
+    }
 }
 
 function continueDrag(event: PointerEvent) {
     const definition = getSelectedDefinition();
+    const canvasPoint = getCanvasPoint(event);
 
-    if (dragPointIndex === null || !definition) {
+    if (!dragState) {
         return;
     }
 
     event.preventDefault();
-    updateSelectedDefinition(
-        updateRockPoint(
-            definition,
-            dragPointIndex,
-            screenToWorld(getCanvasPoint(event), getViewTransform(definition))
-        )
-    );
+
+    if (dragState.type === 'point') {
+        if (!definition) {
+            return;
+        }
+
+        updateSelectedDefinition(
+            updateRockPoint(
+                definition,
+                dragState.pointIndex,
+                screenToWorld(canvasPoint, getViewTransform())
+            )
+        );
+        return;
+    }
+
+    panOffset = {
+        x: panOffset.x + canvasPoint.x - dragState.lastPoint.x,
+        y: panOffset.y + canvasPoint.y - dragState.lastPoint.y
+    };
+    dragState.lastPoint = canvasPoint;
+    renderCanvas();
 }
 
 function endDrag(event: PointerEvent) {
-    if (dragPointIndex !== null) {
+    if (dragState) {
         event.preventDefault();
     }
 
-    dragPointIndex = null;
+    dragState = null;
 }
 
 function updateSelectedDefinition(definition: RockDefinition) {
@@ -294,6 +387,7 @@ function updateSelectedDefinition(definition: RockDefinition) {
 function render() {
     renderTypeControls();
     renderSelectedControls();
+    renderZoomControls();
     renderOutput();
     renderValidation();
     renderCanvas();
@@ -339,6 +433,16 @@ function renderSelectedControls() {
     elements.removePointButton.disabled = points.length <= 3;
 }
 
+function renderZoomControls() {
+    const scale = getZoomScale();
+    const gridStep = getGridWorldStep(scale);
+
+    elements.zoomOutButton.disabled = zoomIndex <= 0;
+    elements.zoomInButton.disabled = zoomIndex >= ZOOM_LEVELS.length - 1;
+    elements.zoomLabel.textContent =
+        formatScale(scale) + ' px/unit · grid ' + String(gridStep);
+}
+
 function renderOutput() {
     if (Object.keys(definitions).length > 0) {
         elements.output.value = formatRockDefinitions(definitions);
@@ -372,56 +476,72 @@ function renderCanvas() {
     const definition = getSelectedDefinition();
     const context = prepareCanvasContext();
     const rect = elements.canvas.getBoundingClientRect();
+    const transform = getViewTransform();
 
     context.clearRect(0, 0, rect.width, rect.height);
-    drawGrid(context, rect.width, rect.height);
+    drawGrid(context, rect.width, rect.height, transform);
 
-    if (!definition) {
-        return;
+    if (definition) {
+        drawRock(context, definition, transform);
     }
 
-    drawRock(context, definition);
+    drawOriginMarker(context, transform, rect.width, rect.height);
 }
 
 function drawGrid(
     context: CanvasRenderingContext2D,
     width: number,
-    height: number
+    height: number,
+    transform: ViewTransform
 ) {
+    const gridStep = getGridWorldStep(transform.scale);
+    const topLeft = screenToWorldExact({ x: 0, y: 0 }, transform);
+    const bottomRight = screenToWorldExact({ x: width, y: height }, transform);
+    const firstX = Math.floor(topLeft.x / gridStep) * gridStep;
+    const lastX = Math.ceil(bottomRight.x / gridStep) * gridStep;
+    const firstY = Math.floor(topLeft.y / gridStep) * gridStep;
+    const lastY = Math.ceil(bottomRight.y / gridStep) * gridStep;
+
     context.save();
     context.fillStyle = PREVIEW_COLORS.background;
     context.fillRect(0, 0, width, height);
     context.strokeStyle = PREVIEW_COLORS.grid;
     context.lineWidth = 1;
 
-    for (let x = width / 2; x < width; x += GRID_STEP) {
-        drawLine(context, x, 0, x, height);
+    for (let x = firstX; x <= lastX; x += gridStep) {
+        if (x !== 0) {
+            const screenX = worldToScreen({ x, y: 0 }, transform).x;
+
+            drawLine(context, screenX, 0, screenX, height);
+        }
     }
 
-    for (let x = width / 2 - GRID_STEP; x > 0; x -= GRID_STEP) {
-        drawLine(context, x, 0, x, height);
-    }
+    for (let y = firstY; y <= lastY; y += gridStep) {
+        if (y !== 0) {
+            const screenY = worldToScreen({ x: 0, y }, transform).y;
 
-    for (let y = height / 2; y < height; y += GRID_STEP) {
-        drawLine(context, 0, y, width, y);
-    }
-
-    for (let y = height / 2 - GRID_STEP; y > 0; y -= GRID_STEP) {
-        drawLine(context, 0, y, width, y);
+            drawLine(context, 0, screenY, width, screenY);
+        }
     }
 
     context.strokeStyle = PREVIEW_COLORS.axis;
-    drawLine(context, width / 2, 0, width / 2, height);
-    drawLine(context, 0, height / 2, width, height / 2);
+    if (transform.originX >= 0 && transform.originX <= width) {
+        drawLine(context, transform.originX, 0, transform.originX, height);
+    }
+    if (transform.originY >= 0 && transform.originY <= height) {
+        drawLine(context, 0, transform.originY, width, transform.originY);
+    }
+    drawAxisLabels(context, width, height, transform, gridStep);
+    drawScaleReference(context, height, transform.scale);
     context.restore();
 }
 
 function drawRock(
     context: CanvasRenderingContext2D,
-    definition: RockDefinition
+    definition: RockDefinition,
+    transform: ViewTransform
 ) {
     const points = definitionToPoints(definition);
-    const transform = getViewTransform(definition);
     const firstPoint = worldToScreen(points[0], transform);
 
     context.save();
@@ -475,6 +595,153 @@ function drawHandle(
     context.restore();
 }
 
+function drawOriginMarker(
+    context: CanvasRenderingContext2D,
+    transform: ViewTransform,
+    width: number,
+    height: number
+) {
+    const origin = worldToScreen({ x: 0, y: 0 }, transform);
+
+    if (
+        origin.x < -ORIGIN_MARKER_HIT_RADIUS ||
+        origin.x > width + ORIGIN_MARKER_HIT_RADIUS ||
+        origin.y < -ORIGIN_MARKER_HIT_RADIUS ||
+        origin.y > height + ORIGIN_MARKER_HIT_RADIUS
+    ) {
+        return;
+    }
+
+    context.save();
+    context.strokeStyle = PREVIEW_COLORS.origin;
+    context.fillStyle = PREVIEW_COLORS.origin;
+    context.lineWidth = 1.5;
+    context.beginPath();
+    context.arc(origin.x, origin.y, ORIGIN_MARKER_RADIUS, 0, Math.PI * 2);
+    context.stroke();
+    drawLine(
+        context,
+        origin.x - ORIGIN_MARKER_HIT_RADIUS,
+        origin.y,
+        origin.x + ORIGIN_MARKER_HIT_RADIUS,
+        origin.y
+    );
+    drawLine(
+        context,
+        origin.x,
+        origin.y - ORIGIN_MARKER_HIT_RADIUS,
+        origin.x,
+        origin.y + ORIGIN_MARKER_HIT_RADIUS
+    );
+    context.font = '11px monospace';
+    context.textAlign = 'left';
+    context.textBaseline = 'bottom';
+    context.fillText('(0,0)', origin.x + 8, origin.y - 7);
+    context.restore();
+}
+
+function drawAxisLabels(
+    context: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    transform: ViewTransform,
+    gridStep: number
+) {
+    context.save();
+    context.fillStyle = PREVIEW_COLORS.label;
+    context.font = '10px monospace';
+    context.textBaseline = 'top';
+
+    if (transform.originY >= 0 && transform.originY <= height) {
+        drawXAxisLabels(context, width, height, transform, gridStep);
+    }
+
+    if (transform.originX >= 0 && transform.originX <= width) {
+        drawYAxisLabels(context, height, transform, gridStep);
+    }
+
+    context.restore();
+}
+
+function drawXAxisLabels(
+    context: CanvasRenderingContext2D,
+    width: number,
+    height: number,
+    transform: ViewTransform,
+    gridStep: number
+) {
+    const topLeft = screenToWorldExact({ x: 0, y: 0 }, transform);
+    const bottomRight = screenToWorldExact({ x: width, y: height }, transform);
+    const labelStep = getLabelWorldStep(gridStep, transform.scale);
+    const firstX = Math.floor(topLeft.x / labelStep) * labelStep;
+    const lastX = Math.ceil(bottomRight.x / labelStep) * labelStep;
+    const labelY = clamp(transform.originY + 5, 8, height - 15);
+
+    context.textAlign = 'center';
+
+    for (let x = firstX; x <= lastX; x += labelStep) {
+        if (x !== 0) {
+            const screenX = worldToScreen({ x, y: 0 }, transform).x;
+
+            context.fillText(String(x), screenX, labelY);
+        }
+    }
+}
+
+function drawYAxisLabels(
+    context: CanvasRenderingContext2D,
+    height: number,
+    transform: ViewTransform,
+    gridStep: number
+) {
+    const topLeft = screenToWorldExact({ x: 0, y: 0 }, transform);
+    const bottomRight = screenToWorldExact(
+        {
+            x: 0,
+            y: height
+        },
+        transform
+    );
+    const labelStep = getLabelWorldStep(gridStep, transform.scale);
+    const firstY = Math.floor(topLeft.y / labelStep) * labelStep;
+    const lastY = Math.ceil(bottomRight.y / labelStep) * labelStep;
+    const labelX = clamp(transform.originX + 5, 8, 46);
+
+    context.textAlign = 'left';
+
+    for (let y = firstY; y <= lastY; y += labelStep) {
+        if (y !== 0) {
+            const screenY = worldToScreen({ x: 0, y }, transform).y;
+
+            context.fillText(String(y), labelX, screenY + 3);
+        }
+    }
+}
+
+function drawScaleReference(
+    context: CanvasRenderingContext2D,
+    height: number,
+    scale: number
+) {
+    const worldLength = getScaleBarWorldLength(scale);
+    const screenLength = worldLength * scale;
+    const x = 16;
+    const y = height - 20;
+
+    context.save();
+    context.strokeStyle = PREVIEW_COLORS.scaleBar;
+    context.fillStyle = PREVIEW_COLORS.label;
+    context.lineWidth = 2;
+    drawLine(context, x, y, x + screenLength, y);
+    drawLine(context, x, y - 4, x, y + 4);
+    drawLine(context, x + screenLength, y - 4, x + screenLength, y + 4);
+    context.font = '10px monospace';
+    context.textAlign = 'left';
+    context.textBaseline = 'bottom';
+    context.fillText(String(worldLength) + ' units', x, y - 6);
+    context.restore();
+}
+
 function drawLine(
     context: CanvasRenderingContext2D,
     x1: number,
@@ -505,30 +772,13 @@ function prepareCanvasContext(): CanvasRenderingContext2D {
     return context;
 }
 
-function getViewTransform(definition: RockDefinition): ViewTransform {
-    const points = definitionToPoints(definition);
-    const validation = validateRockDefinition(definition);
-    const bounds = validation.bounds || {
-        height: 80,
-        maxX: 40,
-        maxY: 40,
-        minX: -40,
-        minY: -40,
-        width: 80
-    };
+function getViewTransform(): ViewTransform {
     const rect = elements.canvas.getBoundingClientRect();
-    const available = Math.max(
-        1,
-        Math.min(rect.width, rect.height) - PREVIEW_PADDING * 2
-    );
-    const maxDimension = Math.max(bounds.width, bounds.height, 1);
-    const scale = available / maxDimension;
-    const center = calculateCenter(points);
 
     return {
-        originX: rect.width / 2 - center.x * scale,
-        originY: rect.height / 2 - center.y * scale,
-        scale
+        originX: rect.width / 2 + panOffset.x,
+        originY: rect.height / 2 + panOffset.y,
+        scale: getZoomScale()
     };
 }
 
@@ -540,20 +790,23 @@ function worldToScreen(point: Point, transform: ViewTransform): Point {
 }
 
 function screenToWorld(point: Point, transform: ViewTransform): Point {
+    const worldPoint = screenToWorldExact(point, transform);
+
     return {
-        x: Math.round((point.x - transform.originX) / transform.scale),
-        y: Math.round((point.y - transform.originY) / transform.scale)
+        x: Math.round(worldPoint.x),
+        y: Math.round(worldPoint.y)
     };
 }
 
-function getPointAtCanvasPosition(
-    points: Point[],
-    event: PointerEvent
-): number | null {
-    const transform = getViewTransform(
-        getSelectedDefinition() as RockDefinition
-    );
-    const canvasPoint = getCanvasPoint(event);
+function screenToWorldExact(point: Point, transform: ViewTransform): Point {
+    return {
+        x: (point.x - transform.originX) / transform.scale,
+        y: (point.y - transform.originY) / transform.scale
+    };
+}
+
+function getPointAtCanvasPosition(points: Point[], canvasPoint: Point) {
+    const transform = getViewTransform();
     let hitIndex: number | null = null;
     let hitDistance = Infinity;
 
@@ -572,6 +825,17 @@ function getPointAtCanvasPosition(
     return hitIndex;
 }
 
+function isOriginMarkerAtCanvasPosition(
+    canvasPoint: Point,
+    transform: ViewTransform
+) {
+    const originPoint = worldToScreen({ x: 0, y: 0 }, transform);
+    const dx = canvasPoint.x - originPoint.x;
+    const dy = canvasPoint.y - originPoint.y;
+
+    return Math.sqrt(dx * dx + dy * dy) <= ORIGIN_MARKER_HIT_RADIUS;
+}
+
 function getCanvasPoint(event: PointerEvent): Point {
     const rect = elements.canvas.getBoundingClientRect();
 
@@ -581,20 +845,38 @@ function getCanvasPoint(event: PointerEvent): Point {
     };
 }
 
-function calculateCenter(points: Point[]): Point {
-    const x =
-        points.reduce(function (sum, point) {
-            return sum + point.x;
-        }, 0) / points.length;
-    const y =
-        points.reduce(function (sum, point) {
-            return sum + point.y;
-        }, 0) / points.length;
+function getZoomScale() {
+    return ZOOM_LEVELS[zoomIndex];
+}
 
-    return {
-        x,
-        y
-    };
+function getGridWorldStep(scale: number) {
+    return (
+        GRID_WORLD_STEPS.find(function (step) {
+            return step * scale >= MIN_GRID_PIXEL_STEP;
+        }) || GRID_WORLD_STEPS[GRID_WORLD_STEPS.length - 1]
+    );
+}
+
+function getLabelWorldStep(gridStep: number, scale: number) {
+    const labelStep = gridStep * 2;
+
+    return labelStep * scale >= 56 ? labelStep : gridStep * 4;
+}
+
+function getScaleBarWorldLength(scale: number) {
+    return (
+        GRID_WORLD_STEPS.find(function (step) {
+            return step * scale >= SCALE_BAR_MIN_WIDTH;
+        }) || GRID_WORLD_STEPS[GRID_WORLD_STEPS.length - 1]
+    );
+}
+
+function formatScale(scale: number) {
+    return Number.isInteger(scale) ? String(scale) : String(scale.toFixed(1));
+}
+
+function clamp(value: number, min: number, max: number) {
+    return Math.min(max, Math.max(min, value));
 }
 
 function getSelectedDefinition(): RockDefinition | null {

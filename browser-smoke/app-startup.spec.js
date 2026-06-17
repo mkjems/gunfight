@@ -297,36 +297,94 @@ test('built browser app renders the rock editor page', async ({ page }) => {
     await expect(page.locator('#rockJsonOutput')).toHaveValue(/"small"/);
     await expect(page.locator('#rockJsonOutput')).toHaveValue(/"tall"/);
 
-    const canvasHasPixels = await page
-        .locator('#rockEditorCanvas')
-        .evaluate(function (canvas) {
-            const context = canvas.getContext('2d');
+    const canvasHasVisiblePixels = async function () {
+        return await page
+            .locator('#rockEditorCanvas')
+            .evaluate(function (canvas) {
+                const context = canvas.getContext('2d');
 
-            if (!context) {
-                return false;
-            }
-
-            const pixels = context.getImageData(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            ).data;
-
-            for (let index = 0; index < pixels.length; index += 4) {
-                if (
-                    pixels[index] !== 0 ||
-                    pixels[index + 1] !== 0 ||
-                    pixels[index + 2] !== 0
-                ) {
-                    return true;
+                if (!context) {
+                    return false;
                 }
-            }
 
-            return false;
-        });
+                const pixels = context.getImageData(
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                ).data;
 
-    expect(canvasHasPixels).toBe(true);
+                for (let index = 0; index < pixels.length; index += 4) {
+                    if (
+                        pixels[index] !== 0 ||
+                        pixels[index + 1] !== 0 ||
+                        pixels[index + 2] !== 0
+                    ) {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
+    };
+    const getRockPixelBounds = async function () {
+        return await page
+            .locator('#rockEditorCanvas')
+            .evaluate(function (canvas) {
+                const context = canvas.getContext('2d');
+
+                if (!context) {
+                    return null;
+                }
+
+                const pixels = context.getImageData(
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                ).data;
+                let minX = canvas.width;
+                let minY = canvas.height;
+                let maxX = -1;
+                let maxY = -1;
+
+                for (let index = 0; index < pixels.length; index += 4) {
+                    const red = pixels[index];
+                    const green = pixels[index + 1];
+                    const blue = pixels[index + 2];
+                    const isRockFill =
+                        red >= 12 && red <= 55 && green >= 80 && blue >= 100;
+
+                    if (isRockFill) {
+                        const pixelIndex = index / 4;
+                        const x = pixelIndex % canvas.width;
+                        const y = Math.floor(pixelIndex / canvas.width);
+
+                        minX = Math.min(minX, x);
+                        minY = Math.min(minY, y);
+                        maxX = Math.max(maxX, x);
+                        maxY = Math.max(maxY, y);
+                    }
+                }
+
+                if (maxX < 0 || maxY < 0) {
+                    return null;
+                }
+
+                return {
+                    height: maxY - minY + 1,
+                    width: maxX - minX + 1
+                };
+            });
+    };
+
+    expect(await canvasHasVisiblePixels()).toBe(true);
+    await expect(page.locator('#rockZoomLabel')).toContainText('4 px/unit');
+    await page.locator('#rockZoomInButton').click();
+    await expect(page.locator('#rockZoomLabel')).toContainText('5 px/unit');
+    expect(await canvasHasVisiblePixels()).toBe(true);
+    await page.locator('#rockResetViewButton').click();
+    await expect(page.locator('#rockZoomLabel')).toContainText('4 px/unit');
 
     const editorPageScrolls = await page.evaluate(function () {
         const scroller = document.scrollingElement;
@@ -352,10 +410,10 @@ test('built browser app renders the rock editor page', async ({ page }) => {
     await page.locator('#rockJsonInput').fill(
         JSON.stringify({
             lines: [
-                { from: [0, 0], to: [20, 0] },
-                { from: [20, 0], to: [20, 20] },
-                { from: [20, 20], to: [0, 20] },
-                { from: [0, 20], to: [0, 0] }
+                { from: [-10, -10], to: [10, -10] },
+                { from: [10, -10], to: [10, 10] },
+                { from: [10, 10], to: [-10, 10] },
+                { from: [-10, 10], to: [-10, -10] }
             ]
         })
     );
@@ -365,6 +423,50 @@ test('built browser app renders the rock editor page', async ({ page }) => {
     await expect(page.locator('#rockValidation')).toContainText(
         'Valid rock JSON.'
     );
+
+    const initialScaleLabel = await page
+        .locator('#rockZoomLabel')
+        .textContent();
+    const initialRockBounds = await getRockPixelBounds();
+
+    expect(initialRockBounds).not.toBeNull();
+    await page.locator('#rockWidthInput').fill('40');
+    await page.locator('#rockHeightInput').fill('40');
+    await page.locator('#rockApplySizeButton').click();
+    const resizedRockBounds = await getRockPixelBounds();
+
+    if (!initialRockBounds || !resizedRockBounds) {
+        throw new Error('Unable to measure rock bounds in canvas');
+    }
+
+    expect(resizedRockBounds.width).toBeGreaterThan(
+        initialRockBounds.width + 60
+    );
+    expect(resizedRockBounds.height).toBeGreaterThan(
+        initialRockBounds.height + 60
+    );
+    await expect(page.locator('#rockZoomLabel')).toHaveText(
+        initialScaleLabel || ''
+    );
+
+    const outputBeforePan = await page.locator('#rockJsonOutput').inputValue();
+    const canvasBox = await page.locator('#rockEditorCanvas').boundingBox();
+
+    if (!canvasBox) {
+        throw new Error('Unable to measure rock editor canvas');
+    }
+
+    await page.mouse.move(
+        canvasBox.x + canvasBox.width / 2,
+        canvasBox.y + canvasBox.height / 2
+    );
+    await page.mouse.down();
+    await page.mouse.move(
+        canvasBox.x + canvasBox.width / 2 + 48,
+        canvasBox.y + canvasBox.height / 2 + 28
+    );
+    await page.mouse.up();
+    await expect(page.locator('#rockJsonOutput')).toHaveValue(outputBeforePan);
 
     expect(browserErrors).toEqual([]);
 });

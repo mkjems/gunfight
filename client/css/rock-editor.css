@@ -17,6 +17,7 @@
 }
 
 #rockPreviewToolbar,
+#rockViewToolbar,
 #rockPointToolbar,
 #rockSizeToolbar {
     align-items: center;
@@ -26,6 +27,7 @@
 }
 
 #rockPreviewToolbar label,
+#rockViewToolbar label,
 #rockPointToolbar label,
 #rockSizeToolbar label {
     align-items: center;
@@ -40,6 +42,17 @@
     min-height: 32px;
     min-width: 132px;
     padding: 0 8px;
+}
+
+#rockZoomOutButton,
+#rockZoomInButton {
+    min-width: 34px;
+}
+
+#rockZoomLabel {
+    color: var(--editor-muted);
+    font-size: 12px;
+    min-width: 8.5em;
 }
 
 #rockPointXInput,
