@@ -1,6 +1,6 @@
 [
     {
-        "name": "rocks",
+        "name": "scene-1",
         "playerStarts": [
             {
                 "x": 118.58,
@@ -17,23 +17,7 @@
         ],
         "decorations": [],
         "cacti": [],
-        "rocks": [
-            {
-                "type": "horizontal",
-                "x": 497.84,
-                "y": 507.28
-            },
-            {
-                "type": "horizontal",
-                "x": 496.67,
-                "y": 321.13
-            },
-            {
-                "type": "horizontal",
-                "x": 506.64,
-                "y": 146.69
-            }
-        ]
+        "rocks": []
     },
     {
         "name": "wagon-crossing",

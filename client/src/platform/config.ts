@@ -105,7 +105,7 @@ export const Config = {
         height: 4,
         speed: 420,
         fixedStep: 1 / 120,
-        defaultStraightness: 0.8,
+        defaultStraightness: 0,
         minimumHarmStraightness: 0.18,
         harmVelocity: 150,
         restVelocity: 18,

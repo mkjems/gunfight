@@ -137,14 +137,21 @@ Idea: What if the players guns were not very good or dangerous in the beginning 
 - [x] Refresh the current hardcoded shooting straightness onto existing players
       during sync/reset so tuning changes cannot leave one side stale.
 
-## P18 - Use straightness shooting as part of the game story
+## P19 - How can straightness shooting be part of the game story, brain storm and ideas
 
 Goal: Lets get some ideas on the table for a more interesting game game story
 Lets have a brainstorm and throw some ideas on the table.
 
 - [ ] Idea: Where the bullet lands, there will grow a cactus.
-- [ ] Ways to increase straightness: Food,
-- [ ] Ways to decrease straightness: Alcohol,
+- [ ] Way to increase straightness: collect food icons, collect gun icons - imagine icons spread over the board that players can bump into.
+- [ ] Way to decrease straightness: touch alcohol icons - imagine alcohol icons spread over the board that players can bump into.
+- [ ] Random elixirs bottle: Maybe decreases maybe increases
+- [ ] Courage or exhaustion decides the shot quality
+- [ ] Money decides the shot quality
+
+## P29 - Undo 'user is always to the left in main lobby'.
+
+- This was introduced to make it less confusing if you reload the page, and you might end on the other side. However, it is even more confusing now, that it switches around between the lobby and the game, and in case of a game over result, we now have conflicting sides there also. Let's just go back to the situation where you namer and your player always is in the 'slot side' that the game dictates.
 
 ## Other Ideas
 
