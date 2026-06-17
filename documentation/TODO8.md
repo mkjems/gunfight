@@ -149,9 +149,11 @@ Lets have a brainstorm and throw some ideas on the table.
 - [ ] Courage or exhaustion decides the shot quality
 - [ ] Money decides the shot quality
 
-## P29 - Undo 'user is always to the left in main lobby'.
+## P20 - Undo 'user is always to the left in main lobby'.
 
-- This was introduced to make it less confusing if you reload the page, and you might end on the other side. However, it is even more confusing now, that it switches around between the lobby and the game, and in case of a game over result, we now have conflicting sides there also. Let's just go back to the situation where you namer and your player always is in the 'slot side' that the game dictates.
+Goal: Undo the feature 'user is always to the left in main lobby'.
+
+- The feature that 'user was always on the left', was originally introduced to make it less confusing if you reload the page, and you might end on the other side. However, it is even more confusing now, that it switches around between the lobby and the game, and in case of a game over result, we now have conflicting sides there also. Let's just go back to the situation where your name and your player always is in the 'slot side' that the game dictates.
 
 ## Other Ideas
 
