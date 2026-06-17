@@ -19,22 +19,23 @@
         "cacti": [],
         "moneyBags": [
             {
-                "x": 350,
+                "x": 50,
                 "y": 430,
-                "gameRoundSeconds": 3
+                "gameRoundSeconds": 1
             },
             {
-                "x": 475,
+                "x": 775,
                 "y": 360,
-                "gameRoundSeconds": 8
-            },
-            {
-                "x": 600,
-                "y": 430,
-                "gameRoundSeconds": 13
+                "gameRoundSeconds": 1
             }
         ],
-        "rocks": []
+        "rocks": [],
+        "wagon": {
+            "x": 460,
+            "fromY": 720,
+            "toY": 250,
+            "duration": 20000
+        }
     },
     {
         "name": "wagon-crossing",
@@ -76,7 +77,7 @@
             "x": 465.38,
             "fromY": 973.02,
             "toY": 193.02,
-            "duration": 40000
+            "duration": 30000
         }
     },
     {
@@ -97,23 +98,7 @@
         ],
         "decorations": [],
         "cacti": [],
-        "moneyBags": [
-            {
-                "x": 360,
-                "y": 430,
-                "gameRoundSeconds": 3
-            },
-            {
-                "x": 475,
-                "y": 350,
-                "gameRoundSeconds": 8
-            },
-            {
-                "x": 590,
-                "y": 430,
-                "gameRoundSeconds": 13
-            }
-        ],
+        "moneyBags": [],
         "rocks": []
     }
 ]
