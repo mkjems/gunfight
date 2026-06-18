@@ -171,6 +171,7 @@ export type RuntimePlayer = {
     playerId: ClientId;
     playDeathAnimation?: () => void;
     respondToKeyEvent?: (keyEvent: RuntimeKeyEvent) => void;
+    showStraightnessMeter?: boolean;
     shootingStraightness?: number;
     x: number;
     y: number;
@@ -180,7 +181,11 @@ export type RuntimePlayers = {
     all: Record<string, RuntimePlayer>;
     clearKeys: () => void;
     label: (id?: ClientId | null) => string;
-    resetAll: (options: { slots: unknown }) => void;
+    resetAll: (options: {
+        roundNumber?: number;
+        showStraightnessMeter?: boolean;
+        slots: unknown;
+    }) => void;
     sync: (model: RuntimeGameModel | null, options: unknown) => void;
 };
 

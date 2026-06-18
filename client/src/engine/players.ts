@@ -31,6 +31,7 @@ type PlayersOptions = {
     resetChangedSlots?: boolean;
     resetExisting?: boolean;
     roundNumber?: number;
+    showStraightnessMeter?: boolean;
     slots?: PlayerSlot[];
 };
 
@@ -59,6 +60,7 @@ export class Players {
         const shootingStraightness = getRoundBulletStraightness(
             options.roundNumber
         );
+        const showStraightnessMeter = options.showStraightnessMeter === true;
         const id = client.id;
 
         if (this.all[id]) {
@@ -78,6 +80,7 @@ export class Players {
             }
 
             player.shootingStraightness = shootingStraightness;
+            player.showStraightnessMeter = showStraightnessMeter;
             player.setMovementBounds(slot.movementBounds);
 
             return;
@@ -87,6 +90,7 @@ export class Players {
             playerId: id,
             facing: slot.facing,
             frame: slot.frame,
+            showStraightnessMeter,
             shootingStraightness
         });
         this.all[id].slot = index;
@@ -125,6 +129,8 @@ export class Players {
             player.shootingStraightness = getRoundBulletStraightness(
                 options.roundNumber
             );
+            player.showStraightnessMeter =
+                options.showStraightnessMeter === true;
         });
     }
 

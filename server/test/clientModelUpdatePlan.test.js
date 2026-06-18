@@ -140,6 +140,7 @@ test('plans a round start when the server enters round intro', async function ()
             syncPlayers: {
                 resetChangedSlots: false,
                 roundNumber: 3,
+                showStraightnessMeter: true,
                 slots: [
                     { x: 120, y: 430, facing: 1, frame: 0 },
                     { x: 830, y: 430, facing: -1, frame: 2 }
@@ -196,6 +197,7 @@ test('plans slot-ordered lobby slots while waiting in the lobby', async function
         ),
         {
             resetChangedSlots: true,
+            showStraightnessMeter: false,
             slots: [
                 {
                     x: 150,
@@ -254,6 +256,7 @@ test('plans abandoned-game recovery', async function () {
             syncStoredPlayerName: true,
             syncPlayers: {
                 resetChangedSlots: false,
+                showStraightnessMeter: false,
                 slots: [
                     { x: 150, y: 430, facing: 1, frame: 0 },
                     { x: 800, y: 430, facing: -1, frame: 2 }
@@ -301,6 +304,7 @@ test('plans lobby recovery when the server returns from game over', async functi
             syncPlayers: {
                 resetChangedSlots: false,
                 resetExisting: true,
+                showStraightnessMeter: false,
                 slots: [
                     {
                         x: 150,
@@ -359,4 +363,5 @@ test('plans game-over presentation when the server ends an active match', async 
     assert.equal(result.enterGameOverState, true);
     assert.equal(result.enterLobbyState, false);
     assert.equal(result.startRoundRitual, false);
+    assert.equal(result.syncPlayers.showStraightnessMeter, true);
 });

@@ -32,6 +32,9 @@ const MATCH_STATE = {
 } as const satisfies Record<string, MatchState>;
 
 const GAME_PHASE = {
+    GameOver: 'gameOver',
+    HitPause: 'hitPause',
+    Playing: 'playing',
     Waiting: 'waiting',
     Readying: 'readying',
     RoundIntro: 'roundIntro'
@@ -78,6 +81,9 @@ export function create(options: CreatePlanOptions) {
             roundNumber: syncLobbySlots
                 ? undefined
                 : options.model?.roundNumber,
+            showStraightnessMeter: isGameplayPresentationPhase(
+                options.model?.phase
+            ),
             slots: syncLobbySlots
                 ? Config.player.lobbySlots
                 : getScenarioPlayerStarts(options.model)
@@ -95,6 +101,15 @@ function canStartRoundFromState(roundState: RoundState): boolean {
 
 function isServerLobbyPhase(phase?: GamePhase): boolean {
     return phase === GAME_PHASE.Waiting || phase === GAME_PHASE.Readying;
+}
+
+function isGameplayPresentationPhase(phase?: GamePhase): boolean {
+    return (
+        phase === GAME_PHASE.RoundIntro ||
+        phase === GAME_PHASE.Playing ||
+        phase === GAME_PHASE.HitPause ||
+        phase === GAME_PHASE.GameOver
+    );
 }
 
 function getScenarioPlayerStarts(model: PublicModel | null) {

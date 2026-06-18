@@ -7,7 +7,10 @@ type ClientRoundResetOptions = {
         reset: () => void;
     };
     players: {
-        resetAll: (options: { slots: typeof Config.player.slots }) => void;
+        resetAll: (options: {
+            showStraightnessMeter?: boolean;
+            slots: typeof Config.player.slots;
+        }) => void;
     };
     renderHud: () => void;
     resetAmmo?: () => void;
@@ -43,6 +46,7 @@ const RESET_TIMERS: ClientTimerName[] = [
 
 export function resetRound(options: ClientRoundResetOptions) {
     options.players.resetAll({
+        showStraightnessMeter: false,
         slots: Config.player.lobbySlots
     });
     resetSharedRoundState(options);
@@ -51,6 +55,7 @@ export function resetRound(options: ClientRoundResetOptions) {
 
 export function resetToStartScreen(options: ResetToStartScreenOptions) {
     options.players.resetAll({
+        showStraightnessMeter: false,
         slots: Config.player.lobbySlots
     });
     resetSharedRoundState(options);

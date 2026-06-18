@@ -117,6 +117,14 @@ export const Config = {
         altitudeMinBounceVelocity: 44,
         groundDrag: 3.4
     },
+    straightnessMeter: {
+        src: 'images/progress-bar.png',
+        frameWidth: 29,
+        frameHeight: 7,
+        frames: 10,
+        scale: 2,
+        offsetY: -14
+    },
     moneyBag: {
         sourceWidth: 160,
         sourceHeight: 20,

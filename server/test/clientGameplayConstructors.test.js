@@ -331,6 +331,104 @@ test('controllable moves, aims, and exposes collision geometry', async function 
     assert.equal(player.isDeathAnimating(), true);
 });
 
+test('controllable reset preserves next-shot straightness', async function () {
+    const { Controllable } = await loadGameplayConstructors();
+    const player = new Controllable(150, 430, {
+        playerId: 'p1',
+        shootingStraightness: 0.7
+    });
+
+    player.resetTo({
+        x: 320,
+        y: 410,
+        facing: -1,
+        frame: 2
+    });
+
+    assert.equal(player.x, 320);
+    assert.equal(player.y, 410);
+    assert.equal(player.shootingStraightness, 0.7);
+});
+
+test('controllable draws the straightness meter from shot straightness', async function () {
+    const { Config, Controllable } = await loadGameplayConstructors();
+    const drawCalls = [];
+    const playerSprite = { complete: true, name: 'player' };
+    const meterSprite = { complete: true, name: 'straightnessMeter' };
+    const originalPlayerSprite = Controllable.sprite;
+    const originalMeterSprite = Controllable.straightnessMeterSprite;
+    const player = new Controllable(150, 430, {
+        playerId: 'p1',
+        showStraightnessMeter: true,
+        shootingStraightness: 0.5
+    });
+
+    Controllable.sprite = playerSprite;
+    Controllable.straightnessMeterSprite = meterSprite;
+
+    player.draw({
+        drawImage(...args) {
+            drawCalls.push(args);
+        },
+        restore() {},
+        save() {},
+        scale() {},
+        translate() {}
+    });
+
+    Controllable.sprite = originalPlayerSprite;
+    Controllable.straightnessMeterSprite = originalMeterSprite;
+
+    assert.equal(Controllable.getStraightnessMeterFrame(0), 0);
+    assert.equal(Controllable.getStraightnessMeterFrame(0.5), 5);
+    assert.equal(Controllable.getStraightnessMeterFrame(1), 9);
+    assert.equal(Controllable.getStraightnessMeterFrame(2), 9);
+    assert.equal(drawCalls.length, 2);
+    assert.deepEqual(drawCalls[1], [
+        meterSprite,
+        5 * Config.straightnessMeter.frameWidth,
+        0,
+        Config.straightnessMeter.frameWidth,
+        Config.straightnessMeter.frameHeight,
+        150 -
+            (Config.straightnessMeter.frameWidth *
+                Config.straightnessMeter.scale) /
+                2,
+        430 + Config.straightnessMeter.offsetY,
+        Config.straightnessMeter.frameWidth * Config.straightnessMeter.scale,
+        Config.straightnessMeter.frameHeight * Config.straightnessMeter.scale
+    ]);
+});
+
+test('controllable skips the straightness meter outside gameplay', async function () {
+    const { Controllable } = await loadGameplayConstructors();
+    const drawCalls = [];
+    const originalPlayerSprite = Controllable.sprite;
+    const originalMeterSprite = Controllable.straightnessMeterSprite;
+    const player = new Controllable(150, 430, {
+        playerId: 'p1',
+        shootingStraightness: 1
+    });
+
+    Controllable.sprite = { complete: true };
+    Controllable.straightnessMeterSprite = { complete: true };
+
+    player.draw({
+        drawImage(...args) {
+            drawCalls.push(args);
+        },
+        restore() {},
+        save() {},
+        scale() {},
+        translate() {}
+    });
+
+    Controllable.sprite = originalPlayerSprite;
+    Controllable.straightnessMeterSprite = originalMeterSprite;
+
+    assert.equal(drawCalls.length, 1);
+});
+
 test('players sync clients, reset slots, and remove departed players', async function () {
     const { Players } = await loadGameplayConstructors();
     const figures = [];
@@ -362,6 +460,49 @@ test('players sync clients, reset slots, and remove departed players', async fun
 
     assert.deepEqual(Object.keys(players.all), ['b']);
     assert.deepEqual(removed, ['a']);
+});
+
+test('players sync straightness meter visibility for gameplay and lobby', async function () {
+    const { Players } = await loadGameplayConstructors();
+    const players = new Players(
+        {
+            addFigure() {}
+        },
+        {
+            remove() {}
+        }
+    );
+
+    players.sync(
+        {
+            clients: [{ id: 'a' }, { id: 'b' }]
+        },
+        {
+            showStraightnessMeter: true
+        }
+    );
+
+    assert.equal(players.all.a.showStraightnessMeter, true);
+    assert.equal(players.all.b.showStraightnessMeter, true);
+
+    players.sync(
+        {
+            clients: [{ id: 'a' }, { id: 'b' }]
+        },
+        {
+            showStraightnessMeter: false
+        }
+    );
+
+    assert.equal(players.all.a.showStraightnessMeter, false);
+    assert.equal(players.all.b.showStraightnessMeter, false);
+
+    players.all.a.showStraightnessMeter = true;
+    players.resetAll({
+        showStraightnessMeter: false
+    });
+
+    assert.equal(players.all.a.showStraightnessMeter, false);
 });
 
 test('players refresh round-based shooting straightness on sync and reset', async function () {

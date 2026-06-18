@@ -193,6 +193,9 @@ it only presents those phases and sends player intents or reports.
   later round adds `Config.bullet.roundStraightnessStep` until the value reaches
   `Config.bullet.maxStraightness`. Existing players refresh their effective
   round-based straightness when they sync or reset.
+- During gameplay, each player shows a `straightnessMeter` under the avatar.
+  The meter shows the shooting straightness that the player's next shot will
+  use. It is not shown in the lobby.
 - `straightness: 1.0` keeps the original straight, constant-speed bullet
   behavior.
 - Lower-straightness bullets use `altitude` for a fake vertical bounce while

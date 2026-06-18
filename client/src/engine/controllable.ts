@@ -7,6 +7,7 @@ type ControllableOptions = {
     facing?: number;
     frame?: number;
     playerId?: string | number;
+    showStraightnessMeter?: boolean;
     shootingStraightness?: number;
     speed?: number;
 };
@@ -46,6 +47,9 @@ type ImageLike = {
 
 export class Controllable {
     static sprite: ImageLike | null = createSprite();
+    static straightnessMeterSprite: ImageLike | null = createImage(
+        Config.straightnessMeter.src
+    );
 
     aim: number;
     animationFrameTime: number;
@@ -60,6 +64,7 @@ export class Controllable {
     movementBounds: MovementBounds | null;
     pen: Pen;
     playerId?: string | number;
+    showStraightnessMeter: boolean;
     shootingStraightness: number;
     slot?: number;
     speed: number;
@@ -80,6 +85,7 @@ export class Controllable {
         this.idleFrame = options.frame || 0;
         this.frame = this.idleFrame;
         this.movementBounds = null;
+        this.showStraightnessMeter = options.showStraightnessMeter === true;
         this.aim = config.defaultAim;
         this.animationTime = 0;
         this.animationFrameTime = config.animationFrameTime;
@@ -247,7 +253,6 @@ export class Controllable {
         this.idleFrame = slot.frame;
         this.frame = this.idleFrame;
         this.aim = Config.player.defaultAim;
-        this.shootingStraightness = Config.bullet.defaultStraightness;
         this.animationTime = 0;
         this.deathAnimationTime = null;
         this.clearKeys();
@@ -329,12 +334,13 @@ export class Controllable {
 
         if (sprite && sprite.complete) {
             this.drawSprite(context, sprite);
-            return;
+        } else {
+            this.pen.x = this.x;
+            this.pen.y = this.y;
+            this.pen.draw(context as never);
         }
 
-        this.pen.x = this.x;
-        this.pen.y = this.y;
-        this.pen.draw(context as never);
+        this.drawStraightnessMeter(context);
     }
 
     drawSprite(context: DrawContext, sprite: ImageLike) {
@@ -368,6 +374,46 @@ export class Controllable {
         context.restore();
     }
 
+    drawStraightnessMeter(context: DrawContext) {
+        const sprite = Controllable.straightnessMeterSprite;
+
+        if (!this.showStraightnessMeter || !sprite || !sprite.complete) {
+            return;
+        }
+
+        const meter = Config.straightnessMeter;
+        const frameIndex = Controllable.getStraightnessMeterFrame(
+            this.shootingStraightness
+        );
+        const targetWidth = meter.frameWidth * meter.scale;
+        const targetHeight = meter.frameHeight * meter.scale;
+
+        context.drawImage(
+            sprite,
+            frameIndex * meter.frameWidth,
+            0,
+            meter.frameWidth,
+            meter.frameHeight,
+            this.x - targetWidth / 2,
+            this.y + meter.offsetY,
+            targetWidth,
+            targetHeight
+        );
+    }
+
+    static getStraightnessMeterFrame(straightness?: number) {
+        const raw =
+            typeof straightness === 'number'
+                ? straightness
+                : Config.bullet.defaultStraightness;
+        const safeValue = Number.isFinite(raw)
+            ? raw
+            : Config.bullet.defaultStraightness;
+        const normalized = Math.max(0, Math.min(1, safeValue));
+
+        return Math.round(normalized * (Config.straightnessMeter.frames - 1));
+    }
+
     getSpriteRow() {
         if (this.isDeathAnimating()) {
             return Config.player.deathAnimation.row;
@@ -378,11 +424,15 @@ export class Controllable {
 }
 
 function createSprite() {
+    return createImage(Config.player.sprite.src);
+}
+
+function createImage(src: string) {
     if (typeof Image === 'undefined') {
         return null;
     }
 
     const sprite = new Image();
-    sprite.src = Config.player.sprite.src;
+    sprite.src = src;
     return sprite;
 }
