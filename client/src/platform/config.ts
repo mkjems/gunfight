@@ -105,8 +105,10 @@ export const Config = {
         height: 4,
         speed: 420,
         fixedStep: 1 / 120,
-        defaultStraightness: 0.25,
-        minimumHarmStraightness: 0.18,
+        defaultStraightness: 0.11,
+        roundStraightnessStep: 0.2,
+        maxStraightness: 1.0,
+        minimumHarmStraightness: 0.1,
         harmVelocity: 150,
         restVelocity: 18,
         altitudeGravity: 900,
@@ -126,3 +128,20 @@ export const Config = {
         yellow: 'rgb(255,244,0)'
     }
 };
+
+export function getRoundBulletStraightness(roundNumber?: number) {
+    const round =
+        typeof roundNumber === 'number' && Number.isFinite(roundNumber)
+            ? roundNumber
+            : 1;
+    const roundIndex = Math.max(0, Math.floor(round) - 1);
+    const straightness =
+        Config.bullet.defaultStraightness +
+        roundIndex * Config.bullet.roundStraightnessStep;
+    const maxStraightness = Math.max(
+        0,
+        Math.min(1, Config.bullet.maxStraightness)
+    );
+
+    return Math.max(0, Math.min(maxStraightness, straightness));
+}

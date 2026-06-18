@@ -68,10 +68,31 @@ async function loadGameplayConstructors() {
         Bullet: bulletModule.Bullet,
         Bullets: bulletsModule.Bullets,
         Config: configModule.Config,
+        getRoundBulletStraightness: configModule.getRoundBulletStraightness,
         Controllable: controllableModule.Controllable,
         Players: playersModule.Players
     };
 }
+
+test('derives shooting straightness from the round number', async function () {
+    const { Config, getRoundBulletStraightness } =
+        await loadGameplayConstructors();
+
+    assert.equal(
+        getRoundBulletStraightness(),
+        Config.bullet.defaultStraightness
+    );
+    assert.equal(
+        getRoundBulletStraightness(1),
+        Config.bullet.defaultStraightness
+    );
+    assert.equal(
+        getRoundBulletStraightness(3),
+        Config.bullet.defaultStraightness +
+            Config.bullet.roundStraightnessStep * 2
+    );
+    assert.equal(getRoundBulletStraightness(99), Config.bullet.maxStraightness);
+});
 
 test('bullets fire once per owner and expose snapshots', async function () {
     const { Bullets, Config } = await loadGameplayConstructors();
@@ -343,8 +364,9 @@ test('players sync clients, reset slots, and remove departed players', async fun
     assert.deepEqual(removed, ['a']);
 });
 
-test('players refresh hardcoded shooting straightness on sync and reset', async function () {
-    const { Config, Players } = await loadGameplayConstructors();
+test('players refresh round-based shooting straightness on sync and reset', async function () {
+    const { Config, Players, getRoundBulletStraightness } =
+        await loadGameplayConstructors();
     const players = new Players(
         {
             addFigure() {}
@@ -354,31 +376,47 @@ test('players refresh hardcoded shooting straightness on sync and reset', async 
         }
     );
 
-    players.sync({
-        clients: [{ id: 'a' }, { id: 'b' }]
-    });
+    players.sync(
+        {
+            clients: [{ id: 'a' }, { id: 'b' }]
+        },
+        {
+            roundNumber: 2
+        }
+    );
+    assert.equal(
+        players.all.a.shootingStraightness,
+        getRoundBulletStraightness(2)
+    );
     players.all.a.shootingStraightness = Config.bullet.defaultStraightness / 2;
     players.all.b.shootingStraightness = Config.bullet.defaultStraightness / 3;
 
-    players.sync({
-        clients: [{ id: 'a' }, { id: 'b' }]
+    players.sync(
+        {
+            clients: [{ id: 'a' }, { id: 'b' }]
+        },
+        {
+            roundNumber: 3
+        }
+    );
+
+    assert.equal(
+        players.all.a.shootingStraightness,
+        getRoundBulletStraightness(3)
+    );
+    assert.equal(
+        players.all.b.shootingStraightness,
+        getRoundBulletStraightness(3)
+    );
+
+    players.all.a.shootingStraightness = Config.bullet.defaultStraightness / 4;
+    players.resetAll({
+        roundNumber: 99
     });
 
     assert.equal(
         players.all.a.shootingStraightness,
-        Config.bullet.defaultStraightness
-    );
-    assert.equal(
-        players.all.b.shootingStraightness,
-        Config.bullet.defaultStraightness
-    );
-
-    players.all.a.shootingStraightness = Config.bullet.defaultStraightness / 4;
-    players.resetAll();
-
-    assert.equal(
-        players.all.a.shootingStraightness,
-        Config.bullet.defaultStraightness
+        getRoundBulletStraightness(99)
     );
 });
 

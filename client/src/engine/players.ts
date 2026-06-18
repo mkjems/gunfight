@@ -1,4 +1,4 @@
-import { Config } from '../platform/config.js';
+import { Config, getRoundBulletStraightness } from '../platform/config.js';
 import { Controllable } from './controllable.js';
 
 type SceneLike = {
@@ -30,6 +30,7 @@ type PlayerSlot = {
 type PlayersOptions = {
     resetChangedSlots?: boolean;
     resetExisting?: boolean;
+    roundNumber?: number;
     slots?: PlayerSlot[];
 };
 
@@ -55,24 +56,29 @@ export class Players {
     ensure(client: ClientLike, index: number, options: PlayersOptions = {}) {
         this.rememberSlots(options.slots);
         const slot = this.getSlot(index, options.slots);
+        const shootingStraightness = getRoundBulletStraightness(
+            options.roundNumber
+        );
         const id = client.id;
 
         if (this.all[id]) {
+            const player = this.all[id];
             const slotChanged = this.all[id].slot !== index;
-            this.all[id].playerId = id;
-            this.all[id].slot = index;
-            this.all[id].facing = slot.facing;
-            this.all[id].idleFrame = slot.frame;
-            this.all[id].shootingStraightness =
-                Config.bullet.defaultStraightness;
-            this.all[id].setMovementBounds(slot.movementBounds);
+
+            player.playerId = id;
+            player.slot = index;
+            player.facing = slot.facing;
+            player.idleFrame = slot.frame;
 
             if (
                 options.resetExisting ||
                 (slotChanged && options.resetChangedSlots)
             ) {
-                this.all[id].resetTo(slot);
+                player.resetTo(slot);
             }
+
+            player.shootingStraightness = shootingStraightness;
+            player.setMovementBounds(slot.movementBounds);
 
             return;
         }
@@ -80,7 +86,8 @@ export class Players {
         this.all[id] = new Controllable(slot.x, slot.y, {
             playerId: id,
             facing: slot.facing,
-            frame: slot.frame
+            frame: slot.frame,
+            shootingStraightness
         });
         this.all[id].slot = index;
         this.all[id].setMovementBounds(slot.movementBounds);
@@ -115,6 +122,9 @@ export class Players {
             const slot = this.getSlot(player.slot || 0, options.slots);
 
             player.resetTo(slot);
+            player.shootingStraightness = getRoundBulletStraightness(
+                options.roundNumber
+            );
         });
     }
 

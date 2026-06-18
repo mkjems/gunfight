@@ -17,6 +17,7 @@ type PublicModel = {
     } | null;
     matchState?: MatchState;
     phase?: GamePhase;
+    roundNumber?: number;
 };
 
 type CreatePlanOptions = {
@@ -74,6 +75,9 @@ export function create(options: CreatePlanOptions) {
         syncPlayers: {
             resetChangedSlots: options.roundState === RoundState.WAITING,
             resetExisting: serverReturnedToLobby || undefined,
+            roundNumber: syncLobbySlots
+                ? undefined
+                : options.model?.roundNumber,
             slots: syncLobbySlots
                 ? Config.player.lobbySlots
                 : getScenarioPlayerStarts(options.model)

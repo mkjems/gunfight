@@ -102,11 +102,11 @@ Idea: What if the players guns were not very good or dangerous in the beginning 
 - [x] Introduce bullet `straightness` as a value from `0.0` to `1.0`.
 - [x] Store shooting straightness on the player, not only on the bullet.
       The two players can have different shooting straightness.
-- [ ] Let a player's shooting straightness evolve during the game.
-- [ ] Replace the current hardcoded shooting straightness with story or
-      progression state when that design is ready.
-- [ ] Tune the hardcoded shooting straightness after playtesting the first
-      cartoon-trajectory slice.
+- [x] Let a player's shooting straightness evolve during the game by increasing
+      automatically each round from config.
+- [x] Replace the current hardcoded shooting straightness with simple
+      round-based progression while the fuller story design is still forming.
+- [ ] Tune the round-based straightness start, step, and cap after playtesting.
 - [x] Freeze `straightness` on each bullet when it is fired.
 - [x] Keep `straightness: 1.0` as the current behavior: constant-speed,
       straight-line flight, current collision behavior, and current ricochet
@@ -134,8 +134,8 @@ Idea: What if the players guns were not very good or dangerous in the beginning 
       shot snapshot so both clients simulate the same fired bullet.
 - [x] Keep a newly fired bullet at its frozen muzzle position for its first
       scene move so local and remote shots show the same visible travel range.
-- [x] Refresh the current hardcoded shooting straightness onto existing players
-      during sync/reset so tuning changes cannot leave one side stale.
+- [x] Refresh the current round-based shooting straightness onto existing
+      players during sync/reset so tuning changes cannot leave one side stale.
 
 ## P19 - How can straightness shooting be part of the game story, brain storm and ideas
 
@@ -160,6 +160,11 @@ Goal: Undo the feature 'user is always to the left in main lobby'.
       left.
 - [x] Keep `(YOU)` as the local marker without moving that player to a
       different side.
+
+## P21 - Fix player name reconnect persistence
+
+- [x] Re-read the browser-stored player name for Socket.IO reconnect auth so
+      server restarts do not restore the name from first page load.
 
 ## Other Ideas
 

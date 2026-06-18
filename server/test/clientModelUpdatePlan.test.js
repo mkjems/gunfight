@@ -113,7 +113,8 @@ test('plans a round start when the server enters round intro', async function ()
                 { x: 830, y: 430, facing: -1, frame: 2 }
             ]
         },
-        phase: 'roundIntro'
+        phase: 'roundIntro',
+        roundNumber: 3
     };
 
     assert.deepEqual(
@@ -138,6 +139,7 @@ test('plans a round start when the server enters round intro', async function ()
             syncStoredPlayerName: true,
             syncPlayers: {
                 resetChangedSlots: false,
+                roundNumber: 3,
                 slots: [
                     { x: 120, y: 430, facing: 1, frame: 0 },
                     { x: 830, y: 430, facing: -1, frame: 2 }
