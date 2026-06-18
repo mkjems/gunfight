@@ -15,7 +15,13 @@ type Socket = {
     on: (event: string, callback: (data: unknown) => void) => void;
 };
 
-type IoFactory = (options: { auth: { name?: string } }) => Socket;
+type AuthPayload = {
+    name?: string;
+};
+
+type AuthProvider = (callback: (payload: AuthPayload) => void) => void;
+
+type IoFactory = (options: { auth: AuthProvider }) => Socket;
 
 type ClientNetworkOptions = {
     getStoredPlayerName?: () => string;
@@ -33,9 +39,6 @@ type GlobalWithIo = typeof globalThis & {
 };
 
 export function ClientNetwork(options: ClientNetworkOptions = {}) {
-    const storedPlayerName = options.getStoredPlayerName
-        ? options.getStoredPlayerName()
-        : '';
     const ioFactory = options.io || (globalThis as GlobalWithIo).io;
 
     if (!ioFactory) {
@@ -43,11 +46,9 @@ export function ClientNetwork(options: ClientNetworkOptions = {}) {
     }
 
     const socket = ioFactory({
-        auth: storedPlayerName
-            ? {
-                  name: storedPlayerName
-              }
-            : {}
+        auth(callback) {
+            callback(getAuthPayload(options.getStoredPlayerName));
+        }
     });
 
     socket.on(SOCKET_EVENT.HighScores, function (nextHighScores) {
@@ -95,4 +96,14 @@ export function ClientNetwork(options: ClientNetworkOptions = {}) {
     return {
         socket
     };
+}
+
+function getAuthPayload(getStoredPlayerName?: () => string): AuthPayload {
+    const storedPlayerName = getStoredPlayerName ? getStoredPlayerName() : '';
+
+    return storedPlayerName
+        ? {
+              name: storedPlayerName
+          }
+        : {};
 }

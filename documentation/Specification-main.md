@@ -135,7 +135,9 @@ Actions:
 - `RND`: choose a random default name
 - `OK`: submit name
 
-Name is stored in the browser (session or local storage ) so you can work on that total high score.
+Name is stored in the browser (session or local storage ) so you can work on
+that total high score. Initial connects and automatic reconnects use the latest
+browser-stored name.
 
 ## Game screen
 
@@ -185,11 +187,11 @@ it only presents those phases and sends player intents or reports.
 - If both players run out of bullets, both reload.
 - Bullets can hit players and damage selected obstacles.
 - Some bullets can ricochet.
-- Bullets have shooting straightness from `0.0` to `1.0`. The current
-  hardcoded player shooting straightness comes from
-  `Config.bullet.defaultStraightness` so the cartoon trajectory is visible
-  during playtesting, and existing players refresh that hardcoded value when
-  they sync or reset.
+- Bullets have shooting straightness from `0.0` to `1.0`.
+  `Config.bullet.defaultStraightness` is the round-1 gun straightness. Each
+  later round adds `Config.bullet.roundStraightnessStep` until the value reaches
+  `Config.bullet.maxStraightness`. Existing players refresh their effective
+  round-based straightness when they sync or reset.
 - `straightness: 1.0` keeps the original straight, constant-speed bullet
   behavior.
 - Lower-straightness bullets use `altitude` for a fake vertical bounce while
