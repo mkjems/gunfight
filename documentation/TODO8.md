@@ -137,6 +137,47 @@ Idea: What if the players guns were not very good or dangerous in the beginning 
 - [x] Refresh the current round-based shooting straightness onto existing
       players during sync/reset so tuning changes cannot leave one side stale.
 
+## P23 - Show next-shot straightness under gameplay players
+
+Goal: Make the current straightness of each player's next shot visible during
+gameplay by drawing a `straightnessMeter` under each player. It uses the
+`client/images/progress-bar.png` sprite, which is 290x7 pixels and contains 10
+horizontal frames, from most empty at the left to most full at the right.
+
+- [ ] Treat this as gameplay feedback, not lobby decoration.
+    - [ ] Show the bar under both real players on the game screen.
+    - [ ] Do not show it in the lobby, high scores, or edit-name screens.
+    - [ ] Keep it attached to the player's world position so camera movement on
+          mobile moves it with the player.
+- [ ] Add explicit sprite configuration.
+    - [ ] Use `straightnessMeter` for code/config names that refer to this
+          visual indicator.
+    - [ ] Add config for `images/progress-bar.png`, frame count `10`, frame
+          size `29x7`, draw scale, and vertical offset under the player.
+    - [ ] Load the progress bar sprite through the normal client asset path or
+          a small engine sprite helper, matching the current player-sprite
+          style.
+- [ ] Derive the frame from next-shot straightness.
+    - [ ] Use the player's current `shootingStraightness`, because that is the
+          value a newly fired local bullet will freeze as `straightness`.
+    - [ ] Clamp the value to `0.0..1.0`.
+    - [ ] Map it to frame index `0..9`, where `0` is most empty and `9` is most
+          full.
+- [ ] Render it from the canvas player path.
+    - [ ] Add a clear gameplay-only flag to `Controllable` or `Players` instead
+          of inferring visibility from lobby slot positions.
+    - [ ] Draw the progress bar after the player sprite so it appears under the
+          feet but remains readable.
+    - [ ] Keep it horizontally centered under the player and stable while the
+          player changes aim or animation frame.
+- [ ] Update documentation and tests.
+    - [ ] Update the main specification gameplay rules/HUD text to describe the
+          straightness indicator.
+    - [ ] Add focused tests for frame selection, gameplay-only visibility, and
+          asset loading.
+    - [ ] Run `npm run check:deploy`; run browser smoke tests if the visual
+          placement changes gameplay or mobile layout.
+
 ## P19 - How can straightness shooting be part of the game story, brain storm and ideas
 
 Goal: Lets get some ideas on the table for a more interesting game game story
