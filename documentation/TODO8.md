@@ -166,6 +166,11 @@ Goal: Undo the feature 'user is always to the left in main lobby'.
 - [x] Re-read the browser-stored player name for Socket.IO reconnect auth so
       server restarts do not restore the name from first page load.
 
+## P22 - Add shared code terminology
+
+- [x] Add `Code-Terminologi.md` with the main code/game terms and names to
+      reconsider.
+
 ## Other Ideas
 
 - [ ] Add more interactive elements to the scenarios,
