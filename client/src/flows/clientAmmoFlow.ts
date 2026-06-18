@@ -1,4 +1,4 @@
-import { RoundState } from '../state/clientScreens.js';
+import { DuelState } from '../state/clientScreens.js';
 
 type AmmoClient = {
     id: number | string;
@@ -15,13 +15,13 @@ type ClientAmmoLike = {
 type ReloadIfBothPlayersAreOutOptions = {
     ammo: ClientAmmoLike;
     model?: AmmoModel | null;
-    roundState: RoundState;
+    duelState: DuelState;
 };
 
 export function reloadIfBothPlayersAreOut(
     options: ReloadIfBothPlayersAreOutOptions
 ) {
-    if (options.roundState !== RoundState.PLAYING || !options.model) {
+    if (options.duelState !== DuelState.PLAYING || !options.model) {
         return false;
     }
 

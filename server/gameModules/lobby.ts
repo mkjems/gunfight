@@ -5,7 +5,7 @@ import type {
     GameResultPayload,
     PublicClient,
     PublicGameModel,
-    RoundResultPayload
+    DuelResultPayload
 } from '../../shared/contracts.js';
 
 const MAX_PLAYERS_PER_GAME = 2;
@@ -158,7 +158,7 @@ function getGameStatus(game: GameSession): GameStatus {
     }
 
     if (
-        phase === GAME_PHASE.RoundIntro ||
+        phase === GAME_PHASE.DuelIntro ||
         phase === GAME_PHASE.Playing ||
         phase === GAME_PHASE.HitPause ||
         phase === GAME_PHASE.GameOver
@@ -360,11 +360,11 @@ export function createLobby(options: LobbyOptions = {}) {
         };
     }
 
-    function recordRoundResult(
+    function recordDuelResult(
         game: GameSession,
-        result: RoundResultPayload
+        result: DuelResultPayload
     ): boolean {
-        const accepted = game.model.recordRoundResult(result);
+        const accepted = game.model.recordDuelResult(result);
 
         if (accepted) {
             game.updatedAt = now();
@@ -404,7 +404,7 @@ export function createLobby(options: LobbyOptions = {}) {
     }
 
     function createResultId(game: GameSession): string {
-        return game.id + ':' + game.model.getModel().roundNumber;
+        return game.id + ':' + game.model.getModel().duelNumber;
     }
 
     function enterPlaying(game: GameSession): GameResultPayload | null {
@@ -450,7 +450,7 @@ export function createLobby(options: LobbyOptions = {}) {
         return {
             resultId: resultId,
             gameId: game.id,
-            roundNumber: model.roundNumber,
+            duelNumber: model.duelNumber,
             clients: model.clients.map(function (client) {
                 return {
                     name: client.name,
@@ -508,7 +508,7 @@ export function createLobby(options: LobbyOptions = {}) {
         finishMatch: finishMatch,
         finishHitPause: finishHitPause,
         readyClient: readyClient,
-        recordRoundResult: recordRoundResult,
+        recordDuelResult: recordDuelResult,
         requeue: requeue,
         returnToLobbyAfterGameOver: returnToLobbyAfterGameOver,
         startMatch: startMatch,

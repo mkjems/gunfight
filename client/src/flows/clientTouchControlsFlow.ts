@@ -16,7 +16,7 @@ type UpdateOptions = {
     getTouchState?: typeof getTouchState;
     highScoresVisible?: boolean;
     ready?: boolean;
-    roundState?: Parameters<typeof getTouchState>[0]['roundState'];
+    duelState?: Parameters<typeof getTouchState>[0]['duelState'];
     touchControls?: {
         update: (state: ReturnType<typeof getTouchState>) => unknown;
     } | null;
@@ -46,7 +46,7 @@ export function update(options: UpdateOptions) {
             editing: options.editing,
             highScoresVisible: options.highScoresVisible,
             ready: options.ready,
-            roundState: options.roundState
+            duelState: options.duelState
         } as never)
     );
 }

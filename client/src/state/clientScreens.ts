@@ -1,13 +1,13 @@
-export const RoundState = {
+export const DuelState = {
     WAITING: 'waiting',
     RITUAL: 'ritual',
     PLAYING: 'playing',
     HIT_PAUSE: 'hitPause',
-    ROUND_OVER: 'roundOver',
+    DUEL_OVER: 'duelOver',
     GAME_OVER: 'gameOver'
 } as const;
 
-export type RoundState = (typeof RoundState)[keyof typeof RoundState];
+export type DuelState = (typeof DuelState)[keyof typeof DuelState];
 
 export const Screen = {
     LOBBY_MAIN: 'lobby-main',
@@ -19,39 +19,39 @@ export const Screen = {
 export type Screen = (typeof Screen)[keyof typeof Screen];
 
 export type ActiveScreenState = {
-    roundState: RoundState;
+    duelState: DuelState;
     nameEditorActive?: boolean;
     highScoresVisible?: boolean;
 };
 
-const legalTransitions: Record<RoundState, RoundState[]> = {
-    [RoundState.WAITING]: [RoundState.RITUAL, RoundState.WAITING],
-    [RoundState.RITUAL]: [
-        RoundState.PLAYING,
-        RoundState.GAME_OVER,
-        RoundState.WAITING
+const legalTransitions: Record<DuelState, DuelState[]> = {
+    [DuelState.WAITING]: [DuelState.RITUAL, DuelState.WAITING],
+    [DuelState.RITUAL]: [
+        DuelState.PLAYING,
+        DuelState.GAME_OVER,
+        DuelState.WAITING
     ],
-    [RoundState.PLAYING]: [
-        RoundState.HIT_PAUSE,
-        RoundState.ROUND_OVER,
-        RoundState.GAME_OVER,
-        RoundState.WAITING
+    [DuelState.PLAYING]: [
+        DuelState.HIT_PAUSE,
+        DuelState.DUEL_OVER,
+        DuelState.GAME_OVER,
+        DuelState.WAITING
     ],
-    [RoundState.HIT_PAUSE]: [
-        RoundState.RITUAL,
-        RoundState.GAME_OVER,
-        RoundState.WAITING
+    [DuelState.HIT_PAUSE]: [
+        DuelState.RITUAL,
+        DuelState.GAME_OVER,
+        DuelState.WAITING
     ],
-    [RoundState.ROUND_OVER]: [RoundState.RITUAL, RoundState.WAITING],
-    [RoundState.GAME_OVER]: [RoundState.WAITING]
+    [DuelState.DUEL_OVER]: [DuelState.RITUAL, DuelState.WAITING],
+    [DuelState.GAME_OVER]: [DuelState.WAITING]
 };
 
-export function isGameplayRoundState(roundState: RoundState): boolean {
-    return roundState !== RoundState.WAITING;
+export function isGameplayDuelState(duelState: DuelState): boolean {
+    return duelState !== DuelState.WAITING;
 }
 
 export function getActiveScreen(state: ActiveScreenState): Screen {
-    if (isGameplayRoundState(state.roundState)) {
+    if (isGameplayDuelState(state.duelState)) {
         return Screen.GAME;
     }
 
@@ -67,8 +67,8 @@ export function getActiveScreen(state: ActiveScreenState): Screen {
 }
 
 export function canTransition(
-    fromState?: RoundState | null,
-    toState?: RoundState | null
+    fromState?: DuelState | null,
+    toState?: DuelState | null
 ): boolean {
     if (!fromState || fromState === toState) {
         return true;
@@ -82,9 +82,9 @@ export function canTransition(
 }
 
 export const ClientScreens = {
-    RoundState,
+    DuelState,
     Screen,
     canTransition,
     getActiveScreen,
-    isGameplayRoundState
+    isGameplayDuelState
 };

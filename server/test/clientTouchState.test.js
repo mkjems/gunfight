@@ -60,7 +60,7 @@ test('builds touch state for waiting lobby screens', async function () {
                 editing: false,
                 highScoresVisible: true,
                 ready: false,
-                roundState: 'waiting'
+                duelState: 'waiting'
             })
         ),
         {
@@ -87,7 +87,7 @@ test('builds touch state for active gameplay screens', async function () {
                 editing: true,
                 highScoresVisible: true,
                 ready: true,
-                roundState: 'playing'
+                duelState: 'playing'
             })
         ),
         {
@@ -103,11 +103,11 @@ test('builds touch state for active gameplay screens', async function () {
     );
 });
 
-test('shows gameplay touch controls during transitional round states', async function () {
+test('shows gameplay touch controls during transitional duel states', async function () {
     const touchState = await loadClientTouchState();
 
     assert.equal(touchState.shouldShowGameplayTouchControls('ritual'), true);
     assert.equal(touchState.shouldShowGameplayTouchControls('hitPause'), true);
-    assert.equal(touchState.shouldShowGameplayTouchControls('roundOver'), true);
+    assert.equal(touchState.shouldShowGameplayTouchControls('duelOver'), true);
     assert.equal(touchState.shouldShowGameplayTouchControls('gameOver'), false);
 });

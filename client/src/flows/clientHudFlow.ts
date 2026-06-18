@@ -1,4 +1,4 @@
-import { RoundState, Screen } from '../state/clientScreens.js';
+import { DuelState, Screen } from '../state/clientScreens.js';
 import { getState } from '../ui/viewModels/gameHudViewModel.js';
 
 type ClientId = number | string;
@@ -57,8 +57,8 @@ type ClientHudFlowOptions = {
     model?: GameModel | null;
     particleCanvas?: ElementLike | null;
     players: unknown;
-    roundData: unknown;
-    roundState: RoundState;
+    duelData: unknown;
+    duelState: DuelState;
     scoreKeeper: unknown;
 };
 
@@ -70,7 +70,7 @@ export function render(options: ClientHudFlowOptions) {
         options.hudCanvas.height
     );
 
-    if (options.roundState === RoundState.WAITING) {
+    if (options.duelState === DuelState.WAITING) {
         renderLobbyApp(options);
         return;
     }
@@ -113,8 +113,8 @@ export function getGameHudState(options: ClientHudFlowOptions) {
             cameraController: options.cameraController as never,
             defaultSeconds: options.defaultSeconds,
             players: options.players as never,
-            roundData: options.roundData as never,
-            roundState: options.roundState,
+            duelData: options.duelData as never,
+            duelState: options.duelState,
             scoreKeeper: options.scoreKeeper as never
         }),
         ammoDisplays: getAmmoDisplays(options, firstClient, secondClient),

@@ -81,7 +81,7 @@ function createOptions(overrides = {}) {
             getState(options) {
                 return {
                     defaultSeconds: options.defaultSeconds,
-                    roundState: options.roundState
+                    duelState: options.duelState
                 };
             }
         },
@@ -123,8 +123,8 @@ function createOptions(overrides = {}) {
             ]
         },
         players: {},
-        roundData: {},
-        roundState: 'playing',
+        duelData: {},
+        duelState: 'playing',
         scoreKeeper: {},
         ...overrides
     };
@@ -143,7 +143,7 @@ function plain(value) {
 test('renders waiting HUD through one app render', async function () {
     const hudFlow = await loadClientHudFlow();
     const { calls, elements, options } = createOptions({
-        roundState: 'waiting'
+        duelState: 'waiting'
     });
 
     hudFlow.render(options);
@@ -207,7 +207,7 @@ test('renders active game HUD and both ammo displays', async function () {
                     defaultSeconds: 70,
                     leftName: 'ACE',
                     rightName: 'DOC',
-                    roundState: 'playing'
+                    duelState: 'playing'
                 },
                 installPrompt: {
                     visible: false
@@ -243,7 +243,7 @@ test('renders active game HUD without ammo when clients are missing', async func
                     defaultSeconds: 70,
                     leftName: '',
                     rightName: '',
-                    roundState: 'playing'
+                    duelState: 'playing'
                 },
                 installPrompt: {
                     visible: false

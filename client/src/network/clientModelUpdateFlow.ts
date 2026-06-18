@@ -18,9 +18,9 @@ type SyncOptions = {
     playReadySound: () => void;
     previousModel: PublicModel;
     renderHud: () => void;
-    roundState: CreatePlanOptions['roundState'];
+    duelState: CreatePlanOptions['duelState'];
     scheduleAbandonedRequeue: () => void;
-    startRoundRitual: () => void;
+    startDuelRitual: () => void;
     syncNameEditor: () => void;
     syncStoredPlayerName: () => void;
 };
@@ -30,7 +30,7 @@ export function sync(options: SyncOptions, createPlan: CreatePlan = create) {
         model: options.model,
         playerId: options.playerId,
         previousModel: options.previousModel,
-        roundState: options.roundState
+        duelState: options.duelState
     });
 
     if (plan.clearLocalReadyRequest) {
@@ -63,8 +63,8 @@ export function sync(options: SyncOptions, createPlan: CreatePlan = create) {
         options.syncNameEditor();
     }
 
-    if (plan.startRoundRitual) {
-        options.startRoundRitual();
+    if (plan.startDuelRitual) {
+        options.startDuelRitual();
         return plan;
     }
 

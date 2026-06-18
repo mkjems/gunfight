@@ -95,12 +95,12 @@ function createFlowOptions(overrides = {}) {
         renderHud() {
             calls.push('renderHud');
         },
-        roundState: 'waiting',
+        duelState: 'waiting',
         scheduleAbandonedRequeue() {
             calls.push('scheduleAbandonedRequeue');
         },
-        startRoundRitual() {
-            calls.push('startRoundRitual');
+        startDuelRitual() {
+            calls.push('startDuelRitual');
         },
         syncNameEditor() {
             calls.push('syncNameEditor');
@@ -129,7 +129,7 @@ function createPlan(overrides = {}) {
             playReadySound: true,
             renderHud: true,
             scheduleAbandonedRequeue: false,
-            startRoundRitual: false,
+            startDuelRitual: false,
             syncNameEditor: true,
             syncPlayers: {
                 slots: ['left', 'right']
@@ -167,7 +167,7 @@ test('applies model update side effects in plan order', async function () {
         previousModel: {
             gameId: 'previous'
         },
-        roundState: 'waiting'
+        duelState: 'waiting'
     });
     assert.deepEqual(plain(calls), [
         'clearLocalReadyRequest',
@@ -180,10 +180,10 @@ test('applies model update side effects in plan order', async function () {
     ]);
 });
 
-test('starts the round ritual instead of rendering the hud', async function () {
+test('starts the duel ritual instead of rendering the hud', async function () {
     const plan = createPlan({
         renderHud: false,
-        startRoundRitual: true
+        startDuelRitual: true
     });
     const flow = await loadClientModelUpdateFlow();
     const { calls, options } = createFlowOptions();
@@ -197,7 +197,7 @@ test('starts the round ritual instead of rendering the hud', async function () {
         'playReadySound',
         ['players.sync', 'next', ['left', 'right']],
         'syncNameEditor',
-        'startRoundRitual'
+        'startDuelRitual'
     ]);
 });
 

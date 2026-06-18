@@ -23,12 +23,12 @@ async function loadClientScreens() {
 
 test('selects active screens from explicit client state', async function () {
     const screens = await loadClientScreens();
-    const RoundState = screens.RoundState;
+    const DuelState = screens.DuelState;
     const Screen = screens.Screen;
 
     assert.equal(
         screens.getActiveScreen({
-            roundState: RoundState.WAITING,
+            duelState: DuelState.WAITING,
             nameEditorActive: false,
             highScoresVisible: false
         }),
@@ -36,7 +36,7 @@ test('selects active screens from explicit client state', async function () {
     );
     assert.equal(
         screens.getActiveScreen({
-            roundState: RoundState.WAITING,
+            duelState: DuelState.WAITING,
             nameEditorActive: true,
             highScoresVisible: true
         }),
@@ -44,7 +44,7 @@ test('selects active screens from explicit client state', async function () {
     );
     assert.equal(
         screens.getActiveScreen({
-            roundState: RoundState.WAITING,
+            duelState: DuelState.WAITING,
             nameEditorActive: false,
             highScoresVisible: true
         }),
@@ -52,7 +52,7 @@ test('selects active screens from explicit client state', async function () {
     );
     assert.equal(
         screens.getActiveScreen({
-            roundState: RoundState.PLAYING,
+            duelState: DuelState.PLAYING,
             nameEditorActive: false,
             highScoresVisible: true
         }),
@@ -60,24 +60,24 @@ test('selects active screens from explicit client state', async function () {
     );
 });
 
-test('documents legal round state transitions', async function () {
+test('documents legal duel state transitions', async function () {
     const screens = await loadClientScreens();
-    const RoundState = screens.RoundState;
+    const DuelState = screens.DuelState;
 
     assert.equal(
-        screens.canTransition(RoundState.WAITING, RoundState.RITUAL),
+        screens.canTransition(DuelState.WAITING, DuelState.RITUAL),
         true
     );
     assert.equal(
-        screens.canTransition(RoundState.RITUAL, RoundState.PLAYING),
+        screens.canTransition(DuelState.RITUAL, DuelState.PLAYING),
         true
     );
     assert.equal(
-        screens.canTransition(RoundState.PLAYING, RoundState.HIT_PAUSE),
+        screens.canTransition(DuelState.PLAYING, DuelState.HIT_PAUSE),
         true
     );
     assert.equal(
-        screens.canTransition(RoundState.PLAYING, RoundState.RITUAL),
+        screens.canTransition(DuelState.PLAYING, DuelState.RITUAL),
         false
     );
 });

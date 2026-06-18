@@ -1,14 +1,14 @@
 import type { GamePhase } from '../../../shared/contracts.js';
 import { Config } from '../platform/config.js';
-import { RoundState } from '../state/clientScreens.js';
+import { DuelState } from '../state/clientScreens.js';
 import { CLIENT_TIMER } from '../state/clientTimers.js';
 
 const GAME_PHASE = {
-    RoundIntro: 'roundIntro',
+    DuelIntro: 'duelIntro',
     Playing: 'playing'
 } as const satisfies Record<string, GamePhase>;
 
-type ClientRoundRitualOptions = {
+type ClientDuelRitualOptions = {
     bullets: {
         reset: () => void;
     };
@@ -16,16 +16,16 @@ type ClientRoundRitualOptions = {
     getServerPhase: () => GamePhase | undefined;
     renderHud: () => void;
     resetAmmo: () => void;
-    roundData: {
+    duelData: {
         clearObstacleDamage: () => void;
         startScenario: () => void;
     };
-    roundIntro: {
+    duelIntro: {
         complete: () => void;
         start: () => void;
     };
-    setRoundMessage: (message: string) => void;
-    setRoundState: (roundState: RoundState) => void;
+    setDuelMessage: (message: string) => void;
+    setDuelState: (duelState: DuelState) => void;
     timers: {
         set: (
             name: typeof CLIENT_TIMER.Ritual,
@@ -35,34 +35,34 @@ type ClientRoundRitualOptions = {
     };
 };
 
-export function start(options: ClientRoundRitualOptions) {
+export function start(options: ClientDuelRitualOptions) {
     const getReadyDelay = Math.max(
-        Config.round.getReadyDelay,
-        Config.round.introWalkDelay
+        Config.duel.getReadyDelay,
+        Config.duel.introWalkDelay
     );
 
-    options.setRoundState(RoundState.RITUAL);
+    options.setDuelState(DuelState.RITUAL);
     options.closeNameEditor();
-    options.roundData.startScenario();
-    options.roundData.clearObstacleDamage();
+    options.duelData.startScenario();
+    options.duelData.clearObstacleDamage();
     options.bullets.reset();
     options.resetAmmo();
-    options.roundIntro.start();
-    options.setRoundMessage('GET READY');
+    options.duelIntro.start();
+    options.setDuelMessage('GET READY');
     options.renderHud();
 
     options.timers.set(
         CLIENT_TIMER.Ritual,
         function () {
-            if (!canShowRoundIntroPresentation(options)) {
+            if (!canShowDuelIntroPresentation(options)) {
                 if (canEnterPlayingPresentation(options)) {
                     enterPlayingPresentation(options);
                 }
                 return;
             }
 
-            options.roundIntro.complete();
-            options.setRoundMessage('DRAW!');
+            options.duelIntro.complete();
+            options.setDuelMessage('DRAW!');
 
             options.timers.set(
                 CLIENT_TIMER.Ritual,
@@ -73,36 +73,36 @@ export function start(options: ClientRoundRitualOptions) {
 
                     enterPlayingPresentation(options);
                 },
-                Config.round.drawDelay
+                Config.duel.drawDelay
             );
         },
         getReadyDelay
     );
 }
 
-function canShowRoundIntroPresentation(
-    options: ClientRoundRitualOptions
+function canShowDuelIntroPresentation(
+    options: ClientDuelRitualOptions
 ): boolean {
     const phase = options.getServerPhase();
 
-    return phase === GAME_PHASE.RoundIntro;
+    return phase === GAME_PHASE.DuelIntro;
 }
 
 function canEnterPlayingPresentation(
-    options: ClientRoundRitualOptions
+    options: ClientDuelRitualOptions
 ): boolean {
     const phase = options.getServerPhase();
 
-    return phase === GAME_PHASE.RoundIntro || phase === GAME_PHASE.Playing;
+    return phase === GAME_PHASE.DuelIntro || phase === GAME_PHASE.Playing;
 }
 
-function enterPlayingPresentation(options: ClientRoundRitualOptions) {
-    options.setRoundMessage('');
+function enterPlayingPresentation(options: ClientDuelRitualOptions) {
+    options.setDuelMessage('');
     options.resetAmmo();
-    options.setRoundState(RoundState.PLAYING);
+    options.setDuelState(DuelState.PLAYING);
     options.renderHud();
 }
 
-export const ClientRoundRitual = {
+export const ClientDuelRitual = {
     start
 };

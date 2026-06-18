@@ -1,4 +1,4 @@
-import { RoundState } from '../state/clientScreens.js';
+import { DuelState } from '../state/clientScreens.js';
 
 type WindowLike = Pick<
     Window,
@@ -30,19 +30,19 @@ type ClientCameraControllerOptions = {
     window?: WindowLike;
 };
 
-type CameraRoundOptions = {
+type CameraDuelOptions = {
     camera?: Camera | null;
-    roundState: RoundState;
+    duelState: DuelState;
 };
 
 type UpdateOptions = {
     camera?: Camera | null;
     canvas: CanvasLike;
     player?: { x: number; y: number } | null;
-    roundState: RoundState;
+    duelState: DuelState;
 };
 
-type WorldToHudPointOptions = CameraRoundOptions & {
+type WorldToHudPointOptions = CameraDuelOptions & {
     x: number;
     y: number;
 };
@@ -52,8 +52,8 @@ export function ClientCameraController(
 ) {
     const win = options.window || window;
 
-    function shouldUseCamera(options: CameraRoundOptions) {
-        if (!options.camera || options.roundState === RoundState.WAITING) {
+    function shouldUseCamera(options: CameraDuelOptions) {
+        if (!options.camera || options.duelState === DuelState.WAITING) {
             return false;
         }
 
@@ -111,7 +111,7 @@ export function ClientCameraController(
         if (
             !shouldUseCamera({
                 camera,
-                roundState: options.roundState
+                duelState: options.duelState
             })
         ) {
             camera.reset();
@@ -148,7 +148,7 @@ export function ClientCameraController(
             camera &&
             shouldUseCamera({
                 camera,
-                roundState: options.roundState
+                duelState: options.duelState
             })
         ) {
             return {

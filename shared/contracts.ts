@@ -19,7 +19,7 @@ export const GAME_PHASE = {
     Waiting: 'waiting',
     Readying: 'readying',
     ReadyCountdown: 'readyCountdown',
-    RoundIntro: 'roundIntro',
+    DuelIntro: 'duelIntro',
     Playing: 'playing',
     HitPause: 'hitPause',
     GameOver: 'gameOver',
@@ -38,7 +38,7 @@ export function isGamePhase(value: unknown): value is GamePhase {
 
 export const SOCKET_EVENT = {
     ClientReady: 'clientReady',
-    RoundResult: 'roundResult',
+    DuelResult: 'duelResult',
     Requeue: 'requeue',
     LeaveGame: 'leaveGame',
     LeftGame: 'leftGame',
@@ -83,7 +83,7 @@ export interface PublicGameModel {
     phase: GamePhase;
     phaseEndsAt?: number;
     phaseStartedAt: number;
-    roundNumber: number;
+    duelNumber: number;
     scores: number[];
     version: number;
 }
@@ -194,7 +194,7 @@ export interface GameModelSnapshot {
     phase: GamePhase;
     phaseEndsAt?: number;
     phaseStartedAt: number;
-    roundNumber: number;
+    duelNumber: number;
     scores: number[];
     version: number;
 }
@@ -237,11 +237,11 @@ export type PlayerPositionPayload = PlayerPositionInput & { player: number };
 export interface ObstacleDamagePayload {
     id: string;
     ownerId: number;
-    roundNumber: number;
+    duelNumber: number;
 }
 
-export interface RoundResultPayload {
-    roundNumber: number;
+export interface DuelResultPayload {
+    duelNumber: number;
     targetId: number;
     winnerId: number;
 }
@@ -254,7 +254,7 @@ export interface GameResultClient {
 export interface GameResultPayload {
     resultId: string;
     gameId?: string;
-    roundNumber?: number;
+    duelNumber?: number;
     clients: GameResultClient[];
     scores: number[];
 }
@@ -889,36 +889,36 @@ export function normalizeObstacleDamagePayload(
     }
 
     const ownerId = getFiniteNumber(data, 'ownerId');
-    const roundNumber = getFiniteNumber(data, 'roundNumber');
+    const duelNumber = getFiniteNumber(data, 'duelNumber');
 
-    if (ownerId === null || roundNumber === null) {
+    if (ownerId === null || duelNumber === null) {
         return null;
     }
 
     return {
         id: data.id,
         ownerId: ownerId,
-        roundNumber: roundNumber
+        duelNumber: duelNumber
     };
 }
 
-export function normalizeRoundResultPayload(
+export function normalizeDuelResultPayload(
     data: unknown
-): RoundResultPayload | null {
+): DuelResultPayload | null {
     if (!isRecord(data)) {
         return null;
     }
 
-    const roundNumber = getFiniteNumber(data, 'roundNumber');
+    const duelNumber = getFiniteNumber(data, 'duelNumber');
     const targetId = getFiniteNumberOrNumericString(data, 'targetId');
     const winnerId = getFiniteNumberOrNumericString(data, 'winnerId');
 
-    if (roundNumber === null || targetId === null || winnerId === null) {
+    if (duelNumber === null || targetId === null || winnerId === null) {
         return null;
     }
 
     return {
-        roundNumber: roundNumber,
+        duelNumber: duelNumber,
         targetId: targetId,
         winnerId: winnerId
     };
@@ -965,7 +965,7 @@ export function normalizeGameResultPayload(
     }
 
     const scores = copyNumberArray(data.scores);
-    const roundNumber = getFiniteNumber(data, 'roundNumber');
+    const duelNumber = getFiniteNumber(data, 'duelNumber');
 
     if (!scores) {
         return null;
@@ -974,7 +974,7 @@ export function normalizeGameResultPayload(
     return {
         resultId: data.resultId,
         gameId: typeof data.gameId === 'string' ? data.gameId : undefined,
-        roundNumber: roundNumber === null ? undefined : roundNumber,
+        duelNumber: duelNumber === null ? undefined : duelNumber,
         clients: clients,
         scores: scores
     };

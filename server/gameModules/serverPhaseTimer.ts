@@ -50,7 +50,7 @@ export function advanceTimedGamePhase<GameSession>(
 
     if (options.phase === GAME_PHASE.ReadyCountdown) {
         options.lobby.startMatch(game);
-    } else if (options.phase === GAME_PHASE.RoundIntro) {
+    } else if (options.phase === GAME_PHASE.DuelIntro) {
         result = options.lobby.enterPlaying(game);
     } else if (options.phase === GAME_PHASE.Playing) {
         result = options.lobby.finishMatch(game);

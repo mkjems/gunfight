@@ -33,7 +33,7 @@
     justify-self: start;
 }
 
-.roundTimer {
+.matchTimer {
     justify-self: center;
 }
 
@@ -90,7 +90,7 @@
     visibility: hidden;
 }
 
-.roundMessage {
+.duelMessage {
     align-self: center;
     font-family: var(--font-family-h1);
     font-size: var(--large-text-size);

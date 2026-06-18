@@ -4,9 +4,9 @@ import path from 'node:path';
 import test from 'node:test';
 import ts from 'typescript';
 
-async function loadClientRoundTransition() {
+async function loadClientDuelTransition() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/flows/clientRoundTransition.ts'),
+        path.join(process.cwd(), 'client/src/flows/clientDuelTransition.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {
@@ -18,11 +18,11 @@ async function loadClientRoundTransition() {
     const encoded = Buffer.from(transpiled.outputText).toString('base64');
     const module = await import('data:text/javascript;base64,' + encoded);
 
-    return module.ClientRoundTransition;
+    return module.ClientDuelTransition;
 }
 
-test('resolves legal round state transitions', async function () {
-    const transition = await loadClientRoundTransition();
+test('resolves legal duel state transitions', async function () {
+    const transition = await loadClientDuelTransition();
 
     assert.equal(
         transition.resolve({
@@ -39,8 +39,8 @@ test('resolves legal round state transitions', async function () {
     );
 });
 
-test('rejects illegal round state transitions', async function () {
-    const transition = await loadClientRoundTransition();
+test('rejects illegal duel state transitions', async function () {
+    const transition = await loadClientDuelTransition();
 
     assert.throws(
         function () {
@@ -53,7 +53,7 @@ test('rejects illegal round state transitions', async function () {
             });
         },
         {
-            message: 'Illegal round state transition: gameOver -> playing'
+            message: 'Illegal duel state transition: gameOver -> playing'
         }
     );
 });

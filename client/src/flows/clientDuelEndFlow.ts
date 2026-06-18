@@ -1,50 +1,50 @@
 import { Config } from '../platform/config.js';
-import { RoundState } from '../state/clientScreens.js';
+import { DuelState } from '../state/clientScreens.js';
 import { CLIENT_TIMER, type ClientTimerName } from '../state/clientTimers.js';
 
 type ClientId = number | string;
 
-type RoundEndClient = {
+type DuelEndClient = {
     name?: string;
     slot: number;
 };
 
-type RoundEndModel = {
-    clients?: RoundEndClient[];
+type DuelEndModel = {
+    clients?: DuelEndClient[];
     gameId?: string;
-    roundNumber?: number;
+    duelNumber?: number;
 };
 
-type RoundEndOptions = {
+type DuelEndOptions = {
     bullets: {
         clear: () => void;
     };
     closeNameEditor: () => void;
-    getClientName?: (client: RoundEndClient) => string;
+    getClientName?: (client: DuelEndClient) => string;
     getPlayerSlot?: (id?: ClientId | null) => number;
-    model?: RoundEndModel | null;
+    model?: DuelEndModel | null;
     players: {
         clearKeys: () => void;
         label: (id?: ClientId | null) => string;
     };
     renderHud: () => void;
-    resetRound?: () => void;
+    resetDuel?: () => void;
     resetToStartScreen?: () => void;
-    roundData: {
-        clearRoundPauseFlags: () => void;
-        resetRoundFlags: () => void;
+    duelData: {
+        clearDuelPauseFlags: () => void;
+        resetDuelFlags: () => void;
     };
-    roundIntro: {
+    duelIntro: {
         clear: () => void;
     };
     scoreKeeper: {
         getGameOverMessage: (
-            clients: RoundEndClient[] | undefined,
-            getClientName?: RoundEndOptions['getClientName']
+            clients: DuelEndClient[] | undefined,
+            getClientName?: DuelEndOptions['getClientName']
         ) => string;
     };
-    setRoundMessage: (message: string) => void;
-    setRoundState: (roundState: RoundState) => void;
+    setDuelMessage: (message: string) => void;
+    setDuelState: (duelState: DuelState) => void;
     timers: {
         clearMany: (names: string[]) => void;
         set: (
@@ -56,76 +56,76 @@ type RoundEndOptions = {
     winnerId?: ClientId | null;
 };
 
-const ROUND_END_TIMERS: ClientTimerName[] = [
+const DUEL_END_TIMERS: ClientTimerName[] = [
     CLIENT_TIMER.Reset,
     CLIENT_TIMER.MatchEnd,
     CLIENT_TIMER.Ritual,
     CLIENT_TIMER.Hit
 ];
 
-export function endRound(options: RoundEndOptions) {
+export function endDuel(options: DuelEndOptions) {
     const winnerSlot = options.getPlayerSlot
         ? options.getPlayerSlot(options.winnerId)
         : -1;
 
-    options.setRoundState(RoundState.ROUND_OVER);
+    options.setDuelState(DuelState.DUEL_OVER);
     options.closeNameEditor();
-    options.roundData.clearRoundPauseFlags();
+    options.duelData.clearDuelPauseFlags();
 
     if (winnerSlot >= 0) {
-        options.setRoundMessage(
+        options.setDuelMessage(
             'PLAYER ' + options.players.label(options.winnerId) + ' WINS'
         );
     } else {
-        options.setRoundMessage('TIME');
+        options.setDuelMessage('TIME');
     }
 
-    clearRoundActivity(options);
+    clearDuelActivity(options);
 
-    if (!options.resetRound) {
+    if (!options.resetDuel) {
         return;
     }
 
     options.timers.set(
         CLIENT_TIMER.Reset,
-        options.resetRound,
-        Config.round.resetDelay
+        options.resetDuel,
+        Config.duel.resetDelay
     );
 }
 
-export function endGame(options: RoundEndOptions) {
-    options.setRoundState(RoundState.GAME_OVER);
+export function endGame(options: DuelEndOptions) {
+    options.setDuelState(DuelState.GAME_OVER);
     options.closeNameEditor();
-    options.roundData.resetRoundFlags();
-    options.setRoundMessage(
+    options.duelData.resetDuelFlags();
+    options.setDuelMessage(
         options.scoreKeeper.getGameOverMessage(
             options.model?.clients,
             options.getClientName
         )
     );
 
-    clearRoundActivity(options);
+    clearDuelActivity(options);
 
-    const reset = options.resetToStartScreen || options.resetRound;
+    const reset = options.resetToStartScreen || options.resetDuel;
 
     if (reset) {
         options.timers.set(
             CLIENT_TIMER.Reset,
             reset,
-            Config.round.gameOverDelay
+            Config.duel.gameOverDelay
         );
     }
 }
 
-function clearRoundActivity(options: RoundEndOptions) {
+function clearDuelActivity(options: DuelEndOptions) {
     options.renderHud();
     options.players.clearKeys();
     options.bullets.clear();
-    options.timers.clearMany(ROUND_END_TIMERS);
-    options.roundIntro.clear();
+    options.timers.clearMany(DUEL_END_TIMERS);
+    options.duelIntro.clear();
 }
 
-export const ClientRoundEndFlow = {
+export const ClientDuelEndFlow = {
     endGame,
-    endRound
+    endDuel
 };

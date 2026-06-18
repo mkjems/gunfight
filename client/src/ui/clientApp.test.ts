@@ -60,7 +60,7 @@ function createPointerDown(window: Window): Event {
     }) as unknown as Event;
 }
 
-test('renders game HUD scores, timer, round text, and hit messages through the app root', function () {
+test('renders game HUD scores, timer, duel text, and hit messages through the app root', function () {
     const browser = createBrowser();
     const root = browser.createElement();
     const app = ClientAppMount.create({ root });
@@ -87,7 +87,7 @@ test('renders game HUD scores, timer, round text, and hit messages through the a
             leftScore: 2,
             rightName: 'DOC',
             rightScore: 1,
-            roundMessage: 'DRAW!',
+            duelMessage: 'DRAW!',
             timerLabel: 67
         }
     });
@@ -96,8 +96,8 @@ test('renders game HUD scores, timer, round text, and hit messages through the a
     assert.equal(query(root, '#lobbyHud').hidden, true);
     assert.deepEqual(childTexts(query(root, '#scoreLeft')), ['2', 'ACE']);
     assert.deepEqual(childTexts(query(root, '#scoreRight')), ['DOC', '1']);
-    assert.equal(query(root, '#roundTimer').textContent, '67');
-    assert.equal(query(root, '#roundMessage').textContent, 'DRAW!');
+    assert.equal(query(root, '#matchTimer').textContent, '67');
+    assert.equal(query(root, '#duelMessage').textContent, 'DRAW!');
     assert.equal(query(root, '#ammoRow').hidden, false);
     assert.equal(query(root, '#ammoLeft').children.length, 6);
     assert.equal(query(root, '#ammoRight').children.length, 6);
@@ -115,8 +115,8 @@ test('renders game HUD scores, timer, round text, and hit messages through the a
 
     assert.equal(query(root, '#scoreLeft').textContent, '0');
     assert.equal(query(root, '#scoreRight').textContent, '0');
-    assert.equal(query(root, '#roundTimer').textContent, '');
-    assert.equal(query(root, '#roundMessage').textContent, '');
+    assert.equal(query(root, '#matchTimer').textContent, '');
+    assert.equal(query(root, '#duelMessage').textContent, '');
     assert.equal(query(root, '#ammoRow').hidden, true);
     assert.equal(query(root, '#hitMessage').hidden, true);
 });
@@ -302,7 +302,7 @@ test('renders lobby screen sections through the app root', function () {
         ['3', 'ACE']
     );
     assert.equal(
-        query(previousResult, '#lobbyPreviousRoundTimer').textContent,
+        query(previousResult, '#lobbyPreviousMatchTimer').textContent,
         'GAME OVER'
     );
     assert.deepEqual(
@@ -382,7 +382,7 @@ test('skips virtual-DOM work when app render props are value-equal', function ()
                 },
                 leftScore: 1,
                 rightScore: 2,
-                roundMessage: '',
+                duelMessage: '',
                 timerLabel
             },
             touchControls: {

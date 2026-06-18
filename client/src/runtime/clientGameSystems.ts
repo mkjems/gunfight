@@ -7,14 +7,14 @@ type ClientGameSystemsOptions<
     TScene,
     TBullets,
     TPlayers,
-    TRoundIntro,
+    TDuelIntro,
     TAmmo,
     TParticleLayer,
     TPositionSync,
-    TRoundData,
+    TDuelData,
     TScoreKeeper,
     TTimers,
-    TRoundState
+    TDuelState
 > = {
     Bullet: BulletConstructor<TBullet>;
     createAmmo: () => TAmmo;
@@ -22,12 +22,12 @@ type ClientGameSystemsOptions<
     createParticleLayer: () => TParticleLayer;
     createPlayers: (scene: TScene, bullets: TBullets) => TPlayers;
     createPositionSync: () => TPositionSync;
-    createRoundData: () => TRoundData;
-    createRoundIntro: (players: TPlayers) => TRoundIntro;
+    createDuelData: () => TDuelData;
+    createDuelIntro: (players: TPlayers) => TDuelIntro;
     createScene: () => TScene;
     createScoreKeeper: () => TScoreKeeper;
     createTimers: () => TTimers;
-    initialRoundState: TRoundState;
+    initialDuelState: TDuelState;
     playRicochet: (bullet?: TBullet) => void;
 };
 
@@ -36,34 +36,34 @@ export function create<
     TScene,
     TBullets,
     TPlayers,
-    TRoundIntro,
+    TDuelIntro,
     TAmmo,
     TParticleLayer,
     TPositionSync,
-    TRoundData,
+    TDuelData,
     TScoreKeeper,
     TTimers,
-    TRoundState
+    TDuelState
 >(
     options: ClientGameSystemsOptions<
         TBullet,
         TScene,
         TBullets,
         TPlayers,
-        TRoundIntro,
+        TDuelIntro,
         TAmmo,
         TParticleLayer,
         TPositionSync,
-        TRoundData,
+        TDuelData,
         TScoreKeeper,
         TTimers,
-        TRoundState
+        TDuelState
     >
 ) {
     const scene = options.createScene();
     const bullets = options.createBullets(scene);
     const players = options.createPlayers(scene, bullets);
-    const roundIntro = options.createRoundIntro(players);
+    const duelIntro = options.createDuelIntro(players);
 
     options.Bullet.onRicochet = options.playRicochet;
 
@@ -75,9 +75,9 @@ export function create<
         particleLayer: options.createParticleLayer(),
         players,
         positionSync: options.createPositionSync(),
-        roundData: options.createRoundData(),
-        roundIntro,
-        roundState: options.initialRoundState,
+        duelData: options.createDuelData(),
+        duelIntro,
+        duelState: options.initialDuelState,
         scene,
         scoreKeeper: options.createScoreKeeper(),
         timers: options.createTimers()

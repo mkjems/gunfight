@@ -1,8 +1,8 @@
 import { Config } from '../platform/config.js';
-import { RoundState } from '../state/clientScreens.js';
+import { DuelState } from '../state/clientScreens.js';
 import { CLIENT_TIMER, type ClientTimerName } from '../state/clientTimers.js';
 
-type ClientRoundResetOptions = {
+type ClientDuelResetOptions = {
     bullets: {
         reset: () => void;
     };
@@ -14,29 +14,29 @@ type ClientRoundResetOptions = {
     };
     renderHud: () => void;
     resetAmmo?: () => void;
-    roundData: {
-        resetRoundFlags: () => void;
+    duelData: {
+        resetDuelFlags: () => void;
     };
-    setRoundMessage: (message: string) => void;
-    setRoundState: (roundState: RoundState) => void;
+    setDuelMessage: (message: string) => void;
+    setDuelState: (duelState: DuelState) => void;
     syncNameEditor: () => void;
     timers: {
         clearMany: (names: string[]) => void;
     };
 };
 
-type ResetToStartScreenOptions = Omit<ClientRoundResetOptions, 'resetAmmo'> & {
+type ResetToStartScreenOptions = Omit<ClientDuelResetOptions, 'resetAmmo'> & {
     resetAmmo: () => void;
 };
 
-type SharedRoundResetOptions = Pick<
-    ClientRoundResetOptions,
-    'bullets' | 'roundData' | 'setRoundMessage' | 'timers'
+type SharedDuelResetOptions = Pick<
+    ClientDuelResetOptions,
+    'bullets' | 'duelData' | 'setDuelMessage' | 'timers'
 >;
 
 type WaitingStateOptions = Pick<
-    ClientRoundResetOptions,
-    'renderHud' | 'setRoundState' | 'syncNameEditor'
+    ClientDuelResetOptions,
+    'renderHud' | 'setDuelState' | 'syncNameEditor'
 >;
 
 const RESET_TIMERS: ClientTimerName[] = [
@@ -44,12 +44,12 @@ const RESET_TIMERS: ClientTimerName[] = [
     CLIENT_TIMER.MatchEnd
 ];
 
-export function resetRound(options: ClientRoundResetOptions) {
+export function resetDuel(options: ClientDuelResetOptions) {
     options.players.resetAll({
         showStraightnessMeter: false,
         slots: Config.player.lobbySlots
     });
-    resetSharedRoundState(options);
+    resetSharedDuelState(options);
     showWaitingState(options);
 }
 
@@ -58,25 +58,25 @@ export function resetToStartScreen(options: ResetToStartScreenOptions) {
         showStraightnessMeter: false,
         slots: Config.player.lobbySlots
     });
-    resetSharedRoundState(options);
+    resetSharedDuelState(options);
     options.resetAmmo();
     showWaitingState(options);
 }
 
-function resetSharedRoundState(options: SharedRoundResetOptions) {
+function resetSharedDuelState(options: SharedDuelResetOptions) {
     options.bullets.reset();
-    options.setRoundMessage('');
-    options.roundData.resetRoundFlags();
+    options.setDuelMessage('');
+    options.duelData.resetDuelFlags();
     options.timers.clearMany(RESET_TIMERS);
 }
 
 function showWaitingState(options: WaitingStateOptions) {
-    options.setRoundState(RoundState.WAITING);
+    options.setDuelState(DuelState.WAITING);
     options.syncNameEditor();
     options.renderHud();
 }
 
-export const ClientRoundResetFlow = {
-    resetRound,
+export const ClientDuelResetFlow = {
+    resetDuel,
     resetToStartScreen
 };

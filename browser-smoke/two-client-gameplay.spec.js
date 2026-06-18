@@ -7,7 +7,7 @@ const SOCKET_EVENT = {
     ModelUpdate: 'modelUpdate',
     NewClient: 'newClient',
     Requeue: 'requeue',
-    RoundResult: 'roundResult'
+    DuelResult: 'duelResult'
 };
 
 function captureBrowserErrors(page, label, browserErrors) {
@@ -217,7 +217,7 @@ function getWinningScoreSelector(scoreLabel) {
         : '#scoreRight span:last-child';
 }
 
-async function createRoundResultPayload(page) {
+async function createDuelResultPayload(page) {
     return page.evaluate(function () {
         const joined = window.__gunfightJoinedGame;
         const model = window.__gunfightLatestModel;
@@ -226,20 +226,20 @@ async function createRoundResultPayload(page) {
         });
 
         return {
-            roundNumber: model.roundNumber,
+            duelNumber: model.duelNumber,
             targetId: target.id,
             winnerId: joined.playerId
         };
     });
 }
 
-async function emitRoundResult(page, payload) {
+async function emitDuelResult(page, payload) {
     await page.evaluate(
         function ({ eventName, resultPayload }) {
             window.__gunfightSockets[0].emit(eventName, resultPayload);
         },
         {
-            eventName: SOCKET_EVENT.RoundResult,
+            eventName: SOCKET_EVENT.DuelResult,
             resultPayload: payload
         }
     );
@@ -462,20 +462,20 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
     await readyWithTouch(mobile);
 
     await Promise.all([
-        expect(desktop.locator('#roundMessage')).toHaveText('GET READY'),
-        expect(mobile.locator('#roundMessage')).toHaveText('GET READY')
+        expect(desktop.locator('#duelMessage')).toHaveText('GET READY'),
+        expect(mobile.locator('#duelMessage')).toHaveText('GET READY')
     ]);
     await captureMobileScreenshot(mobile, testInfo, 'mobile-02-get-ready.png');
 
     await Promise.all([
-        expect(desktop.locator('#roundMessage')).toHaveText('DRAW!'),
-        expect(mobile.locator('#roundMessage')).toHaveText('DRAW!')
+        expect(desktop.locator('#duelMessage')).toHaveText('DRAW!'),
+        expect(mobile.locator('#duelMessage')).toHaveText('DRAW!')
     ]);
     await captureMobileScreenshot(mobile, testInfo, 'mobile-03-draw.png');
 
     await Promise.all([
-        expect(desktop.locator('#roundMessage')).toHaveText(''),
-        expect(mobile.locator('#roundMessage')).toHaveText('')
+        expect(desktop.locator('#duelMessage')).toHaveText(''),
+        expect(mobile.locator('#duelMessage')).toHaveText('')
     ]);
 
     await Promise.all([
@@ -556,7 +556,7 @@ test('desktop and mobile clients can ready up and reach gameplay', async ({
     await mobileContext.close();
 });
 
-test('server hit pause holds score until next round and server game over returns to lobby', async ({
+test('server hit pause holds score until next duel and server game over returns to lobby', async ({
     browser
 }) => {
     test.setTimeout(60000);
@@ -603,14 +603,14 @@ test('server hit pause holds score until next round and server game over returns
         waitForPhase(playerB, 'playing')
     ]);
 
-    const roundResult = await createRoundResultPayload(playerA);
+    const duelResult = await createDuelResultPayload(playerA);
     const expectedScore = await getExpectedScoreForWinner(
         playerA,
-        roundResult.winnerId
+        duelResult.winnerId
     );
     const winningScoreSelector = getWinningScoreSelector(expectedScore);
 
-    await emitRoundResult(playerA, roundResult);
+    await emitDuelResult(playerA, duelResult);
     await Promise.all([
         waitForPhase(playerA, 'hitPause'),
         waitForPhase(playerB, 'hitPause'),
@@ -620,15 +620,15 @@ test('server hit pause holds score until next round and server game over returns
         expect(playerB.locator(winningScoreSelector)).toHaveText('1')
     ]);
 
-    const [roundIntroModelA, roundIntroModelB] = await Promise.all([
-        waitForPhase(playerA, 'roundIntro'),
-        waitForPhase(playerB, 'roundIntro')
+    const [duelIntroModelA, duelIntroModelB] = await Promise.all([
+        waitForPhase(playerA, 'duelIntro'),
+        waitForPhase(playerB, 'duelIntro')
     ]);
 
-    expect(roundIntroModelA.roundNumber).toBe(roundResult.roundNumber + 1);
-    expect(roundIntroModelB.roundNumber).toBe(roundResult.roundNumber + 1);
-    expect(roundIntroModelA.scores.join('-')).toBe(expectedScore);
-    expect(roundIntroModelB.scores.join('-')).toBe(expectedScore);
+    expect(duelIntroModelA.duelNumber).toBe(duelResult.duelNumber + 1);
+    expect(duelIntroModelB.duelNumber).toBe(duelResult.duelNumber + 1);
+    expect(duelIntroModelA.scores.join('-')).toBe(expectedScore);
+    expect(duelIntroModelB.scores.join('-')).toBe(expectedScore);
 
     await Promise.all([
         expect(playerA.locator(winningScoreSelector)).toHaveText('1'),
@@ -640,10 +640,10 @@ test('server hit pause holds score until next round and server game over returns
         waitForPhase(playerB, 'gameOver')
     ]);
     await Promise.all([
-        expect(playerA.locator('#roundMessage')).toContainText(
+        expect(playerA.locator('#duelMessage')).toContainText(
             'WINS ' + expectedScore
         ),
-        expect(playerB.locator('#roundMessage')).toContainText(
+        expect(playerB.locator('#duelMessage')).toContainText(
             'WINS ' + expectedScore
         )
     ]);
@@ -669,7 +669,7 @@ test('server hit pause holds score until next round and server game over returns
     await contextB.close();
 });
 
-test('abandoned games requeue safely and reject late round reports', async ({
+test('abandoned games requeue safely and reject late duel reports', async ({
     browser
 }) => {
     test.setTimeout(45000);
@@ -708,7 +708,7 @@ test('abandoned games requeue safely and reject late round reports', async ({
     await readyWithKeyboard(playerB);
     await waitForPhase(playerA, 'playing');
 
-    const staleRoundResult = await createRoundResultPayload(playerA);
+    const staleDuelResult = await createDuelResultPayload(playerA);
 
     await playerB.close();
     const abandonedModel = await waitForPhase(playerA, 'abandoned');
@@ -717,7 +717,7 @@ test('abandoned games requeue safely and reject late round reports', async ({
 
     const eventsBeforeLateReport = (await getSocketEvents(playerA)).length;
 
-    await emitRoundResult(playerA, staleRoundResult);
+    await emitDuelResult(playerA, staleDuelResult);
     await playerA.waitForTimeout(300);
 
     expect((await getSocketEvents(playerA)).length).toBe(
@@ -841,8 +841,8 @@ test('alone waiting clients are auto paired after opponents leave', async ({
     await readyWithKeyboard(playerC);
 
     await Promise.all([
-        expect(playerA.locator('#roundMessage')).toHaveText('GET READY'),
-        expect(playerC.locator('#roundMessage')).toHaveText('GET READY')
+        expect(playerA.locator('#duelMessage')).toHaveText('GET READY'),
+        expect(playerC.locator('#duelMessage')).toHaveText('GET READY')
     ]);
 
     expect(browserErrors).toEqual([]);

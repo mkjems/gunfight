@@ -34,14 +34,14 @@ function startPlayingGame(lobby, first, second) {
     assert.equal(lobby.readyClient(first.game, second.client), true);
     assert.equal(lobby.getModel(first.game).phase, 'readyCountdown');
     assert.equal(lobby.startMatch(first.game), true);
-    assert.equal(lobby.getModel(first.game).phase, 'roundIntro');
+    assert.equal(lobby.getModel(first.game).phase, 'duelIntro');
     assert.equal(lobby.enterPlaying(first.game), null);
     assert.equal(lobby.getModel(first.game).phase, 'playing');
 }
 
 function advanceAfterHit(lobby, game) {
     assert.equal(lobby.finishHitPause(game), null);
-    assert.equal(lobby.getModel(game).phase, 'roundIntro');
+    assert.equal(lobby.getModel(game).phase, 'duelIntro');
 }
 
 function cloneModel(model) {
@@ -208,7 +208,7 @@ test('does not allow a client to become ready before an opponent joins', functio
     );
 });
 
-test('records round results on the server and rejects stale duplicates', function () {
+test('records duel results on the server and rejects stale duplicates', function () {
     const lobby = createTestLobby();
     const first = lobby.join('socket-1', { name: 'one' });
     const second = lobby.join('socket-2', { name: 'two' });
@@ -219,11 +219,11 @@ test('records round results on the server and rejects stale duplicates', functio
     assert.equal(lobby.getModel(first.game).matchState, 'playing');
     assert.equal(lobby.getModel(first.game).phase, 'playing');
     assert.equal(typeof lobby.getModel(first.game).matchEndsAt, 'number');
-    assert.equal(lobby.getModel(first.game).roundNumber, 1);
+    assert.equal(lobby.getModel(first.game).duelNumber, 1);
 
     assert.equal(
-        lobby.recordRoundResult(first.game, {
-            roundNumber: 1,
+        lobby.recordDuelResult(first.game, {
+            duelNumber: 1,
             targetId: second.client.id,
             winnerId: first.client.id
         }),
@@ -232,11 +232,11 @@ test('records round results on the server and rejects stale duplicates', functio
 
     assert.deepEqual(lobby.getModel(first.game).scores, [1, 0]);
     assert.equal(lobby.getModel(first.game).phase, 'hitPause');
-    assert.equal(lobby.getModel(first.game).roundNumber, 1);
+    assert.equal(lobby.getModel(first.game).duelNumber, 1);
 
     assert.equal(
-        lobby.recordRoundResult(first.game, {
-            roundNumber: 1,
+        lobby.recordDuelResult(first.game, {
+            duelNumber: 1,
             targetId: second.client.id,
             winnerId: first.client.id
         }),
@@ -244,7 +244,7 @@ test('records round results on the server and rejects stale duplicates', functio
     );
     assert.deepEqual(lobby.getModel(first.game).scores, [1, 0]);
     advanceAfterHit(lobby, first.game);
-    assert.equal(lobby.getModel(first.game).roundNumber, 2);
+    assert.equal(lobby.getModel(first.game).duelNumber, 2);
 });
 
 test('finishes matches from server-owned scores for high scores', function () {
@@ -254,8 +254,8 @@ test('finishes matches from server-owned scores for high scores', function () {
     const second = lobby.join('socket-2', { name: 'two' });
 
     startPlayingGame(lobby, first, second);
-    lobby.recordRoundResult(first.game, {
-        roundNumber: 1,
+    lobby.recordDuelResult(first.game, {
+        duelNumber: 1,
         targetId: second.client.id,
         winnerId: first.client.id
     });
@@ -268,7 +268,7 @@ test('finishes matches from server-owned scores for high scores', function () {
     assert.deepEqual(result, {
         resultId: 'G0001:2',
         gameId: 'G0001',
-        roundNumber: 2,
+        duelNumber: 2,
         clients: [
             { name: 'ONE', slot: 0 },
             { name: 'TWO', slot: 1 }
@@ -337,8 +337,8 @@ test('keeps game rooms and models isolated', function () {
     const secondB = lobby.join('b-2', { name: 'rex' });
 
     startPlayingGame(lobby, firstA, secondA);
-    lobby.recordRoundResult(firstA.game, {
-        roundNumber: 1,
+    lobby.recordDuelResult(firstA.game, {
+        duelNumber: 1,
         targetId: secondA.client.id,
         winnerId: firstA.client.id
     });
@@ -348,10 +348,10 @@ test('keeps game rooms and models isolated', function () {
     assert.notEqual(firstA.game.room, firstB.game.room);
     assert.equal(lobby.getGameForSocket('a-1').id, firstA.game.id);
     assert.equal(lobby.getGameForSocket('b-1').id, firstB.game.id);
-    assert.equal(lobby.getModel(firstA.game).phase, 'roundIntro');
+    assert.equal(lobby.getModel(firstA.game).phase, 'duelIntro');
     assert.equal(lobby.getModel(firstB.game).phase, 'readying');
-    assert.equal(lobby.getModel(firstA.game).roundNumber, 2);
-    assert.equal(lobby.getModel(firstB.game).roundNumber, 0);
+    assert.equal(lobby.getModel(firstA.game).duelNumber, 2);
+    assert.equal(lobby.getModel(firstB.game).duelNumber, 0);
     assert.deepEqual(
         lobby.getModel(firstA.game).clients.map(function (client) {
             return client.name;
@@ -421,8 +421,8 @@ test('versions accepted slow-state changes that affect the public model', functi
     );
     assert.equal(
         assertVersionIncreased(lobby, first.game, function () {
-            return lobby.recordRoundResult(first.game, {
-                roundNumber: 1,
+            return lobby.recordDuelResult(first.game, {
+                duelNumber: 1,
                 targetId: second.client.id,
                 winnerId: first.client.id
             });
@@ -499,8 +499,8 @@ test('leaves rejected slow-state intents as public model no-ops', function () {
     );
     assert.equal(
         assertModelUnchanged(lobby, first.game, function () {
-            return lobby.recordRoundResult(first.game, {
-                roundNumber: 2,
+            return lobby.recordDuelResult(first.game, {
+                duelNumber: 2,
                 targetId: second.client.id,
                 winnerId: first.client.id
             });
@@ -508,8 +508,8 @@ test('leaves rejected slow-state intents as public model no-ops', function () {
         false
     );
     assert.equal(
-        lobby.recordRoundResult(first.game, {
-            roundNumber: 1,
+        lobby.recordDuelResult(first.game, {
+            duelNumber: 1,
             targetId: second.client.id,
             winnerId: first.client.id
         }),
@@ -517,8 +517,8 @@ test('leaves rejected slow-state intents as public model no-ops', function () {
     );
     assert.equal(
         assertModelUnchanged(lobby, first.game, function () {
-            return lobby.recordRoundResult(first.game, {
-                roundNumber: 1,
+            return lobby.recordDuelResult(first.game, {
+                duelNumber: 1,
                 targetId: second.client.id,
                 winnerId: first.client.id
             });
@@ -658,8 +658,8 @@ test('disconnect during timed active phases abandons the game and rejects late r
             assertLateEvents(lobby, game, first, second) {
                 assert.equal(lobby.startMatch(game), false);
                 assert.equal(
-                    lobby.recordRoundResult(game, {
-                        roundNumber: 1,
+                    lobby.recordDuelResult(game, {
+                        duelNumber: 1,
                         targetId: second.client.id,
                         winnerId: first.client.id
                     }),
@@ -668,7 +668,7 @@ test('disconnect during timed active phases abandons the game and rejects late r
             }
         },
         {
-            phase: 'roundIntro',
+            phase: 'duelIntro',
             prepare(lobby, first, second) {
                 assert.equal(lobby.readyClient(first.game, first.client), true);
                 assert.equal(
@@ -680,8 +680,8 @@ test('disconnect during timed active phases abandons the game and rejects late r
             assertLateEvents(lobby, game, first, second) {
                 assert.equal(lobby.enterPlaying(game), null);
                 assert.equal(
-                    lobby.recordRoundResult(game, {
-                        roundNumber: 1,
+                    lobby.recordDuelResult(game, {
+                        duelNumber: 1,
                         targetId: second.client.id,
                         winnerId: first.client.id
                     }),
@@ -694,8 +694,8 @@ test('disconnect during timed active phases abandons the game and rejects late r
             prepare(lobby, first, second) {
                 startPlayingGame(lobby, first, second);
                 assert.equal(
-                    lobby.recordRoundResult(first.game, {
-                        roundNumber: 1,
+                    lobby.recordDuelResult(first.game, {
+                        duelNumber: 1,
                         targetId: second.client.id,
                         winnerId: first.client.id
                     }),
@@ -705,8 +705,8 @@ test('disconnect during timed active phases abandons the game and rejects late r
             assertLateEvents(lobby, game, first, second) {
                 assert.equal(lobby.finishHitPause(game), null);
                 assert.equal(
-                    lobby.recordRoundResult(game, {
-                        roundNumber: 1,
+                    lobby.recordDuelResult(game, {
+                        duelNumber: 1,
                         targetId: second.client.id,
                         winnerId: first.client.id
                     }),

@@ -130,9 +130,9 @@ function createStartupDependencies(onNetworkStart) {
                         particleLayer: {},
                         players: {},
                         positionSync: {},
-                        roundData: {},
-                        roundIntro: {},
-                        roundState: options.initialRoundState,
+                        duelData: {},
+                        duelIntro: {},
+                        duelState: options.initialDuelState,
                         scene: {},
                         scoreKeeper: {},
                         timers: {}
@@ -162,7 +162,7 @@ function createStartupDependencies(onNetworkStart) {
             ClientLobbyViewModel: {},
             ClientModelSync: {},
             ClientScreens: {
-                RoundState: {
+                DuelState: {
                     WAITING: 'waiting'
                 }
             }

@@ -54,9 +54,9 @@ function createUpdateOptions() {
             checkForHits() {
                 calls.push('checkForHits');
             },
-            roundIntro: {
+            duelIntro: {
                 update() {
-                    calls.push('roundIntro.update');
+                    calls.push('duelIntro.update');
                 }
             },
             scene: {
@@ -133,7 +133,7 @@ function createRenderOptions(overrides = {}) {
         renderHud() {
             calls.push('renderHud');
         },
-        roundState: 'playing',
+        duelState: 'playing',
         scene: {
             drawAll() {
                 calls.push('scene.drawAll');
@@ -171,7 +171,7 @@ test('updates one frame in simulation order', async function () {
         'updateMovementObstacleEnvironment',
         'updateParticles',
         'scene.moveAll',
-        'roundIntro.update',
+        'duelIntro.update',
         'syncLocalPlayerPosition',
         'checkForHits',
         'updateCamera'
@@ -205,7 +205,7 @@ test('renders one gameplay frame with camera and scenario', async function () {
 test('renders waiting frame without camera or scenario', async function () {
     const frameFlow = await loadClientFrameFlow();
     const { calls, options } = createRenderOptions({
-        roundState: 'waiting',
+        duelState: 'waiting',
         shouldUseCamera() {
             return false;
         }

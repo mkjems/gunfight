@@ -402,7 +402,7 @@ export function ScenarioRenderer(options: ScenarioRendererOptions) {
     }
 
     function isMoneyBagVisible(moneyBag: MoneyBag) {
-        return getRoundElapsedSeconds() >= moneyBag.gameRoundSeconds;
+        return getDuelElapsedSeconds() >= moneyBag.gameRoundSeconds;
     }
 
     function drawMoneyBag(moneyBag: MoneyBag) {
@@ -444,7 +444,7 @@ export function ScenarioRenderer(options: ScenarioRendererOptions) {
 
     function getMoneyBagFrame(moneyBag: MoneyBag) {
         const elapsedMs =
-            (getRoundElapsedSeconds() - moneyBag.gameRoundSeconds) * 1000;
+            (getDuelElapsedSeconds() - moneyBag.gameRoundSeconds) * 1000;
 
         return Math.min(
             Config.moneyBag.frames - 1,
@@ -502,7 +502,7 @@ export function ScenarioRenderer(options: ScenarioRendererOptions) {
     }
 
     function getWagonPosition(wagon: Wagon) {
-        const elapsed = getRoundElapsedMs();
+        const elapsed = getDuelElapsedMs();
         const duration = wagon.duration || 10000;
         const progress = Math.min(1, Math.max(0, elapsed / duration));
 
@@ -512,11 +512,11 @@ export function ScenarioRenderer(options: ScenarioRendererOptions) {
         };
     }
 
-    function getRoundElapsedSeconds() {
-        return getRoundElapsedMs() / 1000;
+    function getDuelElapsedSeconds() {
+        return getDuelElapsedMs() / 1000;
     }
 
-    function getRoundElapsedMs() {
+    function getDuelElapsedMs() {
         const scenarioStartedAt = getScenarioStartedAt();
 
         return scenarioStartedAt ? getTime() - scenarioStartedAt : 0;

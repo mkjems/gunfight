@@ -51,7 +51,7 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('builds game HUD state from scores and round data', async function () {
+test('builds game HUD state from scores and duel data', async function () {
     const viewModel = await loadGameHudViewModel();
 
     assert.deepEqual(
@@ -65,18 +65,18 @@ test('builds game HUD state from scores and round data', async function () {
                 },
                 defaultSeconds: 70,
                 players: { all: {} },
-                roundData: {
+                duelData: {
                     getHitMessage() {
                         return null;
                     },
-                    getRoundMessage() {
+                    getDuelMessage() {
                         return 'DRAW!';
                     },
                     getSecondsLeft(defaultSeconds) {
                         return defaultSeconds - 3;
                     }
                 },
-                roundState: 'playing',
+                duelState: 'playing',
                 scoreKeeper: {
                     getScore(slot) {
                         return slot + 2;
@@ -88,7 +88,7 @@ test('builds game HUD state from scores and round data', async function () {
             leftScore: 2,
             rightScore: 3,
             timerLabel: 67,
-            roundMessage: 'DRAW!',
+            duelMessage: 'DRAW!',
             hitMessage: null
         }
     );
@@ -100,12 +100,12 @@ test('shows game over as the timer label', async function () {
     assert.equal(
         viewModel.getTimerLabel({
             defaultSeconds: 70,
-            roundData: {
+            duelData: {
                 getSecondsLeft() {
                     return 12;
                 }
             },
-            roundState: 'gameOver'
+            duelState: 'gameOver'
         }),
         'GAME OVER'
     );
@@ -121,7 +121,7 @@ test('projects hit messages through the camera controller', async function () {
                 cameraController: {
                     worldToHudPoint(options) {
                         assert.equal(options.camera.id, 'camera');
-                        assert.equal(options.roundState, 'playing');
+                        assert.equal(options.duelState, 'playing');
                         assert.equal(options.x, 120);
                         assert.equal(options.y, 80);
 
@@ -139,7 +139,7 @@ test('projects hit messages through the camera controller', async function () {
                         }
                     }
                 },
-                roundData: {
+                duelData: {
                     getHitMessage() {
                         return {
                             targetId: 'p2',
@@ -147,7 +147,7 @@ test('projects hit messages through the camera controller', async function () {
                         };
                     }
                 },
-                roundState: 'playing'
+                duelState: 'playing'
             })
         ),
         {

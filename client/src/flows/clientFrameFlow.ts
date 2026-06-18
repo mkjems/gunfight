@@ -1,9 +1,9 @@
-import { RoundState } from '../state/clientScreens.js';
+import { DuelState } from '../state/clientScreens.js';
 
 type UpdateOptions = {
     checkForHits: () => void;
     updateParticles: () => void;
-    roundIntro: {
+    duelIntro: {
         update: () => void;
     };
     scene: {
@@ -41,7 +41,7 @@ type RenderOptions = {
     };
     particleContext: RenderContext;
     renderHud: () => void;
-    roundState: RoundState;
+    duelState: DuelState;
     scene: {
         drawAll: (context: RenderContext) => void;
     };
@@ -54,7 +54,7 @@ export function update(options: UpdateOptions) {
     options.updateMovementObstacleEnvironment();
     options.updateParticles();
     options.scene.moveAll();
-    options.roundIntro.update();
+    options.duelIntro.update();
     options.syncLocalPlayerPosition();
     options.checkForHits();
     options.updateCamera();
@@ -79,7 +79,7 @@ export function render(options: RenderOptions) {
         options.camera.apply(options.context);
     }
 
-    if (options.roundState !== RoundState.WAITING) {
+    if (options.duelState !== DuelState.WAITING) {
         options.drawScenario();
     }
 

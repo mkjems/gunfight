@@ -16,7 +16,7 @@ import {
     normalizeBulletSnapshot,
     normalizeGameResultPayload,
     normalizeObstacleDamagePayload,
-    normalizeRoundResultPayload,
+    normalizeDuelResultPayload,
     parseRockDefinitions,
     parseScenarioSources,
     resolveScenarioSource,
@@ -43,7 +43,7 @@ const shot = {
 test('exports lifecycle phase constants and guard', function () {
     assert.equal(GAME_PHASE.Playing, 'playing');
     assert.ok(GAME_PHASE_VALUES.includes(GAME_PHASE.HitPause));
-    assert.equal(isGamePhase('roundIntro'), true);
+    assert.equal(isGamePhase('duelIntro'), true);
     assert.equal(isGamePhase('not-a-phase'), false);
 });
 
@@ -58,7 +58,7 @@ test('exports socket event constants and guard', function () {
     assert.equal(SOCKET_EVENT.ClientReady, 'clientReady');
     assert.equal(SOCKET_EVENT.ModelUpdate, 'modelUpdate');
     assert.equal(SOCKET_EVENT.KeyEvent, 'keyEvent');
-    assert.ok(SOCKET_EVENT_VALUES.includes(SOCKET_EVENT.RoundResult));
+    assert.ok(SOCKET_EVENT_VALUES.includes(SOCKET_EVENT.DuelResult));
     assert.equal(isSocketEvent('obstacleDamage'), true);
     assert.equal(isSocketEvent('not-an-event'), false);
 });
@@ -195,12 +195,12 @@ test('normalizes obstacle damage payloads', function () {
         normalizeObstacleDamagePayload({
             id: 'rock-1',
             ownerId: 2,
-            roundNumber: 4
+            duelNumber: 4
         }),
         {
             id: 'rock-1',
             ownerId: 2,
-            roundNumber: 4
+            duelNumber: 4
         }
     );
 
@@ -208,29 +208,29 @@ test('normalizes obstacle damage payloads', function () {
         normalizeObstacleDamagePayload({
             id: '',
             ownerId: 2,
-            roundNumber: 4
+            duelNumber: 4
         }),
         null
     );
 });
 
-test('normalizes round result payloads', function () {
+test('normalizes duel result payloads', function () {
     assert.deepEqual(
-        normalizeRoundResultPayload({
-            roundNumber: 4,
+        normalizeDuelResultPayload({
+            duelNumber: 4,
             targetId: '2',
             winnerId: '1'
         }),
         {
-            roundNumber: 4,
+            duelNumber: 4,
             targetId: 2,
             winnerId: 1
         }
     );
 
     assert.equal(
-        normalizeRoundResultPayload({
-            roundNumber: 4,
+        normalizeDuelResultPayload({
+            duelNumber: 4,
             targetId: 2,
             winnerId: Number.POSITIVE_INFINITY
         }),
@@ -243,7 +243,7 @@ test('normalizes game result payloads', function () {
         normalizeGameResultPayload({
             resultId: 'G0001:2',
             gameId: 'G0001',
-            roundNumber: 2,
+            duelNumber: 2,
             clients: [
                 {
                     name: 'KID',
@@ -259,7 +259,7 @@ test('normalizes game result payloads', function () {
         {
             resultId: 'G0001:2',
             gameId: 'G0001',
-            roundNumber: 2,
+            duelNumber: 2,
             clients: [
                 {
                     name: 'KID',

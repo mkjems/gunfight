@@ -5,59 +5,59 @@ type HitMessage = {
     text?: string;
 };
 
-type ClientRoundStateOptions = {
+type ClientDuelStateOptions = {
     getTime?: () => number;
 };
 
-export function ClientRoundState(options: ClientRoundStateOptions = {}) {
+export function ClientDuelState(options: ClientDuelStateOptions = {}) {
     const getTime =
         options.getTime ||
         function () {
             return new Date().getTime();
         };
-    let roundEndsAt: number | null = null;
-    let roundMessage = '';
+    let matchEndsAt: number | null = null;
+    let duelMessage = '';
     let hitMessage: HitMessage | null = null;
     let scenarioStartedAt: number | null = null;
     let obstacleDamage: Record<string, number> = {};
 
-    function resetRoundFlags(): void {
-        roundEndsAt = null;
+    function resetDuelFlags(): void {
+        matchEndsAt = null;
         hitMessage = null;
         obstacleDamage = {};
     }
 
-    function clearRoundPauseFlags(): void {
-        roundEndsAt = null;
+    function clearDuelPauseFlags(): void {
+        matchEndsAt = null;
         hitMessage = null;
     }
 
     function getSecondsLeft(defaultSeconds: number): number {
-        if (!roundEndsAt) {
+        if (!matchEndsAt) {
             return defaultSeconds;
         }
 
-        return Math.max(0, Math.ceil((roundEndsAt - getTime()) / 1000));
+        return Math.max(0, Math.ceil((matchEndsAt - getTime()) / 1000));
     }
 
-    function setRoundEndsAt(value: number | null): void {
-        roundEndsAt = value;
+    function setMatchEndsAt(value: number | null): void {
+        matchEndsAt = value;
     }
 
-    function getRoundEndsAt(): number | null {
-        return roundEndsAt;
+    function getMatchEndsAt(): number | null {
+        return matchEndsAt;
     }
 
-    function clearRoundEnd(): void {
-        roundEndsAt = null;
+    function clearMatchEnd(): void {
+        matchEndsAt = null;
     }
 
-    function setRoundMessage(message?: string): void {
-        roundMessage = message || '';
+    function setDuelMessage(message?: string): void {
+        duelMessage = message || '';
     }
 
-    function getRoundMessage(): string {
-        return roundMessage;
+    function getDuelMessage(): string {
+        return duelMessage;
     }
 
     function setHitMessage(message: HitMessage | null): void {
@@ -95,19 +95,19 @@ export function ClientRoundState(options: ClientRoundStateOptions = {}) {
     return {
         clearHitMessage,
         clearObstacleDamage,
-        clearRoundPauseFlags,
-        clearRoundEnd,
+        clearDuelPauseFlags,
+        clearMatchEnd,
         damageObstacle,
         getHitMessage,
         getObstacleDamage,
-        getRoundEndsAt,
-        getRoundMessage,
+        getMatchEndsAt,
+        getDuelMessage,
         getScenarioStartedAt,
         getSecondsLeft,
-        resetRoundFlags,
+        resetDuelFlags,
         setHitMessage,
-        setRoundEndsAt,
-        setRoundMessage,
+        setMatchEndsAt,
+        setDuelMessage,
         startScenario
     };
 }

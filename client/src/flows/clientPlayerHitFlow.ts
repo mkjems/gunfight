@@ -1,10 +1,10 @@
 import type { SocketEvent } from '../../../shared/contracts.js';
 import { Config } from '../platform/config.js';
-import { RoundState } from '../state/clientScreens.js';
+import { DuelState } from '../state/clientScreens.js';
 import { CLIENT_TIMER } from '../state/clientTimers.js';
 
 const SOCKET_EVENT = {
-    RoundResult: 'roundResult'
+    DuelResult: 'duelResult'
 } as const satisfies Record<string, SocketEvent>;
 
 type ClientId = number | string;
@@ -14,8 +14,8 @@ type Player = {
     playDeathAnimation?: () => void;
 };
 
-type RoundResultModel = {
-    roundNumber?: number;
+type DuelResultModel = {
+    duelNumber?: number;
 };
 
 type Players = {
@@ -31,21 +31,21 @@ type HandleHitOptions = {
         targetId: ClientId;
         winnerId: ClientId;
     };
-    model?: RoundResultModel | null;
+    model?: DuelResultModel | null;
     playerId: ClientId;
     players: Players;
     playPain: () => void;
     renderHud: () => void;
     resetAfterHit: () => void;
-    roundData: {
+    duelData: {
         setHitMessage: (message: { targetId: ClientId; text: string }) => void;
     };
-    setRoundState: (roundState: RoundState) => void;
+    setDuelState: (duelState: DuelState) => void;
     socket: {
         emit: (
-            event: typeof SOCKET_EVENT.RoundResult,
+            event: typeof SOCKET_EVENT.DuelResult,
             payload: {
-                roundNumber: number | undefined;
+                duelNumber: number | undefined;
                 targetId: ClientId;
                 winnerId: ClientId;
             }
@@ -68,7 +68,7 @@ type ResetAfterHitOptions = {
         all: Record<string, Player>;
     };
     resetAmmo: () => void;
-    roundData: {
+    duelData: {
         clearHitMessage: () => void;
     };
 };
@@ -76,8 +76,8 @@ type ResetAfterHitOptions = {
 export function handleHit(options: HandleHitOptions) {
     const target = options.players.all[options.hit.targetId];
 
-    options.setRoundState(RoundState.HIT_PAUSE);
-    options.roundData.setHitMessage({
+    options.setDuelState(DuelState.HIT_PAUSE);
+    options.duelData.setHitMessage({
         targetId: options.hit.targetId,
         text: 'Got me!'
     });
@@ -88,8 +88,8 @@ export function handleHit(options: HandleHitOptions) {
     }
 
     if (options.hit.winnerId === options.playerId) {
-        options.socket.emit(SOCKET_EVENT.RoundResult, {
-            roundNumber: options.model?.roundNumber,
+        options.socket.emit(SOCKET_EVENT.DuelResult, {
+            duelNumber: options.model?.duelNumber,
             targetId: options.hit.targetId,
             winnerId: options.hit.winnerId
         });
@@ -101,12 +101,12 @@ export function handleHit(options: HandleHitOptions) {
     options.timers.set(
         CLIENT_TIMER.Hit,
         options.resetAfterHit,
-        Config.round.resetDelay
+        Config.duel.resetDelay
     );
 }
 
 export function resetAfterHit(options: ResetAfterHitOptions) {
-    options.roundData.clearHitMessage();
+    options.duelData.clearHitMessage();
     clearPlayerDeathAnimations(options.players);
 
     options.bullets.reset();

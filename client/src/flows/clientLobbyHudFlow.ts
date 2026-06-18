@@ -18,7 +18,7 @@ type LobbyHudFlowOptions = {
     playerId?: Parameters<typeof getLobbyViewModel>[0]['playerId'];
     previousResult?: unknown;
     players?: Parameters<typeof getLobbyViewModel>[0]['players'];
-    roundState: Parameters<typeof getActiveScreen>[0]['roundState'];
+    duelState: Parameters<typeof getActiveScreen>[0]['duelState'];
 };
 
 export type LobbyHudState = {
@@ -89,7 +89,7 @@ export function getState(options: LobbyHudFlowOptions): LobbyHudState {
 
 function getActiveScreenForOptions(options: LobbyHudFlowOptions) {
     return getActiveScreen({
-        roundState: options.roundState,
+        duelState: options.duelState,
         nameEditorActive: !!(
             options.nameEditor && options.nameEditor.isActive()
         ),

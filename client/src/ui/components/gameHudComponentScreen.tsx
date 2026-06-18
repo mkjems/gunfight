@@ -19,7 +19,7 @@ export type GameHudProps = {
     leftScore?: number;
     rightName?: string;
     rightScore?: number;
-    roundMessage?: string;
+    duelMessage?: string;
     timerLabel?: number | string | null;
 };
 
@@ -39,8 +39,8 @@ export function GameHudComponent(options: GameHudProps) {
         <>
             <ScoreRow {...options} />
             <AmmoRow displays={options.ammoDisplays || []} />
-            <div className={styles.roundMessage} id="roundMessage">
-                {toText(options.roundMessage)}
+            <div className={styles.duelMessage} id="duelMessage">
+                {toText(options.duelMessage)}
             </div>
             <HitMessageView hitMessage={options.hitMessage} />
         </>
@@ -60,8 +60,8 @@ export function ScoreRow(options: ScoreRowProps) {
                 side="left"
             />
             <div
-                className={styles.roundTimer}
-                id={getScoreRowId(options, 'roundTimer')}
+                className={styles.matchTimer}
+                id={getScoreRowId(options, 'matchTimer')}
             >
                 {toText(options.timerLabel)}
             </div>
@@ -172,7 +172,7 @@ function getAmmoDisplayClassName(side: AmmoDisplayProps['side']) {
 function createAmmoRounds(count: number) {
     const activeCount = Math.max(0, Math.floor(count));
 
-    return Array.from({ length: Config.round.ammo }, function (_, index) {
+    return Array.from({ length: Config.duel.ammo }, function (_, index) {
         const visible = index < activeCount;
 
         return (

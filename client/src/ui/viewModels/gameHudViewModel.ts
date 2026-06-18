@@ -1,4 +1,4 @@
-import { RoundState } from '../../state/clientScreens.js';
+import { DuelState } from '../../state/clientScreens.js';
 
 type ClientId = number | string;
 
@@ -17,9 +17,9 @@ type HitMessage = {
     text: string;
 };
 
-type RoundData = {
+type DuelData = {
     getHitMessage(): HitMessage | null;
-    getRoundMessage(): string;
+    getDuelMessage(): string;
     getSecondsLeft(defaultSeconds: number): number;
 };
 
@@ -30,7 +30,7 @@ type ScoreKeeper = {
 type CameraController = {
     worldToHudPoint(options: {
         camera: unknown;
-        roundState: RoundState;
+        duelState: DuelState;
         x: number;
         y: number;
     }): Point;
@@ -45,19 +45,19 @@ type HudOptions = {
     cameraController: CameraController;
     defaultSeconds: number;
     players: Players;
-    roundData: RoundData;
-    roundState: RoundState;
+    duelData: DuelData;
+    duelState: DuelState;
     scoreKeeper: ScoreKeeper;
 };
 
 type TimerOptions = Pick<
     HudOptions,
-    'defaultSeconds' | 'roundData' | 'roundState'
+    'defaultSeconds' | 'duelData' | 'duelState'
 >;
 
 type HitMessageOptions = Pick<
     HudOptions,
-    'camera' | 'cameraController' | 'players' | 'roundData' | 'roundState'
+    'camera' | 'cameraController' | 'players' | 'duelData' | 'duelState'
 >;
 
 export function getState(options: HudOptions) {
@@ -65,21 +65,21 @@ export function getState(options: HudOptions) {
         leftScore: options.scoreKeeper.getScore(0),
         rightScore: options.scoreKeeper.getScore(1),
         timerLabel: getTimerLabel(options),
-        roundMessage: options.roundData.getRoundMessage(),
+        duelMessage: options.duelData.getDuelMessage(),
         hitMessage: getHitMessage(options)
     };
 }
 
 export function getTimerLabel(options: TimerOptions): number | string {
-    if (options.roundState === RoundState.GAME_OVER) {
+    if (options.duelState === DuelState.GAME_OVER) {
         return 'GAME OVER';
     }
 
-    return options.roundData.getSecondsLeft(options.defaultSeconds);
+    return options.duelData.getSecondsLeft(options.defaultSeconds);
 }
 
 export function getHitMessage(options: HitMessageOptions) {
-    const hitMessage = options.roundData.getHitMessage();
+    const hitMessage = options.duelData.getHitMessage();
 
     if (!hitMessage) {
         return null;
@@ -93,7 +93,7 @@ export function getHitMessage(options: HitMessageOptions) {
 
     const point = options.cameraController.worldToHudPoint({
         camera: options.camera,
-        roundState: options.roundState,
+        duelState: options.duelState,
         x: target.x,
         y: Math.max(80, target.y - 150)
     });

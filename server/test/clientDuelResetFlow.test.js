@@ -24,7 +24,7 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
     writeFileSync(outputPath, transpiled.outputText, 'utf8');
 }
 
-async function loadClientRoundResetFlow() {
+async function loadClientDuelResetFlow() {
     const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
 
     compileClientModule(
@@ -43,17 +43,17 @@ async function loadClientRoundResetFlow() {
         tempDirectory
     );
     compileClientModule(
-        'flows/clientRoundResetFlow.ts',
-        'flows/clientRoundResetFlow.js',
+        'flows/clientDuelResetFlow.ts',
+        'flows/clientDuelResetFlow.js',
         tempDirectory
     );
 
     const module = await import(
-        pathToFileURL(path.join(tempDirectory, 'flows/clientRoundResetFlow.js'))
+        pathToFileURL(path.join(tempDirectory, 'flows/clientDuelResetFlow.js'))
             .href
     );
 
-    return module.ClientRoundResetFlow;
+    return module.ClientDuelResetFlow;
 }
 
 function createResetOptions(overrides = {}) {
@@ -75,16 +75,16 @@ function createResetOptions(overrides = {}) {
         resetAmmo() {
             calls.push('resetAmmo');
         },
-        roundData: {
-            resetRoundFlags() {
-                calls.push('roundData.resetRoundFlags');
+        duelData: {
+            resetDuelFlags() {
+                calls.push('duelData.resetDuelFlags');
             }
         },
-        setRoundMessage(message) {
-            calls.push(['setRoundMessage', message]);
+        setDuelMessage(message) {
+            calls.push(['setDuelMessage', message]);
         },
-        setRoundState(state) {
-            calls.push(['setRoundState', state]);
+        setDuelState(state) {
+            calls.push(['setDuelState', state]);
         },
         syncNameEditor() {
             calls.push('syncNameEditor');
@@ -109,11 +109,11 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('resets a round back to waiting', async function () {
-    const flow = await loadClientRoundResetFlow();
+test('resets a duel back to waiting', async function () {
+    const flow = await loadClientDuelResetFlow();
     const { calls, options } = createResetOptions();
 
-    flow.resetRound(options);
+    flow.resetDuel(options);
 
     assert.deepEqual(plain(calls), [
         [
@@ -146,17 +146,17 @@ test('resets a round back to waiting', async function () {
             ]
         ],
         'bullets.reset',
-        ['setRoundMessage', ''],
-        'roundData.resetRoundFlags',
+        ['setDuelMessage', ''],
+        'duelData.resetDuelFlags',
         ['timers.clearMany', ['reset', 'matchEnd']],
-        ['setRoundState', 'waiting'],
+        ['setDuelState', 'waiting'],
         'syncNameEditor',
         'renderHud'
     ]);
 });
 
 test('resets the game over screen back to the lobby start screen', async function () {
-    const flow = await loadClientRoundResetFlow();
+    const flow = await loadClientDuelResetFlow();
     const { calls, options } = createResetOptions();
 
     flow.resetToStartScreen(options);
@@ -192,11 +192,11 @@ test('resets the game over screen back to the lobby start screen', async functio
             ]
         ],
         'bullets.reset',
-        ['setRoundMessage', ''],
-        'roundData.resetRoundFlags',
+        ['setDuelMessage', ''],
+        'duelData.resetDuelFlags',
         ['timers.clearMany', ['reset', 'matchEnd']],
         'resetAmmo',
-        ['setRoundState', 'waiting'],
+        ['setDuelState', 'waiting'],
         'syncNameEditor',
         'renderHud'
     ]);

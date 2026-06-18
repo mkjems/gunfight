@@ -24,7 +24,7 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
     writeFileSync(outputPath, transpiled.outputText, 'utf8');
 }
 
-async function loadClientRoundRitual() {
+async function loadClientDuelRitual() {
     const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
 
     compileClientModule(
@@ -43,17 +43,17 @@ async function loadClientRoundRitual() {
         tempDirectory
     );
     compileClientModule(
-        'flows/clientRoundRitual.ts',
-        'flows/clientRoundRitual.js',
+        'flows/clientDuelRitual.ts',
+        'flows/clientDuelRitual.js',
         tempDirectory
     );
 
     const module = await import(
-        pathToFileURL(path.join(tempDirectory, 'flows/clientRoundRitual.js'))
+        pathToFileURL(path.join(tempDirectory, 'flows/clientDuelRitual.js'))
             .href
     );
 
-    return module.ClientRoundRitual;
+    return module.ClientDuelRitual;
 }
 
 function createOptions() {
@@ -70,7 +70,7 @@ function createOptions() {
             calls.push('closeNameEditor');
         },
         getServerPhase() {
-            return 'roundIntro';
+            return 'duelIntro';
         },
         renderHud() {
             calls.push('renderHud');
@@ -78,27 +78,27 @@ function createOptions() {
         resetAmmo() {
             calls.push('resetAmmo');
         },
-        roundData: {
+        duelData: {
             clearObstacleDamage() {
-                calls.push('roundData.clearObstacleDamage');
+                calls.push('duelData.clearObstacleDamage');
             },
             startScenario() {
-                calls.push('roundData.startScenario');
+                calls.push('duelData.startScenario');
             }
         },
-        roundIntro: {
+        duelIntro: {
             complete() {
-                calls.push('roundIntro.complete');
+                calls.push('duelIntro.complete');
             },
             start() {
-                calls.push('roundIntro.start');
+                calls.push('duelIntro.start');
             }
         },
-        setRoundMessage(message) {
-            calls.push(['setRoundMessage', message]);
+        setDuelMessage(message) {
+            calls.push(['setDuelMessage', message]);
         },
-        setRoundState(state) {
-            calls.push(['setRoundState', state]);
+        setDuelState(state) {
+            calls.push(['setDuelState', state]);
         },
         timers: {
             set(name, callback, delay) {
@@ -112,20 +112,20 @@ function createOptions() {
 }
 
 test('starts the get-ready ritual and schedules draw', async function () {
-    const ritual = await loadClientRoundRitual();
+    const ritual = await loadClientDuelRitual();
     const { calls, options, scheduled } = createOptions();
 
     ritual.start(options);
 
     assert.deepEqual(calls, [
-        ['setRoundState', 'ritual'],
+        ['setDuelState', 'ritual'],
         'closeNameEditor',
-        'roundData.startScenario',
-        'roundData.clearObstacleDamage',
+        'duelData.startScenario',
+        'duelData.clearObstacleDamage',
         'bullets.reset',
         'resetAmmo',
-        'roundIntro.start',
-        ['setRoundMessage', 'GET READY'],
+        'duelIntro.start',
+        ['setDuelMessage', 'GET READY'],
         'renderHud',
         ['timer.set', 'ritual', 1500]
     ]);
@@ -133,7 +133,7 @@ test('starts the get-ready ritual and schedules draw', async function () {
 });
 
 test('moves from draw to playing after ritual timers', async function () {
-    const ritual = await loadClientRoundRitual();
+    const ritual = await loadClientDuelRitual();
     const { calls, options, scheduled } = createOptions();
 
     ritual.start(options);
@@ -141,20 +141,20 @@ test('moves from draw to playing after ritual timers', async function () {
     scheduled[1].callback();
 
     assert.deepEqual(calls.slice(10), [
-        'roundIntro.complete',
-        ['setRoundMessage', 'DRAW!'],
+        'duelIntro.complete',
+        ['setDuelMessage', 'DRAW!'],
         ['timer.set', 'ritual', 700],
-        ['setRoundMessage', ''],
+        ['setDuelMessage', ''],
         'resetAmmo',
-        ['setRoundState', 'playing'],
+        ['setDuelState', 'playing'],
         'renderHud'
     ]);
 });
 
-test('skips stale get-ready timer after server phase leaves round intro', async function () {
-    const ritual = await loadClientRoundRitual();
+test('skips stale get-ready timer after server phase leaves duel intro', async function () {
+    const ritual = await loadClientDuelRitual();
     const { calls, options, scheduled } = createOptions();
-    let serverPhase = 'roundIntro';
+    let serverPhase = 'duelIntro';
 
     options.getServerPhase = function () {
         return serverPhase;
@@ -168,9 +168,9 @@ test('skips stale get-ready timer after server phase leaves round intro', async 
 });
 
 test('enters playing when a late get-ready timer sees server playing', async function () {
-    const ritual = await loadClientRoundRitual();
+    const ritual = await loadClientDuelRitual();
     const { calls, options, scheduled } = createOptions();
-    let serverPhase = 'roundIntro';
+    let serverPhase = 'duelIntro';
 
     options.getServerPhase = function () {
         return serverPhase;
@@ -181,18 +181,18 @@ test('enters playing when a late get-ready timer sees server playing', async fun
     scheduled[0].callback();
 
     assert.deepEqual(calls.slice(10), [
-        ['setRoundMessage', ''],
+        ['setDuelMessage', ''],
         'resetAmmo',
-        ['setRoundState', 'playing'],
+        ['setDuelState', 'playing'],
         'renderHud'
     ]);
     assert.equal(scheduled.length, 1);
 });
 
-test('skips stale draw timer after server phase leaves round intro or playing', async function () {
-    const ritual = await loadClientRoundRitual();
+test('skips stale draw timer after server phase leaves duel intro or playing', async function () {
+    const ritual = await loadClientDuelRitual();
     const { calls, options, scheduled } = createOptions();
-    let serverPhase = 'roundIntro';
+    let serverPhase = 'duelIntro';
 
     options.getServerPhase = function () {
         return serverPhase;
@@ -204,8 +204,8 @@ test('skips stale draw timer after server phase leaves round intro or playing', 
     scheduled[1].callback();
 
     assert.deepEqual(calls.slice(10), [
-        'roundIntro.complete',
-        ['setRoundMessage', 'DRAW!'],
+        'duelIntro.complete',
+        ['setDuelMessage', 'DRAW!'],
         ['timer.set', 'ritual', 700]
     ]);
 });

@@ -9,14 +9,14 @@ This is the current state split. Keep it updated when ownership changes.
 - Player ids, names, slots, and ready flags.
 - Game lifecycle phase, phase timestamps, return-to-lobby timing, and model
   version.
-- Current scenario selection, `roundNumber`, match state, match clock, and match
+- Current scenario selection, `duelNumber`, match state, match clock, and match
   score.
-- Accepted round results and final game-result records for high scores.
+- Accepted duel results and final game-result records for high scores.
 - High score table in server memory.
 
 ## Client-owned state
 
-- Active screen and round phase.
+- Active screen and duel phase.
 - Canvas rendering and DOM HUD rendering.
 - Local player input state.
 - Local simulation of players, bullets, collision, hit detection, obstacle
@@ -39,7 +39,7 @@ side effects stay in flow modules.
 - Key events are applied locally and relayed through the server to the opponent.
 - Player positions are periodically sent through the server to the opponent.
 - Obstacle damage events are produced by the shooter client and relayed to the opponent.
-- Round results are reported by the client that detected the winning hit. The
+- Duel results are reported by the client that detected the winning hit. The
   server accepts only current, non-duplicate, winner-owned results and updates
   score.
 - Match expiry is owned by the server clock. Clients display the server

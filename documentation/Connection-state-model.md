@@ -9,9 +9,9 @@ This document aims to describe this, in the simplest clearest way by describing 
 ## AS IS
 
 The server owns connection, pairing, names, ready flags, lifecycle phase, phase
-timing, match clock, scenario selection, round number, match state, accepted
-round results, match score, and the final high-score result source. The browser
-owns the active screen, local presentation round phase, input state, player
+timing, match clock, scenario selection, duel number, match state, accepted
+duel results, match score, and the final high-score result source. The browser
+owns the active screen, local presentation duel phase, input state, player
 movement, bullets, hit detection, obstacle damage, ammo, and match timer
 presentation.
 
@@ -26,8 +26,8 @@ flowchart TD
     Join --> Lobby["lobby.ts<br/>games map<br/>clientsBySocketId"]
 
     Lobby --> Session["GameSession<br/>id, room<br/>clients, timestamps"]
-    Session --> Gfmodel["gfmodel<br/>client id + ready<br/>phase, version, timing<br/>scenario, roundNumber<br/>matchState, scores"]
-    Session --> PublicModel["PublicGameModel<br/>gameId, message<br/>clients, phase, timing<br/>scenario, roundNumber<br/>matchState, scores"]
+    Session --> Gfmodel["gfmodel<br/>client id + ready<br/>phase, version, timing<br/>scenario, duelNumber<br/>matchState, scores"]
+    Session --> PublicModel["PublicGameModel<br/>gameId, message<br/>clients, phase, timing<br/>scenario, duelNumber<br/>matchState, scores"]
     Gfmodel --> PublicModel
 
     PublicModel --> LatestModel["Client latestModel<br/>server-owned session copy"]
@@ -35,18 +35,18 @@ flowchart TD
     LatestModel --> ClientScreens["ClientScreens<br/>active screen decision"]
     LatestModel --> ClientPlayers["Client players<br/>slots and scenario sync"]
 
-    ClientScreens --> RoundState["Client roundState<br/>waiting, ritual, playing<br/>hitPause, roundOver, gameOver"]
-    RoundState --> Gameplay["Client gameplay simulation<br/>movement, bullets, hit detection<br/>ammo, match timer presentation"]
+    ClientScreens --> DuelState["Client duelState<br/>waiting, ritual, playing<br/>hitPause, duelOver, gameOver"]
+    DuelState --> Gameplay["Client gameplay simulation<br/>movement, bullets, hit detection<br/>ammo, match timer presentation"]
 
     Gameplay -->|"clientKeyEvent, playerPosition, obstacleDamage"| Relay["Server room relay<br/>no gameplay simulation"]
     Relay --> Opponent["Opponent client"]
 
-    Gameplay -->|"roundResult"| Gfmodel
+    Gameplay -->|"duelResult"| Gfmodel
     Gfmodel -->|"server phase timers"| Gfmodel
     Gfmodel -->|"server-owned final result"| Scores["highScores.ts<br/>server memory"]
     Scores -->|"highScores"| ClientHighScores["Client highScores<br/>local render state"]
 
-    Gfmodel -->|"server gameOver timer"| RoundState
+    Gfmodel -->|"server gameOver timer"| DuelState
     LatestModel -->|"phase = abandoned"| Abandoned["ClientLobbyFlow<br/>enter lobby<br/>schedule requeue"]
     Abandoned -->|"requeue"| Join
 ```
@@ -56,13 +56,13 @@ flowchart LR
     NoGame["no game"] -->|"first socket connects"| Waiting["waiting<br/>one client"]
     Waiting -->|"second socket connects"| Readying["readying<br/>two clients"]
     Readying -->|"both ready"| ReadyCountdown["readyCountdown<br/>server timed pause"]
-    ReadyCountdown -->|"server timer"| RoundIntro["roundIntro<br/>scenario published"]
-    RoundIntro -->|"server timer"| Playing["playing<br/>clients simulate match"]
+    ReadyCountdown -->|"server timer"| DuelIntro["duelIntro<br/>scenario published"]
+    DuelIntro -->|"server timer"| Playing["playing<br/>clients simulate match"]
     Playing -->|"hit"| HitPause["hitPause<br/>server timed pause"]
-    HitPause -->|"server timer"| RoundIntro
+    HitPause -->|"server timer"| DuelIntro
     Playing -->|"server match clock"| GameOver["gameOver<br/>high scores recorded"]
     Playing -->|"client leaves"| Abandoned["abandoned<br/>remaining client requeues"]
-    RoundIntro -->|"client leaves"| Abandoned
+    DuelIntro -->|"client leaves"| Abandoned
     HitPause -->|"client leaves"| Abandoned
     Abandoned -->|"requeue"| Waiting
     Waiting -->|"last client leaves"| Closed["closed<br/>deleted"]
@@ -96,13 +96,13 @@ Each lobby client has:
 session:
 
 - list of model clients: `id` and `ready`
-- lifecycle `phase`: `waiting`, `readying`, `readyCountdown`, `roundIntro`,
+- lifecycle `phase`: `waiting`, `readying`, `readyCountdown`, `duelIntro`,
   `playing`, `hitPause`, `gameOver`, `abandoned`, or `closed`
 - monotonically increasing `version`
 - `phaseStartedAt` and optional `phaseEndsAt`
 - optional authoritative `matchEndsAt`
 - current scenario
-- `roundNumber`
+- `duelNumber`
 - `matchState`: `idle`, `playing`, or `gameOver`
 - current match `scores`
 - optional `matchResultId` after the server finishes a match
@@ -119,22 +119,22 @@ lobby-owned socket metadata:
 - `currentScenario`
 - `matchState`
 - `matchResultId` when a match has been finalized
-- `roundNumber`
+- `duelNumber`
 - `scores`
 
 Authoritative public model fields:
 
-| Field                                                                                         | Owner  | Meaning                                                                                |
-| --------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------- |
-| `gameId`, `playerLimit`, `clients`                                                            | Server | Pairing, player identity, display names, slots, and ready flags.                       |
-| `phase`, `version`, `phaseStartedAt`, `phaseEndsAt`, `matchEndsAt`                            | Server | Lifecycle, stale-update guard, phase timing, and match clock.                          |
-| `currentScenario`, `roundNumber`, `matchState`, `matchResultId`, `scores`                     | Server | Scenario choice, duel number, match state, final result id, and authoritative scoring. |
-| `message`                                                                                     | Server | Lobby/result message derived from authoritative server state.                          |
-| Client `roundState`, timers, text beats, effects, sounds, animation, bullets, positions, ammo | Client | Presentation and real-time gameplay details that follow the public model.              |
+| Field                                                                                        | Owner  | Meaning                                                                                |
+| -------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------- |
+| `gameId`, `playerLimit`, `clients`                                                           | Server | Pairing, player identity, display names, slots, and ready flags.                       |
+| `phase`, `version`, `phaseStartedAt`, `phaseEndsAt`, `matchEndsAt`                           | Server | Lifecycle, stale-update guard, phase timing, and match clock.                          |
+| `currentScenario`, `duelNumber`, `matchState`, `matchResultId`, `scores`                     | Server | Scenario choice, duel number, match state, final result id, and authoritative scoring. |
+| `message`                                                                                    | Server | Lobby/result message derived from authoritative server state.                          |
+| Client `duelState`, timers, text beats, effects, sounds, animation, bullets, positions, ammo | Client | Presentation and real-time gameplay details that follow the public model.              |
 
 The current public model is sufficient for every non-gameplay phase. The client
-renders lobby, ready countdown, round intro, hit pause, game over, abandonment,
-and return-to-lobby from `phase`, `version`, timing fields, `roundNumber`,
+renders lobby, ready countdown, duel intro, hit pause, game over, abandonment,
+and return-to-lobby from `phase`, `version`, timing fields, `duelNumber`,
 `scores`, `clients`, and `currentScenario`. No additional neutral presentation
 fields are needed in P8.
 
@@ -156,14 +156,14 @@ cannot become ready.
 `readyCountdown` means both clients are ready and the server is holding the
 lobby screen briefly before starting the match.
 
-`roundIntro` means the server has selected the scenario and round number; the
+`duelIntro` means the server has selected the scenario and duel number; the
 clients present `GET READY`, intro walking, and `DRAW!`.
 
-`playing` means the duel is active and the server accepts current-round hit
+`playing` means the duel is active and the server accepts current-duel hit
 results.
 
 `hitPause` means an accepted hit is being shown. The server has already awarded
-the point, but it has not yet advanced the scenario or round number.
+the point, but it has not yet advanced the scenario or duel number.
 
 `gameOver` means the server match clock has expired and the server-owned final
 score has been recorded.
@@ -176,17 +176,17 @@ map.
 
 Legal server phase transitions are:
 
-| From             | To                                              |
-| ---------------- | ----------------------------------------------- |
-| `waiting`        | `readying`, `closed`                            |
-| `readying`       | `waiting`, `readyCountdown`, `closed`           |
-| `readyCountdown` | `roundIntro`, `abandoned`, `closed`             |
-| `roundIntro`     | `playing`, `gameOver`, `abandoned`, `closed`    |
-| `playing`        | `hitPause`, `gameOver`, `abandoned`, `closed`   |
-| `hitPause`       | `roundIntro`, `gameOver`, `abandoned`, `closed` |
-| `gameOver`       | `waiting`, `readying`, `abandoned`, `closed`    |
-| `abandoned`      | `closed`                                        |
-| `closed`         | none                                            |
+| From             | To                                             |
+| ---------------- | ---------------------------------------------- |
+| `waiting`        | `readying`, `closed`                           |
+| `readying`       | `waiting`, `readyCountdown`, `closed`          |
+| `readyCountdown` | `duelIntro`, `abandoned`, `closed`             |
+| `duelIntro`      | `playing`, `gameOver`, `abandoned`, `closed`   |
+| `playing`        | `hitPause`, `gameOver`, `abandoned`, `closed`  |
+| `hitPause`       | `duelIntro`, `gameOver`, `abandoned`, `closed` |
+| `gameOver`       | `waiting`, `readying`, `abandoned`, `closed`   |
+| `abandoned`      | `closed`                                       |
+| `closed`         | none                                           |
 
 When a disconnect leaves fewer than two clients, `gfmodel` clears the remaining
 client's `ready` flag. If the disconnect happens during an active match phase,
@@ -234,14 +234,14 @@ using the same resolved name.
 
 Disconnect behavior by phase:
 
-| Phase                                                 | Remaining game behavior                                                                       |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `waiting`                                             | Last leave closes and deletes the game.                                                       |
-| `readying`                                            | Remaining client returns to one-player `waiting`; ready is cleared and auto-pairing may run.  |
-| `readyCountdown`, `roundIntro`, `playing`, `hitPause` | Remaining client receives one `abandoned` model; ready, match state, timers, and score clear. |
-| `gameOver`                                            | Remaining client receives `abandoned`; the old match cannot return to play or lobby-reset.    |
-| `abandoned`                                           | Requeue or leave removes the client from the abandoned game; it is not auto-pair eligible.    |
-| `closed`                                              | Closed games are deleted and do not accept further lifecycle reports.                         |
+| Phase                                                | Remaining game behavior                                                                       |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `waiting`                                            | Last leave closes and deletes the game.                                                       |
+| `readying`                                           | Remaining client returns to one-player `waiting`; ready is cleared and auto-pairing may run.  |
+| `readyCountdown`, `duelIntro`, `playing`, `hitPause` | Remaining client receives one `abandoned` model; ready, match state, timers, and score clear. |
+| `gameOver`                                           | Remaining client receives `abandoned`; the old match cannot return to play or lobby-reset.    |
+| `abandoned`                                          | Requeue or leave removes the client from the abandoned game; it is not auto-pair eligible.    |
+| `closed`                                             | Closed games are deleted and do not accept further lifecycle reports.                         |
 
 Automatic pairing only uses one-player `waiting` games. Active, game-over,
 abandoned, and closed games are never pairing targets.
@@ -254,7 +254,7 @@ On `updateName`, the server sanitizes the requested name, makes it unique inside
 the current game, stores it on the lobby client, and emits `modelUpdate` only
 when the public name changes. A same-name request is a no-op.
 
-### Readiness and round selection
+### Readiness and duel selection
 
 The client emits `clientReady` when the player presses play. The client only
 offers this action when a connected opponent exists.
@@ -264,10 +264,10 @@ The server handles `clientReady` by asking `gfmodel` to set that client's
 connected. When the second client becomes ready, `gfmodel` resets the match
 score and enters `readyCountdown` with a server `phaseEndsAt`. A server timer
 then starts the match, sets `matchEndsAt`, advances the scenario, increments
-`roundNumber`, enters `roundIntro`, and emits `modelUpdate`.
+`duelNumber`, enters `duelIntro`, and emits `modelUpdate`.
 
-The browser starts the local round ritual when it receives a server model whose
-phase enters `roundIntro`. The client still presents `GET READY`, `DRAW!`, intro
+The browser starts the local duel ritual when it receives a server model whose
+phase enters `duelIntro`. The client still presents `GET READY`, `DRAW!`, intro
 walking, sounds, and animation locally.
 
 After game over, the server keeps the `gameOver` phase visible until its
@@ -275,12 +275,12 @@ After game over, the server keeps the `gameOver` phase visible until its
 match state, returns the phase to `readying` or `waiting`, and emits
 `modelUpdate`. The client does not send a lifecycle reset request.
 
-After a hit, only the winning client emits `roundResult`. The server accepts the
+After a hit, only the winning client emits `duelResult`. The server accepts the
 result only when the reporting socket is the winner, the game is `playing`, the
-reported round is current, both players are still connected, and the result has
+reported duel is current, both players are still connected, and the result has
 not already been accepted. The server increments the winner's score, enters
 `hitPause`, and emits `modelUpdate`. The server does not
-advance the scenario or `roundNumber` until the hit-pause timer expires. The
+advance the scenario or `duelNumber` until the hit-pause timer expires. The
 browser still owns the animation, sound, hit text, and responsive presentation.
 
 When the server match clock expires, the server finishes the match once, sets
@@ -302,7 +302,7 @@ so the client can resynchronize, but they do not increment `version`.
 | `leaveGame`      | client to server         | Remove the socket from the game; optionally rejoin.                                 |
 | `requeue`        | client to server         | Leave the current game and join a waiting or new game.                              |
 | `clientReady`    | client to server         | Mark the client ready only when paired; enter `readyCountdown` when both are ready. |
-| `roundResult`    | client to server         | Accept one current-round result during `playing`, score it, and enter `hitPause`.   |
+| `duelResult`     | client to server         | Accept one current-duel result during `playing`, score it, and enter `hitPause`.    |
 | `clientKeyEvent` | client to server to peer | Relay keyboard/input event to the opponent.                                         |
 | `playerPosition` | client to server to peer | Relay local player position to the opponent.                                        |
 | `obstacleDamage` | client to server to peer | Relay validated obstacle damage to the opponent.                                    |
@@ -318,11 +318,11 @@ That model gives the client:
 - current scenario
 - lifecycle phase, model version, phase timing, match clock, match state, and
   score
-- round number
+- duel number
 
 The browser also has local state that is not in the public server model:
 
-- `roundState`: `waiting`, `ritual`, `playing`, `hitPause`, `roundOver`,
+- `duelState`: `waiting`, `ritual`, `playing`, `hitPause`, `duelOver`,
   or `gameOver`
 - input key state
 - local optimistic `localReadyRequested`
@@ -338,17 +338,17 @@ The browser also has local state that is not in the public server model:
 This makes the lobby UI respond before the authoritative `modelUpdate` returns.
 It is cleared when the next model says the local client is not ready.
 
-### Client screen and round model
+### Client screen and duel model
 
 The active screen is derived locally:
 
-- any non-`waiting` round state shows `Game`
+- any non-`waiting` duel state shows `Game`
 - `waiting` plus active name editor shows `Lobby-edit-name`
 - `waiting` plus explicit high-score navigation shows `High-scores`
 - otherwise `Lobby-main`
 
-Legal local round transitions live in `client/src/state/clientScreens.ts`.
-Server `phase` is not the same as client `roundState`. The client `roundState`
+Legal local duel transitions live in `client/src/state/clientScreens.ts`.
+Server `phase` is not the same as client `duelState`. The client `duelState`
 is presentation state that follows server phase updates.
 
 ### Gameplay synchronization
@@ -368,7 +368,7 @@ The server does not decide:
 - ammo use
 - obstacle collision
 
-The server does decide whether to accept a reported round result, how the match
+The server does decide whether to accept a reported duel result, how the match
 score changes, when hit pause ends, when the next scenario starts, when the
 match clock expires, and which final score is recorded for high scores.
 
@@ -384,12 +384,12 @@ the remaining player is no longer ready.
 
 ### Known weaknesses
 
-- Server `phase` and client `roundState` are related but separate state
+- Server `phase` and client `duelState` are related but separate state
   machines. The client follows server phase, but still owns presentation
   animation details.
 - The game is mostly client-authoritative, so clients can diverge if timing,
   delivery, collision, or hit detection differs.
-- `roundResult` is still based on client-side hit detection. The server rejects
+- `duelResult` is still based on client-side hit detection. The server rejects
   stale, duplicate, cross-game, and non-winner reports, but it does not validate
   bullet physics.
 - There is no durable session store. Games and high scores live in server

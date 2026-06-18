@@ -19,7 +19,7 @@ const GAME_PHASE = {
     Waiting: 'waiting',
     Readying: 'readying',
     ReadyCountdown: 'readyCountdown',
-    RoundIntro: 'roundIntro',
+    DuelIntro: 'duelIntro',
     Playing: 'playing',
     HitPause: 'hitPause',
     GameOver: 'gameOver',
@@ -135,8 +135,8 @@ export function parseGameModel(data: unknown): RuntimeGameModel | null {
         model.playerLimit = data.playerLimit;
     }
 
-    if (isFiniteNumber(data.roundNumber)) {
-        model.roundNumber = data.roundNumber;
+    if (isFiniteNumber(data.duelNumber)) {
+        model.duelNumber = data.duelNumber;
     }
 
     if (
@@ -246,8 +246,8 @@ export function parseObstacleDamagePayload(
         ownerId: data.ownerId
     };
 
-    if (isFiniteNumber(data.roundNumber)) {
-        payload.roundNumber = data.roundNumber;
+    if (isFiniteNumber(data.duelNumber)) {
+        payload.duelNumber = data.duelNumber;
     }
 
     return payload;

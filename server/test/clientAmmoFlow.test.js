@@ -58,7 +58,7 @@ function createOptions(overrides = {}) {
         model: {
             clients: [{ id: 'p1' }, { id: 'p2' }]
         },
-        roundState: 'playing'
+        duelState: 'playing'
     };
 
     return {
@@ -81,7 +81,7 @@ test('reloads when playing with both clients in the model', async function () {
 test('does not reload outside active play', async function () {
     const flow = await loadClientAmmoFlow();
     const { calls, options } = createOptions({
-        roundState: 'waiting'
+        duelState: 'waiting'
     });
 
     assert.equal(flow.reloadIfBothPlayersAreOut(options), false);

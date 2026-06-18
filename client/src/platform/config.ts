@@ -12,7 +12,7 @@ export const Config = {
     game: {
         seconds: 70
     },
-    round: {
+    duel: {
         resetDelay: 1800,
         gameOverDelay: 5000,
         ammo: 6,
@@ -106,7 +106,7 @@ export const Config = {
         speed: 420,
         fixedStep: 1 / 120,
         defaultStraightness: 0.11,
-        roundStraightnessStep: 0.2,
+        duelStraightnessStep: 0.2,
         maxStraightness: 1.0,
         minimumHarmStraightness: 0.1,
         harmVelocity: 150,
@@ -137,15 +137,15 @@ export const Config = {
     }
 };
 
-export function getRoundBulletStraightness(roundNumber?: number) {
-    const round =
-        typeof roundNumber === 'number' && Number.isFinite(roundNumber)
-            ? roundNumber
+export function getDuelBulletStraightness(duelNumber?: number) {
+    const duel =
+        typeof duelNumber === 'number' && Number.isFinite(duelNumber)
+            ? duelNumber
             : 1;
-    const roundIndex = Math.max(0, Math.floor(round) - 1);
+    const duelIndex = Math.max(0, Math.floor(duel) - 1);
     const straightness =
         Config.bullet.defaultStraightness +
-        roundIndex * Config.bullet.roundStraightnessStep;
+        duelIndex * Config.bullet.duelStraightnessStep;
     const maxStraightness = Math.max(
         0,
         Math.min(1, Config.bullet.maxStraightness)

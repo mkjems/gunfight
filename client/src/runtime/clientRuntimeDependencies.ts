@@ -23,10 +23,10 @@ import { ClientNameEditorFlow } from '../flows/clientNameEditorFlow.js';
 import { ClientNetwork } from '../network/clientNetwork.js';
 import { ClientObstacleSync } from '../network/clientObstacleSync.js';
 import { ClientPlayerHitFlow } from '../flows/clientPlayerHitFlow.js';
-import { ClientRoundEndFlow } from '../flows/clientRoundEndFlow.js';
-import { ClientRoundResetFlow } from '../flows/clientRoundResetFlow.js';
-import { ClientRoundRitual } from '../flows/clientRoundRitual.js';
-import { ClientRoundTransition } from '../flows/clientRoundTransition.js';
+import { ClientDuelEndFlow } from '../flows/clientDuelEndFlow.js';
+import { ClientDuelResetFlow } from '../flows/clientDuelResetFlow.js';
+import { ClientDuelRitual } from '../flows/clientDuelRitual.js';
+import { ClientDuelTransition } from '../flows/clientDuelTransition.js';
 import { ClientScreens } from '../state/clientScreens.js';
 import { ClientTouchControlsFlow } from '../flows/clientTouchControlsFlow.js';
 import { ClientTouchEnvironment } from '../input/clientTouchEnvironment.js';
@@ -69,10 +69,10 @@ export const ClientRuntimeDependencies = {
         ClientNameEditorFlow,
         ClientObstacleSync,
         ClientPlayerHitFlow,
-        ClientRoundEndFlow,
-        ClientRoundResetFlow,
-        ClientRoundRitual,
-        ClientRoundTransition,
+        ClientDuelEndFlow,
+        ClientDuelResetFlow,
+        ClientDuelRitual,
+        ClientDuelTransition,
         ClientTouchControlsFlow
     },
     model: {

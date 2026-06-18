@@ -167,7 +167,7 @@ test('updates camera viewport and resets when camera is disabled', async functio
         player: {
             id: 'p1'
         },
-        roundState: 'waiting'
+        duelState: 'waiting'
     });
 
     assert.deepEqual(plain(calls), [
@@ -192,7 +192,7 @@ test('projects world points through the active camera', async function () {
                     x: 10,
                     y: 20
                 },
-                roundState: 'playing',
+                duelState: 'playing',
                 x: 30,
                 y: 50
             })
@@ -210,7 +210,7 @@ test('projects world points through the active camera', async function () {
                     x: 10,
                     y: 20
                 },
-                roundState: 'waiting',
+                duelState: 'waiting',
                 x: 30,
                 y: 50
             })

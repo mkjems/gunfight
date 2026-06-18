@@ -13,7 +13,7 @@ rendering rule).
 │ SERVER (authoritative for sessions and slow lifecycle)          │
 │ server.js → lobby.ts, gfmodel.ts, highScores.ts                 │
 │ owns: matchmaking, names, slots, ready flags, phase, match      │
-│       clock, scenario selection, round number, score, high scores│
+│       clock, scenario selection, duel number, score, high scores│
 └───────────────────────────┬─────────────────────────────────────┘
                             │ Socket.IO events (both directions)
 ┌───────────────────────────┴─────────────────────────────────────┐
@@ -21,7 +21,7 @@ rendering rule).
 │ gameplay)                                                       │
 │                                                                 │
 │  ClientNetwork ──▶ flow modules ──▶ client state                │
-│                        │   (round state, model copy, input)     │
+│                        │   (duel state, model copy, input)     │
 │  game loop (60fps) ────┤                                        │
 │                        ▼                                        │
 │                   view models (pure functions)                  │
@@ -47,7 +47,7 @@ Client modules are grouped by the architecture boundary they belong to:
   view models, install prompt controller, and DOM/HUD UI render orchestration.
 - `client/src/engine/` — imperative canvas gameplay objects and render helpers:
   players, bullets, scene, camera, collision, obstacles, scenarios, ammo,
-  score, and round intro state.
+  score, and duel intro state.
 - `client/src/flows/` — side-effect orchestration between state, engine,
   network, input, UI, and timers.
 - `client/src/input/` — keyboard, touch controls, touch-interface state, and
@@ -58,7 +58,7 @@ Client modules are grouped by the architecture boundary they belong to:
   config, canvas setup/tools, assets, audio, identity storage, drawing helpers,
   and animation-frame scheduling.
 - `client/src/state/` — framework-independent state utilities and shared client
-  state enums such as screens, round state, and timers.
+  state enums such as screens, duel state, and timers.
 
 ## Server: What It Owns And Emits
 
@@ -68,7 +68,7 @@ and validates `scenarios.json` / `rocks.json` at startup.
 - `lobby.ts` — pairs sockets into games, sanitizes names, assigns slots, and
   builds public lobby/result messages from the game model.
 - `gfmodel.ts` — the public game model: clients, ready flags, lifecycle phase,
-  model version, phase timing, match clock, scenario, round number, match
+  model version, phase timing, match clock, scenario, duel number, match
   state, and scores.
 - `highScores.ts` — in-memory high score table.
 
@@ -76,10 +76,10 @@ The server is authoritative for session state and low-frequency lifecycle
 state. It is still a relay for high-frequency gameplay events and never
 simulates movement or bullets.
 
-| Direction       | Events                                                                                                                        |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Server → client | `joinedGame`, `newClient`, `leftGame`, `modelUpdate`, `highScores`, relayed `keyEvent` / `playerPosition` / `obstacleDamage`  |
-| Client → server | `updateName`, `leaveGame`, `requeue`, `clientReady`, `roundResult`, outgoing `keyEvent` / `playerPosition` / `obstacleDamage` |
+| Direction       | Events                                                                                                                       |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Server → client | `joinedGame`, `newClient`, `leftGame`, `modelUpdate`, `highScores`, relayed `keyEvent` / `playerPosition` / `obstacleDamage` |
+| Client → server | `updateName`, `leaveGame`, `requeue`, `clientReady`, `duelResult`, outgoing `keyEvent` / `playerPosition` / `obstacleDamage` |
 
 ## Client Construction: Who Creates Whom
 
@@ -100,7 +100,7 @@ flowchart TD
     rotate prompt, install prompt, touch controls"]
     GAME --> SYSTEMS["ClientGameSystems.create:
     players, bullets, scene, collision,
-    scoreKeeper, roundIntro, roundState,
+    scoreKeeper, duelIntro, duelState,
     camera, sounds, ammo"]
     GAME --> LOOP[ClientGameLoop + requestAnimationFrame]
     GAME --> NET[ClientNetwork: socket + callbacks]
@@ -127,7 +127,7 @@ flowchart TD
     ClientKeyEventFlow, PlayerPositionSync,
     ClientObstacleSync, ClientLobbyFlow"]
     SYNCFLOWS --> STATE["client state:
-    model copy, ClientRoundState,
+    model copy, ClientDuelState,
     NameEditor value, KeysModel"]
 
     LOOP[game loop, every frame] --> FRAME[ClientFrameFlow]
@@ -137,7 +137,7 @@ flowchart TD
     FRAME -->|render: draw| ENGINE
     FRAME -->|renderHud| HUDFLOW[ClientHudFlow]
     HUDFLOW -->|WAITING| LOBBYFLOW[ClientLobbyHudFlow]
-    HUDFLOW -->|in round| HUDVM[GameHudViewModel]
+    HUDFLOW -->|in duel| HUDVM[GameHudViewModel]
     LOBBYFLOW --> SCREENSEL[ClientScreens: active screen decision]
     LOBBYFLOW --> LOBBYVM[ClientLobbyViewModel]
     HUDVM -->|render props| APP[ClientAppMount]
@@ -159,14 +159,14 @@ The control rules, in one list:
 
 1. **The server controls sessions.** Clients never decide who is in a game,
    what anyone is named, what lifecycle phase is active, what the score is, or
-   what the round number is. They send intents or reports (`clientReady`,
-   `roundResult`, `requeue`, `leaveGame`, `joinLobby`, and `updateName`) and the
+   what the duel number is. They send intents or reports (`clientReady`,
+   `duelResult`, `requeue`, `leaveGame`, `joinLobby`, and `updateName`) and the
    server broadcasts the accepted result via `modelUpdate`.
 2. **The game loop controls time.** `ClientGameLoop` fires
    `ClientFrameFlow.update` then `.render` every animation frame. Everything
    that happens per frame is reachable only from there.
 3. **Flow modules control side effects and sequencing.** They decide when to
-   render, when round phases transition (legal transitions live in
+   render, when duel phases transition (legal transitions live in
    `ClientScreens`), when sounds play, and when socket events are sent.
 4. **View models control derivation only.** Pure functions from state to
    render props. No framework imports, no side effects.
@@ -183,9 +183,9 @@ The control rules, in one list:
 Gameplay movement and hit detection are client-authoritative and peer-relayed.
 Each client simulates locally; key events, periodic positions, and obstacle
 damage are relayed through the server to the opponent. The winning client
-reports `roundResult`; the server accepts only current, non-duplicate,
+reports `duelResult`; the server accepts only current, non-duplicate,
 winner-owned results during the server `playing` phase and updates the
 authoritative score. The server owns the match clock, hit-pause expiry,
-next-round scenario switch, game-over transition, and high-score result source.
+next-duel scenario switch, game-over transition, and high-score result source.
 The remaining divergence risk is documented in
 `documentation/State-ownership.md`.

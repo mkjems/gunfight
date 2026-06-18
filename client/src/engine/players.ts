@@ -1,4 +1,4 @@
-import { Config, getRoundBulletStraightness } from '../platform/config.js';
+import { Config, getDuelBulletStraightness } from '../platform/config.js';
 import { Controllable } from './controllable.js';
 
 type SceneLike = {
@@ -30,7 +30,7 @@ type PlayerSlot = {
 type PlayersOptions = {
     resetChangedSlots?: boolean;
     resetExisting?: boolean;
-    roundNumber?: number;
+    duelNumber?: number;
     showStraightnessMeter?: boolean;
     slots?: PlayerSlot[];
 };
@@ -57,8 +57,8 @@ export class Players {
     ensure(client: ClientLike, index: number, options: PlayersOptions = {}) {
         this.rememberSlots(options.slots);
         const slot = this.getSlot(index, options.slots);
-        const shootingStraightness = getRoundBulletStraightness(
-            options.roundNumber
+        const shootingStraightness = getDuelBulletStraightness(
+            options.duelNumber
         );
         const showStraightnessMeter = options.showStraightnessMeter === true;
         const id = client.id;
@@ -126,8 +126,8 @@ export class Players {
             const slot = this.getSlot(player.slot || 0, options.slots);
 
             player.resetTo(slot);
-            player.shootingStraightness = getRoundBulletStraightness(
-                options.roundNumber
+            player.shootingStraightness = getDuelBulletStraightness(
+                options.duelNumber
             );
             player.showStraightnessMeter =
                 options.showStraightnessMeter === true;

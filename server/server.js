@@ -12,7 +12,7 @@ import {
     createPlayerPositionPayload,
     getNameFromPayload,
     normalizeObstacleDamagePayload,
-    normalizeRoundResultPayload,
+    normalizeDuelResultPayload,
     shouldRejoinAfterLeave
 } from '../shared/contracts.js';
 import { advanceTimedGamePhase as advanceTimedLobbyPhase } from './gameModules/serverPhaseTimer.js';
@@ -374,17 +374,17 @@ io.on('connection', function (socket) {
     });
 
     socket.on(
-        SOCKET_EVENT.RoundResult,
+        SOCKET_EVENT.DuelResult,
         /** @param {unknown} data */
         function (data) {
             const context = getSocketGameContext(socket);
-            const result = normalizeRoundResultPayload(data);
+            const result = normalizeDuelResultPayload(data);
 
             if (!context || !result || result.winnerId !== context.client.id) {
                 return;
             }
 
-            if (!lobby.recordRoundResult(context.game, result)) {
+            if (!lobby.recordDuelResult(context.game, result)) {
                 return;
             }
 

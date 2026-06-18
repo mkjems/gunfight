@@ -1,5 +1,5 @@
 import type { HighScoreEntry, Scenario } from '../../../../shared/contracts.js';
-import type { RoundState as RoundStateValue } from '../../state/clientScreens.js';
+import type { DuelState as DuelStateValue } from '../../state/clientScreens.js';
 import type { ClientGameRuntimeModules } from './dependencies.js';
 import {
     parseGameModel,
@@ -37,8 +37,8 @@ import type {
     RuntimePlayerHit,
     RuntimePlayers,
     RuntimePositionSync,
-    RuntimeRoundData,
-    RuntimeRoundIntro,
+    RuntimeDuelData,
+    RuntimeDuelIntro,
     RuntimeRenderContext,
     RuntimeScenarioRenderer,
     RuntimeScene,
@@ -69,7 +69,7 @@ export class ClientGameRuntime implements ClientGameController {
     private readonly document: Document;
     private readonly ImageCtor: typeof globalThis.Image;
     private readonly window: Window;
-    private readonly RoundState: ClientGameRuntimeModules['ClientScreens']['RoundState'];
+    private readonly DuelState: ClientGameRuntimeModules['ClientScreens']['DuelState'];
 
     private canvas!: HTMLCanvasElement;
     private context!: CanvasRenderingContext2D;
@@ -95,16 +95,16 @@ export class ClientGameRuntime implements ClientGameController {
     private players!: RuntimePlayers;
     private bullets!: RuntimeBullets;
     private particleLayer!: RuntimeParticleLayer;
-    private roundState!: RoundStateValue;
+    private duelState!: DuelStateValue;
     private latestModel: RuntimeGameModel | null = null;
     private highScores: HighScoreEntry[] = [];
     private highScoresVisible = false;
     private scoreKeeper!: RuntimeScoreKeeper;
-    private roundData!: RuntimeRoundData;
+    private duelData!: RuntimeDuelData;
     private timers!: RuntimeTimers;
     private positionSync!: RuntimePositionSync;
     private ammo!: RuntimeAmmo;
-    private roundIntro!: RuntimeRoundIntro;
+    private duelIntro!: RuntimeDuelIntro;
     private localReadyRequested = false;
     private playerId: ClientId | null = null;
     private previousLobbyResult: PreviousLobbyResult | null = null;
@@ -117,7 +117,7 @@ export class ClientGameRuntime implements ClientGameController {
         this.document = options.document;
         this.ImageCtor = options.ImageCtor;
         this.window = options.window;
-        this.RoundState = options.dependencies.ClientScreens.RoundState;
+        this.DuelState = options.dependencies.ClientScreens.DuelState;
     }
 
     connectStartLifecycle() {
@@ -227,7 +227,7 @@ export class ClientGameRuntime implements ClientGameController {
                 return this.assets.getRockPattern();
             },
             getScenarioStartedAt: () => {
-                return this.roundData.getScenarioStartedAt();
+                return this.duelData.getScenarioStartedAt();
             },
             sprites: {
                 cactus: this.assets.sprites.cactus,
@@ -276,7 +276,7 @@ export class ClientGameRuntime implements ClientGameController {
 
     private initGameState = () => {
         const systems = this.dependencies.ClientGameSystems.create({
-            initialRoundState: this.RoundState.WAITING,
+            initialDuelState: this.DuelState.WAITING,
             playRicochet: this.handleRicochet
         }) as RuntimeSystems;
 
@@ -284,11 +284,11 @@ export class ClientGameRuntime implements ClientGameController {
         this.bullets = systems.bullets;
         this.particleLayer = systems.particleLayer;
         this.players = systems.players;
-        this.roundIntro = systems.roundIntro;
-        this.roundState = systems.roundState;
+        this.duelIntro = systems.duelIntro;
+        this.duelState = systems.duelState;
         this.highScores = systems.highScores;
         this.scoreKeeper = systems.scoreKeeper;
-        this.roundData = systems.roundData;
+        this.duelData = systems.duelData;
         this.timers = systems.timers;
         this.positionSync = systems.positionSync;
         this.ammo = systems.ammo;
@@ -376,8 +376,8 @@ export class ClientGameRuntime implements ClientGameController {
             getInstallPromptProps: this.getInstallPromptProps,
             getLobbyHudState: this.getLobbyHudState,
             getTouchControlsProps: this.updateTouchControls,
-            roundData: this.roundData,
-            roundState: this.roundState,
+            duelData: this.duelData,
+            duelState: this.duelState,
             scoreKeeper: this.scoreKeeper
         });
     };
@@ -385,7 +385,7 @@ export class ClientGameRuntime implements ClientGameController {
     private updateFrame = () => {
         this.dependencies.ClientFrameFlow.update({
             checkForHits: this.checkForHits,
-            roundIntro: this.roundIntro,
+            duelIntro: this.duelIntro,
             scene: this.scene,
             syncLocalPlayerPosition: this.syncLocalPlayerPosition,
             updateParticles: this.updateParticles,
@@ -408,7 +408,7 @@ export class ClientGameRuntime implements ClientGameController {
             particleCanvas: this.particleCanvas,
             particleContext: this.particleContext,
             renderHud: this.renderHud,
-            roundState: this.roundState,
+            duelState: this.duelState,
             scene: this.scene,
             shouldUseCamera: this.shouldUseCamera,
             updateTouchControls: this.updateTouchControls
@@ -464,9 +464,9 @@ export class ClientGameRuntime implements ClientGameController {
             playReadySound: this.gameSounds.playReady,
             previousModel,
             renderHud: this.renderHud,
-            roundState: this.roundState,
+            duelState: this.duelState,
             scheduleAbandonedRequeue: this.scheduleAbandonedRequeue,
-            startRoundRitual: this.startRoundRitual,
+            startDuelRitual: this.startDuelRitual,
             syncNameEditor: this.syncNameEditor,
             syncStoredPlayerName: this.syncStoredPlayerName
         });
@@ -491,7 +491,7 @@ export class ClientGameRuntime implements ClientGameController {
             playerId: this.playerId ?? undefined,
             renderHud: this.renderHud,
             returnToLobby: this.returnToLobby,
-            roundState: this.roundState,
+            duelState: this.duelState,
             showHighScores: this.showHighScores
         });
     };
@@ -517,7 +517,7 @@ export class ClientGameRuntime implements ClientGameController {
             data: position,
             localPlayerId: this.playerId,
             players: this.players,
-            playing: this.roundState === this.RoundState.PLAYING
+            playing: this.duelState === this.DuelState.PLAYING
         });
     };
 
@@ -537,34 +537,34 @@ export class ClientGameRuntime implements ClientGameController {
         });
     };
 
-    private setRoundState = (nextState: RoundStateValue) => {
-        this.roundState = this.dependencies.ClientRoundTransition.resolve({
+    private setDuelState = (nextState: DuelStateValue) => {
+        this.duelState = this.dependencies.ClientDuelTransition.resolve({
             canTransition: this.dependencies.ClientScreens.canTransition,
-            currentState: this.roundState,
+            currentState: this.duelState,
             nextState
         });
     };
 
-    private setRoundMessage = (message: string) => {
-        this.roundData.setRoundMessage(message);
+    private setDuelMessage = (message: string) => {
+        this.duelData.setDuelMessage(message);
         this.renderHud();
     };
 
-    private startRoundRitual = () => {
+    private startDuelRitual = () => {
         this.highScoresVisible = false;
         this.activeScenario = this.latestModel?.currentScenario ?? null;
         this.clearHitPausePresentation();
 
-        this.dependencies.ClientRoundRitual.start({
+        this.dependencies.ClientDuelRitual.start({
             bullets: this.bullets,
             closeNameEditor: this.closeNameEditor,
             getServerPhase: () => this.latestModel?.phase,
             renderHud: this.renderHud,
             resetAmmo: this.resetAmmo,
-            roundData: this.roundData,
-            roundIntro: this.roundIntro,
-            setRoundMessage: this.setRoundMessage,
-            setRoundState: this.setRoundState,
+            duelData: this.duelData,
+            duelIntro: this.duelIntro,
+            setDuelMessage: this.setDuelMessage,
+            setDuelState: this.setDuelState,
             timers: this.timers
         });
     };
@@ -575,7 +575,7 @@ export class ClientGameRuntime implements ClientGameController {
             collision: this.dependencies.Collision,
             findBulletObstacleHit: this.findBulletObstacleHit,
             players: this.players,
-            roundState: this.roundState
+            duelState: this.duelState
         }) as RuntimeHitDetectionResult;
 
         if (result.type === 'obstacleHit') {
@@ -620,8 +620,8 @@ export class ClientGameRuntime implements ClientGameController {
             playPain: this.gameSounds.playPain,
             renderHud: this.renderHud,
             resetAfterHit: this.resetAfterHit,
-            roundData: this.roundData,
-            setRoundState: this.setRoundState,
+            duelData: this.duelData,
+            setDuelState: this.setDuelState,
             socket: this.socket,
             timers: this.timers
         });
@@ -632,30 +632,30 @@ export class ClientGameRuntime implements ClientGameController {
             bullets: this.bullets,
             players: this.players,
             resetAmmo: this.resetAmmo,
-            roundData: this.roundData
+            duelData: this.duelData
         });
     };
 
-    private endRound = (winnerId?: ClientId | null) => {
-        this.dependencies.ClientRoundEndFlow.endRound({
+    private endDuel = (winnerId?: ClientId | null) => {
+        this.dependencies.ClientDuelEndFlow.endDuel({
             bullets: this.bullets,
             closeNameEditor: this.closeNameEditor,
             getPlayerSlot: this.getPlayerSlot,
             players: this.players,
             renderHud: this.renderHud,
-            resetRound: this.resetRound,
-            roundData: this.roundData,
-            roundIntro: this.roundIntro,
+            resetDuel: this.resetDuel,
+            duelData: this.duelData,
+            duelIntro: this.duelIntro,
             scoreKeeper: this.scoreKeeper,
-            setRoundMessage: this.setRoundMessage,
-            setRoundState: this.setRoundState,
+            setDuelMessage: this.setDuelMessage,
+            setDuelState: this.setDuelState,
             timers: this.timers,
             winnerId
         });
     };
 
     private endGame = () => {
-        this.dependencies.ClientRoundEndFlow.endGame({
+        this.dependencies.ClientDuelEndFlow.endGame({
             bullets: this.bullets,
             closeNameEditor: this.closeNameEditor,
             getClientName: this.getClientName,
@@ -663,23 +663,23 @@ export class ClientGameRuntime implements ClientGameController {
             players: this.players,
             renderHud: this.renderHud,
             resetToStartScreen: undefined,
-            roundData: this.roundData,
-            roundIntro: this.roundIntro,
+            duelData: this.duelData,
+            duelIntro: this.duelIntro,
             scoreKeeper: this.scoreKeeper,
-            setRoundMessage: this.setRoundMessage,
-            setRoundState: this.setRoundState,
+            setDuelMessage: this.setDuelMessage,
+            setDuelState: this.setDuelState,
             timers: this.timers
         });
     };
 
-    private resetRound = () => {
-        this.dependencies.ClientRoundResetFlow.resetRound({
+    private resetDuel = () => {
+        this.dependencies.ClientDuelResetFlow.resetDuel({
             bullets: this.bullets,
             players: this.players,
             renderHud: this.renderHud,
-            roundData: this.roundData,
-            setRoundMessage: this.setRoundMessage,
-            setRoundState: this.setRoundState,
+            duelData: this.duelData,
+            setDuelMessage: this.setDuelMessage,
+            setDuelState: this.setDuelState,
             syncNameEditor: this.syncNameEditor,
             timers: this.timers
         });
@@ -689,14 +689,14 @@ export class ClientGameRuntime implements ClientGameController {
         this.clearParticles();
         this.activeScenario = undefined;
 
-        this.dependencies.ClientRoundResetFlow.resetToStartScreen({
+        this.dependencies.ClientDuelResetFlow.resetToStartScreen({
             bullets: this.bullets,
             players: this.players,
             renderHud: this.renderHud,
             resetAmmo: this.resetAmmo,
-            roundData: this.roundData,
-            setRoundMessage: this.setRoundMessage,
-            setRoundState: this.setRoundState,
+            duelData: this.duelData,
+            setDuelMessage: this.setDuelMessage,
+            setDuelState: this.setDuelState,
             syncNameEditor: this.syncNameEditor,
             timers: this.timers
         });
@@ -709,9 +709,9 @@ export class ClientGameRuntime implements ClientGameController {
         this.dependencies.ClientLobbyFlow.enter({
             bullets: this.bullets,
             players: this.players,
-            roundData: this.roundData,
-            roundIntro: this.roundIntro,
-            setRoundState: this.setRoundState,
+            duelData: this.duelData,
+            duelIntro: this.duelIntro,
+            setDuelState: this.setDuelState,
             syncNameEditor: this.syncNameEditor,
             timers: this.timers
         });
@@ -732,7 +732,7 @@ export class ClientGameRuntime implements ClientGameController {
 
     private syncLocalPlayerPosition = () => {
         this.positionSync.syncLocal({
-            playing: this.roundState === this.RoundState.PLAYING,
+            playing: this.duelState === this.DuelState.PLAYING,
             player: this.getLocalPlayer(),
             socket: this.socket
         });
@@ -740,7 +740,7 @@ export class ClientGameRuntime implements ClientGameController {
 
     private updateBulletCollisionEnvironment = () => {
         this.dependencies.ClientCollisionEnvironment.updateBulletLines({
-            roundState: this.roundState,
+            duelState: this.duelState,
             scenario: this.getCurrentScenario(),
             scenarioRenderer: this.scenarioRenderer
         });
@@ -748,7 +748,7 @@ export class ClientGameRuntime implements ClientGameController {
 
     private updateMovementObstacleEnvironment = () => {
         this.dependencies.ClientCollisionEnvironment.updateObstacleBodies({
-            roundState: this.roundState,
+            duelState: this.duelState,
             scenario: this.getCurrentScenario(),
             scenarioRenderer: this.scenarioRenderer
         });
@@ -759,7 +759,7 @@ export class ClientGameRuntime implements ClientGameController {
             camera: this.camera,
             canvas: this.canvas,
             player: this.getLocalPlayer(),
-            roundState: this.roundState
+            duelState: this.duelState
         });
     };
 
@@ -919,7 +919,7 @@ export class ClientGameRuntime implements ClientGameController {
             canPlay: this.canRequestReady(),
             highScoresVisible: this.shouldShowHighScoresScreen(),
             ready: this.isLocalClientReady(),
-            roundState: this.roundState,
+            duelState: this.duelState,
             touchControls: this.touchControls
         });
     };
@@ -939,7 +939,7 @@ export class ClientGameRuntime implements ClientGameController {
             playerId: this.playerId,
             previousResult: this.getPreviousLobbyResultHud(),
             players: this.players.all,
-            roundState: this.roundState
+            duelState: this.duelState
         });
     };
 
@@ -1068,17 +1068,17 @@ export class ClientGameRuntime implements ClientGameController {
 
     private syncServerTiming = (model: RuntimeGameModel) => {
         if (typeof model.matchEndsAt === 'number') {
-            this.roundData.setRoundEndsAt(model.matchEndsAt);
+            this.duelData.setMatchEndsAt(model.matchEndsAt);
             return;
         }
 
         if (model.phase) {
-            this.roundData.setRoundEndsAt(null);
+            this.duelData.setMatchEndsAt(null);
         }
     };
 
     private clearHitPausePresentation = () => {
-        this.roundData.clearHitMessage();
+        this.duelData.clearHitMessage();
 
         Object.keys(this.players.all).forEach((id) => {
             this.players.all[id]?.clearDeathAnimation();
@@ -1086,11 +1086,11 @@ export class ClientGameRuntime implements ClientGameController {
     };
 
     private getObstacleDamage = (id: string) => {
-        return this.roundData.getObstacleDamage(id);
+        return this.duelData.getObstacleDamage(id);
     };
 
     private damageObstacle = (id: string) => {
-        this.roundData.damageObstacle(id);
+        this.duelData.damageObstacle(id);
     };
 
     private getPlayerSlot = (id?: ClientId | null) => {
@@ -1155,7 +1155,7 @@ export class ClientGameRuntime implements ClientGameController {
     private shouldUseCamera = () => {
         return this.cameraController.shouldUseCamera({
             camera: this.camera,
-            roundState: this.roundState
+            duelState: this.duelState
         });
     };
 
@@ -1233,7 +1233,7 @@ export class ClientGameRuntime implements ClientGameController {
         this.dependencies.ClientAmmoFlow.reloadIfBothPlayersAreOut({
             ammo: this.ammo,
             model: this.latestModel,
-            roundState: this.roundState
+            duelState: this.duelState
         });
     };
 }

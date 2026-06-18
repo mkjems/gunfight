@@ -1,4 +1,4 @@
-import { RoundState } from '../state/clientScreens.js';
+import { DuelState } from '../state/clientScreens.js';
 
 type Bullet = {
     deleteMe?: boolean;
@@ -40,11 +40,11 @@ type ClientHitDetectionOptions = {
     players?: {
         all: Record<string, Player>;
     };
-    roundState: RoundState;
+    duelState: DuelState;
 };
 
 export function check(options: ClientHitDetectionOptions) {
-    if (options.roundState !== RoundState.PLAYING) {
+    if (options.duelState !== DuelState.PLAYING) {
         return {
             type: 'none'
         };

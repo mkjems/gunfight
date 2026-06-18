@@ -75,7 +75,7 @@ test('handles player hits by entering hit pause and scheduling reset', async fun
             winnerId: 'p1'
         },
         model: {
-            roundNumber: 4
+            duelNumber: 4
         },
         playerId: 'p1',
         players: {
@@ -97,20 +97,20 @@ test('handles player hits by entering hit pause and scheduling reset', async fun
             calls.push('renderHud');
         },
         resetAfterHit() {},
-        roundData: {
+        duelData: {
             setHitMessage(message) {
-                calls.push(['roundData.setHitMessage', message]);
+                calls.push(['duelData.setHitMessage', message]);
             }
         },
-        setRoundState(state) {
-            calls.push(['setRoundState', state]);
+        setDuelState(state) {
+            calls.push(['setDuelState', state]);
         },
         socket: {
             emit(event, payload) {
                 calls.push([
                     'socket.emit',
                     event,
-                    payload.roundNumber,
+                    payload.duelNumber,
                     payload.winnerId,
                     payload.targetId
                 ]);
@@ -124,9 +124,9 @@ test('handles player hits by entering hit pause and scheduling reset', async fun
     });
 
     assert.deepEqual(plain(calls), [
-        ['setRoundState', 'hitPause'],
+        ['setDuelState', 'hitPause'],
         [
-            'roundData.setHitMessage',
+            'duelData.setHitMessage',
             {
                 targetId: 'p2',
                 text: 'Got me!'
@@ -134,7 +134,7 @@ test('handles player hits by entering hit pause and scheduling reset', async fun
         ],
         'playPain',
         'target.playDeathAnimation',
-        ['socket.emit', 'roundResult', 4, 'p1', 'p2'],
+        ['socket.emit', 'duelResult', 4, 'p1', 'p2'],
         'renderHud',
         'players.clearKeys',
         'bullets.clear',
@@ -164,22 +164,22 @@ test('resets hit presentation after the server-owned hit pause', async function 
         resetAmmo() {
             calls.push('resetAmmo');
         },
-        roundData: {
+        duelData: {
             clearHitMessage() {
-                calls.push('roundData.clearHitMessage');
+                calls.push('duelData.clearHitMessage');
             }
         }
     });
 
     assert.deepEqual(calls, [
-        'roundData.clearHitMessage',
+        'duelData.clearHitMessage',
         'p1.clearDeathAnimation',
         'bullets.reset',
         'resetAmmo'
     ]);
 });
 
-test('resets remote hit presentation without advancing the round locally', async function () {
+test('resets remote hit presentation without advancing the duel locally', async function () {
     const flow = await loadClientPlayerHitFlow();
     const calls = [];
 
@@ -206,15 +206,15 @@ test('resets remote hit presentation without advancing the round locally', async
         resetAmmo() {
             calls.push('resetAmmo');
         },
-        roundData: {
+        duelData: {
             clearHitMessage() {
-                calls.push('roundData.clearHitMessage');
+                calls.push('duelData.clearHitMessage');
             }
         }
     });
 
     assert.deepEqual(calls, [
-        'roundData.clearHitMessage',
+        'duelData.clearHitMessage',
         'p1.clearDeathAnimation',
         'p2.clearDeathAnimation',
         'bullets.reset',
@@ -244,15 +244,15 @@ test('does not inspect local match expiry after hit pause', async function () {
         resetAmmo() {
             calls.push('resetAmmo');
         },
-        roundData: {
+        duelData: {
             clearHitMessage() {
-                calls.push('roundData.clearHitMessage');
+                calls.push('duelData.clearHitMessage');
             }
         }
     });
 
     assert.deepEqual(calls, [
-        'roundData.clearHitMessage',
+        'duelData.clearHitMessage',
         'p1.clearDeathAnimation',
         'bullets.reset',
         'resetAmmo'

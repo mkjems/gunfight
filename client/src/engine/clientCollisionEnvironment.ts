@@ -1,4 +1,4 @@
-import { RoundState } from '../state/clientScreens.js';
+import { DuelState } from '../state/clientScreens.js';
 
 type CollisionEnvironmentOptions<TScenario, TLines, TBodies> = {
     Bullet: {
@@ -7,7 +7,7 @@ type CollisionEnvironmentOptions<TScenario, TLines, TBodies> = {
     Obstacles: {
         setBodies: (bodies: TBodies) => void;
     };
-    roundState: RoundState;
+    duelState: DuelState;
     scenario: TScenario | null | undefined;
     scenarioRenderer: {
         getObstacleBodies: (scenario: TScenario | null | undefined) => TBodies;
@@ -27,7 +27,7 @@ export function updateObstacleBodies<TScenario, TLines, TBodies>(
     options: CollisionEnvironmentOptions<TScenario, TLines, TBodies>
 ) {
     const scenario =
-        options.roundState === RoundState.WAITING ? null : options.scenario;
+        options.duelState === DuelState.WAITING ? null : options.scenario;
 
     options.Obstacles.setBodies(
         options.scenarioRenderer.getObstacleBodies(scenario)

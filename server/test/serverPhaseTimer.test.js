@@ -22,7 +22,7 @@ function createTimedPhaseLobby(modelOverrides = {}) {
         phase: 'readyCountdown',
         phaseStartedAt: 1000,
         playerLimit: 2,
-        roundNumber: 1,
+        duelNumber: 1,
         scores: [0, 0],
         version: 7,
         ...modelOverrides
@@ -124,7 +124,7 @@ test('routes fresh timed phase callbacks to the matching lobby command', functio
             result: null
         },
         {
-            phase: 'roundIntro',
+            phase: 'duelIntro',
             calls: [['enterPlaying', 'G0001']],
             result: { clients: [], resultId: 'entered', scores: [0, 0] }
         },

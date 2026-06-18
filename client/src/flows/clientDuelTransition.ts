@@ -7,7 +7,7 @@ type TransitionOptions<State> = {
 export function resolve<State>(options: TransitionOptions<State>): State {
     if (!options.canTransition(options.currentState, options.nextState)) {
         throw new Error(
-            'Illegal round state transition: ' +
+            'Illegal duel state transition: ' +
                 String(options.currentState) +
                 ' -> ' +
                 String(options.nextState)
@@ -17,6 +17,6 @@ export function resolve<State>(options: TransitionOptions<State>): State {
     return options.nextState;
 }
 
-export const ClientRoundTransition = {
+export const ClientDuelTransition = {
     resolve
 };

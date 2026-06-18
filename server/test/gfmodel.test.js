@@ -28,7 +28,7 @@ function snapshot(model) {
         matchState: current.matchState,
         phase: current.phase,
         phaseEndsAt: current.phaseEndsAt,
-        roundNumber: current.roundNumber,
+        duelNumber: current.duelNumber,
         scores: current.scores,
         version: current.version
     };
@@ -38,10 +38,10 @@ test('documents legal lifecycle phase transitions', function () {
     assert.deepEqual(LEGAL_PHASE_TRANSITIONS, {
         waiting: ['readying', 'closed'],
         readying: ['waiting', 'readyCountdown', 'closed'],
-        readyCountdown: ['roundIntro', 'abandoned', 'closed'],
-        roundIntro: ['playing', 'gameOver', 'abandoned', 'closed'],
+        readyCountdown: ['duelIntro', 'abandoned', 'closed'],
+        duelIntro: ['playing', 'gameOver', 'abandoned', 'closed'],
         playing: ['hitPause', 'gameOver', 'abandoned', 'closed'],
-        hitPause: ['roundIntro', 'gameOver', 'abandoned', 'closed'],
+        hitPause: ['duelIntro', 'gameOver', 'abandoned', 'closed'],
         gameOver: ['waiting', 'readying', 'abandoned', 'closed'],
         abandoned: ['closed'],
         closed: []
@@ -78,8 +78,8 @@ test('rejects lifecycle commands that are illegal for the current phase', functi
     assert.equal(model.startMatch(), false);
     assert.equal(model.enterPlaying('early'), false);
     assert.equal(
-        model.recordRoundResult({
-            roundNumber: 1,
+        model.recordDuelResult({
+            duelNumber: 1,
             targetId: secondClient.id,
             winnerId: firstClient.id
         }),

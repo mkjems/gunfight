@@ -39,7 +39,7 @@ test('emits and applies local obstacle hits from the owning player', async funct
                 bullet: { ownerId: 'p1' },
                 obstacleId: 'wagon'
             },
-            model: { roundNumber: 3 },
+            model: { duelNumber: 3 },
             playerId: 'p1',
             socket: {
                 emit(event, payload) {
@@ -51,12 +51,12 @@ test('emits and applies local obstacle hits from the owning player', async funct
     );
 
     assert.deepEqual(plain(applied), [
-        { id: 'wagon', ownerId: 'p1', roundNumber: 3 }
+        { id: 'wagon', ownerId: 'p1', duelNumber: 3 }
     ]);
     assert.deepEqual(plain(emitted), [
         {
             event: 'obstacleDamage',
-            payload: { id: 'wagon', ownerId: 'p1', roundNumber: 3 }
+            payload: { id: 'wagon', ownerId: 'p1', duelNumber: 3 }
         }
     ]);
 });
@@ -74,7 +74,7 @@ test('ignores obstacle hits owned by another player', async function () {
                 bullet: { ownerId: 'p2' },
                 obstacleId: 'wagon'
             },
-            model: { roundNumber: 3 },
+            model: { duelNumber: 3 },
             playerId: 'p1',
             socket: {
                 emit() {
@@ -87,7 +87,7 @@ test('ignores obstacle hits owned by another player', async function () {
     assert.deepEqual(calls, []);
 });
 
-test('applies obstacle damage only for the current round', async function () {
+test('applies obstacle damage only for the current duel', async function () {
     const sync = await loadClientObstacleSync();
     const calls = [];
 
@@ -101,8 +101,8 @@ test('applies obstacle damage only for the current round', async function () {
             damageObstacle(id) {
                 calls.push(['damage', id]);
             },
-            data: { id: 'wagon', ownerId: 'p1', roundNumber: 2 },
-            model: { roundNumber: 3 },
+            data: { id: 'wagon', ownerId: 'p1', duelNumber: 2 },
+            model: { duelNumber: 3 },
             playObstacleHit(id) {
                 calls.push(['sound', id]);
             }
@@ -121,8 +121,8 @@ test('applies obstacle damage only for the current round', async function () {
             damageObstacle(id) {
                 calls.push(['damage', id]);
             },
-            data: { id: 'wagon', ownerId: 'p1', roundNumber: 3 },
-            model: { roundNumber: 3 },
+            data: { id: 'wagon', ownerId: 'p1', duelNumber: 3 },
+            model: { duelNumber: 3 },
             playObstacleHit(id) {
                 calls.push(['sound', id]);
             }

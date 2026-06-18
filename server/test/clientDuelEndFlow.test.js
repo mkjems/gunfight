@@ -24,7 +24,7 @@ function compileClientModule(sourceName, outputName, tempDirectory) {
     writeFileSync(outputPath, transpiled.outputText, 'utf8');
 }
 
-async function loadClientRoundEndFlow() {
+async function loadClientDuelEndFlow() {
     const tempDirectory = mkdtempSync(path.join(tmpdir(), 'gunfight-client-'));
 
     compileClientModule(
@@ -43,20 +43,20 @@ async function loadClientRoundEndFlow() {
         tempDirectory
     );
     compileClientModule(
-        'flows/clientRoundEndFlow.ts',
-        'flows/clientRoundEndFlow.js',
+        'flows/clientDuelEndFlow.ts',
+        'flows/clientDuelEndFlow.js',
         tempDirectory
     );
 
     const module = await import(
-        pathToFileURL(path.join(tempDirectory, 'flows/clientRoundEndFlow.js'))
+        pathToFileURL(path.join(tempDirectory, 'flows/clientDuelEndFlow.js'))
             .href
     );
 
-    return module.ClientRoundEndFlow;
+    return module.ClientDuelEndFlow;
 }
 
-function createRoundOptions(overrides = {}) {
+function createDuelOptions(overrides = {}) {
     const calls = [];
     const options = {
         bullets: {
@@ -85,7 +85,7 @@ function createRoundOptions(overrides = {}) {
                 }
             ],
             gameId: 'game-1',
-            roundNumber: 3
+            duelNumber: 3
         },
         players: {
             clearKeys() {
@@ -98,19 +98,19 @@ function createRoundOptions(overrides = {}) {
         renderHud() {
             calls.push('renderHud');
         },
-        resetRound() {},
+        resetDuel() {},
         resetToStartScreen() {},
-        roundData: {
-            clearRoundPauseFlags() {
-                calls.push('roundData.clearRoundPauseFlags');
+        duelData: {
+            clearDuelPauseFlags() {
+                calls.push('duelData.clearDuelPauseFlags');
             },
-            resetRoundFlags() {
-                calls.push('roundData.resetRoundFlags');
+            resetDuelFlags() {
+                calls.push('duelData.resetDuelFlags');
             }
         },
-        roundIntro: {
+        duelIntro: {
             clear() {
-                calls.push('roundIntro.clear');
+                calls.push('duelIntro.clear');
             }
         },
         scoreKeeper: {
@@ -120,11 +120,11 @@ function createRoundOptions(overrides = {}) {
                 return getClientName(clients[0]) + ' WINS 3-1';
             }
         },
-        setRoundMessage(message) {
-            calls.push(['setRoundMessage', message]);
+        setDuelMessage(message) {
+            calls.push(['setDuelMessage', message]);
         },
-        setRoundState(state) {
-            calls.push(['setRoundState', state]);
+        setDuelState(state) {
+            calls.push(['setDuelState', state]);
         },
         timers: {
             clearMany(names) {
@@ -150,33 +150,33 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('ends a round by scoring the winner and scheduling the reset', async function () {
-    const flow = await loadClientRoundEndFlow();
-    const { calls, options } = createRoundOptions();
+test('ends a duel by scoring the winner and scheduling the reset', async function () {
+    const flow = await loadClientDuelEndFlow();
+    const { calls, options } = createDuelOptions();
 
-    flow.endRound(options);
+    flow.endDuel(options);
 
     assert.deepEqual(plain(calls), [
-        ['setRoundState', 'roundOver'],
+        ['setDuelState', 'duelOver'],
         'closeNameEditor',
-        'roundData.clearRoundPauseFlags',
-        ['setRoundMessage', 'PLAYER 1 WINS'],
+        'duelData.clearDuelPauseFlags',
+        ['setDuelMessage', 'PLAYER 1 WINS'],
         'renderHud',
         'players.clearKeys',
         'bullets.clear',
         ['timers.clearMany', ['reset', 'matchEnd', 'ritual', 'hit']],
-        'roundIntro.clear',
+        'duelIntro.clear',
         ['timers.set', 'reset', 'function', 1800]
     ]);
 });
 
-test('ends a round on time without adding a point', async function () {
-    const flow = await loadClientRoundEndFlow();
-    const { calls, options } = createRoundOptions({
+test('ends a duel on time without adding a point', async function () {
+    const flow = await loadClientDuelEndFlow();
+    const { calls, options } = createDuelOptions({
         winnerId: null
     });
 
-    flow.endRound(options);
+    flow.endDuel(options);
 
     assert.equal(
         calls.some(function (call) {
@@ -185,41 +185,41 @@ test('ends a round on time without adding a point', async function () {
         false
     );
     assert.deepEqual(calls.slice(0, 4), [
-        ['setRoundState', 'roundOver'],
+        ['setDuelState', 'duelOver'],
         'closeNameEditor',
-        'roundData.clearRoundPauseFlags',
-        ['setRoundMessage', 'TIME']
+        'duelData.clearDuelPauseFlags',
+        ['setDuelMessage', 'TIME']
     ]);
 });
 
 test('ends the game and schedules the start reset without notifying the server', async function () {
-    const flow = await loadClientRoundEndFlow();
-    const { calls, options } = createRoundOptions();
+    const flow = await loadClientDuelEndFlow();
+    const { calls, options } = createDuelOptions();
 
     flow.endGame(options);
 
     assert.deepEqual(plain(calls), [
-        ['setRoundState', 'gameOver'],
+        ['setDuelState', 'gameOver'],
         'closeNameEditor',
-        'roundData.resetRoundFlags',
+        'duelData.resetDuelFlags',
         ['scoreKeeper.getGameOverMessage', 2],
-        ['setRoundMessage', 'Ada WINS 3-1'],
+        ['setDuelMessage', 'Ada WINS 3-1'],
         'renderHud',
         'players.clearKeys',
         'bullets.clear',
         ['timers.clearMany', ['reset', 'matchEnd', 'ritual', 'hit']],
-        'roundIntro.clear',
+        'duelIntro.clear',
         ['timers.set', 'reset', 'function', 5000]
     ]);
 });
 
 test('ends the game with the start-screen reset callback when available', async function () {
-    const flow = await loadClientRoundEndFlow();
+    const flow = await loadClientDuelEndFlow();
     const resetCallbacks = [];
-    const resetRound = function resetRound() {};
+    const resetDuel = function resetDuel() {};
     const resetToStartScreen = function resetToStartScreen() {};
-    const { options } = createRoundOptions({
-        resetRound,
+    const { options } = createDuelOptions({
+        resetDuel,
         resetToStartScreen,
         timers: {
             clearMany() {},
@@ -235,9 +235,9 @@ test('ends the game with the start-screen reset callback when available', async 
 });
 
 test('does not schedule a game-over reset without a reset callback', async function () {
-    const flow = await loadClientRoundEndFlow();
-    const { calls, options } = createRoundOptions({
-        resetRound: undefined,
+    const flow = await loadClientDuelEndFlow();
+    const { calls, options } = createDuelOptions({
+        resetDuel: undefined,
         resetToStartScreen: undefined
     });
 

@@ -11,7 +11,7 @@ type ClientAmmoOptions = {
 };
 
 export function ClientAmmo(options: ClientAmmoOptions = {}) {
-    const maxAmmo = options.maxAmmo || Config.round.ammo;
+    const maxAmmo = options.maxAmmo || Config.duel.ammo;
     let ammo: Record<string, number> = {};
 
     function reset(clients: AmmoClient[] = []) {

@@ -1,5 +1,5 @@
 import { handle as handleGameplayInput } from './clientGameplayInput.js';
-import { RoundState } from '../state/clientScreens.js';
+import { DuelState } from '../state/clientScreens.js';
 
 type KeyEvent = {
     action: string;
@@ -28,14 +28,14 @@ type ClientKeyEventFlowOptions = {
     playerId?: number | string;
     renderHud: () => void;
     returnToLobby?: () => void;
-    roundState: RoundState;
+    duelState: DuelState;
     showHighScores?: () => void;
 };
 
 export function handle(options: ClientKeyEventFlowOptions) {
     const keyEvent = options.keyEvent;
     const isLocalWaitingKey =
-        options.roundState === RoundState.WAITING &&
+        options.duelState === DuelState.WAITING &&
         keyEvent.player === options.playerId &&
         (keyEvent.key === 's' || !!options.highScoresVisible) &&
         options.isLocalClientWaiting();
@@ -59,7 +59,7 @@ export function handle(options: ClientKeyEventFlowOptions) {
     }
 
     if (
-        options.roundState === RoundState.WAITING &&
+        options.duelState === DuelState.WAITING &&
         keyEvent.player === options.playerId &&
         keyEvent.key === 'e' &&
         !options.isLocalClientWaiting()
@@ -68,7 +68,7 @@ export function handle(options: ClientKeyEventFlowOptions) {
     }
 
     if (
-        options.roundState === RoundState.WAITING &&
+        options.duelState === DuelState.WAITING &&
         options.nameEditor &&
         keyEvent.player === options.playerId
     ) {
@@ -87,7 +87,7 @@ export function handle(options: ClientKeyEventFlowOptions) {
         bullets: options.bullets as never,
         keyEvent: keyEvent as never,
         player: options.player as never,
-        roundState: options.roundState,
+        duelState: options.duelState,
         onGunFired: options.onGunFired as never,
         onWaitingFire: options.onWaitingFire as never,
         onBulletFired: options.onBulletFired as never,

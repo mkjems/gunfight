@@ -82,7 +82,7 @@ test('fires bullets and stores the shot snapshot on the key event', async functi
         },
         keyEvent,
         player,
-        roundState: 'playing',
+        duelState: 'playing',
         onGunFired(firedBullet) {
             calls.push(['gun', firedBullet]);
         },
@@ -129,7 +129,7 @@ test('does not play gun sound when the shot is rejected', async function () {
         player: {
             playerId: 'p1'
         },
-        roundState: 'playing',
+        duelState: 'playing',
         onGunFired() {
             calls.push('gun');
         },
@@ -169,7 +169,7 @@ test('plays empty gun sound when firing without ammo', async function () {
         player: {
             playerId: 'p1'
         },
-        roundState: 'playing',
+        duelState: 'playing',
         onBulletFired() {
             calls.push('fired');
         },
@@ -208,7 +208,7 @@ test('activates the lobby gun without firing bullets while waiting', async funct
             key: ' '
         },
         player,
-        roundState: 'waiting',
+        duelState: 'waiting',
         onGunFired() {
             calls.push('gun');
         },
@@ -226,7 +226,7 @@ test('activates the lobby gun without firing bullets while waiting', async funct
     assert.deepEqual(calls, [['waitingFire', player]]);
 });
 
-test('only releases keys during locked round states', async function () {
+test('only releases keys during locked duel states', async function () {
     const input = await loadClientGameplayInput();
     const events = [];
     const player = {
@@ -241,7 +241,7 @@ test('only releases keys during locked round states', async function () {
             key: 'h'
         },
         player,
-        roundState: 'ritual'
+        duelState: 'ritual'
     });
     input.handle({
         keyEvent: {
@@ -249,7 +249,7 @@ test('only releases keys during locked round states', async function () {
             key: 'h'
         },
         player,
-        roundState: 'ritual'
+        duelState: 'ritual'
     });
 
     assert.deepEqual(events, ['up']);

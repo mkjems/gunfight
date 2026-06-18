@@ -4,9 +4,9 @@ import path from 'node:path';
 import test from 'node:test';
 import ts from 'typescript';
 
-async function loadClientRoundState() {
+async function loadClientDuelState() {
     const source = readFileSync(
-        path.join(process.cwd(), 'client/src/state/clientRoundState.ts'),
+        path.join(process.cwd(), 'client/src/state/clientDuelState.ts'),
         'utf8'
     );
     const transpiled = ts.transpileModule(source, {
@@ -18,34 +18,34 @@ async function loadClientRoundState() {
     const encoded = Buffer.from(transpiled.outputText).toString('base64');
     const module = await import('data:text/javascript;base64,' + encoded);
 
-    return module.ClientRoundState;
+    return module.ClientDuelState;
 }
 
-test('tracks round clock and messages', async function () {
-    const ClientRoundState = await loadClientRoundState();
+test('tracks duel clock and messages', async function () {
+    const ClientDuelState = await loadClientDuelState();
     let now = 1000;
-    const state = new ClientRoundState({
+    const state = new ClientDuelState({
         getTime() {
             return now;
         }
     });
 
     assert.equal(state.getSecondsLeft(70), 70);
-    state.setRoundEndsAt(3500);
+    state.setMatchEndsAt(3500);
     assert.equal(state.getSecondsLeft(70), 3);
 
     now = 3500;
     assert.equal(state.getSecondsLeft(70), 0);
 
-    state.setRoundMessage('DRAW!');
-    assert.equal(state.getRoundMessage(), 'DRAW!');
-    state.setRoundMessage('');
-    assert.equal(state.getRoundMessage(), '');
+    state.setDuelMessage('DRAW!');
+    assert.equal(state.getDuelMessage(), 'DRAW!');
+    state.setDuelMessage('');
+    assert.equal(state.getDuelMessage(), '');
 });
 
 test('tracks hit state', async function () {
-    const ClientRoundState = await loadClientRoundState();
-    const state = new ClientRoundState();
+    const ClientDuelState = await loadClientDuelState();
+    const state = new ClientDuelState();
     const hitMessage = {
         targetId: 'player-2',
         text: 'Got me!'
@@ -59,29 +59,29 @@ test('tracks hit state', async function () {
     assert.equal(state.getHitMessage(), null);
 });
 
-test('resets obstacle damage only for full round resets', async function () {
-    const ClientRoundState = await loadClientRoundState();
-    const state = new ClientRoundState();
+test('resets obstacle damage only for full duel resets', async function () {
+    const ClientDuelState = await loadClientDuelState();
+    const state = new ClientDuelState();
 
     state.damageObstacle('wagon');
     state.damageObstacle('wagon');
-    state.setRoundEndsAt(2000);
+    state.setMatchEndsAt(2000);
     state.setHitMessage({ text: 'hit' });
 
-    state.clearRoundPauseFlags();
+    state.clearDuelPauseFlags();
 
     assert.equal(state.getObstacleDamage('wagon'), 2);
-    assert.equal(state.getRoundEndsAt(), null);
+    assert.equal(state.getMatchEndsAt(), null);
     assert.equal(state.getHitMessage(), null);
 
-    state.resetRoundFlags();
+    state.resetDuelFlags();
 
     assert.equal(state.getObstacleDamage('wagon'), 0);
 });
 
 test('records scenario start time', async function () {
-    const ClientRoundState = await loadClientRoundState();
-    const state = new ClientRoundState({
+    const ClientDuelState = await loadClientDuelState();
+    const state = new ClientDuelState({
         getTime() {
             return 1234;
         }

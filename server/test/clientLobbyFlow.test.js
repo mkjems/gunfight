@@ -68,18 +68,18 @@ function createLobbyOptions(overrides = {}) {
                 calls.push('players.clearKeys');
             }
         },
-        roundData: {
-            resetRoundFlags() {
-                calls.push('roundData.resetRoundFlags');
+        duelData: {
+            resetDuelFlags() {
+                calls.push('duelData.resetDuelFlags');
             }
         },
-        roundIntro: {
+        duelIntro: {
             clear() {
-                calls.push('roundIntro.clear');
+                calls.push('duelIntro.clear');
             }
         },
-        setRoundState(state) {
-            calls.push(['setRoundState', state]);
+        setDuelState(state) {
+            calls.push(['setDuelState', state]);
         },
         socket: {
             emit(event) {
@@ -119,7 +119,7 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('enters lobby state by clearing round activity and sync state', async function () {
+test('enters lobby state by clearing duel activity and sync state', async function () {
     const flow = await loadClientLobbyFlow();
     const { calls, options } = createLobbyOptions();
 
@@ -127,9 +127,9 @@ test('enters lobby state by clearing round activity and sync state', async funct
 
     assert.deepEqual(plain(calls), [
         ['timers.clearMany', ['ritual', 'hit', 'reset', 'abandonedRequeue']],
-        'roundIntro.clear',
-        'roundData.resetRoundFlags',
-        ['setRoundState', 'waiting'],
+        'duelIntro.clear',
+        'duelData.resetDuelFlags',
+        ['setDuelState', 'waiting'],
         'players.clearKeys',
         'bullets.clear',
         'syncNameEditor'

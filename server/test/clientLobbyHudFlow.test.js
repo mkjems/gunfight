@@ -77,7 +77,7 @@ function createRenderOptions(overrides = {}) {
             calls.push(['onNameEditorSelect', rowIndex, colIndex]);
         },
         playerId: 'p1',
-        roundState: 'waiting',
+        duelState: 'waiting',
         ...overrides
     };
 

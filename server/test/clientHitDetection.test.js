@@ -65,7 +65,7 @@ test('marks obstacle bullets for deletion before returning obstacle hits', async
             return hit;
         },
         players: { all: {} },
-        roundState: 'playing'
+        duelState: 'playing'
     });
 
     assert.equal(result.type, 'obstacleHit');
@@ -94,7 +94,7 @@ test('marks player hit bullets for deletion before returning player hits', async
             return null;
         },
         players: { all: {} },
-        roundState: 'playing'
+        duelState: 'playing'
     });
 
     assert.equal(result.type, 'playerHit');
@@ -113,7 +113,7 @@ test('returns none when no hits are found during active play', async function ()
                     return null;
                 },
                 players: { all: {} },
-                roundState: 'playing'
+                duelState: 'playing'
             })
         ),
         {

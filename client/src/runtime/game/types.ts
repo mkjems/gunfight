@@ -4,7 +4,7 @@ import type {
     MatchState,
     Scenario
 } from '../../../../shared/contracts.js';
-import type { RoundState as RoundStateValue } from '../../state/clientScreens.js';
+import type { DuelState as DuelStateValue } from '../../state/clientScreens.js';
 
 export type ClientId = number | string;
 
@@ -123,17 +123,17 @@ export type RuntimeCameraController = {
     getCameraScale: () => number;
     shouldUseCamera: (options: {
         camera: RuntimeCamera;
-        roundState: RoundStateValue;
+        duelState: DuelStateValue;
     }) => boolean;
     update: (options: {
         camera: RuntimeCamera;
         canvas: HTMLCanvasElement;
         player?: RuntimePlayer | null;
-        roundState: RoundStateValue;
+        duelState: DuelStateValue;
     }) => void;
     worldToHudPoint?: (options: {
         camera: RuntimeCamera;
-        roundState: RoundStateValue;
+        duelState: DuelStateValue;
         x: number;
         y: number;
     }) => {
@@ -182,7 +182,7 @@ export type RuntimePlayers = {
     clearKeys: () => void;
     label: (id?: ClientId | null) => string;
     resetAll: (options: {
-        roundNumber?: number;
+        duelNumber?: number;
         showStraightnessMeter?: boolean;
         slots: unknown;
     }) => void;
@@ -231,26 +231,26 @@ export type RuntimeAmmo = {
     spend: (clientId: ClientId) => boolean;
 };
 
-export type RuntimeRoundData = {
+export type RuntimeDuelData = {
     clearHitMessage: () => void;
     clearObstacleDamage: () => void;
-    clearRoundEnd: () => void;
-    clearRoundPauseFlags: () => void;
+    clearMatchEnd: () => void;
+    clearDuelPauseFlags: () => void;
     damageObstacle: (id: string) => void;
     getHitMessage: () => { targetId: ClientId; text: string } | null;
     getObstacleDamage: (id: string) => number;
-    getRoundEndsAt: () => number | null | undefined;
-    getRoundMessage: () => string;
+    getMatchEndsAt: () => number | null | undefined;
+    getDuelMessage: () => string;
     getScenarioStartedAt: () => number | null;
     getSecondsLeft: (defaultSeconds: number) => number;
-    resetRoundFlags: () => void;
+    resetDuelFlags: () => void;
     setHitMessage: (message: { targetId: ClientId; text: string }) => void;
-    setRoundEndsAt: (value: number | null) => void;
-    setRoundMessage: (message?: string) => void;
+    setMatchEndsAt: (value: number | null) => void;
+    setDuelMessage: (message?: string) => void;
     startScenario: () => void;
 };
 
-export type RuntimeRoundIntro = {
+export type RuntimeDuelIntro = {
     clear: () => void;
     complete: () => void;
     start: () => void;
@@ -328,9 +328,9 @@ export type RuntimeSystems = {
     particleLayer: RuntimeParticleLayer;
     players: RuntimePlayers;
     positionSync: RuntimePositionSync;
-    roundData: RuntimeRoundData;
-    roundIntro: RuntimeRoundIntro;
-    roundState: RoundStateValue;
+    duelData: RuntimeDuelData;
+    duelIntro: RuntimeDuelIntro;
+    duelState: DuelStateValue;
     scene: RuntimeScene;
     scoreKeeper: RuntimeScoreKeeper;
     timers: RuntimeTimers;
@@ -422,7 +422,7 @@ export type RuntimeGameModel = {
     phaseEndsAt?: number;
     phaseStartedAt?: number;
     playerLimit?: number;
-    roundNumber?: number;
+    duelNumber?: number;
     scores?: number[];
     version?: number;
 };
@@ -451,7 +451,7 @@ export type RuntimePlayerPositionPayload = {
 export type RuntimeObstacleDamagePayload = {
     id: string;
     ownerId: ClientId;
-    roundNumber?: number;
+    duelNumber?: number;
 };
 
 export type RuntimeObstacleHit = {

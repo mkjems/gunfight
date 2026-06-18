@@ -107,14 +107,14 @@ function createRuntime(ClientGameRuntime, dependencyOverrides = {}) {
         ClientModelUpdateFlow: {
             sync() {}
         },
-        ClientRoundEndFlow: {
+        ClientDuelEndFlow: {
             endGame() {}
         },
-        ClientRoundRitual: {
+        ClientDuelRitual: {
             start() {}
         },
         ClientScreens: {
-            RoundState: {
+            DuelState: {
                 GAME_OVER: 'gameOver',
                 PLAYING: 'playing',
                 WAITING: 'waiting'
@@ -136,13 +136,13 @@ function createRuntime(ClientGameRuntime, dependencyOverrides = {}) {
     runtime.particleLayer = {
         clear() {}
     };
-    runtime.roundData = {
+    runtime.duelData = {
         clearHitMessage() {},
-        setRoundEndsAt() {
+        setMatchEndsAt() {
             return undefined;
         }
     };
-    runtime.roundIntro = {};
+    runtime.duelIntro = {};
     runtime.scoreKeeper = {
         setScores() {}
     };
@@ -154,7 +154,7 @@ function createRuntime(ClientGameRuntime, dependencyOverrides = {}) {
     return runtime;
 }
 
-test('keeps the active scenario visible until the next round ritual starts', async function () {
+test('keeps the active scenario visible until the next duel ritual starts', async function () {
     const ClientGameRuntime = await loadClientGameRuntime();
     const runtime = createRuntime(ClientGameRuntime);
     const firstScenario = { id: 'first' };
@@ -164,7 +164,7 @@ test('keeps the active scenario visible until the next round ritual starts', asy
         clients: [],
         currentScenario: firstScenario
     };
-    runtime.startRoundRitual();
+    runtime.startDuelRitual();
 
     runtime.latestModel = {
         clients: [],
@@ -173,16 +173,16 @@ test('keeps the active scenario visible until the next round ritual starts', asy
 
     assert.equal(runtime.getCurrentScenario(), firstScenario);
 
-    runtime.startRoundRitual();
+    runtime.startDuelRitual();
 
     assert.equal(runtime.getCurrentScenario(), nextScenario);
 });
 
-test('starts the round ritual without local match-expiry authority', async function () {
+test('starts the duel ritual without local match-expiry authority', async function () {
     const ClientGameRuntime = await loadClientGameRuntime();
     let ritualOptions = null;
     const runtime = createRuntime(ClientGameRuntime, {
-        ClientRoundRitual: {
+        ClientDuelRitual: {
             start(options) {
                 ritualOptions = options;
             }
@@ -192,25 +192,25 @@ test('starts the round ritual without local match-expiry authority', async funct
     runtime.latestModel = {
         clients: [],
         currentScenario: {},
-        phase: 'roundIntro'
+        phase: 'duelIntro'
     };
 
-    runtime.startRoundRitual();
+    runtime.startDuelRitual();
 
     const capturedRitualOptions = ritualOptions;
 
     if (capturedRitualOptions === null) {
-        throw new Error('Expected round ritual options to be captured');
+        throw new Error('Expected duel ritual options to be captured');
     }
 
-    assert.equal(capturedRitualOptions.getServerPhase(), 'roundIntro');
+    assert.equal(capturedRitualOptions.getServerPhase(), 'duelIntro');
 });
 
 test('does not notify match expiry from server-owned lifecycle models', async function () {
     const ClientGameRuntime = await loadClientGameRuntime();
     let endGameOptions = null;
     const runtime = createRuntime(ClientGameRuntime, {
-        ClientRoundEndFlow: {
+        ClientDuelEndFlow: {
             endGame(options) {
                 endGameOptions = options;
             }
@@ -302,7 +302,7 @@ test('applies fresh same-phase model updates', async function () {
         matchState: 'idle',
         phase: 'readying',
         phaseStartedAt: 1000,
-        roundNumber: 0,
+        duelNumber: 0,
         scores: [1, 0],
         version: 8
     });
@@ -326,23 +326,23 @@ test('follows server game-over and return-to-lobby model updates', async functio
             },
             enter(options) {
                 calls.push('enterLobbyState');
-                options.setRoundState('waiting');
+                options.setDuelState('waiting');
             },
             scheduleAbandonedRequeue() {
                 calls.push('scheduleAbandonedRequeue');
             }
         },
         ClientModelUpdateFlow,
-        ClientRoundEndFlow: {
+        ClientDuelEndFlow: {
             endGame(options) {
                 calls.push('endGame');
-                options.setRoundState('gameOver');
+                options.setDuelState('gameOver');
             }
         },
-        ClientRoundTransition: {
+        ClientDuelTransition: {
             resolve(options) {
                 calls.push([
-                    'roundState',
+                    'duelState',
                     options.currentState,
                     options.nextState
                 ]);
@@ -352,7 +352,7 @@ test('follows server game-over and return-to-lobby model updates', async functio
     });
 
     runtime.playerId = 'p1';
-    runtime.roundState = 'playing';
+    runtime.duelState = 'playing';
     runtime.latestModel = {
         clients: [
             { id: 'p1', name: 'ACE', ready: true, slot: 0 },
@@ -376,8 +376,8 @@ test('follows server game-over and return-to-lobby model updates', async functio
     runtime.syncStoredPlayerName = function () {
         calls.push('syncStoredPlayerName');
     };
-    runtime.roundData.setRoundEndsAt = function (endsAt) {
-        calls.push(['setRoundEndsAt', endsAt]);
+    runtime.duelData.setMatchEndsAt = function (endsAt) {
+        calls.push(['setMatchEndsAt', endsAt]);
     };
     runtime.scoreKeeper.setScores = function (scores) {
         calls.push(['setScores', scores]);
@@ -409,25 +409,25 @@ test('follows server game-over and return-to-lobby model updates', async functio
 
     assert.deepEqual(calls, [
         ['setScores', [1, 0]],
-        ['setRoundEndsAt', null],
+        ['setMatchEndsAt', null],
         'syncStoredPlayerName',
         'clearAbandonedRequeue',
         ['players.sync', 'gameOver', undefined],
         'syncNameEditor',
         'renderHud',
         'endGame',
-        ['roundState', 'playing', 'gameOver'],
+        ['duelState', 'playing', 'gameOver'],
         ['setScores', [0, 0]],
-        ['setRoundEndsAt', null],
+        ['setMatchEndsAt', null],
         'syncStoredPlayerName',
         'enterLobbyState',
-        ['roundState', 'gameOver', 'waiting'],
+        ['duelState', 'gameOver', 'waiting'],
         'clearAbandonedRequeue',
         ['players.sync', 'readying', true],
         'syncNameEditor',
         'renderHud'
     ]);
-    assert.equal(runtime.roundState, 'waiting');
+    assert.equal(runtime.duelState, 'waiting');
     assert.equal(runtime.latestModel.phase, 'readying');
     assert.deepEqual(runtime.latestModel.scores, [0, 0]);
 });

@@ -48,18 +48,18 @@ async function loadStateUtilities() {
         tempDirectory
     );
     compileClientModule(
-        'engine/roundIntro.ts',
-        'engine/roundIntro.js',
+        'engine/duelIntro.ts',
+        'engine/duelIntro.js',
         tempDirectory
     );
 
-    const [keysModule, nameEditorModule, scoreKeeperModule, roundIntroModule] =
+    const [keysModule, nameEditorModule, scoreKeeperModule, duelIntroModule] =
         await Promise.all(
             [
                 'input/keysModel.js',
                 'input/nameEditor.js',
                 'engine/scoreKeeper.js',
-                'engine/roundIntro.js'
+                'engine/duelIntro.js'
             ].map(function (fileName) {
                 return import(
                     pathToFileURL(path.join(tempDirectory, fileName)).href
@@ -70,7 +70,7 @@ async function loadStateUtilities() {
     return {
         KeysModel: keysModule.KeysModel,
         NameEditor: nameEditorModule.NameEditor,
-        RoundIntro: roundIntroModule.RoundIntro,
+        DuelIntro: duelIntroModule.DuelIntro,
         ScoreKeeper: scoreKeeperModule.ScoreKeeper
     };
 }
@@ -382,8 +382,8 @@ test('score keeper syncs server scores and formats game-over messages', async fu
     assert.deepEqual(scoreKeeper.getScores(), [0, 0]);
 });
 
-test('round intro walks players from spawn edge to their slots', async function () {
-    const { RoundIntro } = await loadStateUtilities();
+test('duel intro walks players from spawn edge to their slots', async function () {
+    const { DuelIntro } = await loadStateUtilities();
     let timestamp = 1000;
     const calls = [];
     const player = {
@@ -405,7 +405,7 @@ test('round intro walks players from spawn edge to their slots', async function 
             this.y = slot.y;
         }
     };
-    const intro = RoundIntro({
+    const intro = DuelIntro({
         now() {
             return timestamp;
         },

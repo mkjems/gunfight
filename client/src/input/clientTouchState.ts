@@ -1,4 +1,4 @@
-import { RoundState } from '../state/clientScreens.js';
+import { DuelState } from '../state/clientScreens.js';
 
 type TouchStateOptions = {
     aimLevel: number;
@@ -6,28 +6,26 @@ type TouchStateOptions = {
     editing?: boolean;
     highScoresVisible?: boolean;
     ready?: boolean;
-    roundState: RoundState;
+    duelState: DuelState;
 };
 
-export function shouldShowGameplayTouchControls(
-    roundState: RoundState
-): boolean {
+export function shouldShowGameplayTouchControls(duelState: DuelState): boolean {
     return (
-        roundState === RoundState.RITUAL ||
-        roundState === RoundState.PLAYING ||
-        roundState === RoundState.HIT_PAUSE ||
-        roundState === RoundState.ROUND_OVER
+        duelState === DuelState.RITUAL ||
+        duelState === DuelState.PLAYING ||
+        duelState === DuelState.HIT_PAUSE ||
+        duelState === DuelState.DUEL_OVER
     );
 }
 
 export function getTouchState(options: TouchStateOptions) {
     return {
-        gameplay: shouldShowGameplayTouchControls(options.roundState),
-        waiting: options.roundState === RoundState.WAITING,
-        playing: options.roundState === RoundState.PLAYING,
+        gameplay: shouldShowGameplayTouchControls(options.duelState),
+        waiting: options.duelState === DuelState.WAITING,
+        playing: options.duelState === DuelState.PLAYING,
         editing: !!options.editing,
         highScoresVisible:
-            options.roundState === RoundState.WAITING &&
+            options.duelState === DuelState.WAITING &&
             !!options.highScoresVisible,
         canPlay: !!options.canPlay,
         ready: !!options.ready,

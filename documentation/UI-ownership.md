@@ -20,7 +20,7 @@ The component framework must not own:
 - The reserved HUD canvas used for any future canvas-drawn overlays.
 - The game loop and animation frame scheduling.
 - Player, bullet, particle, scene, obstacle, collision, camera, score, ammo,
-  timer, and round simulation objects.
+  timer, and duel simulation objects.
 - Socket.IO synchronization and relayed gameplay events.
 
 These systems stay in focused client modules and continue to be coordinated by
@@ -30,7 +30,7 @@ the game bootstrap and flow modules.
 
 The component-owned area is the DOM overlay rendered around the canvas:
 
-- Game HUD DOM labels, score names, ammo indicators, and round messages.
+- Game HUD DOM labels, score names, ammo indicators, and duel messages.
 - Lobby main screen.
 - High scores screen.
 - Name editor screen.
@@ -49,10 +49,10 @@ Flow modules keep orchestration ownership:
 - `ClientHudFlow` decides whether the active frame renders lobby UI or gameplay
   UI.
 - `ClientLobbyHudFlow` decides which lobby-family screen is active.
-- `ClientScreens` owns legal round states, screen names, and screen selection.
-- Round, lobby, model-update, input, touch, and network flows keep side effects.
+- `ClientScreens` owns legal duel states, screen names, and screen selection.
+- Duel, lobby, model-update, input, touch, and network flows keep side effects.
 
-Components should not start timers, transition round state, send socket events,
+Components should not start timers, transition duel state, send socket events,
 or decide whether a screen transition is legal.
 
 ### View-model modules stay framework-independent
@@ -60,7 +60,7 @@ or decide whether a screen transition is legal.
 View-model modules are the bridge between game state and rendering:
 
 - `ClientLobbyViewModel` derives lobby text, slots, and prompts.
-- `GameHudViewModel` derives scores, timer labels, round messages, and hit
+- `GameHudViewModel` derives scores, timer labels, duel messages, and hit
   message positions.
 - Future view-model helpers should remain plain TypeScript functions.
 
@@ -91,7 +91,7 @@ Actions are callbacks supplied by orchestration, such as:
 
 Components may keep only local presentation state that does not affect gameplay
 or synchronization, such as focus hints or pointer hover state. Persistent UI
-state, gameplay state, player identity, round state, network state, touch input
+state, gameplay state, player identity, duel state, network state, touch input
 state, and name editor value state must stay in the existing client state
 modules.
 

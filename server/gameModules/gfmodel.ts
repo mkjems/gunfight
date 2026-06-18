@@ -9,7 +9,7 @@ import {
     type GameModelClient,
     type GameModelSnapshot,
     type MatchState,
-    type RoundResultPayload,
+    type DuelResultPayload,
     type Scenario
 } from '../../shared/contracts.js';
 
@@ -21,7 +21,7 @@ function getTimingOverride(name: string, fallback: number): number {
 
 export const GAME_MODEL_TIMINGS = {
     readyCountdownMs: 2000,
-    roundIntroMs: 2200,
+    duelIntroMs: 2200,
     hitPauseMs: 1800,
     gameOverMs: getTimingOverride('GUNFIGHT_GAME_OVER_MS', 5000),
     matchMs: getTimingOverride('GUNFIGHT_MATCH_MS', 70000)
@@ -35,11 +35,11 @@ export const LEGAL_PHASE_TRANSITIONS: Record<GamePhase, GamePhase[]> = {
         GAME_PHASE.Closed
     ],
     [GAME_PHASE.ReadyCountdown]: [
-        GAME_PHASE.RoundIntro,
+        GAME_PHASE.DuelIntro,
         GAME_PHASE.Abandoned,
         GAME_PHASE.Closed
     ],
-    [GAME_PHASE.RoundIntro]: [
+    [GAME_PHASE.DuelIntro]: [
         GAME_PHASE.Playing,
         GAME_PHASE.GameOver,
         GAME_PHASE.Abandoned,
@@ -52,7 +52,7 @@ export const LEGAL_PHASE_TRANSITIONS: Record<GamePhase, GamePhase[]> = {
         GAME_PHASE.Closed
     ],
     [GAME_PHASE.HitPause]: [
-        GAME_PHASE.RoundIntro,
+        GAME_PHASE.DuelIntro,
         GAME_PHASE.GameOver,
         GAME_PHASE.Abandoned,
         GAME_PHASE.Closed
@@ -90,7 +90,7 @@ function defaultNow(): number {
 function isActivePhase(phase: GamePhase): boolean {
     return (
         phase === GAME_PHASE.ReadyCountdown ||
-        phase === GAME_PHASE.RoundIntro ||
+        phase === GAME_PHASE.DuelIntro ||
         phase === GAME_PHASE.Playing ||
         phase === GAME_PHASE.HitPause ||
         phase === GAME_PHASE.GameOver
@@ -115,7 +115,7 @@ export function createGameModel(options: GameModelOptions = {}) {
     let phase: GamePhase = GAME_PHASE.Waiting;
     let phaseEndsAt: number | null = null;
     let phaseStartedAt = now();
-    let roundNumber = 0;
+    let duelNumber = 0;
     let scores = [0, 0];
     let version = 0;
 
@@ -139,14 +139,14 @@ export function createGameModel(options: GameModelOptions = {}) {
         );
     }
 
-    function advanceRound(): void {
+    function advanceDuel(): void {
         if (scenarios.length === 0) {
             currentScenarioIndex = -1;
             return;
         }
 
         currentScenarioIndex = (currentScenarioIndex + 1) % scenarios.length;
-        roundNumber++;
+        duelNumber++;
     }
 
     function getClientSlot(clientId: number): number {
@@ -204,9 +204,9 @@ export function createGameModel(options: GameModelOptions = {}) {
         resetMatch();
         matchState = MATCH_STATE.Playing;
         matchEndsAt = now() + GAME_MODEL_TIMINGS.matchMs;
-        advanceRound();
-        return setPhase(GAME_PHASE.RoundIntro, {
-            endsAt: now() + GAME_MODEL_TIMINGS.roundIntroMs
+        advanceDuel();
+        return setPhase(GAME_PHASE.DuelIntro, {
+            endsAt: now() + GAME_MODEL_TIMINGS.duelIntroMs
         });
     }
 
@@ -293,7 +293,7 @@ export function createGameModel(options: GameModelOptions = {}) {
                 matchState: matchState,
                 phase: phase,
                 phaseStartedAt: phaseStartedAt,
-                roundNumber: roundNumber,
+                duelNumber: duelNumber,
                 scores: scores.slice(),
                 version: version
             };
@@ -353,7 +353,7 @@ export function createGameModel(options: GameModelOptions = {}) {
 
         enterPlaying: function (resultId: string): boolean {
             if (
-                phase !== GAME_PHASE.RoundIntro ||
+                phase !== GAME_PHASE.DuelIntro ||
                 matchState !== MATCH_STATE.Playing
             ) {
                 return false;
@@ -368,7 +368,7 @@ export function createGameModel(options: GameModelOptions = {}) {
             });
         },
 
-        recordRoundResult: function (result: RoundResultPayload): boolean {
+        recordDuelResult: function (result: DuelResultPayload): boolean {
             const winnerSlot = getClientSlot(result.winnerId);
             const targetSlot = getClientSlot(result.targetId);
 
@@ -376,7 +376,7 @@ export function createGameModel(options: GameModelOptions = {}) {
                 phase !== GAME_PHASE.Playing ||
                 matchState !== MATCH_STATE.Playing ||
                 clients.length < 2 ||
-                result.roundNumber !== roundNumber ||
+                result.duelNumber !== duelNumber ||
                 winnerSlot < 0 ||
                 targetSlot < 0 ||
                 winnerSlot === targetSlot ||
@@ -403,9 +403,9 @@ export function createGameModel(options: GameModelOptions = {}) {
                 return finishMatch(resultId);
             }
 
-            advanceRound();
-            return setPhase(GAME_PHASE.RoundIntro, {
-                endsAt: now() + GAME_MODEL_TIMINGS.roundIntroMs
+            advanceDuel();
+            return setPhase(GAME_PHASE.DuelIntro, {
+                endsAt: now() + GAME_MODEL_TIMINGS.duelIntroMs
             });
         },
 

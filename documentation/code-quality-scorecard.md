@@ -193,14 +193,14 @@ Current typing guidance:
 ## Constants And Configuration
 
 `client/src/platform/config.ts` already owns shared gameplay constants such as
-canvas size, match length, ammo, round delays, player movement, sprites,
+canvas size, match length, ammo, duel delays, player movement, sprites,
 colliders, and bullet speed.
 
 Keep constants close to their owning module unless they are product rules or
 cross-module contracts:
 
 - Product rules belong in `Config` or state modules.
-- Screen and round-state names belong in `client/src/state/clientScreens.ts`.
+- Screen and duel-state names belong in `client/src/state/clientScreens.ts`.
 - Server lifecycle phases belong in `shared/contracts.ts`.
 - One-off drawing values can stay local to the renderer that uses them.
 - Editor-only dimensions can stay in the editor module unless reused by editor
@@ -227,7 +227,7 @@ Behavior areas with good coverage:
 
 - Lobby pairing, disconnects, requeue, ready rules, and high scores.
 - Shared contract normalization and content validation.
-- Round states, round ritual, round reset, round end, timers, ammo, and hit
+- Duel states, duel ritual, duel reset, duel end, timers, ammo, and hit
   handling.
 - Client flow modules, model sync, player position sync, obstacle sync, and key
   events.

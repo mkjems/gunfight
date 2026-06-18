@@ -63,7 +63,7 @@ function createOptions(overrides = {}) {
                 calls.push(['Obstacles.setBodies', bodies]);
             }
         },
-        roundState: 'playing',
+        duelState: 'playing',
         scenario: scenario,
         scenarioRenderer: {
             getObstacleBodies(nextScenario) {
@@ -150,7 +150,7 @@ test('updates obstacle bodies from the current scenario during play', async func
 test('clears obstacle bodies while waiting', async function () {
     const environment = await loadClientCollisionEnvironment();
     const { calls, options } = createOptions({
-        roundState: 'waiting'
+        duelState: 'waiting'
     });
 
     environment.updateObstacleBodies(options);

@@ -27,7 +27,7 @@ type PlayersLike = {
     getSlot?: (index: number) => PlayerSlot;
 };
 
-type RoundIntroOptions = {
+type DuelIntroOptions = {
     now?: () => number;
     players: PlayersLike;
 };
@@ -47,7 +47,7 @@ type IntroState = {
     targets: IntroTarget[];
 };
 
-export function RoundIntro(options: RoundIntroOptions) {
+export function DuelIntro(options: DuelIntroOptions) {
     const players = options.players;
     const now =
         options.now ||
@@ -58,7 +58,7 @@ export function RoundIntro(options: RoundIntroOptions) {
 
     function start() {
         const startedAt = now();
-        const duration = Config.round.introWalkDelay;
+        const duration = Config.duel.introWalkDelay;
         const targets: IntroTarget[] = [];
 
         players.clearKeys();

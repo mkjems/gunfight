@@ -68,30 +68,30 @@ async function loadGameplayConstructors() {
         Bullet: bulletModule.Bullet,
         Bullets: bulletsModule.Bullets,
         Config: configModule.Config,
-        getRoundBulletStraightness: configModule.getRoundBulletStraightness,
+        getDuelBulletStraightness: configModule.getDuelBulletStraightness,
         Controllable: controllableModule.Controllable,
         Players: playersModule.Players
     };
 }
 
-test('derives shooting straightness from the round number', async function () {
-    const { Config, getRoundBulletStraightness } =
+test('derives shooting straightness from the duel number', async function () {
+    const { Config, getDuelBulletStraightness } =
         await loadGameplayConstructors();
 
     assert.equal(
-        getRoundBulletStraightness(),
+        getDuelBulletStraightness(),
         Config.bullet.defaultStraightness
     );
     assert.equal(
-        getRoundBulletStraightness(1),
+        getDuelBulletStraightness(1),
         Config.bullet.defaultStraightness
     );
     assert.equal(
-        getRoundBulletStraightness(3),
+        getDuelBulletStraightness(3),
         Config.bullet.defaultStraightness +
-            Config.bullet.roundStraightnessStep * 2
+            Config.bullet.duelStraightnessStep * 2
     );
-    assert.equal(getRoundBulletStraightness(99), Config.bullet.maxStraightness);
+    assert.equal(getDuelBulletStraightness(99), Config.bullet.maxStraightness);
 });
 
 test('bullets fire once per owner and expose snapshots', async function () {
@@ -505,8 +505,8 @@ test('players sync straightness meter visibility for gameplay and lobby', async 
     assert.equal(players.all.a.showStraightnessMeter, false);
 });
 
-test('players refresh round-based shooting straightness on sync and reset', async function () {
-    const { Config, Players, getRoundBulletStraightness } =
+test('players refresh duel-based shooting straightness on sync and reset', async function () {
+    const { Config, Players, getDuelBulletStraightness } =
         await loadGameplayConstructors();
     const players = new Players(
         {
@@ -522,12 +522,12 @@ test('players refresh round-based shooting straightness on sync and reset', asyn
             clients: [{ id: 'a' }, { id: 'b' }]
         },
         {
-            roundNumber: 2
+            duelNumber: 2
         }
     );
     assert.equal(
         players.all.a.shootingStraightness,
-        getRoundBulletStraightness(2)
+        getDuelBulletStraightness(2)
     );
     players.all.a.shootingStraightness = Config.bullet.defaultStraightness / 2;
     players.all.b.shootingStraightness = Config.bullet.defaultStraightness / 3;
@@ -537,27 +537,27 @@ test('players refresh round-based shooting straightness on sync and reset', asyn
             clients: [{ id: 'a' }, { id: 'b' }]
         },
         {
-            roundNumber: 3
+            duelNumber: 3
         }
     );
 
     assert.equal(
         players.all.a.shootingStraightness,
-        getRoundBulletStraightness(3)
+        getDuelBulletStraightness(3)
     );
     assert.equal(
         players.all.b.shootingStraightness,
-        getRoundBulletStraightness(3)
+        getDuelBulletStraightness(3)
     );
 
     players.all.a.shootingStraightness = Config.bullet.defaultStraightness / 4;
     players.resetAll({
-        roundNumber: 99
+        duelNumber: 99
     });
 
     assert.equal(
         players.all.a.shootingStraightness,
-        getRoundBulletStraightness(99)
+        getDuelBulletStraightness(99)
     );
 });
 

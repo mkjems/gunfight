@@ -103,10 +103,10 @@ Idea: What if the players guns were not very good or dangerous in the beginning 
 - [x] Store shooting straightness on the player, not only on the bullet.
       The two players can have different shooting straightness.
 - [x] Let a player's shooting straightness evolve during the game by increasing
-      automatically each round from config.
+      automatically each duel from config.
 - [x] Replace the current hardcoded shooting straightness with simple
-      round-based progression while the fuller story design is still forming.
-- [ ] Tune the round-based straightness start, step, and cap after playtesting.
+      duel-based progression while the fuller story design is still forming.
+- [ ] Tune the duel-based straightness start, step, and cap after playtesting.
 - [x] Freeze `straightness` on each bullet when it is fired.
 - [x] Keep `straightness: 1.0` as the current behavior: constant-speed,
       straight-line flight, current collision behavior, and current ricochet
@@ -117,7 +117,7 @@ Idea: What if the players guns were not very good or dangerous in the beginning 
       `y - altitude`, with any shadow or ground contact effect drawn at `x,y`.
 - [x] Player aim should still control the ground-plane firing direction.
 - [x] Low-straightness bullets should bounce along the ground, lose speed,
-      roll, then stop and stay visible for the rest of the round.
+      roll, then stop and stay visible for the rest of the duel.
 - [x] Ground bounces affect only `altitude` and vertical bounce velocity.
       Ricochets against rocks and screen edges affect only the ground-plane
       `x,y` movement.
@@ -128,13 +128,13 @@ Idea: What if the players guns were not very good or dangerous in the beginning 
       player only while it is still moving faster than a harm velocity cutoff.
 - [x] Bullets that are rolling too slowly or lying on the ground are harmless.
 - [x] When an un-straight bullet stops, it becomes resting scenery for the
-      current round and no longer blocks that player from firing another
+      current duel and no longer blocks that player from firing another
       bullet.
 - [x] Include straightness, altitude, velocity, and resting/harmful state in the
       shot snapshot so both clients simulate the same fired bullet.
 - [x] Keep a newly fired bullet at its frozen muzzle position for its first
       scene move so local and remote shots show the same visible travel range.
-- [x] Refresh the current round-based shooting straightness onto existing
+- [x] Refresh the current duel-based shooting straightness onto existing
       players during sync/reset so tuning changes cannot leave one side stale.
 
 ## P23 - Show next-shot straightnessMeter under gameplay players
@@ -160,7 +160,7 @@ horizontal frames, from most empty at the left to most full at the right.
 - [x] Derive the frame from next-shot straightness.
     - [x] Use the player's current `shootingStraightness`, because that is the
           value a newly fired local bullet will freeze as `straightness`.
-    - [x] Preserve the synced `shootingStraightness` when the round-intro
+    - [x] Preserve the synced `shootingStraightness` when the duel-intro
           ritual resets player positions.
     - [x] Clamp the value to `0.0..1.0`.
     - [x] Map it to frame index `0..9`, where `0` is most empty and `9` is most
@@ -199,54 +199,57 @@ Scope:
 
 Concrete steps:
 
-- [ ] Update terminology docs first.
-    - [ ] In `Code-Terminologi.md`, replace the `Round` and `Round state`
+- [x] Update terminology docs first.
+    - [x] In `Code-Terminologi.md`, replace the `Round` and `Round state`
           entries with `Duel` and `Duel state`.
-    - [ ] Define `duelNumber` as the server-owned duel count used for scenario
+    - [x] Define `duelNumber` as the server-owned duel count used for scenario
           selection and duel-based progression.
-    - [ ] Note that `gameRoundSeconds` is intentionally left as a legacy
+    - [x] Note that `gameRoundSeconds` is intentionally left as a legacy
           scenario field for now.
-- [ ] Rename shared public contracts and socket event names.
-    - [ ] Rename `roundNumber` to `duelNumber` in the public game model,
+- [x] Rename shared public contracts and socket event names.
+    - [x] Rename `roundNumber` to `duelNumber` in the public game model,
           snapshots, payload guards, and normalized payloads.
-    - [ ] Rename `RoundResultPayload` to `DuelResultPayload`.
-    - [ ] Rename socket event `roundResult` to `duelResult`.
-    - [ ] Rename server phase `roundIntro` to `duelIntro`.
-- [ ] Rename server game-model ownership.
-    - [ ] Rename `roundNumber`, `advanceRound`, `recordRoundResult`, and related
+    - [x] Rename `RoundResultPayload` to `DuelResultPayload`.
+    - [x] Rename socket event `roundResult` to `duelResult`.
+    - [x] Rename server phase `roundIntro` to `duelIntro`.
+- [x] Rename server game-model ownership.
+    - [x] Rename `roundNumber`, `advanceRound`, `recordRoundResult`, and related
           local helpers in `gfmodel.ts` and `lobby.ts`.
-    - [ ] Keep result validation semantics unchanged: accept only the current
+    - [x] Keep result validation semantics unchanged: accept only the current
           duel result while both players are connected and the phase is
           `playing`.
-    - [ ] Update lobby/game id result keys that currently include the round
+    - [x] Update lobby/game id result keys that currently include the duel
           number.
-- [ ] Rename client lifecycle and presentation state.
-    - [ ] Rename `RoundState` to `DuelState` and `roundOver` to `duelOver`.
-    - [ ] Rename `ClientRoundState` and `roundData` to `ClientDuelState` and
+- [x] Rename client lifecycle and presentation state.
+    - [x] Rename `RoundState` to `DuelState` and `roundOver` to `duelOver`.
+    - [x] Rename `ClientRoundState` and `roundData` to `ClientDuelState` and
           `duelData`.
-    - [ ] Rename round flow modules and APIs such as round ritual, reset, end,
+    - [x] Rename duel flow modules and APIs such as duel ritual, reset, end,
           transition, hit flow, and model update plan names.
-    - [ ] Rename `roundIntro` runtime/system fields to `duelIntro`.
-- [ ] Rename duel-based gameplay tuning.
-    - [ ] Rename `getRoundBulletStraightness` to
+    - [x] Rename `roundIntro` runtime/system fields to `duelIntro`.
+- [x] Rename duel-based gameplay tuning.
+    - [x] Rename `getRoundBulletStraightness` to
           `getDuelBulletStraightness`.
-    - [ ] Rename bullet config fields `roundStraightnessStep` and any
+    - [x] Rename bullet config fields `roundStraightnessStep` and any
           round-based straightness wording to duel-based names.
-    - [ ] Keep the actual straightness values and behavior unchanged.
-- [ ] Update tests and browser smoke expectations.
-    - [ ] Rename test names and fixtures from round terms to duel terms.
-    - [ ] Update expected phase/event/model field names.
-    - [ ] Add or keep regression coverage for stale duel-result rejection.
-- [ ] Update user-facing and project documentation.
-    - [ ] Update `Specification-main.md`, `Connection-state-model.md`,
+    - [x] Keep the actual straightness values and behavior unchanged.
+- [x] Update tests and browser smoke expectations.
+    - [x] Rename test names and fixtures from round terms to duel terms.
+    - [x] Update expected phase/event/model field names.
+    - [x] Add or keep regression coverage for stale duel-result rejection.
+- [x] Update user-facing and project documentation.
+    - [x] Update `Specification-main.md`, `Connection-state-model.md`,
           `State-ownership.md`, and `code-quality-scorecard.md`.
-    - [ ] Keep user-visible copy natural: use "duel" for the showdown and
+    - [x] Keep user-visible copy natural: use "duel" for the showdown and
           "match" for the whole game.
-- [ ] Verify carefully.
-    - [ ] Run `npm run typecheck`.
-    - [ ] Run the focused server/client tests touched by the rename.
-    - [ ] Run `npm run check:deploy`.
-    - [ ] Run browser smoke if the public phase/event names changed.
+- [x] Verify carefully.
+    - [x] Run `npm run typecheck`.
+    - [x] Run the focused server/client tests touched by the rename.
+    - [x] Run `npm run check:deploy`.
+    - [x] Run browser smoke if the public phase/event names changed.
+          `browser-smoke/two-client-gameplay.spec.js:401` passes on rerun,
+          and the duel result/duel intro browser smoke paths pass. Full browser
+          smoke still has unrelated editor fixture expectation failures.
 
 ## P19 - How can straightness shooting be part of the game story, brain storm and ideas
 

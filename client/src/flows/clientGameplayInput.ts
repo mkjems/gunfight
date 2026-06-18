@@ -1,4 +1,4 @@
-import { RoundState } from '../state/clientScreens.js';
+import { DuelState } from '../state/clientScreens.js';
 
 type PlayerId = number | string;
 
@@ -34,15 +34,15 @@ type ClientGameplayInputOptions = {
     onGunFired?: (bullet: Bullet) => void;
     onWaitingFire?: (player: Player) => void;
     player?: Player | null;
-    roundState: RoundState;
+    duelState: DuelState;
 };
 
-export function isLockedRoundState(roundState: RoundState) {
+export function isLockedDuelState(duelState: DuelState) {
     return (
-        roundState === RoundState.RITUAL ||
-        roundState === RoundState.ROUND_OVER ||
-        roundState === RoundState.HIT_PAUSE ||
-        roundState === RoundState.GAME_OVER
+        duelState === DuelState.RITUAL ||
+        duelState === DuelState.DUEL_OVER ||
+        duelState === DuelState.HIT_PAUSE ||
+        duelState === DuelState.GAME_OVER
     );
 }
 
@@ -54,7 +54,7 @@ export function handle(options: ClientGameplayInputOptions) {
         return;
     }
 
-    if (isLockedRoundState(options.roundState)) {
+    if (isLockedDuelState(options.duelState)) {
         if (keyEvent.action === 'up') {
             player.respondToKeyEvent(keyEvent);
         }
@@ -62,7 +62,7 @@ export function handle(options: ClientGameplayInputOptions) {
     }
 
     if (keyEvent.key === ' ' && keyEvent.action === 'down') {
-        if (options.roundState === RoundState.WAITING) {
+        if (options.duelState === DuelState.WAITING) {
             options.onWaitingFire?.(player);
             return;
         }
@@ -70,11 +70,11 @@ export function handle(options: ClientGameplayInputOptions) {
         let bullet: Bullet | false | null | undefined;
 
         if (
-            options.roundState === RoundState.PLAYING &&
+            options.duelState === DuelState.PLAYING &&
             options.ammo.hasAmmo(player.playerId)
         ) {
             bullet = options.bullets.fire(player, keyEvent.shot);
-        } else if (options.roundState === RoundState.PLAYING) {
+        } else if (options.duelState === DuelState.PLAYING) {
             options.onEmptyGun();
         }
 
@@ -98,5 +98,5 @@ export function handle(options: ClientGameplayInputOptions) {
 
 export const ClientGameplayInput = {
     handle,
-    isLockedRoundState
+    isLockedDuelState
 };

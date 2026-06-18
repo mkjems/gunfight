@@ -1,14 +1,14 @@
 import { Bullet } from './bullet.js';
 import { ClientCollisionEnvironment } from './clientCollisionEnvironment.js';
 import { Obstacles } from './obstacles.js';
-import type { RoundState } from '../state/clientScreens.js';
+import type { DuelState } from '../state/clientScreens.js';
 import type { Scenario } from '../../../shared/contracts.js';
 
 type RuntimeCollisionLines = Parameters<typeof Bullet.setCollisionLines>[0];
 type RuntimeObstacleBodies = Parameters<typeof Obstacles.setBodies>[0];
 
 type RuntimeCollisionEnvironmentOptions = {
-    roundState: RoundState;
+    duelState: DuelState;
     scenario: Scenario | null | undefined;
     scenarioRenderer: {
         getObstacleBodies: (
@@ -24,7 +24,7 @@ export function updateBulletLines(options: RuntimeCollisionEnvironmentOptions) {
     ClientCollisionEnvironment.updateBulletLines({
         Bullet,
         Obstacles,
-        roundState: options.roundState,
+        duelState: options.duelState,
         scenario: options.scenario,
         scenarioRenderer: options.scenarioRenderer
     });
@@ -36,7 +36,7 @@ export function updateObstacleBodies(
     ClientCollisionEnvironment.updateObstacleBodies({
         Bullet,
         Obstacles,
-        roundState: options.roundState,
+        duelState: options.duelState,
         scenario: options.scenario,
         scenarioRenderer: options.scenarioRenderer
     });

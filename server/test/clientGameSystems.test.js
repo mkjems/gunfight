@@ -40,10 +40,10 @@ function createSystemBuilders(calls) {
         calls.push(['Players', scene.kind, bullets.kind]);
     }
 
-    function RoundIntro(options) {
-        this.kind = 'roundIntro';
+    function DuelIntro(options) {
+        this.kind = 'duelIntro';
         this.players = options.players;
-        calls.push(['RoundIntro', options.players.kind]);
+        calls.push(['DuelIntro', options.players.kind]);
     }
 
     return {
@@ -75,15 +75,15 @@ function createSystemBuilders(calls) {
                 kind: 'positionSync'
             };
         },
-        createRoundData() {
-            calls.push('ClientRoundState');
+        createDuelData() {
+            calls.push('ClientDuelState');
 
             return {
-                kind: 'roundData'
+                kind: 'duelData'
             };
         },
-        createRoundIntro(players) {
-            return new RoundIntro({
+        createDuelIntro(players) {
+            return new DuelIntro({
                 players
             });
         },
@@ -119,7 +119,7 @@ test('creates game systems with injectable system builders', async function () {
 
     const systems = systemsModule.create({
         ...builders,
-        initialRoundState: 'waiting',
+        initialDuelState: 'waiting',
         playRicochet: playRicochet
     });
 
@@ -127,11 +127,11 @@ test('creates game systems with injectable system builders', async function () {
     assert.equal(systems.bullets.kind, 'bullets');
     assert.equal(systems.players.kind, 'players');
     assert.equal(systems.particleLayer.kind, 'particleLayer');
-    assert.equal(systems.roundIntro.kind, 'roundIntro');
-    assert.equal(systems.roundState, 'waiting');
+    assert.equal(systems.duelIntro.kind, 'duelIntro');
+    assert.equal(systems.duelState, 'waiting');
     assert.deepEqual(plain(systems.highScores), []);
     assert.equal(systems.scoreKeeper.kind, 'scoreKeeper');
-    assert.equal(systems.roundData.kind, 'roundData');
+    assert.equal(systems.duelData.kind, 'duelData');
     assert.equal(systems.timers.kind, 'timers');
     assert.equal(systems.positionSync.kind, 'positionSync');
     assert.equal(systems.ammo.kind, 'ammo');
@@ -141,11 +141,11 @@ test('creates game systems with injectable system builders', async function () {
         'Scene',
         ['Bullets', 'scene'],
         ['Players', 'scene', 'bullets'],
-        ['RoundIntro', 'players'],
+        ['DuelIntro', 'players'],
         'ClientAmmo',
         'ParticleLayer',
         'PlayerPositionSync',
-        'ClientRoundState',
+        'ClientDuelState',
         'ScoreKeeper',
         'ClientTimers'
     ]);

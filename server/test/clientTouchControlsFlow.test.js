@@ -101,7 +101,7 @@ test('updates touch controls with derived touch state', async function () {
                     };
                 },
                 ready: false,
-                roundState: 'waiting',
+                duelState: 'waiting',
                 touchControls: {
                     update(state) {
                         calls.push(state);
@@ -121,7 +121,7 @@ test('updates touch controls with derived touch state', async function () {
                     editing: false,
                     highScoresVisible: true,
                     ready: false,
-                    roundState: 'waiting'
+                    duelState: 'waiting'
                 }
             }
         }
@@ -135,7 +135,7 @@ test('updates touch controls with derived touch state', async function () {
                 editing: false,
                 highScoresVisible: true,
                 ready: false,
-                roundState: 'waiting'
+                duelState: 'waiting'
             }
         }
     ]);

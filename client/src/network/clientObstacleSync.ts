@@ -9,7 +9,7 @@ type ClientId = number | string;
 type ObstacleDamagePayload = {
     id: string;
     ownerId: ClientId;
-    roundNumber?: number;
+    duelNumber?: number;
 };
 
 type ObstacleHit = {
@@ -19,14 +19,14 @@ type ObstacleHit = {
     obstacleId: string;
 };
 
-type RoundModel = {
-    roundNumber?: number;
+type DuelModel = {
+    duelNumber?: number;
 };
 
 type HandleLocalHitOptions = {
     applyDamage: (payload: ObstacleDamagePayload) => void;
     hit: ObstacleHit;
-    model?: RoundModel | null;
+    model?: DuelModel | null;
     playerId: ClientId;
     socket: {
         emit: (
@@ -42,13 +42,13 @@ type ApplyDamageOptions = {
     };
     damageObstacle: (id: string) => void;
     data: ObstacleDamagePayload;
-    model?: RoundModel | null;
+    model?: DuelModel | null;
     playObstacleHit: (id: string) => void;
 };
 
 export function handleLocalHit(options: HandleLocalHitOptions) {
     const hit = options.hit;
-    const roundNumber = options.model?.roundNumber;
+    const duelNumber = options.model?.duelNumber;
 
     if (hit.bullet.ownerId !== options.playerId) {
         return false;
@@ -57,7 +57,7 @@ export function handleLocalHit(options: HandleLocalHitOptions) {
     const payload = {
         id: hit.obstacleId,
         ownerId: hit.bullet.ownerId,
-        roundNumber
+        duelNumber
     };
 
     options.applyDamage(payload);
@@ -69,7 +69,7 @@ export function handleLocalHit(options: HandleLocalHitOptions) {
 export function applyDamage(options: ApplyDamageOptions) {
     const data = options.data;
 
-    if (options.model && data.roundNumber !== options.model.roundNumber) {
+    if (options.model && data.duelNumber !== options.model.duelNumber) {
         return false;
     }
 

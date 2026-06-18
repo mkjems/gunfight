@@ -157,26 +157,26 @@ the player with the highest score when the timer reaches zero.
 - Ammunition is rendered in the DOM on the bottom HUD row using the bullet sprite.
 - On mobile gameplay, the ammunition row stays visible inside the viewport bottom row between the touch controls.
 
-### Round flow
+### Duel flow
 
 1. Both players enter ready state.
 2. The server enters a short ready countdown so both players can see the ready
    state before gameplay starts.
-3. The server starts the match and publishes the first round intro.
+3. The server starts the match and publishes the first duel intro.
 4. Players walk into position.
 5. The screen shows `GET READY` at the center of the screen.
 6. The screen shows `DRAW !` at the center of the screen.
 7. The duel begins.
 8. A hit pauses the game. The winning client reports the hit, the server awards
-   one point and enters a timed hit-pause phase. The next scenario and round
+   one point and enters a timed hit-pause phase. The next scenario and duel
    number are published only after that hit pause ends.
 9. When the server match timer ends, the game shows `GAME OVER` with the
    winning player name or `TIE` and the final score. The server keeps it
    visible briefly, then returns both players to the lobby.
 
-The browser follows server lifecycle updates for ready countdown, round intro,
+The browser follows server lifecycle updates for ready countdown, duel intro,
 hit pause, game over, and return to lobby. The browser does not locally start
-rounds, expire matches, advance after hit pause, or reset the lobby lifecycle;
+duels, expire matches, advance after hit pause, or reset the lobby lifecycle;
 it only presents those phases and sends player intents or reports.
 
 ### Gameplay rules
@@ -189,10 +189,10 @@ it only presents those phases and sends player intents or reports.
 - Bullets can hit players and damage selected obstacles.
 - Some bullets can ricochet.
 - Bullets have shooting straightness from `0.0` to `1.0`.
-  `Config.bullet.defaultStraightness` is the round-1 gun straightness. Each
-  later round adds `Config.bullet.roundStraightnessStep` until the value reaches
+  `Config.bullet.defaultStraightness` is the duel-1 gun straightness. Each
+  later duel adds `Config.bullet.duelStraightnessStep` until the value reaches
   `Config.bullet.maxStraightness`. Existing players refresh their effective
-  round-based straightness when they sync or reset.
+  duel-based straightness when they sync or reset.
 - During gameplay, each player shows a `straightnessMeter` under the avatar.
   The meter shows the shooting straightness that the player's next shot will
   use. It is not shown in the lobby.
@@ -205,10 +205,10 @@ it only presents those phases and sends player intents or reports.
   movement advances it, keeping local and remote shots visually symmetric.
 - Bullets below the harm straightness cutoff are theatrical only. Other bullets
   become harmless once they slow below the harm velocity cutoff or come to rest.
-- Resting bullets stay visible for the current round and no longer block that
+- Resting bullets stay visible for the current duel and no longer block that
   player from firing again.
 - Scenarios may define `moneyBags` entries with `x`, `y`, and
-  `gameRoundSeconds`. A money bag appears once the current round reaches its
+  `gameRoundSeconds`. A money bag appears once the current duel reaches its
   configured second, plays its eight-frame appear animation from
   `client/images/money.png`, then remains visible. Money bags are passive
   scenery until pickup/economy rules are designed.
@@ -317,7 +317,7 @@ Server responsibilities:
   waiting players
 - store player names and ready state
 - choose the current scenario
-- accept current-round results, keep match score, and record high scores from
+- accept current-duel results, keep match score, and record high scores from
   the server-owned final score
 - relay input, position, and obstacle damage inside each room
 - mark games as waiting, readying, playing, abandoned, or closed
@@ -329,7 +329,7 @@ Client responsibilities:
 - apply remote input when received
 - run the local game loop
 - move players and bullets by elapsed time
-- detect hits and report round results
+- detect hits and report duel results
 - detect obstacle damage
 - draw HUD, lobby, and name editor state
 

@@ -1,7 +1,7 @@
 import type { GamePhase, MatchState } from '../../../shared/contracts.js';
 import { Config } from '../platform/config.js';
 import { analyze } from './clientModelSync.js';
-import { RoundState } from '../state/clientScreens.js';
+import { DuelState } from '../state/clientScreens.js';
 
 type ClientId = number | string;
 
@@ -17,14 +17,14 @@ type PublicModel = {
     } | null;
     matchState?: MatchState;
     phase?: GamePhase;
-    roundNumber?: number;
+    duelNumber?: number;
 };
 
 type CreatePlanOptions = {
     model: PublicModel | null;
     playerId?: ClientId | null;
     previousModel: PublicModel | null;
-    roundState: RoundState;
+    duelState: DuelState;
 };
 
 const MATCH_STATE = {
@@ -37,7 +37,7 @@ const GAME_PHASE = {
     Playing: 'playing',
     Waiting: 'waiting',
     Readying: 'readying',
-    RoundIntro: 'roundIntro'
+    DuelIntro: 'duelIntro'
 } as const satisfies Record<string, GamePhase>;
 
 export function create(options: CreatePlanOptions) {
@@ -46,23 +46,23 @@ export function create(options: CreatePlanOptions) {
         options.model,
         options.playerId
     );
-    const serverStartedRound =
-        options.model?.phase === GAME_PHASE.RoundIntro &&
-        options.previousModel?.phase !== GAME_PHASE.RoundIntro;
-    const shouldStartRound =
-        canStartRoundFromState(options.roundState) && serverStartedRound;
+    const serverStartedDuel =
+        options.model?.phase === GAME_PHASE.DuelIntro &&
+        options.previousModel?.phase !== GAME_PHASE.DuelIntro;
+    const shouldStartDuel =
+        canStartDuelFromState(options.duelState) && serverStartedDuel;
     const serverReturnedToLobby =
         isServerLobbyPhase(options.model?.phase) &&
-        options.roundState !== RoundState.WAITING;
+        options.duelState !== DuelState.WAITING;
     const shouldEnterLobbyState =
         !!syncState.abandoned || serverReturnedToLobby;
     const shouldEnterGameOverState =
         options.model?.matchState === MATCH_STATE.GameOver &&
-        options.roundState !== RoundState.WAITING &&
-        options.roundState !== RoundState.GAME_OVER;
+        options.duelState !== DuelState.WAITING &&
+        options.duelState !== DuelState.GAME_OVER;
     const syncLobbySlots =
-        (options.roundState === RoundState.WAITING || serverReturnedToLobby) &&
-        !shouldStartRound;
+        (options.duelState === DuelState.WAITING || serverReturnedToLobby) &&
+        !shouldStartDuel;
 
     return {
         clearAbandonedRequeue: !syncState.abandoned,
@@ -70,17 +70,15 @@ export function create(options: CreatePlanOptions) {
         enterGameOverState: shouldEnterGameOverState,
         enterLobbyState: shouldEnterLobbyState,
         playReadySound: syncState.clientBecameReady,
-        renderHud: !shouldStartRound,
+        renderHud: !shouldStartDuel,
         scheduleAbandonedRequeue: !!syncState.abandoned,
-        startRoundRitual: shouldStartRound,
+        startDuelRitual: shouldStartDuel,
         syncNameEditor: true,
         syncStoredPlayerName: true,
         syncPlayers: {
-            resetChangedSlots: options.roundState === RoundState.WAITING,
+            resetChangedSlots: options.duelState === DuelState.WAITING,
             resetExisting: serverReturnedToLobby || undefined,
-            roundNumber: syncLobbySlots
-                ? undefined
-                : options.model?.roundNumber,
+            duelNumber: syncLobbySlots ? undefined : options.model?.duelNumber,
             showStraightnessMeter: isGameplayPresentationPhase(
                 options.model?.phase
             ),
@@ -91,11 +89,11 @@ export function create(options: CreatePlanOptions) {
     };
 }
 
-function canStartRoundFromState(roundState: RoundState): boolean {
+function canStartDuelFromState(duelState: DuelState): boolean {
     return (
-        roundState === RoundState.WAITING ||
-        roundState === RoundState.HIT_PAUSE ||
-        roundState === RoundState.ROUND_OVER
+        duelState === DuelState.WAITING ||
+        duelState === DuelState.HIT_PAUSE ||
+        duelState === DuelState.DUEL_OVER
     );
 }
 
@@ -105,7 +103,7 @@ function isServerLobbyPhase(phase?: GamePhase): boolean {
 
 function isGameplayPresentationPhase(phase?: GamePhase): boolean {
     return (
-        phase === GAME_PHASE.RoundIntro ||
+        phase === GAME_PHASE.DuelIntro ||
         phase === GAME_PHASE.Playing ||
         phase === GAME_PHASE.HitPause ||
         phase === GAME_PHASE.GameOver

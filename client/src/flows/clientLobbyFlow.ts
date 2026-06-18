@@ -1,6 +1,6 @@
 import type { SocketEvent } from '../../../shared/contracts.js';
 import { Config } from '../platform/config.js';
-import { RoundState } from '../state/clientScreens.js';
+import { DuelState } from '../state/clientScreens.js';
 import { CLIENT_TIMER, type ClientTimerName } from '../state/clientTimers.js';
 
 const SOCKET_EVENT = {
@@ -14,13 +14,13 @@ type ClientLobbyFlowOptions = {
     players: {
         clearKeys: () => void;
     };
-    roundData: {
-        resetRoundFlags: () => void;
+    duelData: {
+        resetDuelFlags: () => void;
     };
-    roundIntro: {
+    duelIntro: {
         clear: () => void;
     };
-    setRoundState: (roundState: RoundState) => void;
+    setDuelState: (duelState: DuelState) => void;
     socket?: {
         emit: (event: typeof SOCKET_EVENT.Requeue) => void;
     } | null;
@@ -53,9 +53,9 @@ const LOBBY_ENTRY_TIMERS: ClientTimerName[] = [
 
 export function enter(options: ClientLobbyFlowOptions) {
     options.timers.clearMany(LOBBY_ENTRY_TIMERS);
-    options.roundIntro.clear();
-    options.roundData.resetRoundFlags();
-    options.setRoundState(RoundState.WAITING);
+    options.duelIntro.clear();
+    options.duelData.resetDuelFlags();
+    options.setDuelState(DuelState.WAITING);
     options.players.clearKeys();
     options.bullets.clear();
     options.syncNameEditor();
@@ -71,7 +71,7 @@ export function scheduleAbandonedRequeue(options: AbandonedRequeueOptions) {
         function () {
             options.socket?.emit(SOCKET_EVENT.Requeue);
         },
-        Config.round.abandonedRequeueDelay
+        Config.duel.abandonedRequeueDelay
     );
 
     return true;

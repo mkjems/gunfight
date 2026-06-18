@@ -61,7 +61,7 @@ function plain(value) {
     return JSON.parse(JSON.stringify(value));
 }
 
-test('does not start a round from ready flags without server round intro', async function () {
+test('does not start a duel from ready flags without server duel intro', async function () {
     const plan = await loadClientModelUpdatePlan();
     const previousModel = {
         clients: [
@@ -86,14 +86,14 @@ test('does not start a round from ready flags without server round intro', async
         model,
         playerId: 'p1',
         previousModel,
-        roundState: 'waiting'
+        duelState: 'waiting'
     });
 
-    assert.equal(result.startRoundRitual, false);
+    assert.equal(result.startDuelRitual, false);
     assert.equal(result.renderHud, true);
 });
 
-test('plans a round start when the server enters round intro', async function () {
+test('plans a duel start when the server enters duel intro', async function () {
     const plan = await loadClientModelUpdatePlan();
     const previousModel = {
         clients: [
@@ -113,8 +113,8 @@ test('plans a round start when the server enters round intro', async function ()
                 { x: 830, y: 430, facing: -1, frame: 2 }
             ]
         },
-        phase: 'roundIntro',
-        roundNumber: 3
+        phase: 'duelIntro',
+        duelNumber: 3
     };
 
     assert.deepEqual(
@@ -123,7 +123,7 @@ test('plans a round start when the server enters round intro', async function ()
                 model,
                 playerId: 'p1',
                 previousModel,
-                roundState: 'hitPause'
+                duelState: 'hitPause'
             })
         ),
         {
@@ -134,12 +134,12 @@ test('plans a round start when the server enters round intro', async function ()
             playReadySound: false,
             renderHud: false,
             scheduleAbandonedRequeue: false,
-            startRoundRitual: true,
+            startDuelRitual: true,
             syncNameEditor: true,
             syncStoredPlayerName: true,
             syncPlayers: {
                 resetChangedSlots: false,
-                roundNumber: 3,
+                duelNumber: 3,
                 showStraightnessMeter: true,
                 slots: [
                     { x: 120, y: 430, facing: 1, frame: 0 },
@@ -170,8 +170,8 @@ test('does not start gameplay while the server is in ready countdown', async fun
                 ],
                 phase: 'readying'
             },
-            roundState: 'waiting'
-        }).startRoundRitual,
+            duelState: 'waiting'
+        }).startDuelRitual,
         false
     );
 });
@@ -192,7 +192,7 @@ test('plans slot-ordered lobby slots while waiting in the lobby', async function
                 model,
                 playerId: 'p2',
                 previousModel: null,
-                roundState: 'waiting'
+                duelState: 'waiting'
             }).syncPlayers
         ),
         {
@@ -240,7 +240,7 @@ test('plans abandoned-game recovery', async function () {
                 },
                 playerId: 'p1',
                 previousModel: null,
-                roundState: 'playing'
+                duelState: 'playing'
             })
         ),
         {
@@ -251,7 +251,7 @@ test('plans abandoned-game recovery', async function () {
             playReadySound: false,
             renderHud: true,
             scheduleAbandonedRequeue: true,
-            startRoundRitual: false,
+            startDuelRitual: false,
             syncNameEditor: true,
             syncStoredPlayerName: true,
             syncPlayers: {
@@ -287,7 +287,7 @@ test('plans lobby recovery when the server returns from game over', async functi
                     ],
                     phase: 'gameOver'
                 },
-                roundState: 'gameOver'
+                duelState: 'gameOver'
             })
         ),
         {
@@ -298,7 +298,7 @@ test('plans lobby recovery when the server returns from game over', async functi
             playReadySound: false,
             renderHud: true,
             scheduleAbandonedRequeue: false,
-            startRoundRitual: false,
+            startDuelRitual: false,
             syncNameEditor: true,
             syncStoredPlayerName: true,
             syncPlayers: {
@@ -357,11 +357,11 @@ test('plans game-over presentation when the server ends an active match', async 
             matchState: 'playing',
             phase: 'playing'
         },
-        roundState: 'playing'
+        duelState: 'playing'
     });
 
     assert.equal(result.enterGameOverState, true);
     assert.equal(result.enterLobbyState, false);
-    assert.equal(result.startRoundRitual, false);
+    assert.equal(result.startDuelRitual, false);
     assert.equal(result.syncPlayers.showStraightnessMeter, true);
 });

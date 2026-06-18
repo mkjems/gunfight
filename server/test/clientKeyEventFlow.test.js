@@ -94,7 +94,7 @@ function createOptions(overrides = {}) {
             renderHud() {
                 calls.push('renderHud');
             },
-            roundState: 'playing',
+            duelState: 'playing',
             ...overrides
         }
     };
@@ -117,7 +117,7 @@ test('blocks local edit key while the local client is not waiting', async functi
             key: 'e',
             player: 'p1'
         },
-        roundState: 'waiting'
+        duelState: 'waiting'
     });
 
     assert.equal(flow.handle(options), false);
@@ -140,7 +140,7 @@ test('routes waiting local key events through the active name editor', async fun
                 return false;
             }
         },
-        roundState: 'waiting'
+        duelState: 'waiting'
     });
 
     assert.equal(flow.handle(options), false);
@@ -162,7 +162,7 @@ test('opens and closes high scores from local waiting navigation', async functio
         returnToLobby() {
             calls.push('returnToLobby');
         },
-        roundState: 'waiting',
+        duelState: 'waiting',
         showHighScores() {
             calls.push('showHighScores');
         }
@@ -199,7 +199,7 @@ test('blocks other local waiting keys while high scores are visible', async func
             key: 'h',
             player: 'p1'
         },
-        roundState: 'waiting'
+        duelState: 'waiting'
     });
 
     assert.equal(flow.handle(options), false);
@@ -217,7 +217,7 @@ test('delegates gameplay key events to gameplay input', async function () {
                     onGunFired: Boolean(options.onGunFired),
                     onWaitingFire: Boolean(options.onWaitingFire),
                     player: options.player,
-                    roundState: options.roundState
+                    duelState: options.duelState
                 });
                 if (options.keyEvent.key === ' ') {
                     options.onBulletFired();
@@ -242,7 +242,7 @@ test('delegates gameplay key events to gameplay input', async function () {
             player: {
                 id: 'p1'
             },
-            roundState: 'playing'
+            duelState: 'playing'
         }
     ]);
     assert.deepEqual(calls, ['onBulletFired']);
