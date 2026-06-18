@@ -29,7 +29,13 @@
                 "gameRoundSeconds": 1
             }
         ],
-        "rocks": [],
+        "rocks": [
+            {
+                "type": "horizontal",
+                "x": 474.39,
+                "y": 150.31
+            }
+        ],
         "wagon": {
             "x": 460,
             "fromY": 720,
