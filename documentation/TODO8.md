@@ -181,6 +181,73 @@ horizontal frames, from most empty at the left to most full at the right.
     - [x] Run browser smoke for the gameplay path; full browser smoke currently
           has unrelated editor-page fixture expectation failures.
 
+## P24 - Rename duel/round terminology
+
+Goal: Use `duel` for one showdown cycle inside a match. A match can contain
+many duels. The current code often uses `round` for that concept, which makes
+conversation and code harder to line up.
+
+Scope:
+
+- Rename `round` to `duel` where it means one showdown cycle, lifecycle step,
+  result, counter, or client presentation state.
+- Keep `match` for the full timed competition between two players.
+- Keep ordinary non-game uses of "round", such as `Math.round` or visual
+  roundness.
+- Leave scenario field `gameRoundSeconds` unchanged for now. Money bags still
+  pass through the scenario editor as they do today.
+
+Concrete steps:
+
+- [ ] Update terminology docs first.
+    - [ ] In `Code-Terminologi.md`, replace the `Round` and `Round state`
+          entries with `Duel` and `Duel state`.
+    - [ ] Define `duelNumber` as the server-owned duel count used for scenario
+          selection and duel-based progression.
+    - [ ] Note that `gameRoundSeconds` is intentionally left as a legacy
+          scenario field for now.
+- [ ] Rename shared public contracts and socket event names.
+    - [ ] Rename `roundNumber` to `duelNumber` in the public game model,
+          snapshots, payload guards, and normalized payloads.
+    - [ ] Rename `RoundResultPayload` to `DuelResultPayload`.
+    - [ ] Rename socket event `roundResult` to `duelResult`.
+    - [ ] Rename server phase `roundIntro` to `duelIntro`.
+- [ ] Rename server game-model ownership.
+    - [ ] Rename `roundNumber`, `advanceRound`, `recordRoundResult`, and related
+          local helpers in `gfmodel.ts` and `lobby.ts`.
+    - [ ] Keep result validation semantics unchanged: accept only the current
+          duel result while both players are connected and the phase is
+          `playing`.
+    - [ ] Update lobby/game id result keys that currently include the round
+          number.
+- [ ] Rename client lifecycle and presentation state.
+    - [ ] Rename `RoundState` to `DuelState` and `roundOver` to `duelOver`.
+    - [ ] Rename `ClientRoundState` and `roundData` to `ClientDuelState` and
+          `duelData`.
+    - [ ] Rename round flow modules and APIs such as round ritual, reset, end,
+          transition, hit flow, and model update plan names.
+    - [ ] Rename `roundIntro` runtime/system fields to `duelIntro`.
+- [ ] Rename duel-based gameplay tuning.
+    - [ ] Rename `getRoundBulletStraightness` to
+          `getDuelBulletStraightness`.
+    - [ ] Rename bullet config fields `roundStraightnessStep` and any
+          round-based straightness wording to duel-based names.
+    - [ ] Keep the actual straightness values and behavior unchanged.
+- [ ] Update tests and browser smoke expectations.
+    - [ ] Rename test names and fixtures from round terms to duel terms.
+    - [ ] Update expected phase/event/model field names.
+    - [ ] Add or keep regression coverage for stale duel-result rejection.
+- [ ] Update user-facing and project documentation.
+    - [ ] Update `Specification-main.md`, `Connection-state-model.md`,
+          `State-ownership.md`, and `code-quality-scorecard.md`.
+    - [ ] Keep user-visible copy natural: use "duel" for the showdown and
+          "match" for the whole game.
+- [ ] Verify carefully.
+    - [ ] Run `npm run typecheck`.
+    - [ ] Run the focused server/client tests touched by the rename.
+    - [ ] Run `npm run check:deploy`.
+    - [ ] Run browser smoke if the public phase/event names changed.
+
 ## P19 - How can straightness shooting be part of the game story, brain storm and ideas
 
 Goal: Lets get some ideas on the table for a more interesting game game story
