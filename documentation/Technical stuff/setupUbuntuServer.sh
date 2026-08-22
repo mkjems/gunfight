@@ -45,6 +45,9 @@ cd /opt/gunfight
 ## }
 
 
+## For manual pulls of a private GHCR package, log in with a fresh read-only
+## token. The GitHub Actions deploy workflow refreshes GHCR auth before each
+## production pull.
 echo YOUR_READ_ONLY_GHCR_TOKEN | docker login ghcr.io -u mkjems --password-stdin
 
 docker compose pull

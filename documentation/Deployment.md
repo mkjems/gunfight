@@ -62,21 +62,24 @@ Deployment is triggered by a push to the `master` branch.
     - Vitest UI/component tests.
     - Server tests after a production build.
 7. If checks pass, the `build` job builds the Docker image from `Dockerfile`.
-8. GitHub Actions logs in to GHCR using the workflow `GITHUB_TOKEN`.
+8. GitHub Actions logs in to GHCR on the runner using the workflow
+   `GITHUB_TOKEN`.
 9. The image is pushed as `ghcr.io/mkjems/gunfight:latest`.
 10. If the image push succeeds, the `deploy` job connects to the VPS over SSH.
-11. On the VPS, the workflow runs:
+11. On the VPS, the workflow logs in to GHCR with the same short-lived workflow
+    token, then runs:
 
 ```sh
 cd /opt/gunfight
+printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 docker compose pull
 docker compose up -d
 docker image prune -f
 ```
 
 The deploy job does not copy source files to the VPS. The VPS only needs the
-Compose file, Docker/GHCR access, and the ability to pull and run the latest
-image.
+Compose file, Docker, and the ability to authenticate to GHCR during the deploy
+step.
 
 Browser smoke tests are not part of the deployment gate. They are run manually
 with `npm run test:browser` when browser-path verification is needed.
@@ -146,11 +149,12 @@ The VPS needs:
 - Caddy.
 - `/opt/gunfight/compose.yaml`.
 - GHCR read access for `ghcr.io/mkjems/gunfight:latest` if the package is not
-  public.
+  public. The GitHub Actions deploy job refreshes this login before every
+  production pull.
 - SSH access for GitHub Actions.
 
-If GHCR authentication is required on the VPS, log in once with a read-only
-token:
+For manual VPS pulls, log in with a fresh read-only token when GHCR
+authentication is required:
 
 ```sh
 echo YOUR_READ_ONLY_GHCR_TOKEN | docker login ghcr.io -u mkjems --password-stdin
@@ -167,8 +171,9 @@ The deploy workflow expects these repository secrets:
 The matching public key must be present in the deploy user's
 `~/.ssh/authorized_keys` on the VPS.
 
-The workflow also uses GitHub's built-in `GITHUB_TOKEN` to publish the container
-image to GHCR. The workflow permissions grant `packages: write`.
+The workflow uses GitHub's built-in `GITHUB_TOKEN` to publish the container
+image to GHCR and to refresh the VPS GHCR login just before pulling. The build
+job grants `packages: write`; the deploy job grants only `packages: read`.
 
 ## Caddy
 
@@ -195,6 +200,7 @@ Manual deployment uses the same commands as the GitHub Actions deploy job:
 ```sh
 ssh VPS_USER@VPS_HOST
 cd /opt/gunfight
+echo YOUR_READ_ONLY_GHCR_TOKEN | docker login ghcr.io -u mkjems --password-stdin
 docker compose pull
 docker compose up -d
 docker image prune -f
@@ -237,6 +243,8 @@ sudo journalctl -u caddy --no-pager -n 100
 
 - If checks fail, no image is built and production is unchanged.
 - If image build or push fails, the VPS is not touched.
+- If the VPS cannot authenticate to GHCR, `docker compose pull` fails with
+  `denied`, and the previous running container normally continues.
 - If SSH deployment fails, the previous running container normally continues
   because Compose has not replaced it successfully.
 - If the new container starts but is unhealthy or exits, inspect
