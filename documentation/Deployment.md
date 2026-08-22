@@ -5,7 +5,7 @@ code change to a running Gunfight container.
 
 ## Production Shape
 
-Gunfight runs as one Node.js container on a Hetzner VPS.
+Gunfight runs as one Node.js container on a Hetzner VPS. (In Germany, EU)
 
 ```text
 Browser
